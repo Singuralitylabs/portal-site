@@ -1,0 +1,99 @@
+{
+    "extends": [
+        "next/core-web-vitals", // Next.jsの推奨ルール（パフォーマンスの最適化なども含む）
+        "eslint:recommended", // ESLintの推奨ルール
+        "plugin:@typescript-eslint/recommended", // TypeScript用の推奨ルール
+        "plugin:react/recommended", // Reactの推奨ルール
+        "plugin:react-hooks/recommended", // React Hooksの推奨ルール
+        "prettier" // Prettierとの競合を避けるための設定
+    ],
+    // plugins: 追加のルールセットを導入
+    "plugins": [
+        "@typescript-eslint", // TypeScript用のルール
+        "import" // import/export文の順序やパスの検証
+    ],
+    // rules: 個別のルール設定
+    "rules": {
+        "react/react-in-jsx-scope": "off", // React 17以降はimport React不要
+        "react/prop-types": "off", // TypeScriptを使用するため無効化
+        "@typescript-eslint/explicit-module-boundary-types": "off", // 関数の戻り値の型を必須としない
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_"
+            }
+        ], // 未使用変数を禁止（_で始まる変数は除外）
+        "@typescript-eslint/no-explicit-any": "warn", // any型の使用を警告
+        // importの順序を制御
+        "import/order": [
+            "error",
+            {
+                "groups": [
+                    "builtin",
+                    "external",
+                    "internal",
+                    [
+                        "parent",
+                        "sibling"
+                    ],
+                    "index",
+                    "object",
+                    "type"
+                ],
+                "newlines-between": "always", // グループ間に空行を入れる
+                "alphabetize": { // アルファベット順に並べる
+                    "order": "asc",
+                    "caseInsensitive": true
+                }
+            }
+        ],
+        "no-console": [
+            "warn",
+            {
+                "allow": [
+                    "warn",
+                    "error"
+                ]
+            }
+        ], // console.logを警告（warn,errorは許可）
+        "eqeqeq": [
+            "error",
+            "always"
+        ], // 厳密等価演算子（===）の使用を強制
+        "curly": [
+            "error",
+            "all"
+        ], // 中括弧の使用を強制
+        // コード間の空行を制御
+        "padding-line-between-statements": [
+            "error",
+            {
+                "blankLine": "always",
+                "prev": "*",
+                "next": "return"
+            }, // return前に空行
+            {
+                "blankLine": "always",
+                "prev": [
+                    "const",
+                    "let",
+                    "var"
+                ],
+                "next": "*"
+            }, // 変数宣言後に空行
+            {
+                "blankLine": "any",
+                "prev": [
+                    "const",
+                    "let",
+                    "var"
+                ],
+                "next": [
+                    "const",
+                    "let",
+                    "var"
+                ]
+            } // 連続する変数宣言は空行不要
+        ]
+    }
+}
