@@ -1,37 +1,148 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 会員制動画ポータルサイト
 
-## Getting Started
+会員限定のコンテンツを提供するためのポータルサイトです。Google認証による会員管理と承認機能を備え、承認された会員のみがコンテンツを視聴できます。
 
-First, run the development server:
+## 機能概要
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Google認証による会員管理
+- 管理者による会員承認システム
+- レスポンシブ対応のモバイルフレンドリーUI
+
+## 技術スタック
+
+### フロントエンド
+
+- Next.js (TypeScript)
+- Tailwind CSS
+- Shadcn/ui
+
+### バックエンド/インフラ
+
+- Clerk (認証)
+- Supabase (データベース)
+- Vercel (ホスティング)
+
+### 開発環境
+
+- Git/GitHub (ソースコード管理)
+- GitHub Actions (CI/CD)
+
+## 開発環境のセットアップ
+
+1. リポジトリのクローン
+
+   ```bash
+   git clone https://github.com/Singuralitylabs/portal-site.git
+   cd portal-site
+   ```
+
+2. 依存パッケージのインストール
+
+   ```bash
+   npm install
+   ```
+
+3. 環境変数の設定
+   `.env.local`ファイルを作成し、必要な環境変数を設定します。
+   環境変数の値については、プロジェクトリーダーに確認してください。
+
+   ```bash
+   # Clerk認証関連
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_********
+   CLERK_SECRET_KEY=sk_********
+
+   # Supabase関連
+   NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
+   ```
+
+4. 開発サーバーの起動
+
+   ```bash
+   npm run dev
+   ```
+
+## ブランチ戦略
+
+```
+release (protected) - 本番環境
+  ↑
+main (protected) - テスト環境
+  ↑
+feature/* - 機能開発
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `release`: 本番環境用ブランチ（保護済）
+- `main`: テスト環境用ブランチ（保護済）
+- `feature/*`: 機能開発用ブランチ
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 必要スキル
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 基礎スキル
 
-## Learn More
+- HTML/CSSの基本的な理解
+- JavaScriptの基本構文とES6機能の理解
+- Git/GitHubの基本操作
 
-To learn more about Next.js, take a look at the following resources:
+### 学習リソース
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- HTML/CSS: Progate推奨
+- JavaScript: GAS講座推奨
+- その他技術スタックは参画後に学習可能
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 開発手順
 
-## Deploy on Vercel
+1. featureブランチの作成
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   git checkout main           # mainブランチに移動
+   git pull origin main       # 最新の状態に更新
+   git checkout -b feature/[機能名]  # 新しいブランチを作成
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# portal-site
+   - **重要**: 必ずmainブランチから新しいfeatureブランチを作成してください
+
+2. 実装
+
+   - コミットメッセージは変更内容が分かるように記載してください
+     ```bash
+     git add .
+     git commit -m "Add: ログイン機能の実装"
+     ```
+
+3. プルリクエストの作成
+
+   - featureブランチからmainブランチに向けて作成します
+   - 以下の項目を必ず設定してください：
+     - Assignee: 自分自身
+     - Reviewer: プロジェクトリーダー
+     - Description: 実装内容の概要（追加・修正・削除した内容）
+   - GithubActionsのテストが全てパスしていることを確認してください
+
+4. コードレビュー
+
+   - レビューでの指摘事項があった場合は対応してください
+   - 変更後は再度レビューを依頼してください
+
+5. mainブランチへのマージ
+   - プロジェクトリーダーによる承認後、マージされます
+   - マージ後、プロジェクトリーダーから全メンバーにrebaseの実行が指示されます
+6. rebaseの実行
+   ```bash
+   git checkout main          # mainブランチに移動
+   git pull origin main      # リモートの変更を取得
+   git checkout feature/[作業中の機能名]  # 作業ブランチに移動
+   git rebase main          # mainの内容で作業ブランチを更新
+   ```
+   - コンフリクトが発生した場合は解消してください
+   - 解消後は以下のコマンドで続行します
+   ```bash
+   git add .
+   git rebase --continue
+   ```
+7. ブランチの後片付け（作業完了時）
+   ```bash
+   git checkout main          # mainブランチに移動
+   git pull origin main      # 最新の状態に更新
+   git branch -d feature/[機能名]  # 作業ブランチの削除
+   ```
