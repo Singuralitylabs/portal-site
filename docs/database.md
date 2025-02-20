@@ -14,8 +14,6 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
    資料やリンクなどのドキュメント情報を管理します。
 
 
-  
-
 ## 2. テーブル設計
 
 ### 2.1. users テーブル
@@ -26,8 +24,8 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `clerk_id`      | `VARCHAR(255)`   | UNIQUE, NOT NULL                | Clerkが発行する一意なID         |
 | `email`         | `VARCHAR(255)`   | UNIQUE, NOT NULL                | Googleアカウントのメールアドレス（最大255文字） |
 | `display_name`  | `VARCHAR(100)`   | NOT NULL                        | Googleアカウントの表示名        |
-| `role`          | `VARCHAR(50)`    | DEFAULT 'member'                | ユーザーの役割（例: member, admin） |
-| `status`        | `VARCHAR(50)`    | DEFAULT 'pending'               | ユーザーの状態（例: pending, active） |
+| `role`          | `VARCHAR(50)`    | DEFAULT 'member'  NOT NULL      | ユーザーの役割（例: member, admin） |
+| `status`        | `VARCHAR(50)`    | DEFAULT 'pending' NOT NULL      | ユーザーの状態（例: pending, active） |
 | `created_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                   |
 | `updated_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                   |
 
@@ -39,9 +37,11 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 |------------------|------------------|----------------------------------|---------------------------------|
 | `id`            | `SERIAL`         | PRIMARY KEY                     | レコードの一意な識別子（連番）  |
 | `name`          | `VARCHAR(255)`   | NOT NULL                        | 資料名                          |
-| `description`   | `TEXT`           |                                  | 資料の説明文      |
+| `description`   | `TEXT`           |                                  | 資料の説明文                     |
 | `category`      | `VARCHAR(100)`   | NOT NULL                        | 資料の分類（例: 事務局資料）     |
 | `url`           | `TEXT`           | NOT NULL                        | 資料へのリンク（Googleドライブ等） |
+| `added_by_user_id` | `INTEGER`      | FOREIGN KEY(users.id)           | 資料をポータルサイトに追加したユーザー |
+| `assignee_user_id` | `INTEGER`      | FOREIGN KEY(users.id)           | 資料の担当者                    |
 | `created_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                   |
 | `updated_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                   |
 
@@ -67,7 +67,11 @@ erDiagram
         TEXT description "資料の説明文"
         VARCHAR category "資料の分類（例: 事務局資料） (最大100文字)"
         TEXT url "資料へのリンク（Googleドライブ等）"
+        INTEGER added_by_user_id FK "資料をポータルサイトに追加したユーザー"
+        INTEGER assignee_user_id FK "資料の担当者"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
     }
+
+    users ||--o{ documents : "1:N"
 ```
