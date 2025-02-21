@@ -26,6 +26,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `display_name`  | `VARCHAR(100)`   | NOT NULL                        | Googleアカウントの表示名        |
 | `role`          | `VARCHAR(50)`    | DEFAULT 'member'  NOT NULL      | ユーザーの役割（例: member, admin） |
 | `status`        | `VARCHAR(50)`    | DEFAULT 'pending' NOT NULL      | ユーザーの状態（例: pending, active） |
+| `is_deleted`    | `BOOLEAN`        | DEFAULT FALSE, NOT NULL         | 論理削除フラグ                  |
 | `created_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                   |
 | `updated_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                   |
 
@@ -40,8 +41,10 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `description`   | `TEXT`           |                                  | 資料の説明文                     |
 | `category`      | `VARCHAR(100)`   | NOT NULL                        | 資料の分類（例: 事務局資料）     |
 | `url`           | `TEXT`           | NOT NULL                        | 資料へのリンク（Googleドライブ等） |
-| `added_by_user_id` | `INTEGER`      | FOREIGN KEY(users.id)           | 資料をポータルサイトに追加したユーザー |
-| `assignee_user_id` | `INTEGER`      | FOREIGN KEY(users.id)           | 資料の担当者                    |
+| `created_by`    | `INTEGER`        | FOREIGN KEY(users.id), NOT NULL | 資料を作成したユーザー           |
+| `updated_by`    | `INTEGER`        | FOREIGN KEY(users.id), NOT NULL | 資料を最後に更新したユーザー     |
+| `assignee`      | `VARCHAR(100)`   |                                  | 資料の担当者名                   |
+| `is_deleted`    | `BOOLEAN`        | DEFAULT FALSE, NOT NULL         | 論理削除フラグ                  |
 | `created_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                   |
 | `updated_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                   |
 
@@ -57,6 +60,7 @@ erDiagram
         VARCHAR display_name "Googleアカウントの表示名 (最大100文字)"
         VARCHAR role "ユーザーの役割（例: member, admin） (最大50文字)"
         VARCHAR status "ユーザーの状態（例: pending, active） (最大50文字)"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
     }
@@ -67,8 +71,10 @@ erDiagram
         TEXT description "資料の説明文"
         VARCHAR category "資料の分類（例: 事務局資料） (最大100文字)"
         TEXT url "資料へのリンク（Googleドライブ等）"
-        INTEGER added_by_user_id FK "資料をポータルサイトに追加したユーザー"
-        INTEGER assignee_user_id FK "資料の担当者"
+        INTEGER created_by FK NOT NULL "資料を作成したユーザー (users.id)"
+        INTEGER updated_by FK NOT NULL "資料を最後に更新したユーザー (users.id)"
+        VARCHAR assignee "資料の担当者名 (最大100文字)"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
     }
