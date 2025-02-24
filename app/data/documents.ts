@@ -1,6 +1,6 @@
-import { Material } from '../types';
+import { Document } from '../types';
 
-export const materials: Material[] = [
+export const documents: Document[] = [
   {
     id: '1',
     title: 'プログラミング基礎講座 資料',
