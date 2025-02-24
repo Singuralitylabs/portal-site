@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -22,7 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" {...mantineHtmlProps}>
+      <head>
+        <ColorSchemeScript />
+      </head>
       <body>
         <MantineProvider>{children}</MantineProvider>
       </body>
