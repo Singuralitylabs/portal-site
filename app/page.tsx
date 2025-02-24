@@ -4,7 +4,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-card-foreground mb-6">
-            SinguralityLabs ポータルサイトへようこそ
+            SingularityLabs ポータルサイトへようこそ
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             会員向けの資料やプログラミング学習など、<br/>
