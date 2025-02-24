@@ -58,73 +58,28 @@ npm install --save-dev eslint-config-next @typescript-eslint/parser @typescript-
   "extends": [
     "next/core-web-vitals", // Next.jsの推奨設定とWeb Vitalsの最適化ルール
     "plugin:@typescript-eslint/recommended", // TypeScriptの推奨ルール
-    "plugin:react/recommended", // Reactの推奨ルール
-    "plugin:react-hooks/recommended", // React Hooksの推奨ルール
-    "plugin:import/recommended", // import/exportの推奨ルール
-    "plugin:import/typescript", // TypeScriptのimport規則
     "prettier" // Prettierとの競合を防ぐ
   ],
 
   // 使用するプラグイン
   "plugins": [
     "@typescript-eslint", // TypeScript用のLintルール
-    "react", // React用のLintルール
     "import" // import/export用のLintルール
   ],
 
   // 個別のルール設定
   "rules": {
-    "react/react-in-jsx-scope": "off", // React 17以降はimport React不要
-    "react/prop-types": "off", // TypeScriptを使用するため無効化
-    "@typescript-eslint/explicit-module-boundary-types": "off", // 関数の戻り値の型を必須としない
+    "import/no-unused-modules": "off", // この設定は無効化
+    "no-unused-vars": "off", // TypeScriptの設定と重複するため無効化
     "@typescript-eslint/no-unused-vars": [
-      "error",
+      "warn",
       {
-        "argsIgnorePattern": "^_"
+        "vars": "all", // すべての変数をチェック
+        "args": "after-used", // 使用されない引数をチェック
+        "ignoreRestSiblings": true, // 分割代入の残余引数は無視
+        "argsIgnorePattern": "^_", // _で始まる引数は無視
+        "varsIgnorePattern": "^_" // _で始まる変数は無視
       }
-    ], // 未使用変数を禁止（_で始まる変数は除外）
-    "@typescript-eslint/no-explicit-any": "warn", // any型の使用を警告
-    // importの順序とグループ化を制御
-    "import/order": [
-      "error",
-      {
-        // グループの順序を定義
-        "groups": [
-          "builtin", // Node.jsの組み込みモジュール
-          "external", // npm パッケージ
-          "internal", // プロジェクト内の指定パス
-          "parent", // 親ディレクトリからのインポート
-          "sibling", // 同じディレクトリからのインポート
-          "index", // カレントディレクトリのindex
-          "object", // オブジェクトのインポート
-          "type" // 型のインポート
-        ],
-        "newlines-between": "always", // グループ間に空行を入れる
-        "alphabetize": {
-          "order": "asc" // アルファベット順に並び替え
-        }
-      }
-    ],
-    "eqeqeq": ["error", "always"], // 厳密等価演算子（===）の使用を強制
-    "curly": ["error", "all"], // 中括弧の使用を強制
-    // コード間の空行を制御
-    "padding-line-between-statements": [
-      "error",
-      {
-        "blankLine": "always",
-        "prev": "*",
-        "next": "return"
-      }, // return前に空行
-      {
-        "blankLine": "always",
-        "prev": ["const", "let", "var"],
-        "next": "*"
-      }, // 変数宣言後に空行
-      {
-        "blankLine": "any",
-        "prev": ["const", "let", "var"],
-        "next": ["const", "let", "var"]
-      } // 連続する変数宣言は空行不要
     ]
   }
 }
