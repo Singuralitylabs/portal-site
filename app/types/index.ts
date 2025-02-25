@@ -4,6 +4,6 @@ export interface Document {
   description: string;
   category: string;
   driveUrl: string;
-  fileType: 'pdf' | 'doc' | 'xls' | 'ppt' | 'other';
+  fileType: 'pdf' | 'doc' | 'xls' | 'gsheet' | 'ppt' | 'other';
   updatedAt: string;
 }

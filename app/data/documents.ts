@@ -16,7 +16,7 @@ export const documents: Document[] = [
     description: 'よく使用されるデザインパターンの解説と実装例',
     category: 'プログラミング',
     driveUrl: 'https://drive.google.com/file/d/example2',
-    fileType: 'pdf',
+    fileType: 'gsheet',
     updatedAt: '2024-03-18',
   },
   {
