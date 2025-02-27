@@ -13,7 +13,7 @@
 
 - Next.js (TypeScript)
 - Tailwind CSS
-- Shadcn/ui
+- Mantine UI
 
 ### バックエンド/インフラ
 
