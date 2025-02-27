@@ -1,10 +1,23 @@
-'use client';
-
-import { documents } from '../data/documents';
 import { DocumentCard } from './components/DocumentCard';
+import { createClient } from '@supabase/supabase-js';
 import { Grid, Paper, Title } from '@mantine/core';
 
-export default function DocumentsPage() {
+// Supabaseクライアントの作成
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
+
+// サーバーコンポーネント
+export default async function DocumentsPage() {
+  // Supabaseからデータ取得
+  const { data: documents, error } = await supabase.from('documents').select('*');
+
+  if (error) {
+    console.error('データ取得エラー:', error.message);
+    return <p>データを取得できませんでした。</p>;
+  }
+
   return (
     <Paper m="0 2rem">
       <Title order={1} p="1.25rem 0" style={{borderBottom: '1px solid #888'}}>資料一覧</Title>
