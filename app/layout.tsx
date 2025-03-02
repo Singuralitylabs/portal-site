@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@mantine/core/styles.css";
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
+import { SideNav } from "./components/SideNav";
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -28,7 +29,10 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body>
-        <MantineProvider>{children}</MantineProvider>
+        <MantineProvider>
+          <SideNav />
+          {children}
+        </MantineProvider>
       </body>
     </html>
   );
