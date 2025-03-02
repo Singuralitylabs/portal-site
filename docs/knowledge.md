@@ -1,3 +1,3 @@
 # デザイン
-- アイコン検索  
-https://lucide.dev/icons/?search=arrow
+- lucide-react 
+https://lucide.dev/icons/
