@@ -30,8 +30,10 @@ export default function RootLayout({
       </head>
       <body>
         <MantineProvider>
-          <SideNav />
-          {children}
+          <div className="sm:flex min-h-screen">
+            <SideNav />
+            <div className="flex-1 sm:ml-48">{children}</div>
+          </div>
         </MantineProvider>
       </body>
     </html>

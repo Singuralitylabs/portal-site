@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Drawer, Button, Burger } from "@mantine/core";
 import { Menu, House, Video, FileText, User, LogOut } from "lucide-react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 interface NavItem {
@@ -39,9 +38,8 @@ interface NavItem {
       icon: <LogOut className="h-5 w-5" />,
     },
   ];
-  
+
   export function SideNav() {
-    const pathname = usePathname();
     const [open, setOpen] = useState(false);
     
     return (
@@ -51,11 +49,11 @@ interface NavItem {
         <Button 
             variant="subtle" 
             onClick={() => setOpen(true)} 
-            className="lg:hidden"
+            className="sm:hidden"
         >
         <Menu 
             size={24}
-            className="lg:hidden" 
+            className="sm:hidden" 
         />
         </Button>
         
@@ -74,7 +72,7 @@ interface NavItem {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
+                className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
                 >
                 {item.icon}
                 {item.title}
@@ -84,7 +82,7 @@ interface NavItem {
         </Drawer>
 
         {/* デスクトップ用サイドバー */}
-        <div className="hidden lg:flex h-screen w-64 flex-col fixed left-0 top-0 border-r bg-card">
+        <div className="hidden sm:flex h-screen w-64 flex-col fixed left-0 top-0 border-r bg-card">
           <div className="p-6">
             <h1 className="text-xl font-bold">Sinlab Portal</h1>
           </div>
@@ -93,7 +91,7 @@ interface NavItem {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
+                className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
               >
                 {item.icon}
                 {item.title}
