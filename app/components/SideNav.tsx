@@ -34,7 +34,7 @@ interface NavItem {
     // },
     {
       title: "ログアウト",
-      href: "/logout",
+      href: "/login",
       icon: <LogOut className="h-5 w-5" />,
     },
   ];
