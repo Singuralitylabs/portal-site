@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "@mantine/core/styles.css";
-import "./globals.css";
+import "./../globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
 import { SideNav } from "./components/SideNav";
 
