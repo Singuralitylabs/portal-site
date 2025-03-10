@@ -1,14 +1,37 @@
 "use client";
 
+import { useSignIn } from "@clerk/nextjs";
+import { useState } from "react";
+
 const GoogleLoginButton = () => {
+  const { signIn, isLoaded } = useSignIn();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  const handleGoogleLogin = async () => {
+    setIsSigningIn(true);
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/",
+      });
+    } catch (err) {
+      console.error("ログインエラー:", err);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
   return (
     <button
       className="flex items-center gap-3 px-6 py-3 bg-white border-2 border-gray-200 
         rounded-lg hover:bg-gray-50 transition-colors"
-      onClick={() => {
-        // Clerk Google sign-in will be integrated here
-        console.log("Google sign in clicked");
-      }}
+      disabled={isSigningIn}
+      onClick={handleGoogleLogin}
     >
       <svg viewBox="0 0 24 24" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
         <path
