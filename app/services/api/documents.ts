@@ -1,14 +1,13 @@
-import supabase from './supabase';
+import supabase from "./supabase";
 
 // Documentsテーブルからデータを取得する関数
 export async function fetchDocuments() {
-  const { data, error } = await supabase.from('documents').select('*');
+  const { data, error } = await supabase.from("documents").select("*");
 
   if (error) {
-    console.error('Supabase データ取得エラー:', error.message);
-    return {data: null, error };
+    console.error("Supabase データ取得エラー:", error.message);
+    return { data: null, error };
   }
 
   return { data, error: null };
-
 }
