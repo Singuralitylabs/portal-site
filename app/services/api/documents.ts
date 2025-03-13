@@ -1,5 +1,4 @@
 import supabase from './supabase';
-import { DocumentType } from '@/app/types';
 
 // Documentsテーブルからデータを取得する関数
 export async function fetchDocuments() {
