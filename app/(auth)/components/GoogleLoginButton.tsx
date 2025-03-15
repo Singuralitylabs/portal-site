@@ -51,7 +51,7 @@ const GoogleLoginButton = () => {
           fill="#EA4335"
         />
       </svg>
-      Googleでログイン
+      {isSigningIn ? "ログイン中..." : "Googleでログイン"}
     </button>
   );
 };
