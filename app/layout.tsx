@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "@mantine/core/styles.css";
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
-// import { SideNav } from "./components/SideNav";
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -18,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AuthLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -30,10 +29,7 @@ export default function AuthLayout({
       </head>
       <body>
         <MantineProvider>
-          <div className="min-h-screen">
-            {/* <SideNav /> in case of authenticated, sm:flex */}
-            {children}
-          </div>
+          <div className="min-h-screen">{children}</div>
         </MantineProvider>
       </body>
     </html>
