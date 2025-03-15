@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "@mantine/core/styles.css";
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
-import { SideNav } from "./components/SideNav";
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -30,10 +29,7 @@ export default function RootLayout({
       </head>
       <body>
         <MantineProvider>
-          <div className="sm:flex min-h-screen">
-            <SideNav />
-            <div className="flex-1 sm:ml-48">{children}</div>
-          </div>
+          <div className="min-h-screen">{children}</div>
         </MantineProvider>
       </body>
     </html>
