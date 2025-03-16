@@ -2,16 +2,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-card-foreground mb-6">
-          Singularity Lab. ポータルサイトへようこそ！
+        <div className="text-center px-4 sm:px-6 md:px-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-card-foreground mb-6">
+            Singularity Lab. ポータルサイトへようこそ！
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            会員向けの資料やプログラミング学習など、<br/>
+          <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-full sm:max-w-2xl mx-auto">
+            会員向けの資料やプログラミング学習など、
             シンラボ活動に役立つ情報を提供します。
           </p>
-          <div className="flex justify-center gap-4">
-          </div>
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
