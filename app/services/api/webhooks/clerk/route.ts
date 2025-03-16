@@ -1,7 +1,7 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import supabase from "@/app/services/api/supabase";
+import { addNewUser } from "@/app/services/api/user";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -40,40 +40,26 @@ export async function POST(req: Request) {
   const eventType = evt.type;
 
   if (eventType === "user.created") {
-    const { id, email_addresses, first_name, last_name } = evt.data;
+    const { id: clerkId, email_addresses, first_name, last_name } = evt.data;
 
-    const primaryEmail = email_addresses[0]?.email_address;
+    const email = email_addresses[0]?.email_address;
 
-    if (!primaryEmail) {
+    if (!email) {
       console.error("No email address found for user");
       return new Response("No email address found", { status: 400 });
     }
 
     const displayName =
-      first_name && last_name
-        ? `${last_name} ${first_name}`
-        : first_name || primaryEmail.split("@")[0];
+      first_name && last_name ? `${last_name} ${first_name}` : first_name || email.split("@")[0];
 
     try {
-      const { data, error } = await supabase
-        .from("users")
-        .insert([
-          {
-            clerk_id: id,
-            email: primaryEmail,
-            display_name: displayName,
-            role: "member",
-            status: "pending",
-          },
-        ])
-        .select();
+      const { error } = await addNewUser({ clerkId, email, displayName });
 
       if (error) {
         console.error("Error inserting user to Supabase:", error);
         return new Response("Error inserting user", { status: 500 });
       }
 
-      console.log("User created in Supabase:", data);
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
