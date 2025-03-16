@@ -29,9 +29,11 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body>
-        <MantineProvider>
-          <div className="min-h-screen">{children}</div>
-        </MantineProvider>
+        <ClerkProvider>
+          <MantineProvider>
+            <div className="min-h-screen">{children}</div>
+          </MantineProvider>
+        </ClerkProvider>
       </body>
     </html>
   );
