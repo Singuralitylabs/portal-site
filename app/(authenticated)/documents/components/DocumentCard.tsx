@@ -27,7 +27,7 @@ export function DocumentCard({ document }: DocumentCardProps) {
         </Flex>
       </Card.Section>
       <Card.Section>
-        <Text component="div" p="1rem" h={(2 * 1.55 + 2) + 'rem'}>{document.description}</Text>
+        <Text component="div" p="1rem">{document.description}</Text>
         <Flex gap="0.25rem" justify="flex-start" align="center" direction="row" p="0 1rem 1rem">
           <Calendar style={{width: '1rem', height: '1rem'}} />
           <Text component="div" fs="0.875rem" lh="1.25rem">{new Date(document.updated_at).toLocaleDateString("ja-JP", {year: "numeric",month: "2-digit",day: "2-digit"}).replaceAll('/', '-')}</Text>
