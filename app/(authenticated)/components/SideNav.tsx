@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Drawer, Button, Burger } from "@mantine/core";
 import { Menu, House, Video, FileText, User, LogOut } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import IconImage from "../../../public/icon.png";
 import { useClerk } from "@clerk/nextjs";
 
 interface NavItem {
@@ -58,7 +60,15 @@ export function SideNav() {
         position="left"
         size="250px"
         padding="md"
-        title="メニュー"
+        title={
+          <Link
+            href="/"
+            className="text-xl font-bold flex items-center space-x-2  no-underline text-inherit"
+          >
+            <Image src={IconImage} alt="Sinlab Logo" className="w-auto h-[1em] origin-center" />
+            <div className="font-bold">Sinlab Portal</div>
+          </Link>
+        }
       >
         <nav className="space-y-2">
           {navItems.map(item =>
@@ -89,7 +99,13 @@ export function SideNav() {
       {/* デスクトップ用サイドバー */}
       <div className="hidden sm:flex h-screen w-64 flex-col fixed left-0 top-0 border-r bg-card">
         <div className="p-6">
-          <h1 className="text-xl font-bold">Sinlab Portal</h1>
+          <Link
+            href="/"
+            className="text-xl font-bold flex items-center space-x-2 no-underline  text-inherit"
+          >
+            <Image src={IconImage} alt="Sinlab Logo" className="w-auto h-[1em] origin-center" />
+            <div className="font-bold">Sinlab Portal</div>
+          </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {navItems.map(item =>
