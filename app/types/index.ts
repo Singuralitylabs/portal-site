@@ -1,4 +1,4 @@
-import { Database } from "./lib/database.types";
+import { Database } from "@/app/types/lib/database.types";
 
 type DocumentsTable = Database["public"]["Tables"]["documents"];
 export type DocumentType = DocumentsTable["Row"];
