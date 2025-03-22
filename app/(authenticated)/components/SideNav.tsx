@@ -5,7 +5,7 @@ import { Drawer, Button, Burger } from "@mantine/core";
 import { Menu, House, Video, FileText, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import IconImage from "../../../public/icon.png";
+import IconImage from "@/public/icon.png";
 import { useClerk } from "@clerk/nextjs";
 
 interface NavItem {
@@ -63,7 +63,7 @@ export function SideNav() {
         title={
           <Link
             href="/"
-            className="text-xl font-bold flex items-center space-x-2  no-underline text-inherit"
+            className="text-xl font-bold flex items-center space-x-2 no-underline text-inherit"
           >
             <Image src={IconImage} alt="Sinlab Logo" className="w-auto h-[1em] origin-center" />
             <div className="font-bold">Sinlab Portal</div>
