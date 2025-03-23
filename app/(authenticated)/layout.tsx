@@ -1,6 +1,7 @@
-import { SideNav } from "@/app/(authenticated)/components/SideNav";
+// 認証済みページレイアウト
+import { SideNav } from "./components/SideNav";
 
-export default function AuthenticatedLayout({
+export default function AuthLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

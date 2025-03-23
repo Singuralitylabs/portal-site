@@ -1,5 +1,5 @@
-import { fetchDocuments } from "@/app/services/api/documents";
-import { DocumentsPageTemplate } from "@/app/(authenticated)/documents/components/Template";
+import { fetchDocuments } from '@/app/services/api/documents';
+import { DocumentsPageTemplate } from './components/Template';
 
 export default async function DocumentsPage() {
   const { data, error } = await fetchDocuments();
