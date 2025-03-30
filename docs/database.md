@@ -5,13 +5,16 @@
 本プロジェクトでは、バックエンドサービスとしてSupabaseを採用している。  
 Supabaseは、PostgreSQLを基盤としたオープンソースのバックエンドサービスである。
 
-本プロジェクトでは以下の2種類のデータを管理する
+本プロジェクトでは以下の3種類のデータを管理する
 
 1. **ユーザー情報**（`users`テーブル）  
    Googleアカウント認証を活用したユーザー情報を管理します。
 
 2. **ドキュメント情報**（`documents`テーブル）  
    資料やリンクなどのドキュメント情報を管理します。
+
+3. **動画情報**（`videos`テーブル）  
+   再生時間やリンクなどの動画情報を管理します。
 
 
 ## 2. テーブル設計
@@ -48,6 +51,25 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `created_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                   |
 | `updated_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                   |
 
+---
+
+### 2.3. videos テーブル
+
+| カラム名         | データ型         | 制約                             | 説明                            |
+|------------------|------------------|----------------------------------|---------------------------------|
+| `id`            | `SERIAL`         | PRIMARY KEY                     | レコードの一意な識別子（連番）  |
+| `name`          | `VARCHAR(255)`   | NOT NULL                        | 動画名                          |
+| `description`   | `TEXT`           |                                  | 動画の説明文                     |
+| `category`      | `VARCHAR(100)`   | NOT NULL                        | 動画の分類（例: GAS講座）       |
+| `url`           | `TEXT`           | NOT NULL                        | 動画へのリンク（Youtube等）      |
+| `thumbnail`     | `TEXT`           |                                 | サムネイル画像パス                |
+| `length`        | `INTEGER`        | NOT NULL                        | 動画の再生時間（秒換算）          |
+| `created_by`    | `INTEGER`        | FOREIGN KEY(users.id), NOT NULL | 動画を作成したユーザー           |
+| `updated_by`    | `INTEGER`        | FOREIGN KEY(users.id), NOT NULL | 動画を最後に更新したユーザー     |
+| `assignee`      | `VARCHAR(100)`   |                                  | 動画の担当者名（講師など）         |
+| `is_deleted`    | `BOOLEAN`        | DEFAULT FALSE, NOT NULL         | 論理削除フラグ                  |
+| `created_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                   |
+| `updated_at`    | `TIMESTAMP`      | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                   |
 
 ## 3. ER図
 
@@ -79,5 +101,22 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
+    videos {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        VARCHAR name "動画名 (最大255文字)"
+        TEXT description "動画の説明文"
+        VARCHAR category "動画の分類（例: GAS講座） (最大100文字)"
+        TEXT url "動画へのリンク（Youtube等）"
+        TEXT thumbnail "サムネイル画像パス"
+        INTEGER length "動画の再生時間（秒換算）"
+        INTEGER created_by FK "動画を作成したユーザー (users.id)"
+        INTEGER updated_by FK "動画を最後に更新したユーザー (users.id)"
+        VARCHAR assignee "動画の担当者名（講師など）"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
     users ||--o{ documents : "1:N"
+    users ||--o{ videos : "1:N"
 ```
