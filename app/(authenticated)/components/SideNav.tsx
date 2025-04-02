@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "動画一覧",
-    href: "/movies",
+    href: "/videos",
     icon: <FileVideo className="h-5 w-5" />,
   },
   {
