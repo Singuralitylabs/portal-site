@@ -6,10 +6,10 @@ import { Grid, Paper, Title } from '@mantine/core';
 import { VideoType } from '@/app/types';
 
 interface VideosPageTemplateProps {
-  documents: VideoType[];
+  videos: VideoType[];
 }
 
-export function VideosPageTemplate({ documents }: VideosPageTemplateProps) {
+export function VideosPageTemplate({ videos }: VideosPageTemplateProps) {
   return (
     <Paper m="0 2rem">
       <Title order={1} p="1.25rem 0" style={{ borderBottom: '1px solid #888' }}>動画一覧</Title>
@@ -17,9 +17,9 @@ export function VideosPageTemplate({ documents }: VideosPageTemplateProps) {
       <Paper>
         <Title order={2} p="1rem 0">プログラミング学習</Title>
         <Grid>
-          {documents.map((document) => (
-            <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + '_grid'}>
-              <VideoCard video={document} />
+          {videos.map((video) => (
+            <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
+              <VideoCard video={video} />
             </Grid.Col>
           ))}
         </Grid>
