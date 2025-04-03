@@ -8,5 +8,5 @@ export default async function VideosPage() {
     return <p>データを取得できませんでした。</p>;
   }
 
-  return <VideosPageTemplate documents={data} />;
+  return <VideosPageTemplate videos={data} />;
 }
