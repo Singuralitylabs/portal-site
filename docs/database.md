@@ -64,7 +64,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `url`           | `TEXT`           | NOT NULL                        | 動画へのリンク（Youtube等）      |
 | `thumbnail`     | `TEXT`           |                                 | サムネイル画像パス                |
 | `thumbnail_time` | `INTEGER`       |                                 | サムネイルのタイミング（秒換算）     |
-| `length`        | `INTEGER`        | NOT NULL                        | 動画の再生時間（秒換算）          |
+| `length`        | `INTEGER`        |                                 | 動画の再生時間（秒換算）          |
 | `created_by`    | `INTEGER`        | FOREIGN KEY(users.id), NOT NULL | 動画を作成したユーザー           |
 | `updated_by`    | `INTEGER`        | FOREIGN KEY(users.id), NOT NULL | 動画を最後に更新したユーザー     |
 | `assignee`      | `VARCHAR(100)`   |                                  | 動画の担当者名（講師など）         |
