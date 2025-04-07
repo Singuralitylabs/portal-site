@@ -1,7 +1,8 @@
 'use client';
 
 import { VideoCard } from './VideoCard';
-import { Grid, Paper, Title } from '@mantine/core';
+import { Grid, Paper } from '@mantine/core';
+import { PageTitle } from '@/app/components/PageTitle';
 
 import { VideoType } from '@/app/types';
 
@@ -12,7 +13,7 @@ interface VideosPageTemplateProps {
 export function VideosPageTemplate({ videos }: VideosPageTemplateProps) {
   return (
     <Paper m="0 2rem">
-      <Title order={1} p="1.25rem 0" style={{ borderBottom: '1px solid #888' }}>動画一覧</Title>
+      <PageTitle>動画一覧</PageTitle>
 
       <Paper>
         <Grid>
