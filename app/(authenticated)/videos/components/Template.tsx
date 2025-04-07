@@ -15,7 +15,6 @@ export function VideosPageTemplate({ videos }: VideosPageTemplateProps) {
       <Title order={1} p="1.25rem 0" style={{ borderBottom: '1px solid #888' }}>動画一覧</Title>
 
       <Paper>
-        <Title order={2} p="1rem 0">プログラミング学習</Title>
         <Grid>
           {videos.map((video) => (
             <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
