@@ -62,7 +62,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `description`   | `TEXT`           |                                  | 動画の説明文                     |
 | `category`      | `VARCHAR(100)`   | NOT NULL                        | 動画の分類（例: GAS講座）       |
 | `url`           | `TEXT`           | NOT NULL                        | 動画へのリンク（Youtube等）      |
-| `thumbnail`     | `TEXT`           |                                 | サムネイル画像パス                |
+| `thumbnail_path` | `TEXT`           |                                 | サムネイル画像パス                |
 | `thumbnail_time` | `INTEGER`       |                                 | サムネイルのタイミング（秒換算）     |
 | `length`        | `INTEGER`        |                                 | 動画の再生時間（秒換算）          |
 | `created_by`    | `INTEGER`        | FOREIGN KEY(users.id), NOT NULL | 動画を作成したユーザー           |
@@ -108,7 +108,7 @@ erDiagram
         TEXT description "動画の説明文"
         VARCHAR category "動画の分類（例: GAS講座） (最大100文字)"
         TEXT url "動画へのリンク（Youtube等）"
-        TEXT thumbnail "サムネイル画像パス"
+        TEXT thumbnail_path "サムネイル画像パス"
         INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
         INTEGER length "動画の再生時間（秒換算）"
         INTEGER created_by FK "動画を作成したユーザー (users.id)"
