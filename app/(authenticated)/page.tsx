@@ -22,7 +22,9 @@ export default function Home() {
             </p>
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">動画一覧（追加予定）</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              <a href="/videos">動画一覧</a>
+            </h3>
             <p className="text-muted-foreground">
               プログラミング基礎講座の動画を視聴できます。
             </p>
