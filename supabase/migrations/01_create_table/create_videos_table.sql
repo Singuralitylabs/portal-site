@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS videos (
     url TEXT NOT NULL,
     thumnail_path TEXT,
     thumnail_time INTEGER,
+    length INTEGER,
     created_by INTEGER NOT NULL REFERENCES users(id),
     updated_by INTEGER NOT NULL REFERENCES users(id),
     assignee VARCHAR(100),
