@@ -4,6 +4,21 @@ import { VideoType } from "@/app/types";
 // ダミービデオデータ
 const dummyVideos: VideoType[] = [
   {
+    id: 0,
+    name: '削除済み動画',
+    description: 'この動画は削除済みのため表示されません',
+    category: 'テスト',
+    url: 'https://www.youtube.com/watch?v=deleted',
+    thumbnail: 'https://picsum.photos/200/300',
+    length: 1800,
+    created_by: 1,
+    updated_by: 1,
+    assignee: 'テストユーザー',
+    is_deleted: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
     id: 1,
     name: 'JavaScript基礎講座',
     description: 'JavaScriptの基本的な概念と構文について学びます。変数、データ型、関数、オブジェクト指向プログラミングなどをカバーします。',
@@ -158,13 +173,17 @@ const dummyVideos: VideoType[] = [
 export async function fetchVideos() {
   // 本来はSupabaseからデータを取得するが、ダミーデータを返す
   // const supabase = await createServerSupabaseClient();
-  // const { data, error } = await supabase.from("videos").select("*");
+  // const { data, error } = await supabase
+  //   .from("videos")
+  //   .select("*")
+  //   .eq("is_deleted", false);
   //
   // if (error) {
   //   console.error("Supabase 動画一覧データ取得エラー:", error.message);
   //   return { data: null, error };
   // }
 
-  // ダミーデータを返す
-  return { data: dummyVideos, error: null };
+  // ダミーデータを返す（is_deleted=falseのみ）
+  const filteredVideos = dummyVideos.filter(video => !video.is_deleted);
+  return { data: filteredVideos, error: null };
 }
