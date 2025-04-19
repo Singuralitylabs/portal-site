@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Drawer, Button, Burger } from "@mantine/core";
-import { Menu, House, Video, FileText, User, LogOut } from "lucide-react";
+import { Drawer, Button } from "@mantine/core";
+// import { Drawer, Button, Burger } from "@mantine/core";
+// import { Menu, House, Video, FileText, User, LogOut } from "lucide-react";
+import { Menu, House, FileText, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import IconImage from "../../../public/icon.png";
