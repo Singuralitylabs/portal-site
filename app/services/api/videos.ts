@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "./supabase";
+// import { createServerSupabaseClient } from "./supabase";
 import { VideoType } from "@/app/types";
 
 // ダミービデオデータ
@@ -164,6 +164,21 @@ const dummyVideos: VideoType[] = [
     created_by: 1,
     updated_by: 1,
     assignee: '小林守',
+    is_deleted: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 11,
+    name: '【初心者向け】GASを使ってGoogleフォームを使ったイベント参加者の自動集計システムを作ってみよう',
+    description: '【初心者向け】GASを使ってGoogleフォームを使ったイベント参加者の自動集計システムを作ってみよう。イベント参加者数を自動で集計し、Googleフォームの説明欄に表示します',
+    category: 'プログラミング学習',
+    url: 'https://www.youtube.com/embed/xxxxxxxxxx',
+    thumbnail: 'https://picsum.photos/200/300',
+    length: 3600,
+    created_by: 1,
+    updated_by: 1,
+    assignee: 'ラボ活!チャンネル',
     is_deleted: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
