@@ -15,7 +15,7 @@ export function VideoCard({ video }: VideoCardProps) {
       <Card.Section>
         <div style={{ position: 'relative', width: '100%', height: '12rem' }}>
           <Image
-            src={video.thumbnail || video.url}
+            src={video.thumnail_path || video.url}
             alt={video.name}
             fill
             style={{ objectFit: 'cover', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}

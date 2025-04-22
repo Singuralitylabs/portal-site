@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['picsum.photos'], // YouTubeサムネイルとプレースホルダー画像用のドメインを許可
+    domains: ['www.youtube.com','yahoo.co.jp'], // YouTubeサムネイルとプレースホルダー画像用のドメインを許可
   },
 };
 
