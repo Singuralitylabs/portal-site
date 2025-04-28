@@ -1,3 +1,6 @@
+Need to install the following packages:
+supabase@2.22.6
+Ok to proceed? (y) 
 export type Json =
   | string
   | number
@@ -113,8 +116,8 @@ export type Database = {
           is_deleted: boolean
           length: number | null
           name: string
-          thumnail_path: string | null
-          thumnail_time: number | null
+          thumbnail_path: string | null
+          thumbnail_time: number | null
           updated_at: string
           updated_by: number
           url: string
@@ -129,8 +132,8 @@ export type Database = {
           is_deleted?: boolean
           length?: number | null
           name: string
-          thumnail_path?: string | null
-          thumnail_time?: number | null
+          thumbnail_path?: string | null
+          thumbnail_time?: number | null
           updated_at?: string
           updated_by: number
           url: string
@@ -145,8 +148,8 @@ export type Database = {
           is_deleted?: boolean
           length?: number | null
           name?: string
-          thumnail_path?: string | null
-          thumnail_time?: number | null
+          thumbnail_path?: string | null
+          thumbnail_time?: number | null
           updated_at?: string
           updated_by?: number
           url?: string
