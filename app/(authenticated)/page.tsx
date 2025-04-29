@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
@@ -15,14 +17,16 @@ export default function Home() {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
-              <a href="/documents">資料一覧</a>
+              <Link href="/documents">資料一覧</Link>
             </h3>
             <p className="text-muted-foreground">
               各種申請フォームや資料のリンク集です。
             </p>
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">動画一覧（追加予定）</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              <Link href="/videos">動画一覧</Link>
+            </h3>
             <p className="text-muted-foreground">
               プログラミング基礎講座の動画を視聴できます。
             </p>
