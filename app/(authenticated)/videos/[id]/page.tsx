@@ -6,7 +6,7 @@ import { VideoDetailPageTemplate } from './components/Template';
 export default async function VideoDetailPage({
   params,
 }: {
-  params: { id: number }
+  params: Promise<{ id: number }>
 }) {
   const video_id: number = (await params).id;
   const { data, error } = await fetchVideos();
