@@ -35,6 +35,7 @@ BEGIN
     WHERE 
       clerk_id = current_clerk_id
       AND is_deleted = FALSE
+      AND status = 'active'
   );
 EXCEPTION
   WHEN OTHERS THEN RETURN FALSE;

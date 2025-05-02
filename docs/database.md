@@ -240,7 +240,7 @@ RLSポリシーで使用される主要な関数は以下の通りです。
     $ LANGUAGE plpgsql SECURITY DEFINER;
     ```
   - 解説: セッション変数に設定されたClerk IDを取得する関数。RLSポリシー内で現在のユーザーを識別するために使用される。`current_setting`の第二引数が`true`の場合、設定が存在しない場合はエラーではなくNULLを返す。例外処理によってエラー発生時も安全にNULLを返すようになっている。
-- `is_registered_user()`: Clerk IDがusersテーブルに存在し、削除されていないかチェックする関数
+- `is_registered_user()`: Clerk IDがusersテーブルに存在し、承認済みであり、かつ、削除されていないかチェックする関数
 
   - 定義:
 
@@ -261,6 +261,7 @@ RLSポリシーで使用される主要な関数は以下の通りです。
         WHERE
             clerk_id = current_clerk_id
             AND is_deleted = FALSE
+            AND status = 'active'
         );
     EXCEPTION
         WHEN OTHERS THEN RETURN FALSE;
