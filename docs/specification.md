@@ -33,8 +33,8 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
      - clerk_id（Clerkから発行されるID）
      - email（Googleアカウントのメールアドレス）
      - display_name（Googleアカウントの表示名）
-     - role（デフォルト：'member'）
-     - status（デフォルト：'pending'）
+     - role（デフォルト：`member`）
+     - status（デフォルト：`pending`）
 
 ### 2.3 基本機能
 
@@ -52,7 +52,8 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 
    - 初回ログイン後、承認が行われるまで専用ページにリダイレクトさせる
    - 管理者により承認が行われると、正常にアクセスが可能となる
-     - status（デフォルト：'pending'）を active に変更する
+     - `status`（デフォルト：`pending`）を `active` に変更する
+   - 管理者が拒否した場合、`status` を `rejected` に変更する
 
 ### 2.3 画面遷移
 

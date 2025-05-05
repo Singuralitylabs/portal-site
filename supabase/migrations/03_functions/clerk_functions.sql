@@ -18,7 +18,7 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Clerk IDがusersテーブルに存在し、削除されていないかチェックする関数
+-- Clerk IDがusersテーブルに存在し、削除されていないか、承認済みであるかをチェックする関数
 CREATE OR REPLACE FUNCTION is_registered_user()
 RETURNS BOOLEAN AS $$
 DECLARE
