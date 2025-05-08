@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Drawer, Button } from "@mantine/core";
-import { Menu, House, FileVideo, FileText, User, LogOut } from "lucide-react";
+// import { Menu, House, FileVideo, FileText, User, LogOut } from "lucide-react";
+import { Menu, House, FileVideo, FileText, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import IconImage from "../../../public/icon.png";
