@@ -7,6 +7,7 @@ CREATE POLICY "registered_users_can_read_videos" ON "videos"
   USING (
     is_registered_user()
     AND is_deleted = FALSE
+    AND status = 'active'
   );
 
 ALTER TABLE "videos" ENABLE ROW LEVEL SECURITY;

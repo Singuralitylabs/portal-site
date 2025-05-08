@@ -201,16 +201,16 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 #### 閲覧ポリシー（SELECT）
 
 - `registered_users_can_read_documents`: 登録済みユーザーは全てのdocumentsを閲覧可能
-  - 条件: `is_registered_user() AND is_deleted = FALSE`
-  - 解説: `is_registered_user()`関数を使用して、現在ログインしているユーザーがusersテーブルに正しく登録されており、論理削除されていないことを確認する。この条件を満たすユーザーのみが、削除されていない全ての資料（documents）にアクセスできる。つまり、シンラボメンバーとして正規登録されたユーザーだけが資料を閲覧できる仕組み。
+  - 条件: `is_registered_user() AND is_deleted = FALSE AND status = 'active'`
+  - 解説: `is_registered_user()`関数を使用して、現在ログインしているユーザーがusersテーブルに正しく登録されており、論理削除されていないこと、また、管理者による承認を受けていることを確認する。この条件を満たすユーザーのみが、削除されていない全ての資料（documents）にアクセスできる。つまり、シンラボメンバーとして正規登録されたユーザーだけが資料を閲覧できる仕組み。
 
 ### 4.3. videos テーブルのRLSポリシー
 
 #### 閲覧ポリシー（SELECT）
 
 - `registered_users_can_read_videos`: 登録済みユーザーは全てのvideosを閲覧可能
-  - 条件: `is_registered_user() AND is_deleted = FALSE`
-  - 解説: documentsテーブルと同様に、`is_registered_user()`関数を使用して、ログインユーザーが正規登録されたシンラボメンバーであることを確認する。この条件を満たすユーザーのみが、論理削除されていない全ての動画（videos）にアクセスできる。会員以外の一般ユーザーは動画を閲覧できない仕組みになっている。
+  - 条件: `is_registered_user() AND is_deleted = FALSE AND status = 'active'`
+  - 解説: documentsテーブルと同様に、`is_registered_user()`関数を使用して、ログインユーザーが正規登録されたシンラボメンバーであること、また、管理者による承認を受けていることを確認する。この条件を満たすユーザーのみが、論理削除されていない全ての動画（videos）にアクセスできる。会員以外の一般ユーザーは動画を閲覧できない仕組みになっている。
 
 ## 5. サポート関数
 
@@ -240,7 +240,7 @@ RLSポリシーで使用される主要な関数は以下の通りです。
     $ LANGUAGE plpgsql SECURITY DEFINER;
     ```
   - 解説: セッション変数に設定されたClerk IDを取得する関数。RLSポリシー内で現在のユーザーを識別するために使用される。`current_setting`の第二引数が`true`の場合、設定が存在しない場合はエラーではなくNULLを返す。例外処理によってエラー発生時も安全にNULLを返すようになっている。
-- `is_registered_user()`: Clerk IDがusersテーブルに存在し、承認済みであり、かつ、削除されていないかチェックする関数
+- `is_registered_user()`: Clerk IDがusersテーブルに存在していることをチェックする関数
 
   - 定義:
 
@@ -260,8 +260,6 @@ RLSポリシーで使用される主要な関数は以下の通りです。
         SELECT 1 FROM users
         WHERE
             clerk_id = current_clerk_id
-            AND is_deleted = FALSE
-            AND status = 'active'
         );
     EXCEPTION
         WHEN OTHERS THEN RETURN FALSE;
@@ -269,9 +267,7 @@ RLSポリシーで使用される主要な関数は以下の通りです。
     $ LANGUAGE plpgsql SECURITY DEFINER;
     ```
 
-  - 解説: 現在のユーザーが正規登録されたメンバーであるかを確認する関数。まず`get_clerk_user_id()`で現在のClerk IDを取得し、そのIDがusersテーブルに存在し論理削除されていないかをチェックする。これにより未登録ユーザーやアカウント停止されたユーザーによるアクセスを防止する。  
-    また、`status` が `active` であることを確認することで、承認済みのユーザーであることを条件とする。  
-    この関数はdocumentsやvideosテーブルのRLSポリシーで使用され、登録メンバーのみがコンテンツにアクセスできるようにしている。
+  - 解説: 現在のユーザーが正規登録されたメンバーであるかを確認する関数。まず`get_clerk_user_id()`で現在のClerk IDを取得し、そのIDがusersテーブルに存在することをチェックする。これにより未登録ユーザーによるアクセスを防止する。この関数はdocumentsやvideosテーブルのRLSポリシーで使用され、登録メンバーのみがコンテンツにアクセスできるようにしている。
 
 これらの関数とRLSポリシーにより、シンラボポータルサイトでは以下のデータアクセス制御を実現しています。
 
