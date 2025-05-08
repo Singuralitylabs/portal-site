@@ -6,8 +6,8 @@ CREATE POLICY "users_can_read_own_data" ON "users"
   FOR SELECT
   USING (
     clerk_id = get_clerk_user_id()
-    AND is_deleted = FALSE
     AND status = 'active'
+    AND is_deleted = FALSE
   );
 
 -- 管理者は全ユーザーデータを閲覧可能
@@ -20,8 +20,8 @@ CREATE POLICY "admins_can_read_all_users" ON "users"
       WHERE 
         clerk_id = get_clerk_user_id()
         AND role = 'admin'
-        AND is_deleted = FALSE
         AND status = 'active'
+        AND is_deleted = FALSE
     )
   );
 
@@ -42,13 +42,13 @@ CREATE POLICY "users_can_update_own_data" ON "users"
   FOR UPDATE
   USING (
     clerk_id = get_clerk_user_id()
-    AND is_deleted = FALSE
     AND status = 'active'
+    AND is_deleted = FALSE
   )
   WITH CHECK (
     clerk_id = get_clerk_user_id()
-    AND is_deleted = FALSE
     AND status = 'active'
+    AND is_deleted = FALSE
   );
 
 -- UPDATE: 管理者はすべてのユーザー情報を更新可能
@@ -61,8 +61,8 @@ CREATE POLICY "admins_can_update_all_users" ON "users"
       WHERE 
         clerk_id = get_clerk_user_id()
         AND role = 'admin'
-        AND is_deleted = FALSE
         AND status = 'active'
+        AND is_deleted = FALSE
     )
   );
 
@@ -72,13 +72,13 @@ CREATE POLICY "users_can_delete_own_data" ON "users"
   FOR UPDATE
   USING (
     clerk_id = get_clerk_user_id()
-    AND is_deleted = FALSE
     AND status = 'active'
+    AND is_deleted = FALSE
   )
   WITH CHECK (
     clerk_id = get_clerk_user_id()
-    AND is_deleted = TRUE  -- 論理削除のみ許可
     AND status = 'active'
+    AND is_deleted = TRUE  -- 論理削除のみ許可
   );
 
 -- DELETE: 管理者はユーザーの論理削除が可能
@@ -91,8 +91,8 @@ CREATE POLICY "admins_can_delete_users" ON "users"
       WHERE 
         clerk_id = get_clerk_user_id()
         AND role = 'admin'
-        AND is_deleted = FALSE
         AND status = 'active'
+        AND is_deleted = FALSE
     )
   );
 
