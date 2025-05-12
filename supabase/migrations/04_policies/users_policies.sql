@@ -6,6 +6,7 @@ CREATE POLICY "users_can_read_own_data" ON "users"
   FOR SELECT
   USING (
     clerk_id = get_clerk_user_id()
+    AND status = 'active'
     AND is_deleted = FALSE
   );
 
@@ -19,6 +20,7 @@ CREATE POLICY "admins_can_read_all_users" ON "users"
       WHERE 
         clerk_id = get_clerk_user_id()
         AND role = 'admin'
+        AND status = 'active'
         AND is_deleted = FALSE
     )
   );
@@ -40,10 +42,12 @@ CREATE POLICY "users_can_update_own_data" ON "users"
   FOR UPDATE
   USING (
     clerk_id = get_clerk_user_id()
+    AND status = 'active'
     AND is_deleted = FALSE
   )
   WITH CHECK (
     clerk_id = get_clerk_user_id()
+    AND status = 'active'
     AND is_deleted = FALSE
   );
 
@@ -57,6 +61,7 @@ CREATE POLICY "admins_can_update_all_users" ON "users"
       WHERE 
         clerk_id = get_clerk_user_id()
         AND role = 'admin'
+        AND status = 'active'
         AND is_deleted = FALSE
     )
   );
@@ -67,10 +72,12 @@ CREATE POLICY "users_can_delete_own_data" ON "users"
   FOR UPDATE
   USING (
     clerk_id = get_clerk_user_id()
+    AND status = 'active'
     AND is_deleted = FALSE
   )
   WITH CHECK (
     clerk_id = get_clerk_user_id()
+    AND status = 'active'
     AND is_deleted = TRUE  -- 論理削除のみ許可
   );
 
@@ -84,6 +91,7 @@ CREATE POLICY "admins_can_delete_users" ON "users"
       WHERE 
         clerk_id = get_clerk_user_id()
         AND role = 'admin'
+        AND status = 'active'
         AND is_deleted = FALSE
     )
   );
