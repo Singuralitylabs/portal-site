@@ -6,7 +6,6 @@ CREATE POLICY "registered_users_can_read_videos" ON "videos"
   FOR SELECT
   USING (
     is_registered_user()
-    AND status = 'active'
     AND is_deleted = FALSE
   );
 
