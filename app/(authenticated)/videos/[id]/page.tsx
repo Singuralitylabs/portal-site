@@ -1,6 +1,6 @@
 'use server';
 
-import { fetchSingleVideo } from '@/app/services/api/videos';
+import { fetchVideoById } from '@/app/services/api/videos';
 import { VideoDetailPageTemplate } from './components/Template';
 import Link from 'next/link';
 
@@ -10,7 +10,7 @@ export default async function VideoDetailPage({
   params: Promise<{ id: number }>
 }) {
   const videoId: number = (await params).id;
-  const { data, error } = await fetchSingleVideo(videoId);
+  const { data, error } = await fetchVideoById(videoId);
   const videoData = data!.shift();
 
   if (error) {

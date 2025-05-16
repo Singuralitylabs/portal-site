@@ -15,7 +15,7 @@ export async function fetchVideos() {
   return { data, error: null };
 }
 
-export async function fetchSingleVideo(videoId: number) {
+export async function fetchVideoById(videoId: number) {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
