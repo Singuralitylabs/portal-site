@@ -9,69 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      videos: {
-        Row: {
-          id: number
-          name: string
-          description: string | null
-          category: string
-          url: string
-          thumbnail: string | null
-          length: number
-          created_by: number
-          updated_by: number
-          assignee: string | null
-          is_deleted: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          name: string
-          description?: string | null
-          category: string
-          url: string
-          thumbnail?: string | null
-          length: number
-          created_by: number
-          updated_by: number
-          assignee?: string | null
-          is_deleted?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          name?: string
-          description?: string | null
-          category?: string
-          url?: string
-          thumbnail?: string | null
-          length?: number
-          created_by?: number
-          updated_by?: number
-          assignee?: string | null
-          is_deleted?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "videos_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "videos_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       documents: {
         Row: {
           assignee: string | null

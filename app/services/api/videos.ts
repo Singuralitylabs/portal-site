@@ -15,12 +15,12 @@ export async function fetchVideos() {
   return { data, error: null };
 }
 
-export async function fetchSingleVideo(video_id: number) {
+export async function fetchSingleVideo(videoId: number) {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
     .select("*")
-    .eq("id", video_id)
+    .eq("id", videoId)
     .eq("is_deleted", false);
 
   if (error) {

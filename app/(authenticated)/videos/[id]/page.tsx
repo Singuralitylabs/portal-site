@@ -9,16 +9,16 @@ export default async function VideoDetailPage({
 }: {
   params: Promise<{ id: number }>
 }) {
-  const video_id: number = (await params).id;
-  const { data, error } = await fetchSingleVideo(video_id);
-  const video_data = data!.shift();
+  const videoId: number = (await params).id;
+  const { data, error } = await fetchSingleVideo(videoId);
+  const videoData = data!.shift();
 
   if (error) {
     return <p>データを取得できませんでした。</p>;
   }
 
-  if (video_data !== undefined) {
-    return <VideoDetailPageTemplate video={video_data} />;
+  if (videoData !== undefined) {
+    return <VideoDetailPageTemplate video={videoData} />;
   } else {
     return (
       <div style={{margin: '0.5rem 4rem'}}>
