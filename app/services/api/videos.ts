@@ -21,7 +21,8 @@ export async function fetchVideoById(videoId: number) {
     .from("videos")
     .select("*")
     .eq("id", videoId)
-    .eq("is_deleted", false);
+    .eq("is_deleted", false)
+    .maybeSingle();
 
   if (error) {
     console.error("Supabase 動画データ取得エラー:", error.message);
