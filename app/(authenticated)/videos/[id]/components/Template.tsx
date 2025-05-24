@@ -3,7 +3,6 @@
 import { VideoType } from '@/app/types';
 import { Paper, Button, Flex, Text, Grid, Divider } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
-import { GetWindowSize } from '@/app/components/GetWindowSize';
 import Link from 'next/link';
 import YouTube from 'react-youtube';
 
@@ -12,7 +11,6 @@ interface VideoDetailPageProps {
 }
 
 export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
-  const { width } = GetWindowSize(); // 画面横幅を取得
   return (
     <Paper m="0.5rem 2rem">
       <PageTitle>
@@ -20,13 +18,17 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
       </PageTitle>  
       <Paper p="1rem 0 0">
         <Flex justify="center">
-          <div className="max-w-800 shadow-md rounded-b-md c">
+          <div className="max-w-[800px] w-full shadow-md rounded-b-md">
             <div>
               <YouTube
                 videoId={video.url.replace(/(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/, "$1")}
                 title={video.name}
-                opts={{ width: ((width >= 640) ? ((width >= 1094) ? 800 : (width - 294)) : (width - 64)), height: (((width >= 640) ? ((width >= 1094) ? 800 : (width - 294)) : (width - 64)) * (9 / 16)) }}
-                style={{ border: 0, padding: 0, margin: '0 auto', aspectRatio: "16 / 9", maxWidth: 800, width: ((width >= 640) ? ((width >= 1094) ? 800 : (width - 294)) : (width - 64)) }}
+                opts={{
+                  width: "100%",
+                  height: "100%",
+                }}
+                className="mx-auto inset-0 max-w-[800px] aspect-video"
+                iframeClassName="max-w-[800px] aspect-video"
               />
             </div>
             <div>
@@ -41,7 +43,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                   <Grid.Col span={6}>
                     {/* 担当者情報 */}
                     {video.assignee && (
-                      // 担当者情報アリの場合は表示する
+                      // 担当者情報ありの場合は表示する
                       <Flex w="100%" justify="flex-end">
                         <Text>担当：{video.assignee}</Text>
                       </Flex>
