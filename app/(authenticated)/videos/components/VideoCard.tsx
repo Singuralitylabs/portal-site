@@ -1,7 +1,7 @@
 'use client';
 
 import { VideoType } from '@/app/types';
-import { Button, Card, Flex, Text } from '@mantine/core';
+import { Button, Card, Text } from '@mantine/core';
 import Image from 'next/image';
 
 interface VideoCardProps {
