@@ -19,7 +19,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
       <Paper p="1rem 0 0">
         <Flex justify="center">
           <div className="max-w-[800px] w-full shadow-md rounded-b-md">
-            <div>
+            <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <YouTube
                 videoId={video.url.replace(/(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/, "$1")}
                 title={video.name}
@@ -27,8 +27,8 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                   width: "100%",
                   height: "100%",
                 }}
-                className="mx-auto inset-0 max-w-[800px] aspect-video"
-                iframeClassName="max-w-[800px] aspect-video"
+                className="absolute inset-0 w-full h-full"
+                iframeClassName="w-full h-full"
               />
             </div>
             <div>
