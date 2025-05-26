@@ -28,7 +28,8 @@ export default function Home() {
               <Link href="/videos">動画一覧</Link>
             </h3>
             <p className="text-muted-foreground">
-              プログラミング基礎講座の動画を視聴できます。
+              シンラボ活動やスキルアップなど、<br />
+              シンラボで提供された様々な動画を視聴できます。
             </p>
           </div>
         </div>
