@@ -8,10 +8,10 @@ export default function LoginPage() {
         <span className="md:inline block">ポータルサイト</span>
       </h1>
       <p className="text-lg text-red-500 font-bold text-center mb-8">
-        <span className="md:inline block">※承認が拒否されております。</span>
+        <span className="md:inline block">※承認されませんでした。</span>
         <span className="md:inline block">管理者にお問い合わせください。</span>
       </p>
-      <GoogleLogoutButton />
+      <p> (管理者のメールアドレス) </p>
     </div>
   );
 }
