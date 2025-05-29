@@ -20,8 +20,7 @@ const GoogleLogoutButton = () => {
 
   return (
     <button
-      className="flex items-center gap-3 px-6 py-3 bg-white border-2 border-gray-200 
-        rounded-lg hover:bg-gray-50 transition-colors"
+      className="flex items-center gap-3 px-6 py-3 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
       onClick={handleLogout}
       disabled={isSigningOut}
     >
