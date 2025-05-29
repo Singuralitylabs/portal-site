@@ -1,6 +1,6 @@
 import GoogleLogoutButton from "../components/GoogleLoginButton";
 
-export default function LoginPage() {
+export default function RejectedPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100">
       <h1 className="text-3xl font-bold text-center">
@@ -11,7 +11,7 @@ export default function LoginPage() {
         <span className="md:inline block">※承認されませんでした。</span>
         <span className="md:inline block">管理者にお問い合わせください。</span>
       </p>
-      <p> (管理者のメールアドレス) </p>
+      <p> {process.env.NEXT_PUBLIC_ADMIN_EMAIL || "管理者のメールアドレスが設定されていません"} </p>
     </div>
   );
 }
