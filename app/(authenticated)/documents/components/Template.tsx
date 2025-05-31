@@ -1,7 +1,8 @@
 'use client';
 
 import { DocumentCard } from './DocumentCard';
-import { Grid, Paper, Title } from '@mantine/core';
+import { Grid, Paper } from '@mantine/core';
+import { PageTitle } from '@/app/components/PageTitle';
 
 import { DocumentType } from '@/app/types';
 
@@ -12,7 +13,7 @@ interface DocumentsPageTemplateProps  {
 export function DocumentsPageTemplate({documents} : DocumentsPageTemplateProps) {
   return (
     <Paper m="0 2rem">
-      <Title order={1} p="1.25rem 0" style={{ borderBottom: '1px solid #888' }}>資料一覧</Title>
+      <PageTitle>資料一覧</PageTitle>
 
       <Paper>
         <Grid>

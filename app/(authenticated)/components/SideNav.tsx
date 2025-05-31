@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Drawer, Button, Burger } from "@mantine/core";
-import { Menu, House, Video, FileText, User, LogOut } from "lucide-react";
+import { Drawer, Button } from "@mantine/core";
+// import { Menu, House, FileVideo, FileText, User, LogOut } from "lucide-react";
+import { Menu, House, FileVideo, FileText, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import IconImage from "../../../public/icon.png";
@@ -20,11 +21,11 @@ const navItems: NavItem[] = [
     href: "/",
     icon: <House className="h-5 w-5" />,
   },
-  // {
-  //   title: "動画一覧",
-  //   href: "/videos",
-  //   icon: <Video className="h-5 w-5" />,
-  // },
+  {
+    title: "動画一覧",
+    href: "/videos",
+    icon: <FileVideo className="h-5 w-5" />,
+  },
   {
     title: "資料一覧",
     href: "/documents",
