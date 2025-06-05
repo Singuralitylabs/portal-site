@@ -1,5 +1,5 @@
 import { currentUser, clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
+import { fetchUserStatusByClerkId } from "@/app/services/api/user";
 
 const isPublicRoute = createRouteMatcher([
   "/login(.*)",
@@ -14,13 +14,8 @@ export default clerkMiddleware(async (auth, request) => {
     // Protect all routes except public ones
     await auth.protect();
 
-    const current_user = await currentUser();
-    const userId = current_user?.id || "";
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-    );
+    const user = await currentUser();
+    const userId: string = user?.id || "";
 
     // Clerk上にユーザーIDが存在しない場合はログインページへリダイレクト
     if (!userId) {
@@ -28,21 +23,17 @@ export default clerkMiddleware(async (auth, request) => {
     }
 
     // SupabaseのUsersテーブルからユーザー情報を取得
-    const { data: user, error } = await supabase
-      .from("Users")
-      .select("status")
-      .eq("clerk_user_id", userId) // ClerkのユーザーIDで検索
-      .single();
+    const { data, error } = await fetchUserStatusByClerkId(Number(userId));
 
-    if (error || !user) {
+    if (error || !data) {
       // Usersテーブルにユーザーが見つからない場合はログインページへ
       return Response.redirect(new URL("/login", request.url));
     }
 
-    if (user.status !== "pending") {
+    if (data.status !== "pending") {
       return Response.redirect(new URL("/unapproved", request.url));
     }
-    if (user.status === "reject") {
+    if (data.status === "reject") {
       return Response.redirect(new URL("/rejected", request.url));
     }
     // statusがactiveならそのまま
