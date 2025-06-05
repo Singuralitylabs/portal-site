@@ -30,11 +30,11 @@ const navItems: NavItem[] = [
     href: "/documents",
     icon: <FileText className="h-5 w-5" />,
   },
-  // {
-  //   title: "プロフィール",
-  //   href: "/profile",
-  //   icon: <User className="h-5 w-5" />,
-  // },
+  {
+    title: "プロフィール",
+    href: "/profile",
+    icon: <User className="h-5 w-5" />,
+  },
   {
     title: "会員一覧",
     href: "/members",
