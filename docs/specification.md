@@ -180,7 +180,6 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
    ``` -->
 
    ![承認待ち画面](https://www.plantuml.com/plantuml/svg/dPDDIq9158Rt_OgpQ-72I_RDvUBrwn-qYXPABe9eaQvIOJvIr0hRH0G6sPUb9494aA7_fLVJdn5pxsGMIYKSpZi7tZdFp1o6YFo9P7GtcOXk9sU8AELHcOZ0c1kKfc5sOup3J6pjnLVd3CkCMH3Fa8yG3SWRo7l86cGEuWgovPHbWZo7V8NeGDOXdY2k8VEcDsQPNjN76eMHfirEmfbh7fyHM78rudFL3hiQNj2wejLsDRYeVTeV2NptXO9A3KCXd3gaVK7DYsY_tXVG77jUzr-s9jndgkSThd_46slrI-rU-GwCznkL_d5kmBBWTOWynC5xeJEe7VNQMV0AU1Ny34nCGzAD6eVTbnnu6xpQRHN1Jy6R40Nm4dZn4rC2lm0_0T__4-mNHufINyCUUpRAK9hMrLe-G3GXBY5k8VDWR6EqkJDEsx0S_pyFbL797z_PLB_a0m00 "承認待ち画面")
-   
 
 3. 拒否時の画面
 
