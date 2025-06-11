@@ -15,8 +15,8 @@
 
 ### 1.3 構成図
 
-```plantuml
-@startuml
+<!-- ```plantuml
+@startuml 構成図
 !pragma teoz true
 participant login as "   ログインページ   "
 participant Google as "    Google    "
@@ -58,22 +58,24 @@ SideNav -> login
 |||
 
 ' 資料一覧
-documents --> supabase : fetchDocuments()\ndocuments テーブル取得
+documents -[#000]-> supabase : fetchDocuments()\ndocuments テーブル取得
 documents -> document_card
 & note over documents : 資料カード
 |||
 
 ' 動画
-videos --> supabase : fetchVideos()\nvideos テーブル取得
+videos -[#000]-> supabase : fetchVideos()\nvideos テーブル取得
 videos -> video
 & note over videos : 動画カード
 |||
 
 ' 動画視聴ページ
-video --> supabase : fetchVideoById()\nvideos テーブル取得
+video -[#000]-> supabase : fetchVideoById()\nvideos テーブル取得
 note over video : YouTube\n埋め込み
 @enduml
-```
+``` -->
+
+![構成図](https://www.plantuml.com/plantuml/svg/VLFTYXCn6BtFKyHUL8KTUj-BOL511F72Fn0AadRIEZYT3DDCMQKNxGIqQrtqGhleWZ-BTiL54AfGiAmF4rl7jv0casaodTshcUGxv_jEJawsEnI5D6fxS7aqMWvVBWwcu5mGebORGOh9OqZ328C0XTHjk07oAVH8o_KXwi0IX92pRpp-pkDFd4qvUylPdCSp2679e5mbfELXnL7B3TXb3uSFCvHS2L2TxC0IPqFE66Vx9ecIG52oSYR3nDro7Nm3TIKs_YaaxtBsaRCHPvyvcvS0zXrO9pjoN39zkXo_-JFh9vCZivD36b4R-xGZUkcuKqOhmlq62XsDnEFZ5PpjvaOlHg__llfbzkYw3YPoeYoVEL6WDN0o6IU37nfOpNCGHNNKmR0J1V9dHLAB4l09nP1qSPXUUnNUkNczMX4BK8RhCYN1LkQnHC6AWSXisyePej0PmA2b1rSWkTn4v00Lrm50IhRiD706IHs7zv_Bgf7a_fuykOUR59AcIcmLRc9hFeyFLpSPJyGR6FuRp9RFte6o8bcsZBBPKQQxAh_9rxtaonoKqrtBNja9JCBQMyuEH6m-W7AsQzdg5sXRnOxchaeFi4ukS3h7r8EeCpVJeOkNrXqAluQWr-i1SDuKiNvWbcMlarc5JKmR3wweweMBDNyDvUo9S6NCsV7YnNXnig_tiStC5GSpCoDxc4gUF2b8irYawguehIIbe08zYfvwMnnpEUeK1RbtB3kUhkVIeslEsP8sNz4z4jsEwhZcBzwFU3n8JkPyy1jiOz-9sjv_ "構成図")
 
 ## 2. 認証機能
 
@@ -144,7 +146,7 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 
 1. 未ログイン時の画面
 
-   ```plantuml
+   <!-- ```plantuml
    @startsalt
    {+
       　　　 | 　 | 　　　
@@ -156,15 +158,17 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
       　　　 | 　 | 　　　
    }
    @endsalt
-   ```
+   ``` -->
+
+   ![未ログイン時画面](https://www.plantuml.com/plantuml/svg/fPBDIiDG48NtFiNiksXq9ILSwgfFu4fSj3Q840maMPaMviw0k77bIgaB_n2jfa8HAItsOOxw778J3Lq8LOJXm6M6ET_CN29g9caxJfDscAuGKLPpIaHWBeDwL6aPFrJucpNFs_2Cd-mT18qrp_WT0tc1ZY4vz0Pw1xs77aAkeDFYEI3eENG6cKE7a6V8DVJ8htUCNtTzp1BJNs3jH64KD-AWwu0-1W-L2-mGTWIsIobXyxVPsVl91MmEEuTSGaQGAMG2Umjx3FiAUmgMV-Dcb56rmIhnbUvJZxR0N1Qihhk9MWlB0dChYdR3m57f8-Ifc7GCvkr5t-zJ5Gt_oDjtqWpsk-wxV080 "未ログイン時画面")
 
 2. 承認待ち画面
 
-   ```plantuml
+   <!-- ```plantuml
    @startsalt
    {+
       　　　 | 　 | 　　　
-      　　　 | <size:20><b>シンギュラリティ・ラボ ポータルサイト</b></size> | 　　　
+      　　　 | <size:20><b>シンギュラリティ・ラボ ポータルサイト</b></size> | 　　　 
       　　　 | 　 | 　　　
       　　　 | 　　　　　　　　※現在、管理者による承認待ちです。 | 　　　
       　　　 | 　　　　　　　承認完了まで今しばらくお待ちください。 | 　　　
@@ -173,15 +177,18 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
       　　　 | 　 | 　　　
    }
    @endsalt
-   ```
+   ``` -->
+
+   ![承認待ち画面](https://www.plantuml.com/plantuml/svg/dPDDIq9158Rt_OgpQ-72I_RDvUBrwn-qYXPABe9eaQvIOJvIr0hRH0G6sPUb9494aA7_fLVJdn5pxsGMIYKSpZi7tZdFp1o6YFo9P7GtcOXk9sU8AELHcOZ0c1kKfc5sOup3J6pjnLVd3CkCMH3Fa8yG3SWRo7l86cGEuWgovPHbWZo7V8NeGDOXdY2k8VEcDsQPNjN76eMHfirEmfbh7fyHM78rudFL3hiQNj2wejLsDRYeVTeV2NptXO9A3KCXd3gaVK7DYsY_tXVG77jUzr-s9jndgkSThd_46slrI-rU-GwCznkL_d5kmBBWTOWynC5xeJEe7VNQMV0AU1Ny34nCGzAD6eVTbnnu6xpQRHN1Jy6R40Nm4dZn4rC2lm0_0T__4-mNHufINyCUUpRAK9hMrLe-G3GXBY5k8VDWR6EqkJDEsx0S_pyFbL797z_PLB_a0m00 "承認待ち画面")
+   
 
 3. 拒否時の画面
 
-   ```plantuml
+   <!-- ```plantuml
    @startsalt
    {+
       　　　 | 　 | 　　　
-      　　　 | <size:20><b>シンギュラリティ・ラボ ポータルサイト</b></size> | 　　　
+      　　　 | <size:20><b>シンギュラリティ・ラボ ポータルサイト</b></size> | 　　　 
       　　　 | 　 | 　　　
       　　　 | 　　　　　　　　　※承認されませんでした。| 　　　
       　　　 | 　　　　　　　　管理者にお問い合わせください。 | 　　　
@@ -190,7 +197,8 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
       　　　 | 　 | 　　　
    }
    @endsalt
-   ```
+   ``` -->
+   ![拒否時の画面](https://www.plantuml.com/plantuml/svg/dLBDIe9H4Dtt5BDtuKVBk5pq8Ne09HT2jEZxLduQTsPCD8fF26bHeVP3fE4c8iB8T_5W-XXn5Qn8a8J3uGxCdNFcC4IK2QFSOHJczgCj8efJdea8pYr0PLho0YiwJ5Wi5NQs0slo5l8AVOOCeFVGHsWFMeFSGeVpyegWrz1to0ZQXxn0xg1rayvRa_Ppx4ynsiZFylqNOpVyR8nclJDm2t8A_W1VGix13-0BS1jEDXi-7NIdpThC7OFxu9D9Am5N9yqw9F4Id80xNfIhSB9-WJKTCSNViQ_qGnKgqv61TdtQFkeRQ0Fw17dxbR7PJGL1Dh3p3_zqLV6KAHpi-Glw0W00 "拒否時の画面")
 
 ## 3. 資料一覧ページ
 
@@ -228,7 +236,7 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 
 ### 3.4 画面レイアウト
 
-```plantuml
+<!-- ```plantuml
 @startsalt
 {#
    { 
@@ -259,11 +267,13 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
    }
 }
 @endsalt
-```
+``` -->
+
+![資料一覧画面レイアウト](https://www.plantuml.com/plantuml/svg/SoWkIImgAKxCAU6gLkPIK52eLW2H2WeAZniQ7arRO1EgRMHWO61dasGNd9cNavYa491VL9AOOwEVPFUueU5nGmD2EO9bevQHdvjg1zTSQlUuUVRZvZsFcnVOw9VQGHNQ56TMfLePWConqGUnxP1DACjCISr7Dk9fzzJdKtO_sT7mOjboear9oKykpKtDAq4swCNczcVJPf9eK69oSdvfNebkJdvwVYd2kCVDQnytRNZSjEXnqxB7pHqW7RKADU0mh4PeVzpGe503jS3G31IOg6v8ieFQg503LOuId13jJtPrF-sU-NHZ0qGlFgNLobmWTjDgS9XtGWG9Yf2bHm4PrE9p55m2dwAdkvgVBjZuVCgAuUR9MgvQBeVKl1HGLWC0 "資料一覧画面レイアウト")
 
 ### 3.5 カードデザイン
 
-```plantuml
+<!-- ```plantuml
 @startsalt
 {+
    　 | <size:16><&document></size> 資料名 | 　
@@ -276,7 +286,9 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
    　 | 　 | 　
 }
 @endsalt
-```
+``` -->
+
+![資料カードデザイン](https://www.plantuml.com/plantuml/svg/SoWkIImgAKxCAU6grkPIK51utD2WKADWKvnPbMfbQ6PdevQIdroQcvfNOcUZ3nAqKtYnkVtPj9bF9_Ggr81KWpJfwYhKm0Y48N0I8VHYrPfdC_eUDxSzRbhxk6ddu-QEnmqDS8IkkXhg3YC3EnkrvCISrBoKn2AOEw1EDB5JY8oCZBG9rJOmC7Any_M5iLnS7ZSqmDnSen0DDSl2pYR9xcb7syk5ynutxN_SjC56FmdkjLY5MdGtO75Mj4rIOdAsLL9EOdAs7RBx8SWcEJydlyYgF2Ep9DKE4bYFcoQzdDRzkB7VHXyiYQxBHXzaebqiRijhkHnIyr90yGG0 "資料カードデザイン")
 
 ## 4. 動画一覧ページ
 
@@ -314,7 +326,7 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 
 ### 4.4 画面レイアウト
 
-```plantuml
+<!-- ```plantuml
 @startsalt
 {#
    { 
@@ -345,11 +357,13 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
    }
 }
 @endsalt
-```
+``` -->
+
+![動画一覧ページデザイン](https://www.plantuml.com/plantuml/svg/SoWkIImgAKxCAU6gLkPIK52eLW2H2WeAZniQ7arRO1EgRMHWO61dasGNd9cNavYa491VL9AOOwEVPFUueU5nGmD2EO9bevQHdvjg1zTSQlUuUVRZvZsFcnVOw9VQGHNQ56TMfLePWConqGUnxP1DACjCISr7Dk9fzzJdKtO_sT7mOjboear9oKykpKtDAq4swCNczcVJPf9eK69oSdvfNebkJdvwVYd2kCVDQnytRNZSjEXnqxB7pHqW7RKADU0mh4PeVzpGe503jS3G31IOg9v9ieFQg503LOuId13jZvkdGsrhNlcuUVxZvisFcpOyNRli-Vv9-BHLAtE1s4shmU7V2JMBa0XPUXIGGIrUly0ay2bwicl9iwsDJ_RC6ZxUg-MgvN98pKi1PJW0 "動画一覧ページデザイン")
 
 ### 4.5 カードデザイン
 
-```plantuml
+<!-- ```plantuml
 @startsalt
 {+
    　 |  | 　
@@ -366,7 +380,9 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
    　 | { <size:20><&calendar></size><size:14> YYYY<U+002D>MM<U+002D>DD　</size> | [ <size:8><b>分類タグ</b></size> ] } | 　
 }
 @endsalt
-```
+``` -->
+
+![動画カードデザイン](https://www.plantuml.com/plantuml/svg/SoWkIImgAKxCAU6grkPIK51utD2WKAEWK0DY4Cz_tD20WfgsFcvUyBYvzt7JaiVDgvzFsVsqkHzD3QbM8FYwkWerC08XRrESMPLgPMXcPvDazxHxwlCfknytxGVRt_6uURMDVfATZJv8YHswmIzMhNase-znSzlZfhMFctQ2rEDn9XQXQgZTHWPsDch9YJcfUIc9HJ3ReCuoiLE8Z8oCj0dLDZ0mSh7pzOMnN5mUDpGWN1ODDSi2x8sEjfSBvu6ziG7P0x4AjL0tr78vfEQbWA8F0000 "動画カードデザイン")
 
 ## 5. 動画再生ページ
 
@@ -402,7 +418,7 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 
 ### 5.4 画面レイアウト
 
-```plantuml
+<!-- ```plantuml
 @startsalt
 {#
    { 
@@ -440,7 +456,9 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
    }
 }
 @endsalt
-```
+``` -->
+
+![動画再生ページデザイン](https://www.plantuml.com/plantuml/svg/fLHDIm9H5DtxAou4BH9nQX4Xm-0FQ165YuWMemubc0Cwqw8PO-OzB45eOqeV41PXP1b2YugC_eitRLpv5-BDJECe2dt0cyVbtllEk-USnqHpYfXLSc9Q2MWp0G3GWEq0W8RHgTRuM721upY1ZmjhgKnQZCEAd5N4D1-E2sWOQ1Z3zc74psxBEvBW7LO5fET8sqXhV5WLt4O-bzgJ8Xp3uSCi5lm8kwca9FiXkgNAv_7hnxDXrMz-Z9AK4-gEb57yGDRZOQzw-aiWCP6GrOmIIijRiZg4Gzf4qa9oXQIEjCXEv46tDTH6SESNcOOE1oJlIAwH5f7UCI7TwtIO0_Qvvq8XqB-tuIJE0Xsqe9jqyg03w3uN_fJry9srBgkA6fVSeKTh_xziF3k1hzUhmOQhuv8jO_6WVtbXozZo2GYROnnwfKBthJned-tpJcWP1S5nQD90u_oPyPxFPQI7I1feFlGhJsXM1kqpZejm74oXPpEPaEzKQxqwiUhcvBBLkE-T724zGD94yeAqEANFViInrMKq6sZUJlLpf93twpFofZm_t48-a0z4fKoI_Hc-0000 "動画再生ページデザイン")
 
 ## 6. 今後の機能拡充予定
 
