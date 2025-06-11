@@ -13,6 +13,68 @@
 - ユーザーフィードバックを基に改善・拡張
 - 既存システムとの整合性を維持
 
+### 1.3 構成図
+
+```plantuml
+@startuml
+!pragma teoz true
+participant login as "   ログインページ   "
+participant Google as "    Google    "
+participant Clerk as "    Clerk    "
+box "トップ"
+participant top as "トップページ"
+participant SideNav as "サイドメニュー"
+end box
+box "資料一覧"
+participant documents as "資料一覧ページ"
+participant document_card as "資料カード"
+end box
+box "動画"
+participant videos as "動画一覧ページ"
+participant video as "動画視聴ページ"
+end box
+database supabase as "supabase"
+note over login : URL:/login
+& note over top, SideNav : URL: /
+& note over documents, document_card : URL: /documents
+& note over videos : URL: /videos
+& note over video : URL: /videos/id
+
+login -> Google
+& note over login : 「Googleログイン」
+note left of Google : Googleログイン\nアカウント選択
+& Google -> Clerk
+note left of Clerk : Clerk認証
+& Clerk -> top
+
+note left of SideNav : ホーム
+& SideNav -> SideNav
+SideNav -> documents
+& note over top, SideNav : 資料一覧
+SideNav -> videos
+& note over top, SideNav : 動画一覧
+SideNav -> login
+& note over SideNav : ログアウト
+|||
+
+' 資料一覧
+documents --> supabase : fetchDocuments()\ndocuments テーブル取得
+documents -> document_card
+& note over documents : 資料カード
+|||
+
+' 動画
+videos --> supabase : fetchVideos()\nvideos テーブル取得
+videos -> video
+& note over videos : 動画カード
+|||
+
+' 動画視聴ページ
+video --> supabase : fetchVideoById()\nvideos テーブル取得
+note over video : YouTube\n埋め込み
+@enduml
+```
+
 ## 2. 認証機能
 
 ### 2.1 機能概要
