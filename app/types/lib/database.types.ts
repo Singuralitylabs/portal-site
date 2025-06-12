@@ -77,6 +77,7 @@ export type Database = {
           role: string
           status: string
           updated_at: string
+          bio: string
         }
         Insert: {
           clerk_id: string
@@ -88,6 +89,7 @@ export type Database = {
           role?: string
           status?: string
           updated_at?: string
+          bio?: string
         }
         Update: {
           clerk_id?: string
@@ -99,6 +101,7 @@ export type Database = {
           role?: string
           status?: string
           updated_at?: string
+          bio?: string
         }
         Relationships: []
       }
