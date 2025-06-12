@@ -202,16 +202,9 @@ npm install @clerk/nextjs
    ```
 
 2. TypeScriptのエラー
-
    ```bash
    # TypeScriptの型定義を更新
    npm run build
-   ```
-
-3. npm コマンドが実行できない場合
-   ```bash
-   # ローカル環境にnpmをインストール
-   nvm install stable --latest-npm
    ```
 
 不明な点がある場合は、Slackの`201-club_チーム開発`チャンネルで質問してください。
