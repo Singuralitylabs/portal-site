@@ -16,6 +16,9 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 3. **動画情報**（`videos`テーブル）  
    再生時間やリンクなどの動画情報を管理します。
 
+4. **カテゴリー情報**（`categories`テーブル）  
+   ドキュメントや動画情報のカテゴリー種別を管理します。
+
 ## 2. テーブル設計
 
 ### 2.1. users テーブル
@@ -71,6 +74,20 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                         |
 | `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                         |
 
+### 2.4. categories テーブル
+
+| カラム名        | データ型       | 制約                                | 説明                              |
+| --------------- | -------------- | ----------------------------------- | --------------------------------- |
+| `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）    |
+| `category_type` | `VARCHAR(50)`  | NOT NULL                            | カテゴリーの種別（例: documents） |
+| `name`          | `VARCHAR(100)` | NOT NULL                            | カテゴリー名 （例: 事務局資料）   |
+| `description`   | `TEXT`         |                                     | カテゴリーの説明文                |
+| `created_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL     | 作成したユーザー                  |
+| `updated_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL     | 最後に更新したユーザー            |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                    |
+| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                          |
+| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                          |
+
 ## 3. ER図
 
 ```mermaid
@@ -118,8 +135,22 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
+    categories {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        VARCHAR category_name "カテゴリー種別 (最大50文字)"
+        VARCHAR name "カテゴリー名 (最大100文字)"
+        TEXT description "カテゴリーの説明文"
+        INTEGER created_by FK "作成したユーザー (users.id)"
+        INTEGER updated_by FK "最後に更新したユーザー (users.id)"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
     users ||--o{ documents : "1:N"
     users ||--o{ videos : "1:N"
+    documents ||--|| categories : "N:N"
+    videos ||--|| categories : "N:N"
 ```
 
 ## 4. Row Level Security（RLS）ポリシー
@@ -214,6 +245,14 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - `registered_users_can_read_videos`: 登録済みユーザーは全てのvideosを閲覧可能
   - 条件: `is_registered_user() AND status = 'active' AND is_deleted = FALSE`
   - 解説: documentsテーブルと同様に、`is_registered_user()`関数を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全ての動画（videos）にアクセスできる。会員以外の一般ユーザーは動画を閲覧できない仕組みになっている。
+
+### 4.4. categories テーブルのRLSポリシー
+
+#### 閲覧ポリシー（SELECT）
+
+- `registered_users_can_read_categories`: 登録済みユーザーは全てのcategoriesを閲覧可能
+  - 条件: `is_registered_user() AND status = 'active' AND is_deleted = FALSE`
+  - 解説: documentsテーブルと同様に、`is_registered_user()`関数を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全てのカテゴリー（categories）にアクセスできる。会員以外の一般ユーザーは閲覧できない仕組みになっている。
 
 ## 5. サポート関数
 
