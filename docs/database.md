@@ -44,7 +44,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `id`          | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）     |
 | `name`        | `VARCHAR(255)` | NOT NULL                            | 資料名                             |
 | `description` | `TEXT`         |                                     | 資料の説明文                       |
-| `category`    | `VARCHAR(100)` | NOT NULL                            | 資料の分類（例: 事務局資料）       |
+| `category_id` | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 資料の分類（例: 10,11）       |
 | `url`         | `TEXT`         | NOT NULL                            | 資料へのリンク（Googleドライブ等） |
 | `created_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL     | 資料を作成したユーザー             |
 | `updated_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL     | 資料を最後に更新したユーザー       |
@@ -62,7 +62,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `id`             | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）   |
 | `name`           | `VARCHAR(255)` | NOT NULL                            | 動画名                           |
 | `description`    | `TEXT`         |                                     | 動画の説明文                     |
-| `category`       | `VARCHAR(100)` | NOT NULL                            | 動画の分類（例: GAS講座）        |
+| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類（例: 20,21）       |
 | `url`            | `TEXT`         | NOT NULL                            | 動画へのリンク（Youtube等）      |
 | `thumbnail_path` | `TEXT`         |                                     | サムネイル画像パス               |
 | `thumbnail_time` | `INTEGER`      |                                     | サムネイルのタイミング（秒換算） |
@@ -108,7 +108,7 @@ erDiagram
         SERIAL id PK "レコードの一意な識別子（連番）"
         VARCHAR name "資料名 (最大255文字)"
         TEXT description "資料の説明文"
-        VARCHAR category "資料の分類（例: 事務局資料） (最大100文字)"
+        INTEGER category_id FK "資料のカテゴリー（categories.id）"
         TEXT url "資料へのリンク（Googleドライブ等）"
         INTEGER created_by FK "資料を作成したユーザー (users.id)"
         INTEGER updated_by FK "資料を最後に更新したユーザー (users.id)"
@@ -122,7 +122,7 @@ erDiagram
         SERIAL id PK "レコードの一意な識別子（連番）"
         VARCHAR name "動画名 (最大255文字)"
         TEXT description "動画の説明文"
-        VARCHAR category "動画の分類（例: GAS講座） (最大100文字)"
+        INTEGER category_id FK "動画のカテゴリー（categories.id）"
         TEXT url "動画へのリンク（Youtube等）"
         TEXT thumbnail_path "サムネイル画像パス"
         INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
@@ -149,8 +149,8 @@ erDiagram
 
     users ||--o{ documents : "1:N"
     users ||--o{ videos : "1:N"
-    documents ||--|| categories : "N:N"
-    videos ||--|| categories : "N:N"
+    categories ||--o{ documents : "1:N"
+    categories ||--o{ videos : "1:N"
 ```
 
 ## 4. Row Level Security（RLS）ポリシー
