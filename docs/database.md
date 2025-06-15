@@ -31,6 +31,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `display_name` | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                        |
 | `role`         | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, admin）             |
 | `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected） |
+| `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                            |
 | `is_deleted`   | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                  |
 | `created_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                        |
 | `updated_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                        |
@@ -99,6 +100,7 @@ erDiagram
         VARCHAR display_name "Googleアカウントの表示名 (最大100文字)"
         VARCHAR role "ユーザーの役割（例: member, admin） (最大50文字)"
         VARCHAR status "ユーザーの状態（例: pending, active, rejected） (最大50文字)"
+        VARCHAR bio "ユーザーの自己紹介文 (最大500文字)"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
