@@ -17,7 +17,7 @@ export function VideoCard({ video }: VideoCardProps) {
       <Card.Section>
         <div style={{ position: 'relative', margin: '0 auto', width: 'calc(12rem * 16 / 9)', height: 'calc(12rem - 2px)', aspectRatio: '16/9' }}>
           <Image
-            src={thumbnailUrl}
+            src={video.thumbnail_path || 'https://img.youtube.com/vi/' + video.url.replace(/(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/, "$1") + '/hqdefault.jpg' || '/default_video_thumbnail.png'}
             alt={video.name}
             fill
             style={{ objectFit: 'cover' }}
