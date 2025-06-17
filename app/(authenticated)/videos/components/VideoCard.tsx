@@ -12,12 +12,12 @@ export function VideoCard({ video }: VideoCardProps) {
   return (
     <Card component="a" href={`/videos/${video.id}`} shadow="sm" padding="0" radius="md" w="100%" withBorder className="hover:shadow-lg transition-shadow">
       <Card.Section>
-        <div style={{ position: 'relative', width: '100%', height: '12rem' }}>
+        <div style={{ position: 'relative', margin: '0 auto', width: 'calc(12rem * 16 / 9)', height: 'calc(12rem - 2px)', aspectRatio: '16/9' }}>
           <Image
-            src={video.thumbnail_path || '/default_video_thumbnail.png'}
+            src={video.thumbnail_path || 'https://img.youtube.com/vi/' + video.url.replace(/(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/, "$1") + '/hqdefault.jpg' || '/default_video_thumbnail.png'}
             alt={video.name}
             fill
-            style={{ objectFit: 'cover', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}
+            style={{ objectFit: 'cover' }}
           />
         </div>
       </Card.Section>
