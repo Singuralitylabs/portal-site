@@ -2,46 +2,9 @@ import { currentUser } from '@clerk/nextjs/server';
 import { getUserByClerkId, updateUserProfile } from '@/app/services/api/user';
 import { Template } from './components/Template';
 
-// プロフィール更新用のサーバーアクション
-async function updateProfileAction(displayName: string, bio: string) {
-  'use server';
-  
-  // Clerk認証情報の取得（例外が発生する可能性あり）
-  let idpUser;
-  try {
-    idpUser = await currentUser();
-  } catch (error) {
-    console.error('認証情報取得エラー:', error);
-    return { success: false, message: '認証情報の取得に失敗しました' };
-  }
-  
-  if (!idpUser) {
-    return { success: false, message: 'ユーザー認証情報が見つかりません' };
-  }
-  
-  // Supabaseからユーザー情報を取得
-  const { data: user, error: getUserError } = await getUserByClerkId(idpUser.id);
-  if (getUserError || !user) {
-    return { success: false, message: 'ユーザーデータが見つかりません' };
-  }
-  
-  // ユーザープロフィールを更新
-  const { error: updateError } = await updateUserProfile({
-    id: user.id,
-    displayName,
-    bio,
-  });
-  
-  if (updateError) {
-    return { success: false, message: 'プロフィールの更新に失敗しました' };
-  }
-  
-  return { success: true };
-}
-
 export default async function ProfilePage() {
   // Clerk認証情報の取得（例外が発生する可能性あり）
-  let idpUser;
+  let idpUser: any;
   try {
     idpUser = await currentUser();
   } catch (error) {
@@ -80,5 +43,28 @@ export default async function ProfilePage() {
     bio: user?.bio || '',
   };
 
-  return <Template initialUser={userData} updateProfile={updateProfileAction} />;
+  // プロフィール更新用のサーバーアクション
+  const updateProfile = async (displayName: string, bio: string) => {
+    'use server';
+    
+    // 既に取得済みのユーザー情報を使用
+    if (!user) {
+      return { success: false, message: 'ユーザーデータが見つかりません' };
+    }
+    
+    // ユーザープロフィールを更新
+    const { error: updateError } = await updateUserProfile({
+      id: user.id,
+      displayName,
+      bio,
+    });
+    
+    if (updateError) {
+      return { success: false, message: 'プロフィールの更新に失敗しました' };
+    }
+    
+    return { success: true };
+  }
+
+  return <Template initialUser={userData} updateProfile={updateProfile} />;
 }
