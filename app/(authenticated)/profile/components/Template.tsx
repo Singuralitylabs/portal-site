@@ -2,46 +2,65 @@
 
 import { PageTitle } from '@/app/components/PageTitle';
 import { Button, Paper, TextInput, Textarea, Notification } from '@mantine/core';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface User {
+  id: number;
   name: string;
   role: string;
   joinedAt: string;
   bio: string;
 }
 
-interface ProfileTemplateProps {
-  user: User;
+interface TemplateProps {
+  initialUser: User;
+  updateProfile: (displayName: string, bio: string) => Promise<{ success: boolean; message?: string }>;
 }
 
-export function ProfileTemplate({ user }: ProfileTemplateProps) {
-  const [name, setName] = useState(user.name);
-  const [bio, setBio] = useState(user.bio || '');
+export function Template({ initialUser, updateProfile }: TemplateProps) {
+  const [user, setUser] = useState<User>(initialUser);
+  const [name, setName] = useState(initialUser.name);
+  const [bio, setBio] = useState(initialUser.bio || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('プロフィールの更新に失敗しました');
 
+  // 初期ユーザー情報が更新されたら、状態を更新
+  useEffect(() => {
+    setUser(initialUser);
+    setName(initialUser.name);
+    setBio(initialUser.bio || '');
+  }, [initialUser]);
+
+  // プロフィール更新処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      // ここで実際のプロフィール更新処理を実装
-      // 例: await updateUserProfile({ name, bio });
-      console.log('Profile update:', { name, bio });
+    // サーバーアクションを呼び出してプロフィールを更新
+    const result = await updateProfile(name, bio);
+
+    if (result.success) {
+      // 更新成功時にユーザー情報を更新（実際のデータはサーバーから再取得される）
+      setUser({
+        ...user,
+        name: name,
+        bio: bio
+      });
       
       // 成功通知
       setShowSuccessNotification(true);
       setTimeout(() => setShowSuccessNotification(false), 3000);
-    } catch (error) {
-      console.error('プロフィール更新エラー:', error);
+    } else {
+      // エラー通知
+      console.error('プロフィール更新エラー:', result.message);
+      setErrorMessage(result.message || 'プロフィールの更新に失敗しました');
       setShowErrorNotification(true);
       setTimeout(() => setShowErrorNotification(false), 3000);
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    setIsSubmitting(false);
   };
 
   return (
@@ -83,7 +102,7 @@ export function ProfileTemplate({ user }: ProfileTemplateProps) {
           onClose={() => setShowErrorNotification(false)}
           className="mb-4"
         >
-          プロフィールの更新に失敗しました
+          {errorMessage}
         </Notification>
       )}
 
