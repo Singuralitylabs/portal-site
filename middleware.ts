@@ -1,14 +1,42 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { currentUser, clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { fetchUserStatusByClerkId } from "@/app/services/api/user";
 
 const isPublicRoute = createRouteMatcher([
   "/login(.*)",
   "/sso-callback",
   "/services/api/webhooks(.*)",
+  "/unapproved",
+  "/rejected",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
+    // Protect all routes except public ones
     await auth.protect();
+
+    const user = await currentUser();
+    const userId: string = user?.id || "";
+
+    // Clerk上にユーザーIDが存在しない場合はログインページへリダイレクト
+    if (!userId) {
+      return Response.redirect(new URL("/login", request.url));
+    }
+
+    // SupabaseのUsersテーブルからユーザー情報を取得
+    const { data, error } = await fetchUserStatusByClerkId(Number(userId));
+
+    if (error || !data) {
+      // Usersテーブルにユーザーが見つからない場合はログインページへ
+      return Response.redirect(new URL("/login", request.url));
+    }
+
+    if (data.status !== "pending") {
+      return Response.redirect(new URL("/unapproved", request.url));
+    }
+    if (data.status === "reject") {
+      return Response.redirect(new URL("/rejected", request.url));
+    }
+    // statusがactiveならそのまま
   }
 });
 
