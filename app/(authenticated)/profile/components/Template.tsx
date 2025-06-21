@@ -1,7 +1,7 @@
 'use client';
 
 import { PageTitle } from '@/app/components/PageTitle';
-import { Button, Paper, TextInput, Textarea, Notification } from '@mantine/core';
+import { Button, TextInput, Textarea, Notification } from '@mantine/core';
 import { useState, useEffect } from 'react';
 
 interface User {
@@ -64,11 +64,11 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
   };
 
   return (
-    <Paper m="0 2rem">
+    <div className="mx-8">
       <PageTitle>プロフィール</PageTitle>
 
       {/* プロフィール情報表示 */}
-      <Paper p="md" mb="xl">
+      <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
         <div className="mb-4">
           <h2 className="text-2xl font-bold">{user.name}</h2>
           <div className="flex items-center gap-4 mt-2">
@@ -81,7 +81,7 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
           </div>
         </div>
         <p className="text-gray-700">{user.bio || '自己紹介はまだ設定されていません。'}</p>
-      </Paper>
+      </div>
 
       {/* 通知 */}
       {showSuccessNotification && (
@@ -107,7 +107,7 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
       )}
 
       {/* プロフィール編集フォーム */}
-      <Paper p="md" mb="xl">
+      <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
@@ -139,7 +139,7 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
             </Button>
           </div>
         </form>
-      </Paper>
-    </Paper>
+      </div>
+    </div>
   );
 }
