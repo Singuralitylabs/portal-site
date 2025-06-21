@@ -1,7 +1,8 @@
 'use client';
 
 import { PageTitle } from '@/app/components/PageTitle';
-import { Button, TextInput, Textarea, Notification } from '@mantine/core';
+import { Button, TextInput, Textarea } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { useState, useEffect } from 'react';
 
 interface User {
@@ -22,9 +23,6 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
   const [name, setName] = useState(initialUser.name);
   const [bio, setBio] = useState(initialUser.bio || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
-  const [showErrorNotification, setShowErrorNotification] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('プロフィールの更新に失敗しました');
 
   // 初期ユーザー情報が更新されたら、状態を更新
   useEffect(() => {
@@ -50,14 +48,21 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
       });
       
       // 成功通知
-      setShowSuccessNotification(true);
-      setTimeout(() => setShowSuccessNotification(false), 3000);
+      notifications.show({
+        title: '成功',
+        message: 'プロフィールを更新しました',
+        color: 'green',
+        autoClose: 3000,
+      });
     } else {
       // エラー通知
       console.error('プロフィール更新エラー:', result.message);
-      setErrorMessage(result.message || 'プロフィールの更新に失敗しました');
-      setShowErrorNotification(true);
-      setTimeout(() => setShowErrorNotification(false), 3000);
+      notifications.show({
+        title: 'エラー',
+        message: result.message || 'プロフィールの更新に失敗しました',
+        color: 'red',
+        autoClose: 3000,
+      });
     }
     
     setIsSubmitting(false);
@@ -83,28 +88,6 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
         <p className="text-gray-700">{user.bio || '自己紹介はまだ設定されていません。'}</p>
       </div>
 
-      {/* 通知 */}
-      {showSuccessNotification && (
-        <Notification
-          title="成功"
-          color="green"
-          onClose={() => setShowSuccessNotification(false)}
-          className="mb-4"
-        >
-          プロフィールを更新しました
-        </Notification>
-      )}
-      
-      {showErrorNotification && (
-        <Notification
-          title="エラー"
-          color="red"
-          onClose={() => setShowErrorNotification(false)}
-          className="mb-4"
-        >
-          {errorMessage}
-        </Notification>
-      )}
 
       {/* プロフィール編集フォーム */}
       <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
@@ -134,7 +117,10 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
               />
             </div>
 
-            <Button type="submit" loading={isSubmitting}>
+            <Button 
+              type="submit" 
+              loading={isSubmitting}
+            >
               保存
             </Button>
           </div>
