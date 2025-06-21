@@ -80,7 +80,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | カラム名        | データ型       | 制約                                | 説明                              |
 | --------------- | -------------- | ----------------------------------- | --------------------------------- |
 | `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）    |
-| `category_type` | `VARCHAR(50)`  | NOT NULL                            | カテゴリーの種別（例: documents） |
+| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos`   | カテゴリーの種別 |
 | `name`          | `VARCHAR(100)` | NOT NULL                            | カテゴリー名 （例: 事務局資料）   |
 | `description`   | `TEXT`         |                                     | カテゴリーの説明文                |
 | `created_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL     | 作成したユーザー                  |
@@ -139,7 +139,7 @@ erDiagram
 
     categories {
         SERIAL id PK "レコードの一意な識別子（連番）"
-        VARCHAR category_name "カテゴリー種別 (最大50文字)"
+        VARCHAR category_type "カテゴリー種別 (documents OR videos) (最大50文字)"
         VARCHAR name "カテゴリー名 (最大100文字)"
         TEXT description "カテゴリーの説明文"
         INTEGER created_by FK "作成したユーザー (users.id)"
