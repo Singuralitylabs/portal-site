@@ -3,15 +3,16 @@ ALTER TABLE videos
 ADD COLUMN category_id INTEGER;
 
 -- 既存データの置換
-UPDATE videos  SET category_id = 20 WHERE category = '全体交流会';
-UPDATE videos  SET category_id = 21 WHERE category = 'テクノロジー交流会';
-UPDATE videos  SET category_id = 22 WHERE category = 'ボードゲーム';
-UPDATE videos  SET category_id = 23 WHERE category = 'GAS基礎講座';
-UPDATE videos  SET category_id = 24 WHERE category = 'GASアプリ解説';
-UPDATE videos  SET category_id = 25 WHERE category = 'コンサルエッグ';
-
--- 残りの行に不明として 0 を入れる（カテゴリーなし）
-UPDATE videos  SET category_id = 0 WHERE category_id IS NULL;
+UPDATE videos
+SET category_id = CASE
+    WHEN category = '全体交流会' THEN 7
+    WHEN category = 'テクノロジー交流会' THEN 8
+    WHEN category = 'ボードゲーム' THEN 9
+    WHEN category = 'GAS基礎講座' THEN 10
+    WHEN category = 'GASアプリ解説' THEN 11
+    WHEN category = 'コンサルエッグ' THEN 12
+    ELSE 6 -- 未分類
+END;
 
 -- カラムに NOT NULL を追加
 ALTER TABLE videos
