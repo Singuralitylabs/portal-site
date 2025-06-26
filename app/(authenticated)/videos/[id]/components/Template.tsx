@@ -3,7 +3,7 @@
 import { VideoWithCategoryType } from '@/app/types';
 import { Paper, Button, Flex, Text, Grid, Divider } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
-import { YoutubeVideoId } from '@/app/components/YoutubeVideoId';
+import { GetYouTubeVideoId } from '@/app/components/GetYouTubeVideoId';
 import Link from 'next/link';
 import YouTube from 'react-youtube';
 
@@ -22,7 +22,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
           <div className="max-w-[800px] w-full shadow-md rounded-b-md">
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <YouTube
-                videoId={YoutubeVideoId({ url: video.url })}
+                videoId={GetYouTubeVideoId({ url: video.url })}
                 title={video.name}
                 opts={{
                   width: "100%",

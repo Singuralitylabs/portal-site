@@ -3,19 +3,31 @@
 import { VideoWithCategoryType } from '@/app/types';
 import { Button, Card, Text } from '@mantine/core';
 import Image from 'next/image';
-import { YoutubeVideoId } from '@/app/components/YoutubeVideoId';
+import { GetYouTubeVideoId } from '@/app/components/GetYouTubeVideoId';
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
 }
 
+function GetThumbnailUrl(video: VideoType): string {
+  if (video.thumbnail_path) {
+    return video.thumbnail_path;
+  }
+
+  const videoId = GetYouTubeVideoId({ url: video.url });
+  if (videoId) {
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  }
+
+  return "/default_video_thumbnail.png";
+}
+
 export function VideoCard({ video }: VideoCardProps) {
-  const VideoId = YoutubeVideoId({ url: video.url });
-  const thumbnailUrl = video.thumbnail_path || (VideoId ? `https://img.youtube.com/vi/${VideoId}/hqdefault.jpg` : '/default_video_thumbnail.png');
+  const thumbnailUrl = GetThumbnailUrl(video);
   return (
     <Card component="a" href={`/videos/${video.id}`} shadow="sm" padding="0" radius="md" w="100%" withBorder className="hover:shadow-lg transition-shadow">
       <Card.Section>
-        <div style={{ position: 'relative', margin: '0 auto', width: 'calc(12rem * 16 / 9)', height: 'calc(12rem - 2px)', aspectRatio: '16/9' }}>
+        <div className="aspect-video" style={{ position: 'relative', margin: '0 auto' }}>
           <Image
             src={video.thumbnail_path || 'https://img.youtube.com/vi/' + video.url.replace(/(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/, "$1") + '/hqdefault.jpg' || '/default_video_thumbnail.png'}
             alt={video.name}
