@@ -9,7 +9,7 @@ interface VideoCardProps {
   video: VideoWithCategoryType;
 }
 
-function GetThumbnailUrl(video: VideoType): string {
+function getThumbnailUrl(video: VideoType): string {
   if (video.thumbnail_path) {
     return video.thumbnail_path;
   }
@@ -23,7 +23,7 @@ function GetThumbnailUrl(video: VideoType): string {
 }
 
 export function VideoCard({ video }: VideoCardProps) {
-  const thumbnailUrl = GetThumbnailUrl(video);
+  const thumbnailUrl = getThumbnailUrl(video);
   return (
     <Card component="a" href={`/videos/${video.id}`} shadow="sm" padding="0" radius="md" w="100%" withBorder className="hover:shadow-lg transition-shadow">
       <Card.Section>
