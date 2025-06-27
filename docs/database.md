@@ -16,6 +16,9 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 3. **動画情報**（`videos`テーブル）  
    再生時間やリンクなどの動画情報を管理します。
 
+4. **カテゴリー情報**（`categories`テーブル）  
+   ドキュメントや動画情報のカテゴリー種別を管理します。
+
 ## 2. テーブル設計
 
 ### 2.1. users テーブル
@@ -42,7 +45,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `id`          | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）     |
 | `name`        | `VARCHAR(255)` | NOT NULL                            | 資料名                             |
 | `description` | `TEXT`         |                                     | 資料の説明文                       |
-| `category`    | `VARCHAR(100)` | NOT NULL                            | 資料の分類（例: 事務局資料）       |
+| `category_id` | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 資料の分類       |
 | `url`         | `TEXT`         | NOT NULL                            | 資料へのリンク（Googleドライブ等） |
 | `created_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL     | 資料を作成したユーザー             |
 | `updated_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL     | 資料を最後に更新したユーザー       |
@@ -60,7 +63,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `id`             | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）   |
 | `name`           | `VARCHAR(255)` | NOT NULL                            | 動画名                           |
 | `description`    | `TEXT`         |                                     | 動画の説明文                     |
-| `category`       | `VARCHAR(100)` | NOT NULL                            | 動画の分類（例: GAS講座）        |
+| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類       |
 | `url`            | `TEXT`         | NOT NULL                            | 動画へのリンク（Youtube等）      |
 | `thumbnail_path` | `TEXT`         |                                     | サムネイル画像パス               |
 | `thumbnail_time` | `INTEGER`      |                                     | サムネイルのタイミング（秒換算） |
@@ -71,6 +74,18 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                   |
 | `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                         |
 | `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                         |
+
+### 2.4. categories テーブル
+
+| カラム名        | データ型       | 制約                                | 説明                              |
+| --------------- | -------------- | ----------------------------------- | --------------------------------- |
+| `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）    |
+| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos`   | カテゴリーの種別 |
+| `name`          | `VARCHAR(100)` | NOT NULL                            | カテゴリー名 （例: 事務局資料）   |
+| `description`   | `TEXT`         |                                     | カテゴリーの説明文                |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                    |
+| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                          |
+| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                          |
 
 ## 3. ER図
 
@@ -93,7 +108,7 @@ erDiagram
         SERIAL id PK "レコードの一意な識別子（連番）"
         VARCHAR name "資料名 (最大255文字)"
         TEXT description "資料の説明文"
-        VARCHAR category "資料の分類（例: 事務局資料） (最大100文字)"
+        INTEGER category_id FK "資料のカテゴリー（categories.id）"
         TEXT url "資料へのリンク（Googleドライブ等）"
         INTEGER created_by FK "資料を作成したユーザー (users.id)"
         INTEGER updated_by FK "資料を最後に更新したユーザー (users.id)"
@@ -107,7 +122,7 @@ erDiagram
         SERIAL id PK "レコードの一意な識別子（連番）"
         VARCHAR name "動画名 (最大255文字)"
         TEXT description "動画の説明文"
-        VARCHAR category "動画の分類（例: GAS講座） (最大100文字)"
+        INTEGER category_id FK "動画のカテゴリー（categories.id）"
         TEXT url "動画へのリンク（Youtube等）"
         TEXT thumbnail_path "サムネイル画像パス"
         INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
@@ -120,8 +135,20 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
+    categories {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        VARCHAR category_type "カテゴリー種別 (documents OR videos) (最大50文字)"
+        VARCHAR name "カテゴリー名 (最大100文字)"
+        TEXT description "カテゴリーの説明文"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
     users ||--o{ documents : "1:N"
     users ||--o{ videos : "1:N"
+    categories ||--o{ documents : "1:N"
+    categories ||--o{ videos : "1:N"
 ```
 
 ## 4. Row Level Security（RLS）ポリシー
@@ -216,6 +243,14 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - `registered_users_can_read_videos`: 登録済みユーザーは全てのvideosを閲覧可能
   - 条件: `is_registered_user() AND status = 'active' AND is_deleted = FALSE`
   - 解説: documentsテーブルと同様に、`is_registered_user()`関数を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全ての動画（videos）にアクセスできる。会員以外の一般ユーザーは動画を閲覧できない仕組みになっている。
+
+### 4.4. categories テーブルのRLSポリシー
+
+#### 閲覧ポリシー（SELECT）
+
+- `registered_users_can_read_categories`: 登録済みユーザーは全てのcategoriesを閲覧可能
+  - 条件: `is_registered_user() AND status = 'active' AND is_deleted = FALSE`
+  - 解説: documentsテーブルと同様に、`is_registered_user()`関数を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全てのカテゴリー（categories）にアクセスできる。会員以外の一般ユーザーは閲覧できない仕組みになっている。
 
 ## 5. サポート関数
 
