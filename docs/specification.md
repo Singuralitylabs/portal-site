@@ -17,31 +17,92 @@
 
 ### 2.1 機能概要
 
-Clerkを使用したGoogleアカウントでの認証機能を提供し、ログインしたメンバーの情報をSupabaseのデータベースで管理する。
+Supabase Authを使用したGoogleアカウントでの認証機能を提供し、ログインしたメンバーの情報をSupabaseのデータベースで管理する。
+
+- **認証プロバイダー**: Supabase Auth（Google OAuth）
+- **データ管理**: Supabase PostgreSQL
+- **権限制御**: Row Level Security（RLS）
+- **セッション管理**: Supabase Auth
 
 ### 2.2 実装方針
 
 1. 認証基盤
 
-   - Clerkを使用したGoogle OAuth認証
-   - ログイン後のセッション管理
+   - Supabase AuthによるGoogle OAuth認証
+   - 認証とデータ管理の一元化
+   - 自動セッション管理
 
 2. データ管理
 
    - 初回ログイン時にSupabaseのusersテーブルにメンバー情報を登録
    - 登録情報：
-     - clerk_id（Clerkから発行されるID）
+     - auth_id（Supabase AuthのユーザーUUID）
      - email（Googleアカウントのメールアドレス）
      - display_name（Googleアカウントの表示名）
      - role（デフォルト：`member`）
      - status（デフォルト：`pending`）
 
-### 2.3 基本機能
+### 2.3 認証フロー詳細
+
+#### 2.3.1 初回ログインフロー
+
+```mermaid
+sequenceDiagram
+    participant U as ユーザー
+    participant L as ログイン画面
+    participant G as Google OAuth
+    participant SA as Supabase Auth
+    participant CB as コールバック処理
+    participant DB as usersテーブル
+    participant P as 承認待ち画面
+
+    U->>L: ログイン画面アクセス
+    U->>L: [Googleでログイン]ボタンクリック
+    L->>SA: signInWithOAuth({provider: 'google'})
+    SA->>G: Google OAuth認証リクエスト
+    G->>U: Google認証画面表示
+    U->>G: 認証情報入力・承認
+    G->>CB: 認証コード付きでコールバック
+    CB->>SA: exchangeCodeForSession(code)
+    SA->>CB: セッション作成完了
+    CB->>DB: ユーザー情報をusersテーブルに登録
+    Note over DB: status='pending'で登録
+    CB->>P: 承認待ち画面にリダイレクト
+```
+
+#### 2.3.2 既存ユーザーログインフロー
+
+```mermaid
+sequenceDiagram
+    participant U as ユーザー
+    participant L as ログイン画面
+    participant SA as Supabase Auth
+    participant MW as Middleware
+    participant AL as AuthLayout
+    participant DB as usersテーブル
+    participant MC as メインコンテンツ
+
+    U->>L: ログイン画面アクセス
+    U->>L: [Googleでログイン]ボタンクリック
+    L->>SA: Google OAuth認証
+    SA->>U: 既存セッション作成
+    U->>MC: メインページアクセス
+    MC->>MW: middleware.ts実行
+    MW->>SA: セッション確認
+    SA->>MW: 認証済みセッション返却
+    MW->>AL: AuthLayout実行
+    AL->>DB: ユーザー承認状態確認
+    DB->>AL: status='active'
+    AL->>MC: メインコンテンツ表示
+```
+
+### 2.4 基本機能
 
 1. ログイン
 
-   - Googleアカウントでのログイン
+   - Googleアカウントでのシームレスログイン
    - 認証情報の保持
+   - セッション管理の自動化
 
 2. ログアウト
 
@@ -50,12 +111,18 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 
 3. メンバー承認機能
 
-   - 初回ログイン後、承認が行われるまで専用ページにリダイレクトさせる
+   - 初回ログイン後、承認が行われるまで承認待ちページにリダイレクトさせる
    - 管理者により承認が行われると、正常にアクセスが可能となる
      - `status`（デフォルト：`pending`）を `active` に変更する
    - 管理者が拒否した場合、`status` を `rejected` に変更する
 
-### 2.3 画面遷移
+| status     | 説明     | アクセス権限 | 表示画面         |
+| ---------- | -------- | ------------ | ---------------- |
+| `pending`  | 承認待ち | なし         | 承認待ち画面     |
+| `active`   | 承認済み | 全機能       | メインコンテンツ |
+| `rejected` | 拒否済み | なし         | 拒否画面         |
+
+### 2.5 画面遷移
 
 1. 未ログイン時のアクセス
 
@@ -78,9 +145,9 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
    - ログアウトボタンクリックでセッション破棄
    - ログイン画面へ遷移
 
-### 2.4 画面表示
+### 2.6 画面表示
 
-1. 未ログイン時の画面
+#### 2.6.1 未ログイン画面
 
 ```
 +----------------------------------+
@@ -92,7 +159,7 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 +----------------------------------+
 ```
 
-2. 承認待ち画面
+#### 2.6.2 承認待ち画面
 
 ```
 +----------------------------------+
@@ -107,7 +174,7 @@ Clerkを使用したGoogleアカウントでの認証機能を提供し、ログ
 +----------------------------------+
 ```
 
-3. 拒否時の画面
+#### 2.6.3 拒否時の画面
 
 ```
 +----------------------------------+
