@@ -91,14 +91,6 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ```mermaid
 erDiagram
-    auth_users {
-        UUID id PK "Supabase Auth ユーザーID"
-        VARCHAR email "メールアドレス"
-        JSONB user_metadata "ユーザーメタデータ"
-        TIMESTAMP created_at "作成日時"
-        TIMESTAMP updated_at "更新日時"
-    }
-
     users {
         SERIAL id PK "レコードの一意な識別子（連番）"
         UUID auth_id FK "Supabase Auth ユーザーID"
@@ -153,7 +145,6 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
-    auth_users ||--|| users : "1:1"
     users ||--o{ documents : "1:N"
     users ||--o{ videos : "1:N"
     categories ||--o{ documents : "1:N"
