@@ -37,7 +37,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                   <Grid.Col span={6}>
                     {/* 動画のカテゴリー */}
                     <Button component="div" radius="md" size="compact-sm" c="rgb(23,23,23)" bg="gray.2" fs="0.875rem">
-                      {video.category}
+                      {video.category?.name}
                     </Button>
                   </Grid.Col>
                   <Grid.Col span={6}>

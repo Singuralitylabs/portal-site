@@ -27,7 +27,7 @@ export function VideoCard({ video }: VideoCardProps) {
           {video.description}
         </Text>
         <Button component="div" radius="md" size="compact-sm" c="rgb(23,23,23)" bg="gray.2" fs="0.875rem">
-          {video.category}
+          {video.category?.name}
         </Button>
       </Card.Section>
     </Card>

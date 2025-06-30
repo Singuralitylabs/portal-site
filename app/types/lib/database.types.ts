@@ -12,7 +12,9 @@ export type Database = {
       documents: {
         Row: {
           assignee: string | null
-          category: string
+          category: {
+            name: string
+          }
           created_at: string
           created_by: number
           description: string | null
@@ -25,7 +27,9 @@ export type Database = {
         }
         Insert: {
           assignee?: string | null
-          category: string
+          category: {
+            name: string
+          }
           created_at?: string
           created_by: number
           description?: string | null
@@ -38,7 +42,9 @@ export type Database = {
         }
         Update: {
           assignee?: string | null
-          category?: string
+          category?: {
+            name: string
+          }
           created_at?: string
           created_by?: number
           description?: string | null
@@ -108,7 +114,9 @@ export type Database = {
       videos: {
         Row: {
           assignee: string | null
-          category: string
+          category: {
+            name: string
+          }
           created_at: string
           created_by: number
           description: string | null
@@ -124,7 +132,9 @@ export type Database = {
         }
         Insert: {
           assignee?: string | null
-          category: string
+          category: {
+            name: string
+          }
           created_at?: string
           created_by: number
           description?: string | null
@@ -140,7 +150,9 @@ export type Database = {
         }
         Update: {
           assignee?: string | null
-          category?: string
+          category?: {
+            name: string
+          }
           created_at?: string
           created_by?: number
           description?: string | null
