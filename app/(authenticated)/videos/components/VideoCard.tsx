@@ -1,11 +1,11 @@
 'use client';
 
-import { VideoType } from '@/app/types';
+import { VideoWithCategoryType } from '@/app/types';
 import { Button, Card, Text } from '@mantine/core';
 import Image from 'next/image';
 
 interface VideoCardProps {
-  video: VideoType;
+  video: VideoWithCategoryType;
 }
 
 export function VideoCard({ video }: VideoCardProps) {

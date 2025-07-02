@@ -1,11 +1,11 @@
 'use client';
 
-import { DocumentType } from '@/app/types';
+import { DocumentWithCategoryType } from '@/app/types';
 import { FileText, FileType, Calendar } from 'lucide-react';
 import { Button, Card, Flex, Text } from '@mantine/core';
 
 interface DocumentCardProps {
-  document: DocumentType;
+  document: DocumentWithCategoryType;
 }
 
 export function DocumentCard({ document }: DocumentCardProps) {

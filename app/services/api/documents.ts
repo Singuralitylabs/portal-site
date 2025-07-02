@@ -4,12 +4,7 @@ export async function fetchDocuments() {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
   .from("documents")
-    .select(`
-    *,
-    category:categories (
-      name
-    )
-  `)
+  .select(`*, category:categories (name)`)
   .eq("is_deleted", false);
 
   if (error) {

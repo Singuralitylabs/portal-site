@@ -42,9 +42,7 @@ export type Database = {
       documents: {
         Row: {
           assignee: string | null
-          category: {
-            name: string
-          }
+          category_id: number
           created_at: string
           created_by: number
           description: string | null
@@ -147,9 +145,7 @@ export type Database = {
       videos: {
         Row: {
           assignee: string | null
-          category: {
-            name: string
-          }
+          category_id: number
           created_at: string
           created_by: number
           description: string | null
