@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      categories: {
+        Row: {
+          category_type: string
+          created_at: string
+          description: string | null
+          id: number
+          is_deleted: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category_type: string
+          created_at?: string
+          description?: string | null
+          id?: number
+          is_deleted?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category_type?: string
+          created_at?: string
+          description?: string | null
+          id?: number
+          is_deleted?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           assignee: string | null
@@ -27,9 +57,7 @@ export type Database = {
         }
         Insert: {
           assignee?: string | null
-          category: {
-            name: string
-          }
+          category_id: number
           created_at?: string
           created_by: number
           description?: string | null
@@ -42,9 +70,7 @@ export type Database = {
         }
         Update: {
           assignee?: string | null
-          category?: {
-            name: string
-          }
+          category_id?: number
           created_at?: string
           created_by?: number
           description?: string | null
@@ -56,6 +82,13 @@ export type Database = {
           url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_created_by_fkey"
             columns: ["created_by"]
@@ -74,6 +107,7 @@ export type Database = {
       }
       users: {
         Row: {
+          bio: string | null
           clerk_id: string
           created_at: string
           display_name: string
@@ -83,9 +117,9 @@ export type Database = {
           role: string
           status: string
           updated_at: string
-          bio: string
         }
         Insert: {
+          bio?: string | null
           clerk_id: string
           created_at?: string
           display_name: string
@@ -95,9 +129,9 @@ export type Database = {
           role?: string
           status?: string
           updated_at?: string
-          bio?: string
         }
         Update: {
+          bio?: string | null
           clerk_id?: string
           created_at?: string
           display_name?: string
@@ -107,7 +141,6 @@ export type Database = {
           role?: string
           status?: string
           updated_at?: string
-          bio?: string
         }
         Relationships: []
       }
@@ -132,9 +165,7 @@ export type Database = {
         }
         Insert: {
           assignee?: string | null
-          category: {
-            name: string
-          }
+          category_id: number
           created_at?: string
           created_by: number
           description?: string | null
@@ -150,9 +181,7 @@ export type Database = {
         }
         Update: {
           assignee?: string | null
-          category?: {
-            name: string
-          }
+          category_id?: number
           created_at?: string
           created_by?: number
           description?: string | null
@@ -167,6 +196,13 @@ export type Database = {
           url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "videos_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "videos_created_by_fkey"
             columns: ["created_by"]

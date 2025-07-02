@@ -9,7 +9,8 @@ export async function fetchDocuments() {
     category:categories (
       name
     )
-  `);
+  `)
+  .eq("is_deleted", false);
 
   if (error) {
     console.error("Supabase 資料一覧データ取得エラー:", error.message);
