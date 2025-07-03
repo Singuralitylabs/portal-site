@@ -4,10 +4,10 @@ import { VideoCard } from './VideoCard';
 import { Grid, Paper } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
 
-import { VideoType } from '@/app/types';
+import { VideoWithCategoryType } from '@/app/types';
 
 interface VideosPageTemplateProps {
-  videos: VideoType[];
+  videos: VideoWithCategoryType[];
 }
 
 export function VideosPageTemplate({ videos }: VideosPageTemplateProps) {

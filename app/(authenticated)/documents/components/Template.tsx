@@ -4,10 +4,10 @@ import { DocumentCard } from './DocumentCard';
 import { Grid, Paper } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
 
-import { DocumentType } from '@/app/types';
+import { DocumentWithCategoryType } from '@/app/types';
 
 interface DocumentsPageTemplateProps  {
-    documents: DocumentType[];
+    documents: DocumentWithCategoryType[];
 };
 
 export function DocumentsPageTemplate({documents} : DocumentsPageTemplateProps) {
