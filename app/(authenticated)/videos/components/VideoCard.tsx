@@ -9,7 +9,7 @@ interface VideoCardProps {
   video: VideoWithCategoryType;
 }
 
-function getThumbnailUrl(video: VideoType): string {
+function getThumbnailUrl(video: VideoWithCategoryType): string {
   if (video.thumbnail_path) {
     return video.thumbnail_path;
   }
@@ -29,7 +29,7 @@ export function VideoCard({ video }: VideoCardProps) {
       <Card.Section>
         <div className="aspect-video mx-auto" style={{ position: 'relative' }}>
           <Image
-            src={video.thumbnail_path || 'https://img.youtube.com/vi/' + video.url.replace(/(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/, "$1") + '/hqdefault.jpg' || '/default_video_thumbnail.png'}
+            src={thumbnailUrl}
             alt={video.name}
             fill
             style={{ objectFit: 'cover' }}
