@@ -9,7 +9,7 @@ interface VideoCardProps {
   video: VideoWithCategoryType;
 }
 
-function getThumbnailUrl(video: VideoType): string {
+function getThumbnailUrl(video: VideoWithCategoryType): string {
   if (video.thumbnail_path) {
     return video.thumbnail_path;
   }
