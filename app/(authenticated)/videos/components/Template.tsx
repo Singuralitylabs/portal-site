@@ -5,24 +5,38 @@ import { Grid, Paper } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
 
 import { VideoWithCategoryType } from '@/app/types';
+import { CategoryType } from '@/app/types';
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
+  categories: CategoryType[];
 }
 
-export function VideosPageTemplate({ videos }: VideosPageTemplateProps) {
+export function VideosPageTemplate({ videos, categories }: VideosPageTemplateProps) {
+  const existingCategories = categories.filter((category) => {
+    const videoCategories = videos.map((video) => video.category?.name);
+    return videoCategories.includes(category.name);
+  });
+
   return (
     <Paper m="0 2rem">
       <PageTitle>動画一覧</PageTitle>
 
       <Paper>
-        <Grid>
-          {videos.map((video) => (
-            <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
-              <VideoCard video={video} />
-            </Grid.Col>
-          ))}
-        </Grid>
+        {existingCategories.map((category) => (
+          <div key={category.id}>
+            <h2>{category.name}</h2>
+            <Grid>
+              {videos.filter((video) => video.category?.name == category.name)
+                .map((video) => (
+                  <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
+                    <VideoCard video={video} />
+                  </Grid.Col>
+              ))}
+            </Grid>
+            <br/>
+          </div>
+        ))}
       </Paper>
     </Paper>
   );

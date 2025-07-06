@@ -13,3 +13,6 @@ export type VideoWithCategoryType = VideosTable["Row"] & {
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];
 export type InsertUserType = UsersTable["Insert"];
+
+type CategoriesTable = Database["public"]["Tables"]["categories"];
+export type CategoryType = CategoriesTable["Row"];
