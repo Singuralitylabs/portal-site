@@ -13,10 +13,8 @@ interface VideosPageTemplateProps {
 }
 
 export function VideosPageTemplate({ videos, categories }: VideosPageTemplateProps) {
-  const existingCategories = categories.filter((category) => {
-    const videoCategories = videos.map((video) => video.category?.name);
-    return videoCategories.includes(category.name);
-  });
+  const videoCategoryNames = new Set(videos.map((video) => video.category?.name));
+  const existingCategories = categories.filter((category) => videoCategoryNames.has(category.name));
 
   return (
     <Paper m="0 2rem">
@@ -27,7 +25,7 @@ export function VideosPageTemplate({ videos, categories }: VideosPageTemplatePro
           <div key={category.id}>
             <h2>{category.name}</h2>
             <Grid>
-              {videos.filter((video) => video.category?.name == category.name)
+              {videos.filter((video) => video.category?.name === category.name)
                 .map((video) => (
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
                     <VideoCard video={video} />
