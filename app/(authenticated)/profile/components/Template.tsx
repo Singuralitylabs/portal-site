@@ -3,7 +3,7 @@
 import { PageTitle } from '@/app/components/PageTitle';
 import { Button, TextInput, Textarea } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 
 interface User {
   id: number;
@@ -22,7 +22,7 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
   const [user, setUser] = useState<User>(initialUser);
   const [name, setName] = useState(initialUser.name);
   const [bio, setBio] = useState(initialUser.bio || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // 初期ユーザー情報が更新されたら、状態を更新
   useEffect(() => {
@@ -34,38 +34,37 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
   // プロフィール更新処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // サーバーアクションを呼び出してプロフィールを更新
-    const result = await updateProfile(name, bio);
-
-    if (result.success) {
-      // 更新成功時にユーザー情報を更新（実際のデータはサーバーから再取得される）
-      setUser({
-        ...user,
-        name: name,
-        bio: bio
-      });
-      
-      // 成功通知
-      notifications.show({
-        title: '成功',
-        message: 'プロフィールを更新しました',
-        color: 'green',
-        autoClose: 3000,
-      });
-    } else {
-      // エラー通知
-      console.error('プロフィール更新エラー:', result.message);
-      notifications.show({
-        title: 'エラー',
-        message: result.message || 'プロフィールの更新に失敗しました',
-        color: 'red',
-        autoClose: 3000,
-      });
-    }
     
-    setIsSubmitting(false);
+    startTransition(async () => {
+      // サーバーアクションを呼び出してプロフィールを更新
+      const result = await updateProfile(name, bio);
+
+      if (result.success) {
+        // 更新成功時にユーザー情報を更新（実際のデータはサーバーから再取得される）
+        setUser({
+          ...user,
+          name: name,
+          bio: bio
+        });
+        
+        // 成功通知
+        notifications.show({
+          title: '成功',
+          message: 'プロフィールを更新しました',
+          color: 'green',
+          autoClose: 3000,
+        });
+      } else {
+        // エラー通知
+        console.error('プロフィール更新エラー:', result.message);
+        notifications.show({
+          title: 'エラー',
+          message: result.message || 'プロフィールの更新に失敗しました',
+          color: 'red',
+          autoClose: 3000,
+        });
+      }
+    });
   };
 
   return (
@@ -119,7 +118,7 @@ export function Template({ initialUser, updateProfile }: TemplateProps) {
 
             <Button 
               type="submit" 
-              loading={isSubmitting}
+              loading={isPending}
             >
               保存
             </Button>
