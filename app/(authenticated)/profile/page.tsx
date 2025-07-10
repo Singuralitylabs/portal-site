@@ -1,10 +1,10 @@
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser, User } from '@clerk/nextjs/server';
 import { getUserByClerkId, updateUserProfile } from '@/app/services/api/user';
 import { Template } from './components/Template';
 
 export default async function ProfilePage() {
   // Clerk認証情報の取得（例外が発生する可能性あり）
-  let idpUser: any;
+  let idpUser: User | null;
   try {
     idpUser = await currentUser();
   } catch (error) {
