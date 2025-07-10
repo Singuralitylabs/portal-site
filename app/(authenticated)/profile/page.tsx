@@ -3,14 +3,9 @@ import { getUserByClerkId, updateUserProfile } from '@/app/services/api/user';
 import { Template } from './components/Template';
 
 export default async function ProfilePage() {
-  // Clerk認証情報の取得（例外が発生する可能性あり）
+
   let idpUser: User | null;
-  try {
-    idpUser = await currentUser();
-  } catch (error) {
-    console.error('認証情報取得エラー:', error);
-    return <div>認証情報の取得に失敗しました</div>;
-  }
+  idpUser = await currentUser();
   
   if (!idpUser) {
     return <div>ユーザー情報を読み込み中...</div>;
