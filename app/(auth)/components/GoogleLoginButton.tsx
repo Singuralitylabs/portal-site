@@ -1,9 +1,10 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
+import { useSignIn, useUser } from "@clerk/nextjs";
 import { useState } from "react";
 
 const GoogleLoginButton = () => {
+  const { isSignedIn, user } = useUser();
   const { signIn, isLoaded } = useSignIn();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
@@ -14,11 +15,16 @@ const GoogleLoginButton = () => {
   const handleGoogleLogin = async () => {
     setIsSigningIn(true);
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
-      });
+      if (!isSignedIn) {
+        // 未ログインならサインインを行う
+        await signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete: "/",
+        });
+      }
+      // 既にログインしている場合は何もしない
+      // ここで必要に応じてユーザー情報を取得・処理することも可能
     } catch (err) {
       console.error("ログインエラー:", err);
     } finally {
@@ -28,8 +34,7 @@ const GoogleLoginButton = () => {
 
   return (
     <button
-      className="flex items-center gap-3 px-6 py-3 bg-white border-2 border-gray-200 
-        rounded-lg hover:bg-gray-50 transition-colors"
+      className="flex items-center gap-3 px-6 py-3 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
       disabled={isSigningIn}
       onClick={handleGoogleLogin}
     >
