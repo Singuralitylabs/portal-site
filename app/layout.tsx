@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
+import { Notifications } from '@mantine/notifications';
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -31,6 +33,7 @@ export default function RootLayout({
       <body>
         <ClerkProvider>
           <MantineProvider>
+            <Notifications />
             <div className="min-h-screen">{children}</div>
           </MantineProvider>
         </ClerkProvider>
