@@ -7,7 +7,8 @@ import { Menu, House, FileVideo, FileText, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import IconImage from "../../../public/icon.png";
-import { useClerk } from "@clerk/nextjs";
+import { createClientSupabaseClient } from "@/app/services/api/supabase";
+import { useRouter } from "next/navigation";
 
 interface NavItem {
   title: string;
@@ -45,7 +46,13 @@ const navItems: NavItem[] = [
 
 export function SideNav() {
   const [open, setOpen] = useState(false);
-  const { signOut } = useClerk();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    const supabase = createClientSupabaseClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   return (
     <>
@@ -76,7 +83,7 @@ export function SideNav() {
             item.title === "ログアウト" ? (
               <button
                 key={item.title}
-                onClick={() => signOut({ redirectUrl: "/login" })}
+                onClick={handleSignOut}
                 className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground w-full text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
               >
                 {item.icon}
@@ -113,7 +120,7 @@ export function SideNav() {
             item.title === "ログアウト" ? (
               <button
                 key={item.title}
-                onClick={() => signOut({ redirectUrl: "/login" })}
+                onClick={handleSignOut}
                 className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground w-full text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
               >
                 {item.icon}

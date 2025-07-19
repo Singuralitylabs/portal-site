@@ -1,5 +1,6 @@
 // 認証済みページレイアウト
 import { SideNav } from "./components/SideNav";
+import { AuthLayout as AuthGuard } from "./auth-layout";
 
 export default function AuthLayout({
   children,
@@ -7,9 +8,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="sm:flex min-h-screen">
-      <SideNav />
-      <div className="flex-1 sm:ml-48">{children}</div>
-    </div>
+    <AuthGuard>
+      <div className="sm:flex min-h-screen">
+        <SideNav />
+        <div className="flex-1 sm:ml-48">{children}</div>
+      </div>
+    </AuthGuard>
   );
 }

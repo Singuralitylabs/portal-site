@@ -1,15 +1,17 @@
 import { InsertUserType } from "@/app/types";
-import supabase from "./supabase";
+import { createClientSupabaseClient } from "./supabase";
 
 interface NewUserProps {
-  clerkId: string;
+  authId: string;
   email: string;
   displayName: string;
 }
 
-export async function addNewUser({ clerkId, email, displayName }: NewUserProps) {
+export async function addNewUser({ authId, email, displayName }: NewUserProps) {
+  const supabase = createClientSupabaseClient();
+
   const newUser: InsertUserType = {
-    clerk_id: clerkId,
+    auth_id: authId,
     email: email,
     display_name: displayName,
     role: "member",

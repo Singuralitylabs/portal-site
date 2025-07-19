@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "./supabase";
+import { createServerSupabaseClient } from "./supabase-server";
 
 export async function fetchVideos() {
   const supabase = await createServerSupabaseClient();

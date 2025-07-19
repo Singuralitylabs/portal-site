@@ -1,7 +1,7 @@
-import { createServerSupabaseClient } from "./supabase";
+import { createClientSupabaseClient } from "./supabase";
 
 export async function fetchCategoriesByType(type: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createClientSupabaseClient();
   const { data, error } = await supabase
     .from("categories")
     .select("*")
