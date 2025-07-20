@@ -1,7 +1,7 @@
-import { createClientSupabaseClient } from "./supabase-client";
+import { createServerSupabaseClient } from "./supabase-server";
 
 export async function fetchCategoriesByType(type: string) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("categories")
     .select("*")
