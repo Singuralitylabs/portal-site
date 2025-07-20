@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { USER_STATUS } from "./app/constants/user";
 
 const publicRoutes = ["/login", "/callback", "/pending", "/rejected"];
 
@@ -75,12 +76,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (userData.status === "pending" && !pathname.startsWith("/pending")) {
+  if (userData.status === USER_STATUS.PENDING && !pathname.startsWith("/pending")) {
     const redirectUrl = new URL("/pending", request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (userData.status === "rejected" && !pathname.startsWith("/rejected")) {
+  if (userData.status === USER_STATUS.REJECTED && !pathname.startsWith("/rejected")) {
     const redirectUrl = new URL("/rejected", request.url);
     return NextResponse.redirect(redirectUrl);
   }

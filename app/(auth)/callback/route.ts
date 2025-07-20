@@ -1,6 +1,8 @@
 import { CookieOptions, createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { fetchUserStatusById } from "@/app/services/api/user";
+import { USER_STATUS } from "@/app/constants/user";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -32,47 +34,28 @@ export async function GET(request: NextRequest) {
       console.log("認証成功:", data.session.user.email);
 
       // 認証済みユーザーとして自分のユーザー情報を確認
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("status")
-        .eq("auth_id", data.session.user.id)
-        .single();
+      const { status: userStatus, error: userError } = await fetchUserStatusById({
+        authId: data.session.user.id,
+      });
 
       if (userError) {
-        console.error("ユーザー情報取得エラー:", userError);
-
-        // 新規ユーザーの場合、usersテーブルにレコードを作成
-        if (userError.code === "PGRST116") {
-          console.log("新規ユーザーを作成中:", data.session.user.email);
-
-          const { error: insertError } = await supabase.from("users").insert({
-            auth_id: data.session.user.id,
-            email: data.session.user.email || "",
-            name: data.session.user.user_metadata?.name || data.session.user.email || "",
-            status: "pending",
-          });
-
-          if (insertError) {
-            console.error("ユーザー作成エラー:", insertError);
-          } else {
-            console.log("新規ユーザー作成完了");
-          }
-        }
-
-        // ユーザー情報がない場合は承認待ちページへ
+        console.error("ユーザーステータス取得エラー:", userError);
+        // 新規ユーザーの場合は承認待ちページへ（supabase-auth-providerでユーザー作成処理）
         return NextResponse.redirect(`${origin}/pending`);
       }
 
-      console.log("ユーザーステータス:", userData.status);
+      console.log("ユーザーステータス:", userStatus);
 
       // ユーザーのステータスに応じてリダイレクト
-      if (userData.status === "active") {
+      if (userStatus === USER_STATUS.ACTIVE) {
         return NextResponse.redirect(`${origin}/`);
-      } else if (userData.status === "rejected") {
+      } else if (userStatus === USER_STATUS.REJECTED) {
         return NextResponse.redirect(`${origin}/rejected`);
-      } else {
-        // pending の場合
+      } else if (userStatus === USER_STATUS.PENDING) {
         return NextResponse.redirect(`${origin}/pending`);
+      } else {
+        console.error("不明なユーザーステータス:", userStatus);
+        return NextResponse.redirect(`${origin}/login`);
       }
     } else {
       console.error("認証エラー:", error);

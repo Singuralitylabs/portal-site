@@ -1,61 +1,52 @@
-'use client';
+"use client";
 
-import { useSupabaseAuth } from '@/app/providers/supabase-auth-provider';
-import { createClientSupabaseClient } from '@/app/services/api/supabase';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-
-interface UserStatus {
-  status: 'pending' | 'active' | 'rejected';
-  display_name: string;
-}
+import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchUserStatusById } from "../services/api/user";
+import { UserStatusType } from "../types";
+import { USER_STATUS } from "../constants/user";
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useSupabaseAuth();
   const router = useRouter();
-  const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
+  const [userStatus, setUserStatus] = useState<UserStatusType | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
 
   useEffect(() => {
     if (loading) return;
 
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     // ユーザーのステータスを確認
     const checkUserStatus = async () => {
       try {
-        const supabase = createClientSupabaseClient();
-        const { data, error } = await supabase
-          .from('users')
-          .select('status, display_name')
-          .eq('auth_id', user.id)
-          .eq('is_deleted', false)
-          .single();
+        const { status, error } = await fetchUserStatusById({ authId: user.id });
 
-        if (error || !data) {
-          // ユーザーが見つからない場合は登録が必要
-          router.push('/login');
+        if (error || !status) {
+          router.push("/login");
           return;
         }
 
-        setUserStatus(data);
-        
         // ステータスに応じてリダイレクト
-        if (data.status === 'pending') {
-          router.push('/pending');
+        if (status === USER_STATUS.PENDING) {
+          router.push("/pending");
           return;
-        } else if (data.status === 'rejected') {
-          router.push('/rejected');
+        } else if (status === USER_STATUS.REJECTED) {
+          router.push("/rejected");
+          return;
+        } else if (status !== USER_STATUS.ACTIVE) {
+          console.error("不正なユーザーステータス:", status);
+          router.push("/login");
           return;
         }
-        // activeの場合はそのまま表示
-
+        setUserStatus(status as UserStatusType);
       } catch (error) {
-        console.error('ユーザーステータス確認エラー:', error);
-        router.push('/login');
+        console.error("ユーザーステータス確認エラー:", error);
+        router.push("/login");
       } finally {
         setStatusLoading(false);
       }
@@ -76,7 +67,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   }
 
   // 認証済みかつactiveな場合のみコンテンツを表示
-  if (user && userStatus?.status === 'active') {
+  if (user && userStatus === USER_STATUS.ACTIVE) {
     return <>{children}</>;
   }
 

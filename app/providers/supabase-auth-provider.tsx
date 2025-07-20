@@ -1,14 +1,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClientSupabaseClient } from "@/app/services/api/supabase";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User, Session, AuthChangeEvent, AuthError } from "@supabase/supabase-js";
+import { createClientSupabaseClient } from "../services/api/supabase-client";
+import { UserStatusType } from "../types";
+import { addNewUser, fetchUserIdByAuthId } from "../services/api/user";
 
 interface SupabaseAuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  userStatus: "pending" | "active" | "rejected" | null;
+  userStatus: UserStatusType | null;
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType>({
@@ -21,7 +23,7 @@ const SupabaseAuthContext = createContext<SupabaseAuthContextType>({
 interface SupabaseAuthProviderProps {
   children: React.ReactNode;
   initialUser?: User | null;
-  initialUserStatus?: "pending" | "active" | "rejected" | null;
+  initialUserStatus?: UserStatusType | null;
 }
 
 export function SupabaseAuthProvider({
@@ -31,32 +33,50 @@ export function SupabaseAuthProvider({
 }: SupabaseAuthProviderProps) {
   const [user, setUser] = useState<User | null>(initialUser);
   const [session, setSession] = useState<Session | null>(null);
-  const [userStatus, _] = useState<"pending" | "active" | "rejected" | null>(initialUserStatus);
+  const [userStatus, _] = useState<UserStatusType | null>(initialUserStatus);
   const [loading, setLoading] = useState(!initialUser);
 
   useEffect(() => {
     const supabase = createClientSupabaseClient();
 
     // 現在のユーザーを取得（セキュア）
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (error) {
-        console.error("認証エラー:", error);
-        setUser(null);
-        setSession(null);
-      } else {
-        setUser(user);
-        // getUser()ではsessionは直接取得できないため、getSession()も併用
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          setSession(session);
-        });
-      }
-      setLoading(false);
-    });
+    supabase.auth
+      .getUser()
+      .then(
+        ({ data: { user }, error }: { data: { user: User | null }; error: AuthError | null }) => {
+          if (error) {
+            console.error("認証エラー:", error);
+            setUser(null);
+            setSession(null);
+          } else {
+            setUser(user);
+            // getUser()ではsessionは直接取得できないため、getSession()も併用
+            supabase.auth
+              .getSession()
+              .then(
+                ({
+                  data: { session },
+                  error: sessionError,
+                }: {
+                  data: { session: Session | null };
+                  error: AuthError | null;
+                }) => {
+                  if (sessionError) {
+                    console.error("セッション取得エラー:", sessionError);
+                  } else {
+                    setSession(session);
+                  }
+                }
+              );
+          }
+          setLoading(false);
+        }
+      );
 
     // 認証状態の変更を監視
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -73,24 +93,16 @@ export function SupabaseAuthProvider({
 
   const syncUserToDatabase = async (user: User) => {
     try {
-      const supabase = createClientSupabaseClient();
-
       // ユーザーが既にusersテーブルに存在するかチェック
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id")
-        .eq("auth_id", user.id)
-        .single();
-
-      if (!existingUser) {
-        // 新規ユーザーの場合、usersテーブルに追加
-        await supabase.from("users").insert({
-          auth_id: user.id,
-          email: user.email!,
-          display_name: user.user_metadata?.full_name || user.email!,
-          role: "member",
-          status: "pending",
+      const { userId, error: userError } = await fetchUserIdByAuthId({ authId: user.id });
+      // 新規ユーザーの場合、usersテーブルに追加
+      if (!userId || userError) {
+        await addNewUser({
+          authId: user.id,
+          email: user.email || "",
+          displayName: user.user_metadata?.full_name || "",
         });
+        console.log("新規ユーザーをusersテーブルに追加:", user.id);
       }
     } catch (error) {
       console.error("ユーザー情報の同期エラー:", error);

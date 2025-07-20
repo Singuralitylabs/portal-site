@@ -7,7 +7,7 @@ import { Menu, House, FileVideo, FileText, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import IconImage from "../../../public/icon.png";
-import { createClientSupabaseClient } from "@/app/services/api/supabase";
+import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import { useRouter } from "next/navigation";
 
 interface NavItem {
@@ -51,7 +51,7 @@ export function SideNav() {
   const handleSignOut = async () => {
     const supabase = createClientSupabaseClient();
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push("/login");
   };
 
   return (

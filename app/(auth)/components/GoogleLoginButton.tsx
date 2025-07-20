@@ -1,6 +1,6 @@
 "use client";
 
-import { createClientSupabaseClient } from "@/app/services/api/supabase";
+import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import { useState } from "react";
 
 const GoogleLoginButton = () => {
@@ -10,9 +10,8 @@ const GoogleLoginButton = () => {
     setIsSigningIn(true);
     try {
       const supabase = createClientSupabaseClient();
-      
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/callback`,
         },
