@@ -1,263 +1,257 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   public: {
     Tables: {
       categories: {
         Row: {
-          category_type: string
-          created_at: string
-          description: string | null
-          id: number
-          is_deleted: boolean
-          name: string
-          updated_at: string
-        }
+          category_type: string;
+          created_at: string;
+          description: string | null;
+          id: number;
+          is_deleted: boolean;
+          name: string;
+          updated_at: string;
+        };
         Insert: {
-          category_type: string
-          created_at?: string
-          description?: string | null
-          id?: number
-          is_deleted?: boolean
-          name: string
-          updated_at?: string
-        }
+          category_type: string;
+          created_at?: string;
+          description?: string | null;
+          id?: number;
+          is_deleted?: boolean;
+          name: string;
+          updated_at?: string;
+        };
         Update: {
-          category_type?: string
-          created_at?: string
-          description?: string | null
-          id?: number
-          is_deleted?: boolean
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          category_type?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: number;
+          is_deleted?: boolean;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       documents: {
         Row: {
-          assignee: string | null
-          category_id: number
-          created_at: string
-          created_by: number
-          description: string | null
-          id: number
-          is_deleted: boolean
-          name: string
-          updated_at: string
-          updated_by: number
-          url: string
-        }
+          assignee: string | null;
+          category_id: number;
+          created_at: string;
+          created_by: number;
+          description: string | null;
+          id: number;
+          is_deleted: boolean;
+          name: string;
+          updated_at: string;
+          updated_by: number;
+          url: string;
+        };
         Insert: {
-          assignee?: string | null
-          category_id: number
-          created_at?: string
-          created_by: number
-          description?: string | null
-          id?: number
-          is_deleted?: boolean
-          name: string
-          updated_at?: string
-          updated_by: number
-          url: string
-        }
+          assignee?: string | null;
+          category_id: number;
+          created_at?: string;
+          created_by: number;
+          description?: string | null;
+          id?: number;
+          is_deleted?: boolean;
+          name: string;
+          updated_at?: string;
+          updated_by: number;
+          url: string;
+        };
         Update: {
-          assignee?: string | null
-          category_id?: number
-          created_at?: string
-          created_by?: number
-          description?: string | null
-          id?: number
-          is_deleted?: boolean
-          name?: string
-          updated_at?: string
-          updated_by?: number
-          url?: string
-        }
+          assignee?: string | null;
+          category_id?: number;
+          created_at?: string;
+          created_by?: number;
+          description?: string | null;
+          id?: number;
+          is_deleted?: boolean;
+          name?: string;
+          updated_at?: string;
+          updated_by?: number;
+          url?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "documents_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
+            foreignKeyName: "documents_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "documents_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "documents_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "documents_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "documents_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       users: {
         Row: {
-          bio: string | null
-          clerk_id: string
-          created_at: string
-          display_name: string
-          email: string
-          id: number
-          is_deleted: boolean
-          role: string
-          status: string
-          updated_at: string
-        }
+          bio: string | null;
+          auth_id: string;
+          created_at: string;
+          display_name: string;
+          email: string;
+          id: number;
+          is_deleted: boolean;
+          role: string;
+          status: string;
+          updated_at: string;
+        };
         Insert: {
-          bio?: string | null
-          clerk_id: string
-          created_at?: string
-          display_name: string
-          email: string
-          id?: number
-          is_deleted?: boolean
-          role?: string
-          status?: string
-          updated_at?: string
-        }
+          bio?: string | null;
+          auth_id: string;
+          created_at?: string;
+          display_name: string;
+          email: string;
+          id?: number;
+          is_deleted?: boolean;
+          role?: string;
+          status?: string;
+          updated_at?: string;
+        };
         Update: {
-          bio?: string | null
-          clerk_id?: string
-          created_at?: string
-          display_name?: string
-          email?: string
-          id?: number
-          is_deleted?: boolean
-          role?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          bio?: string | null;
+          auth_id?: string;
+          created_at?: string;
+          display_name?: string;
+          email?: string;
+          id?: number;
+          is_deleted?: boolean;
+          role?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       videos: {
         Row: {
-          assignee: string | null
-          category_id: number
-          created_at: string
-          created_by: number
-          description: string | null
-          id: number
-          is_deleted: boolean
-          length: number | null
-          name: string
-          thumbnail_path: string | null
-          thumbnail_time: number | null
-          updated_at: string
-          updated_by: number
-          url: string
-        }
+          assignee: string | null;
+          category_id: number;
+          created_at: string;
+          created_by: number;
+          description: string | null;
+          id: number;
+          is_deleted: boolean;
+          length: number | null;
+          name: string;
+          thumbnail_path: string | null;
+          thumbnail_time: number | null;
+          updated_at: string;
+          updated_by: number;
+          url: string;
+        };
         Insert: {
-          assignee?: string | null
-          category_id: number
-          created_at?: string
-          created_by: number
-          description?: string | null
-          id?: number
-          is_deleted?: boolean
-          length?: number | null
-          name: string
-          thumbnail_path?: string | null
-          thumbnail_time?: number | null
-          updated_at?: string
-          updated_by: number
-          url: string
-        }
+          assignee?: string | null;
+          category_id: number;
+          created_at?: string;
+          created_by: number;
+          description?: string | null;
+          id?: number;
+          is_deleted?: boolean;
+          length?: number | null;
+          name: string;
+          thumbnail_path?: string | null;
+          thumbnail_time?: number | null;
+          updated_at?: string;
+          updated_by: number;
+          url: string;
+        };
         Update: {
-          assignee?: string | null
-          category_id?: number
-          created_at?: string
-          created_by?: number
-          description?: string | null
-          id?: number
-          is_deleted?: boolean
-          length?: number | null
-          name?: string
-          thumbnail_path?: string | null
-          thumbnail_time?: number | null
-          updated_at?: string
-          updated_by?: number
-          url?: string
-        }
+          assignee?: string | null;
+          category_id?: number;
+          created_at?: string;
+          created_by?: number;
+          description?: string | null;
+          id?: number;
+          is_deleted?: boolean;
+          length?: number | null;
+          name?: string;
+          thumbnail_path?: string | null;
+          thumbnail_time?: number | null;
+          updated_at?: string;
+          updated_by?: number;
+          url?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "videos_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
+            foreignKeyName: "videos_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "videos_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "videos_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "videos_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "videos_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-    }
+        ];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
       get_clerk_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
       is_authenticated_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       is_registered_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       requesting_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
       set_clerk_user_id: {
-        Args: { clerk_id: string }
-        Returns: undefined
-      }
-    }
+        Args: { clerk_id: string };
+        Returns: undefined;
+      };
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof Database;
   }
     ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
@@ -265,72 +259,68 @@ export type Tables<
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
   ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof Database;
   }
     ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
   ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof Database;
   }
     ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
   ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"] | { schema: keyof Database },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof Database;
   }
     ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
@@ -338,14 +328,14 @@ export type Enums<
   ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof Database;
   }
     ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
@@ -353,10 +343,10 @@ export type CompositeTypes<
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
 
 export const Constants = {
   public: {
     Enums: {},
   },
-} as const
+} as const;

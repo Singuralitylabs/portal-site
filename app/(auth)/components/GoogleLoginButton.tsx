@@ -1,24 +1,25 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
+import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import { useState } from "react";
 
 const GoogleLoginButton = () => {
-  const { signIn, isLoaded } = useSignIn();
   const [isSigningIn, setIsSigningIn] = useState(false);
-
-  if (!isLoaded) {
-    return <div>Loading...</div>;
-  }
 
   const handleGoogleLogin = async () => {
     setIsSigningIn(true);
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+      const supabase = createClientSupabaseClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/callback`,
+        },
       });
+
+      if (error) {
+        console.error("ログインエラー:", error);
+      }
     } catch (err) {
       console.error("ログインエラー:", err);
     } finally {
