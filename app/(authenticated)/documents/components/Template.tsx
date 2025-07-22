@@ -1,25 +1,29 @@
 'use client';
 
 import { DocumentCard } from './DocumentCard';
-import { Grid, Paper } from '@mantine/core';
+import { Grid, Paper, Button } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
 
 import { DocumentWithCategoryType } from '@/app/types';
 import { CategoryType } from '@/app/types';
 
 interface DocumentsPageTemplateProps  {
-    documents: DocumentWithCategoryType[];
-    categories: CategoryType[];
+  documents: DocumentWithCategoryType[];
+  categories: CategoryType[];
+  onOpenModal: (type: 'create', item?: any) => void;//any じゃなくて適当なものに
 };
 
-export function DocumentsPageTemplate({ documents, categories } : DocumentsPageTemplateProps) {
+export function DocumentsPageTemplate({ documents, categories, onOpenModal } : DocumentsPageTemplateProps) {
   const documentCategoryNames = new Set(documents.map((document) => document.category?.name));
   const existingCategories = categories.filter((category) => documentCategoryNames.has(category.name));
 
   return (
     <Paper m="0 2rem">
       <PageTitle>資料一覧</PageTitle>
-
+      <Button onClick={() => onOpenModal('create')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-right space-x-2">
+        <span>新規作成</span>
+      </Button>
+      
       <Paper>
         {existingCategories.map((category) => (
           <div key={category.id}>
