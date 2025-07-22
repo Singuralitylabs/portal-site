@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { VideoCard } from './VideoCard';
-import { Grid, Paper, Button } from '@mantine/core';
+import { VideoForm } from './VideoForm';
+import { Grid, Paper, Button, Flex, Modal } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
 
 import { VideoWithCategoryType } from '@/app/types';
@@ -10,19 +12,36 @@ import { CategoryType } from '@/app/types';
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
   categories: CategoryType[];
-  onOpenModal: (type: 'create', item?: any) => void;//any じゃなくて適当なものに
 }
 
 export function VideosPageTemplate({ videos, categories }: VideosPageTemplateProps) {
-  const videoCategoryNames = new Set(videos.map((video) => video.category?.name));
-  const existingCategories = categories.filter((category) => videoCategoryNames.has(category.name));
+  const [opened, setOpened] = useState(false);
+
+  // category_typeが'videos'のカテゴリのみ抽出
+  const videoCategories = categories.filter((category) => category.category_type === 'videos');
+  const videoCategoryNames = new Set(
+    videos
+      .map((video) => video.category?.name)
+      .filter((name) => videoCategories.some((cat) => cat.name === name))
+  );
+  const existingCategories = videoCategories.filter((category) => videoCategoryNames.has(category.name));
+  const handleOpenModal = () => setOpened(true);
 
   return (
     <Paper m="0 2rem">
-      <PageTitle>動画一覧</PageTitle>
-      <Button onClick={() => onOpenModal('create')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-right space-x-2">
-        <span>新規作成</span>
-      </Button>
+      <Flex justify="space-between" align="center" mb="md">
+        <PageTitle>動画一覧</PageTitle>
+        <Button onClick={handleOpenModal}>
+          新規作成
+        </Button>
+      </Flex>
+      <Modal opened={opened} onClose={() => setOpened(false)}>
+        <VideoForm
+          categories={videoCategories} // カテゴリー情報
+          onSuccess={() => setOpened(false)}
+          onClose={() => setOpened(false)}
+        />
+      </Modal>
       <Paper>
         {existingCategories.map((category) => (
           <div key={category.id}>
@@ -33,9 +52,9 @@ export function VideosPageTemplate({ videos, categories }: VideosPageTemplatePro
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
                     <VideoCard video={video} />
                   </Grid.Col>
-              ))}
+                ))}
             </Grid>
-            <br/>
+            <br />
           </div>
         ))}
       </Paper>

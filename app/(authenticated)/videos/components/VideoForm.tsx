@@ -1,50 +1,46 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Video } from '@/app/types';
-import { useContent } from '@/app/(authenticated)/context/ContentContext';
+import { CategoryType, VideoWithCategoryType } from '@/app/types';
 
 interface VideoFormProps {
-  video?: Video;
+  video?: VideoWithCategoryType;
+  categories: CategoryType[];
   onSuccess: () => void;
   onClose: () => void;
 }
 
-export const VideoForm: React.FC<VideoFormProps> = ({ video, onSuccess, onClose }) => {
+export const VideoForm: React.FC<VideoFormProps> = ({ video, categories, onSuccess, onClose }) => {
   const [formData, setFormData] = useState({
     title: '',
+    category: '',
+    url: '',
     description: '',
-    videoUrl: '',
-    thumbnail: '',
+    owner: '',
+    duration: '',
   });
-
-  const { addVideo, updateVideo } = useContent();
-  const isEditing = !!video;
 
   useEffect(() => {
     if (video) {
       setFormData({
-        title: video.title,
-        description: video.description,
-        videoUrl: video.videoUrl,
-        thumbnail: video.thumbnail,
+        name: video.name || '',
+        category: video.category || '',
+        url: video.url || '',
+        description: video.description || '',
+        duration: video.duration || '',
       });
     }
   }, [video]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (isEditing && video) {
-      updateVideo(video.id, formData);
-    } else {
-      addVideo(formData);
-    }
-    
-    onSuccess();
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // 登録・更新処理をここに記述
+    onSuccess();
   };
 
   return (
@@ -60,14 +56,49 @@ export const VideoForm: React.FC<VideoFormProps> = ({ video, onSuccess, onClose 
           value={formData.title}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="動画のタイトルを入力してください"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          placeholder="ビデオのタイトルを入力してください"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+          カテゴリー
+        </label>
+        <select
+          id="category"
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        >
+          <option value="">選択してください</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.name}>{cat.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
+          URL
+        </label>
+        <input
+          type="url"
+          id="url"
+          name="url"
+          value={formData.url}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          placeholder="https://example.com/video.mp4"
         />
       </div>
 
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-          説明
+          概要
         </label>
         <textarea
           id="description"
@@ -75,40 +106,40 @@ export const VideoForm: React.FC<VideoFormProps> = ({ video, onSuccess, onClose 
           value={formData.description}
           onChange={handleChange}
           rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="動画の説明を入力してください"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          placeholder="ビデオの概要を入力してください"
         />
       </div>
 
       <div>
-        <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-2">
-          動画URL
+        <label htmlFor="owner" className="block text-sm font-medium text-gray-700 mb-2">
+          担当
         </label>
         <input
-          type="url"
-          id="videoUrl"
-          name="videoUrl"
-          value={formData.videoUrl}
+          type="text"
+          id="owner"
+          name="owner"
+          value={formData.owner}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="https://example.com/video.mp4"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          placeholder="担当者名を入力してください"
         />
       </div>
 
       <div>
-        <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-2">
-          サムネイルURL
+        <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
+          ビデオの長さ
         </label>
         <input
-          type="url"
-          id="thumbnail"
-          name="thumbnail"
-          value={formData.thumbnail}
+          type="text"
+          id="duration"
+          name="duration"
+          value={formData.duration}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="https://example.com/thumbnail.jpg"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          placeholder="例: 10:23"
         />
       </div>
 
@@ -124,7 +155,7 @@ export const VideoForm: React.FC<VideoFormProps> = ({ video, onSuccess, onClose 
           type="submit"
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
-          {isEditing ? '更新' : '作成'}
+          保存
         </button>
       </div>
     </form>

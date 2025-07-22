@@ -1,15 +1,17 @@
+'use client';
+
 import React, { createContext, useContext, ReactNode } from 'react';
-import { Document, Video } from '@/app/types';
+import { DocumentFormat, VideoFormat } from '@/app/types';
 import { useLocalStorage } from '@/app/(authenticated)/hooks/useLocalStorage';
 
 interface ContentContextType {
-  documents: Document[];
-  videos: Video[];
+  documents: DocumentFormat[];
+  videos: VideoFormat[];
   addDocument: (document: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateDocument: (id: string, document: Partial<Document>) => void;
   deleteDocument: (id: string) => void;
-  addVideo: (video: Omit<Video, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateVideo: (id: string, video: Partial<Video>) => void;
+  addVideo: (video: Omit<VideoFormat, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateVideo: (id: string, video: Partial<VideoFormat>) => void;
   deleteVideo: (id: string) => void;
 }
 
@@ -29,13 +31,13 @@ interface ContentProviderProps {
 
 export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) => {
   const [documents, setDocuments] = useLocalStorage<Document[]>('documents', []);
-  const [videos, setVideos] = useLocalStorage<Video[]>('videos', []);
+  const [videos, setVideos] = useLocalStorage<VideoFormat[]>('videos', []);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
   const getCurrentTimestamp = () => new Date().toISOString();
 
   const addDocument = (document: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newDocument: Document = {
+    const newDocument: DocumentFormat = {
       ...document,
       id: generateId(),
       createdAt: getCurrentTimestamp(),
@@ -44,7 +46,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     setDocuments(prev => [...prev, newDocument]);
   };
 
-  const updateDocument = (id: string, document: Partial<Document>) => {
+  const updateDocument = (id: string, document: Partial<DocumentFormat>) => {
     setDocuments(prev =>
       prev.map(doc =>
         doc.id === id ? { ...doc, ...document, updatedAt: getCurrentTimestamp() } : doc
@@ -56,8 +58,8 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     setDocuments(prev => prev.filter(doc => doc.id !== id));
   };
 
-  const addVideo = (video: Omit<Video, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newVideo: Video = {
+  const addVideo = (video: Omit<VideoFormat, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newVideo: VideoFormat = {
       ...video,
       id: generateId(),
       createdAt: getCurrentTimestamp(),
@@ -66,7 +68,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     setVideos(prev => [...prev, newVideo]);
   };
 
-  const updateVideo = (id: string, video: Partial<Video>) => {
+  const updateVideo = (id: string, video: Partial<VideoFormat>) => {
     setVideos(prev =>
       prev.map(vid =>
         vid.id === id ? { ...vid, ...video, updatedAt: getCurrentTimestamp() } : vid

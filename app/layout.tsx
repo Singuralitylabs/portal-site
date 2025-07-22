@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "@mantine/core/styles.css";
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
+import { ContentProvider } from '@/app/(authenticated)/context/ContentContext';
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -31,7 +32,9 @@ export default function RootLayout({
       <body>
         <ClerkProvider>
           <MantineProvider>
-            <div className="min-h-screen">{children}</div>
+            <ContentProvider>
+              <div className="min-h-screen">{children}</div>
+            </ContentProvider>
           </MantineProvider>
         </ClerkProvider>
       </body>
