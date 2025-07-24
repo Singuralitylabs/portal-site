@@ -84,10 +84,10 @@ const { data, error } = await supabase.from("table_name").delete().eq("id", 1);
 
 ## 認証連携
 
-本プロジェクトでは、Clerkを使用した認証と、Supabaseを使用したデータ管理を組み合わせています：
+本プロジェクトでは、Supabase Authを使用した認証と、Supabaseを使用したデータ管理を組み合わせています：
 
-1. ユーザーがClerkでGoogle認証を行う
-2. 認証成功後、Clerkからwebhookが呼び出され、ユーザー情報がSupabaseのusersテーブルに登録される
+1. ユーザーがSupabase AuthでGoogle認証を行う
+2. 認証成功後、ユーザー情報がSupabaseのauth.usersテーブルに自動的に登録される
 3. クライアントからのデータアクセスはRLSポリシーによって制御される
 
 ### Row Level Security (RLS)
@@ -109,7 +109,7 @@ Row Level Security (RLS)を使用して、データアクセスを制御して�
 解決策:
 
 1. RLSポリシーが正しく設定されているか確認
-2. Clerk認証からclerk_idが正しくセットされているか確認
+2. Supabase Auth認証からuser_idが正しくセットされているか確認
 
 ### 型定義の不一致
 
