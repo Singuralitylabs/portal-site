@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { DocumentWithCategoryType, UserType } from '@/app/types';
 import { FileText, FileType, Calendar } from 'lucide-react';
 import { Button, Card, Flex, Text, Modal, Group } from '@mantine/core';
-import { deleteDocument } from '@/app/services/api/documents'; // ドキュメント削除APIをインポート
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
@@ -25,15 +24,21 @@ export function DocumentCard({ document, currentUser, onEdit, onDelete }: Docume
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const res = await fetch('/api/documents/delete', {
+  const handleDelete = async (id: number) => {
+    const res = await fetch('/api/documents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
     const result = await res.json();
     if (result.success) {
-      // 削除後のリスト更新など
+      // 削除成功
+      alert('削除しました');
+      setDeleteModalOpened(false);
+      // 必要ならリスト更新処理
+    } else {
+      // 削除失敗
+      alert('削除に失敗しました: ' + (result.error || '不明なエラー'));
     }
   };
 
@@ -81,7 +86,7 @@ export function DocumentCard({ document, currentUser, onEdit, onDelete }: Docume
           <Button variant="default" onClick={() => setDeleteModalOpened(false)}>
             キャンセル
           </Button>
-          <Button color="red" onClick={handleDelete}>
+          <Button color="red" onClick={() => handleDelete(document.id)}>
             削除
           </Button>
         </Group>
