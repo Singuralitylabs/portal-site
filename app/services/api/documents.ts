@@ -15,15 +15,3 @@ export async function fetchDocuments() {
 
   return { data, error: null };
 }
-
-// 対象の資料を論理削除するAPI
-export async function deleteDocument(req: NextRequest) {
-  const { id } = await req.json();
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.from("documents").update({ is_deleted: true }).eq("id", id);
-
-  if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ success: true });
-}
