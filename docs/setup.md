@@ -137,11 +137,11 @@ VSCodeの設定（`.vscode/settings.json`）：
 }
 ```
 
-### 2. UIライブラリ（shadcn/ui）のセットアップ
+### 2. UIライブラリ（mantine）のセットアップ
 
 ```bash
-# shadcn/uiの初期設定
-npx shadcn-ui@latest init
+# mantineの基本設定
+npm install @mantine/core @mantine/hooks
 ```
 
 以下の選択肢を選んでください：
@@ -157,21 +157,23 @@ npx shadcn-ui@latest init
 ✔ Configure the import alias for utils? → @/lib/utils
 ```
 
-### 2. 認証（Clerk）のセットアップ
+### 2. 認証（Supabase Auth）のセットアップ
 
 ```bash
-# Clerkのインストール
-npm install @clerk/nextjs
+# Supabaseクライアントのインストール
+npm install @supabase/supabase-js
 ```
 
 ## 認証の設定
 
-### 1. Clerkの設定
+### 1. Supabase Authの設定
 
-1. [Clerk Dashboard](https://dashboard.clerk.dev/)でプロジェクトを作成
+1. [Supabase Dashboard](https://supabase.com/dashboard/)でプロジェクトを作成
 2. Google認証の有効化:
-   - OAuth providersからGoogleを選択
-   - 必要な情報を入力
+   - Authentication > Providersから「Google」を選択
+   - Googleプロバイダーを有効にして、Client IDとClient Secretを設定
+3. 環境変数の設定:
+   - プロジェクト設定からSupabase URLとAnon Keyを取得
 
 ## 開発環境の起動確認
 
@@ -187,7 +189,7 @@ npm install @clerk/nextjs
 
 3. ブラウザでの動作確認
    - http://localhost:3000 にアクセス
-   - 認証機能の動作確認
+   - Supabase Auth認証機能の動作確認
 
 ## トラブルシューティング
 

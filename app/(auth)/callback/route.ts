@@ -1,8 +1,6 @@
 import { CookieOptions, createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { fetchUserStatusById } from "@/app/services/api/user";
-import { USER_STATUS } from "@/app/constants/user";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -33,30 +31,10 @@ export async function GET(request: NextRequest) {
     if (!error && data.session) {
       console.log("認証成功:", data.session.user.email);
 
-      // 認証済みユーザーとして自分のユーザー情報を確認
-      const { status: userStatus, error: userError } = await fetchUserStatusById({
-        authId: data.session.user.id,
-      });
-
-      if (userError) {
-        console.error("ユーザーステータス取得エラー:", userError);
-        // 新規ユーザーの場合は承認待ちページへ（supabase-auth-providerでユーザー作成処理）
-        return NextResponse.redirect(`${origin}/pending`);
-      }
-
-      console.log("ユーザーステータス:", userStatus);
-
-      // ユーザーのステータスに応じてリダイレクト
-      if (userStatus === USER_STATUS.ACTIVE) {
-        return NextResponse.redirect(`${origin}/`);
-      } else if (userStatus === USER_STATUS.REJECTED) {
-        return NextResponse.redirect(`${origin}/rejected`);
-      } else if (userStatus === USER_STATUS.PENDING) {
-        return NextResponse.redirect(`${origin}/pending`);
-      } else {
-        console.error("不明なユーザーステータス:", userStatus);
-        return NextResponse.redirect(`${origin}/login`);
-      }
+      console.log("認証セッション確立完了");
+      
+      // middlewareで適切なページにリダイレクトされるため、一律でホームページへ
+      return NextResponse.redirect(`${origin}/`);
     } else {
       console.error("認証エラー:", error);
     }
