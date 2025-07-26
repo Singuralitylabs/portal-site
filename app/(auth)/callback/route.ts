@@ -1,7 +1,7 @@
 import { CookieOptions, createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { fetchUserStatusById } from "@/app/services/api/user";
+import { fetchUserStatusByIdInServer } from "@/app/services/api/user-server";
 import { USER_STATUS } from "@/app/constants/user";
 
 export async function GET(request: NextRequest) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       console.log("認証成功:", data.session.user.email);
 
       // 認証済みユーザーとして自分のユーザー情報を確認
-      const { status: userStatus, error: userError } = await fetchUserStatusById({
+      const { status: userStatus, error: userError } = await fetchUserStatusByIdInServer({
         authId: data.session.user.id,
       });
 
