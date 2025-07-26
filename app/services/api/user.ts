@@ -1,6 +1,7 @@
 import { InsertUserType, UserStatusType, UserType } from "@/app/types";
 import { createClientSupabaseClient } from "./supabase-client";
 import { PostgrestError } from "@supabase/supabase-js";
+import { UUID } from "crypto";
 
 interface NewUserProps {
   authId: string;
@@ -36,15 +37,15 @@ export async function addNewUser({ authId, email, displayName }: NewUserProps) {
 }
 
 /**
- * usersテーブルから指定のauth_idのユーザーのステータスを取得する
- * @param param0 - ユーザーの認証ID
- * @param {string} authId - ユーザーの認証ID
+ * usersテーブルから指定のauth_idのユーザーのステータスを取得する（クライアントサイド用）
+ * @param param0 - パラメータオブジェクト
+ * @param {UUID | string} param0.authId - ユーザーの認証ID
  * @returns { status: UserStatusType | null, error: PostgrestError | null } - ユーザーステータスとエラー
  */
 export async function fetchUserStatusById({
   authId,
 }: {
-  authId: string;
+  authId: UUID | string;
 }): Promise<{ status: UserStatusType | null; error: PostgrestError | null }> {
   const supabase = createClientSupabaseClient();
 
@@ -53,10 +54,10 @@ export async function fetchUserStatusById({
     .select("status")
     .eq("auth_id", authId)
     .eq("is_deleted", false)
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
-    console.error("Supabase ユーザーステータス取得エラー:", error.message);
+    console.error("Supabase ユーザーステータス取得エラー:", error?.message || "No data found");
     return { status: null, error };
   }
 
