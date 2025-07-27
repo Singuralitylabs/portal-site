@@ -6,7 +6,7 @@ import { createClientSupabaseClient } from "./supabase-client";
  * @returns 削除結果
  */
 export async function deleteDocument(id: number) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   const { error } = await supabase.from("documents").update({ is_deleted: true }).eq("id", id);
 
   if (error) {

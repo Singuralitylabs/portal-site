@@ -27,7 +27,7 @@ export function DocumentCard({ document, currentUser }: DocumentCardProps) {
 
   const handleDelete = async (id: number) => {
     try {
-      const result = await deleteDocument(id); // クライアントサイドでの削除処理
+      const result = await deleteDocument(id);
       setDeleteModalOpened(false);
       if (result?.success) {
         alert('資料を削除しました。');
@@ -66,9 +66,7 @@ export function DocumentCard({ document, currentUser }: DocumentCardProps) {
         </Button>
         {isAdmin && (
           <Group m="0 1rem 1rem" gap="xs">
-            <Button color="blue" onClick={() => /* */ alert('編集機能はまだ実装していません')}>
-              編集
-            </Button>
+            {/* TODO: Implement the edit functionality */}
             <Button color="red" onClick={() => setDeleteModalOpened(true)}>
               削除
             </Button>

@@ -26,3 +26,23 @@ export async function createServerSupabaseClient() {
     }
   );
 }
+
+/**
+ * サーバーサイドで現在アクセスしているユーザー情報（usersテーブルの型）を取得する
+ */
+export async function getCurrentUser() {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
+    return null;
+  }
+
+  // usersテーブルから追加情報を取得
+  const { data: userProfile, error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("auth_id", data.user.id)
+    .single();
+
+  return { userProfile, userError };
+}
