@@ -24,7 +24,7 @@ export function DocumentsPageTemplate({ documents, categories } : DocumentsPageT
         <div className="flex flex-wrap items-center">
           {existingCategories.map((category, index) => (
             <div key={category.id}>
-              {index > 0 && <span className="text-gray-500">|</span>}
+              {index > 0 && <span className="text-gray-500 mx-2">|</span>}
               <a href={`#category-${category.id}`} className="text-blue-600">{category.name}</a>
             </div>
           ))}
