@@ -20,10 +20,21 @@ export function VideosPageTemplate({ videos, categories }: VideosPageTemplatePro
     <Paper m="0 2rem">
       <PageTitle>動画一覧</PageTitle>
 
+      <Paper mb="md" p="md">
+        <div className="flex flex-wrap items-center">
+          {existingCategories.map((category, index) => (
+            <div key={category.id}>
+              {index > 0 && <span className="text-gray-500">|</span>}
+              <a href={`#category-${category.id}`} className="text-blue-600">{category.name}</a>
+            </div>
+          ))}
+        </div>
+      </Paper>
+
       <Paper>
         {existingCategories.map((category) => (
           <div key={category.id}>
-            <h2>{category.name}</h2>
+            <h2 id={`category-${category.id}`}>{category.name}</h2>
             <Grid>
               {videos.filter((video) => video.category?.name === category.name)
                 .map((video) => (
