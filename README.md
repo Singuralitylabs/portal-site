@@ -19,7 +19,7 @@
 
 ### バックエンド/インフラ
 
-- Clerk (認証)
+- Supabase Auth (認証)
 - Supabase (データベース)
 - Vercel (ホスティング)
 
@@ -48,13 +48,10 @@
    環境変数の値については、プロジェクトリーダーに確認してください。
 
    ```bash
-   # Clerk認証関連
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_********
-   CLERK_SECRET_KEY=sk_********
-
-   # Supabase関連
+   # Supabase関連（認証・データベース）
    NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
+   SUPABASE_PROJECT_ID=************
    ```
 
 4. 開発サーバーの起動

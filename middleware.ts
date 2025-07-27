@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { USER_STATUS } from "./app/constants/user";
+import { fetchUserStatusByIdInServer } from "./app/services/api/user-server";
 
 const publicRoutes = ["/login", "/callback", "/pending", "/rejected"];
 
@@ -63,25 +64,27 @@ export async function middleware(request: NextRequest) {
   }
 
   // 認証済みユーザーとして自分のユーザー情報を確認
-  const { data: userData } = await supabase
-    .from("users")
-    .select("status")
-    .eq("auth_id", user.id)
-    .single();
+  const { status: userStatus, error: userError } = await fetchUserStatusByIdInServer({
+    authId: user.id,
+  });
+
+  if (userError) {
+    console.error("User data fetch error:", userError);
+  }
 
   // ユーザーステータスに応じてリダイレクト
-  if (!userData) {
+  if (!userStatus) {
     // ユーザー情報がない場合は承認待ちページへ
     const redirectUrl = new URL("/pending", request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (userData.status === USER_STATUS.PENDING && !pathname.startsWith("/pending")) {
+  if (userStatus === USER_STATUS.PENDING && !pathname.startsWith("/pending")) {
     const redirectUrl = new URL("/pending", request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (userData.status === USER_STATUS.REJECTED && !pathname.startsWith("/rejected")) {
+  if (userStatus === USER_STATUS.REJECTED && !pathname.startsWith("/rejected")) {
     const redirectUrl = new URL("/rejected", request.url);
     return NextResponse.redirect(redirectUrl);
   }
