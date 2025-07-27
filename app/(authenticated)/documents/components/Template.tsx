@@ -11,8 +11,8 @@ interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
   categories: CategoryType[];
   currentUser?: UserType;
-  onEdit?: (document: DocumentWithCategoryType) => void;
-  onDelete?: (id: number) => void;
+  //onEdit?: (document: DocumentWithCategoryType) => void;
+  //onDelete?: (id: number) => Promise<{ success: boolean; error?: string | null }>; // 削除処理の結果を返す関数, Promise?は要確認
 };
 
 export function DocumentsPageTemplate({ documents, categories, currentUser, onEdit, onDelete }: DocumentsPageTemplateProps) {
@@ -33,8 +33,8 @@ export function DocumentsPageTemplate({ documents, categories, currentUser, onEd
                     <DocumentCard
                       document={document}
                       currentUser={currentUser}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
+                    //onEdit={onEdit}
+                    //onDelete={onDelete}
                     />
                   </Grid.Col>
                 ))}

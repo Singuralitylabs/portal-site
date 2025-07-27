@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { DocumentWithCategoryType, UserType } from '@/app/types';
 import { FileText, FileType, Calendar } from 'lucide-react';
 import { Button, Card, Flex, Text, Modal, Group } from '@mantine/core';
+import { deleteDocument } from '@/app/services/api/documents-client';
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
   currentUser?: UserType; // 親からユーザー情報を渡す
   onEdit?: (document: DocumentWithCategoryType) => void;
-  onDelete?: (id: number) => void;
+  onDelete?: (id: number) => Promise<{ success: boolean; error?: string | null }>; // 削除処理の結果を返す関数, Promise?は要確認
 }
 
 export function DocumentCard({ document, currentUser, onEdit, onDelete }: DocumentCardProps) {
@@ -25,21 +26,9 @@ export function DocumentCard({ document, currentUser, onEdit, onDelete }: Docume
   };
 
   const handleDelete = async (id: number) => {
-    const res = await fetch('/api/documents', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    const result = await res.json();
-    if (result.success) {
-      // 削除成功
-      alert('削除しました');
-      setDeleteModalOpened(false);
-      // 必要ならリスト更新処理
-    } else {
-      // 削除失敗
-      alert('削除に失敗しました: ' + (result.error || '不明なエラー'));
-    }
+    await deleteDocument(id); // クライアントサイドでの削除処理
+    setDeleteModalOpened(false);
+    alert('資料を削除しました。'); // 削除成功のメッセージ
   };
 
   const isAdmin = currentUser?.role === 'admin';
