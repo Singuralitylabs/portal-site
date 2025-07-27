@@ -5,16 +5,16 @@ import { DocumentWithCategoryType, UserType } from '@/app/types';
 import { FileText, FileType, Calendar } from 'lucide-react';
 import { Button, Card, Flex, Text, Modal, Group } from '@mantine/core';
 import { deleteDocument } from '@/app/services/api/documents-client';
+import { useRouter } from 'next/navigation';
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
   currentUser?: UserType; // 親からユーザー情報を渡す
-  onEdit?: (document: DocumentWithCategoryType) => void;
-  onDelete?: (id: number) => Promise<{ success: boolean; error?: string | null }>; // 削除処理の結果を返す関数, Promise?は要確認
 }
 
-export function DocumentCard({ document, currentUser, onEdit, onDelete }: DocumentCardProps) {
+export function DocumentCard({ document, currentUser }: DocumentCardProps) {
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const router = useRouter();
 
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
@@ -26,9 +26,20 @@ export function DocumentCard({ document, currentUser, onEdit, onDelete }: Docume
   };
 
   const handleDelete = async (id: number) => {
-    await deleteDocument(id); // クライアントサイドでの削除処理
-    setDeleteModalOpened(false);
-    alert('資料を削除しました。'); // 削除成功のメッセージ
+    try {
+      const result = await deleteDocument(id); // クライアントサイドでの削除処理
+      setDeleteModalOpened(false);
+      if (result?.success) {
+        alert('資料を削除しました。');
+        router.refresh(); // ページをリフレッシュして削除を反映
+      } else {
+        alert('削除に失敗しました: ' + (result?.error || '不明なエラー'));
+      }
+    } catch (e) {
+      setDeleteModalOpened(false);
+      alert('削除処理で予期しないエラーが発生しました');
+      console.error(e);
+    }
   };
 
   const isAdmin = currentUser?.role === 'admin';
@@ -55,7 +66,7 @@ export function DocumentCard({ document, currentUser, onEdit, onDelete }: Docume
         </Button>
         {isAdmin && (
           <Group m="0 1rem 1rem" gap="xs">
-            <Button color="blue" onClick={() => onEdit && onEdit(document)}>
+            <Button color="blue" onClick={() => /* */ alert('編集機能はまだ実装していません')}>
               編集
             </Button>
             <Button color="red" onClick={() => setDeleteModalOpened(true)}>

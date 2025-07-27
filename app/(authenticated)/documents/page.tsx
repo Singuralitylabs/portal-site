@@ -33,8 +33,6 @@ export default async function DocumentsPage() {
       documents={data}
       categories={dataCategory}
       currentUser={currentUser}
-    //onEdit={(document) => console.log('Edit document:', document)} // 編集機能はまだ実装していない
-    //onDelete={handleDelete} // 削除機能を渡す
     />
   );
 }
