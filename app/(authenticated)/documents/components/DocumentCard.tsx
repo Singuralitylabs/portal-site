@@ -6,6 +6,7 @@ import { FileText, FileType, Calendar } from 'lucide-react';
 import { Button, Card, Flex, Text, Modal, Group } from '@mantine/core';
 import { deleteDocument } from '@/app/services/api/documents-client';
 import { useRouter } from 'next/navigation';
+import { notifications } from '@mantine/notifications';
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
@@ -29,14 +30,26 @@ export function DocumentCard({ document, currentUserRole }: DocumentCardProps) {
       const result = await deleteDocument(id);
       setDeleteModalOpened(false);
       if (result?.success) {
-        alert('資料を削除しました。');
-        router.refresh(); // ページをリフレッシュして削除を反映
+        notifications.show({
+          title: '削除完了',
+          message: '資料を削除しました。',
+          color: 'green',
+        });
+        router.refresh();
       } else {
-        alert('削除に失敗しました: ' + (result?.error || '不明なエラー'));
+        notifications.show({
+          title: '削除失敗',
+          message: String(result?.error) || '不明なエラー',
+          color: 'red',
+        });
       }
     } catch (e) {
       setDeleteModalOpened(false);
-      alert('削除処理で予期しないエラーが発生しました');
+      notifications.show({
+        title: 'エラー',
+        message: '削除処理で予期しないエラーが発生しました',
+        color: 'red',
+      });
       console.error(e);
     }
   };
