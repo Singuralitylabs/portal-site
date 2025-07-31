@@ -9,10 +9,10 @@ import { useRouter } from 'next/navigation';
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
-  currentUser?: UserType; // 親からユーザー情報を渡す
+  currentUserRole: string | null; // アクセスユーザーの役割（role）
 }
 
-export function DocumentCard({ document, currentUser }: DocumentCardProps) {
+export function DocumentCard({ document, currentUserRole }: DocumentCardProps) {
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const router = useRouter();
 
@@ -42,7 +42,7 @@ export function DocumentCard({ document, currentUser }: DocumentCardProps) {
     }
   };
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUserRole === 'admin';
 
   return (
     <Card component="div" shadow="sm" padding="lg" radius="md" w="100%" withBorder>

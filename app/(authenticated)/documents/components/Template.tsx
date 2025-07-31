@@ -10,10 +10,10 @@ import { CategoryType, UserType } from '@/app/types';
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
   categories: CategoryType[];
-  currentUser?: UserType;
+  currentUserRole?: string | null;
 };
 
-export function DocumentsPageTemplate({ documents, categories, currentUser }: DocumentsPageTemplateProps) {
+export function DocumentsPageTemplate({ documents, categories, currentUserRole }: DocumentsPageTemplateProps) {
   const documentCategoryNames = new Set(documents.map((document) => document.category?.name));
   const existingCategories = categories.filter((category) => documentCategoryNames.has(category.name));
 
@@ -30,7 +30,7 @@ export function DocumentsPageTemplate({ documents, categories, currentUser }: Do
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + '_grid'}>
                     <DocumentCard
                       document={document}
-                      currentUser={currentUser}
+                      currentUserRole={currentUserRole ?? null}
                     />
                   </Grid.Col>
                 ))}

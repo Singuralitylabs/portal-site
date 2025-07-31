@@ -28,7 +28,8 @@ export async function createServerSupabaseClient() {
 }
 
 /**
- * サーバーサイドで現在アクセスしているユーザー情報（usersテーブルの型）を取得する
+ * サーバーサイドで現在アクセスしている認証ユーザー情報（auth_id含む）を取得する
+ * @returns 認証ユーザー情報（auth_idなど）またはnull
  */
 export async function getCurrentUser() {
   const supabase = await createServerSupabaseClient();
@@ -36,13 +37,10 @@ export async function getCurrentUser() {
   if (error || !data?.user) {
     return null;
   }
-
-  // usersテーブルから追加情報を取得
-  const { data: userProfile, error: userError } = await supabase
-    .from("users")
-    .select("*")
-    .eq("auth_id", data.user.id)
-    .single();
-
-  return { userProfile, userError };
+  // 必要な情報だけ返す（auth_idなど）
+  return {
+    auth_id: data.user.id,
+    email: data.user.email,
+    // 必要に応じて他のauth情報も追加可能
+  };
 }
