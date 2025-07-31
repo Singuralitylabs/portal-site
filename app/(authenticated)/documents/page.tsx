@@ -1,4 +1,3 @@
-import { getCurrentUser } from '@/app/services/api/supabase-server';
 import { fetchUserRoleByAuthId } from '@/app/services/api/user-server';
 import { fetchDocuments } from '@/app/services/api/documents';
 import { fetchCategoriesByType } from '@/app/services/api/categories';

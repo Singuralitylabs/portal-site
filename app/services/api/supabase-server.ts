@@ -31,7 +31,7 @@ export async function createServerSupabaseClient() {
  * サーバーサイドで現在アクセスしている認証ユーザー情報（auth_id含む）を取得する
  * @returns 認証ユーザー情報（auth_idなど）またはnull
  */
-export async function getCurrentUser() {
+export async function getServerCurrentUser() {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data?.user) {

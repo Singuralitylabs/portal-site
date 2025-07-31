@@ -1,5 +1,5 @@
 import { UserStatusType } from "@/app/types";
-import { getCurrentUser, createServerSupabaseClient } from "./supabase-server";
+import { getServerCurrentUser, createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 
@@ -41,7 +41,7 @@ export async function fetchUserRoleByAuthId(
 ): Promise<{ role: string | null; error: PostgrestError | null }> {
   let targetAuthId = authId;
   if (!targetAuthId) {
-    const currentUser = await getCurrentUser();
+    const currentUser = await getServerCurrentUser();
     if (!currentUser?.auth_id) {
       return { role: null, error: null };
     }
