@@ -1,5 +1,5 @@
 import { UserStatusType } from "@/app/types";
-import { createServerSupabaseClient } from "./supabase-server";
+import { getCurrentUser, createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 
@@ -29,4 +29,36 @@ export async function fetchUserStatusByIdInServer({
   }
 
   return { status: data.status, error: null };
+}
+
+/**
+ * usersテーブルからauth_idでユーザーのroleを取得する
+ * @param authId - 省略時は現在のユーザーのauth_idを自動取得
+ * @returns { role: string | null, error: PostgrestError | null }
+ */
+export async function fetchUserRoleByAuthId(
+  authId?: string
+): Promise<{ role: string | null; error: PostgrestError | null }> {
+  let targetAuthId = authId;
+  if (!targetAuthId) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.auth_id) {
+      return { role: null, error: null };
+    }
+    targetAuthId = currentUser.auth_id;
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", targetAuthId)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { role: null, error };
+  }
+
+  return { role: data.role, error: null };
 }

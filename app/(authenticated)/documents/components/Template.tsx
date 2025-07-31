@@ -7,12 +7,13 @@ import { PageTitle } from '@/app/components/PageTitle';
 import { DocumentWithCategoryType } from '@/app/types';
 import { CategoryType } from '@/app/types';
 
-interface DocumentsPageTemplateProps  {
-    documents: DocumentWithCategoryType[];
-    categories: CategoryType[];
+interface DocumentsPageTemplateProps {
+  documents: DocumentWithCategoryType[];
+  categories: CategoryType[];
+  currentUserRole?: string | null;
 };
 
-export function DocumentsPageTemplate({ documents, categories } : DocumentsPageTemplateProps) {
+export function DocumentsPageTemplate({ documents, categories, currentUserRole }: DocumentsPageTemplateProps) {
   const documentCategoryNames = new Set(documents.map((document) => document.category?.name));
   const existingCategories = categories.filter((category) => documentCategoryNames.has(category.name));
 
@@ -39,11 +40,14 @@ export function DocumentsPageTemplate({ documents, categories } : DocumentsPageT
               {documents.filter((document) => document.category?.name === category.name)
                 .map((document) => (
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + '_grid'}>
-                    <DocumentCard document={document} />
+                    <DocumentCard
+                      document={document}
+                      currentUserRole={currentUserRole ?? null}
+                    />
                   </Grid.Col>
-              ))}
+                ))}
             </Grid>
-            <br/>
+            <br />
           </div>
         ))}
       </Paper>
