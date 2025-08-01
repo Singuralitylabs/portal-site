@@ -10,7 +10,7 @@ import { CategoryType } from '@/app/types';
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
   categories: CategoryType[];
-  currentUserRole?: string | null;
+  currentUserRole: string;
 };
 
 export function DocumentsPageTemplate({ documents, categories, currentUserRole }: DocumentsPageTemplateProps) {
@@ -42,7 +42,7 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole }
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + '_grid'}>
                     <DocumentCard
                       document={document}
-                      currentUserRole={currentUserRole ?? null}
+                      currentUserRole={currentUserRole}
                     />
                   </Grid.Col>
                 ))}

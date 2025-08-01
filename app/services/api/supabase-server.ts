@@ -1,5 +1,7 @@
 import { CookieOptions, createServerClient } from "@supabase/ssr";
+import { PostgrestError } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { AuthError } from "@supabase/supabase-js";
 
 // サーバーサイド用Supabaseクライアント（認証付き）
 export async function createServerSupabaseClient() {
@@ -29,18 +31,17 @@ export async function createServerSupabaseClient() {
 
 /**
  * サーバーサイドで現在アクセスしている認証ユーザー情報（auth_id含む）を取得する
- * @returns 認証ユーザー情報（auth_idなど）またはnull
+ * @returns 認証ユーザー情報（auth_idなど）
+ * @returns { auth_id: string, error: PostgrestError | null }
  */
-export async function getServerCurrentUser() {
+export async function getServerCurrentUser(): Promise<{
+  auth_id: string;
+  error: AuthError | null;
+}> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
-    return null;
-  }
-  // 必要な情報だけ返す（auth_idなど）
   return {
-    auth_id: data.user.id,
-    email: data.user.email,
-    // 必要に応じて他のauth情報も追加可能
+    auth_id: data?.user?.id ?? "",
+    error,
   };
 }

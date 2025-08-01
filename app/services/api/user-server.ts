@@ -32,31 +32,26 @@ export async function fetchUserStatusByIdInServer({
 }
 
 /**
- * usersテーブルからauth_idでユーザーのroleを取得する
- * @param authId - 省略時は現在のユーザーのauth_idを自動取得
- * @returns { role: string | null, error: PostgrestError | null }
+ * usersテーブルから指定のauth_idのユーザーのロールを取得する（サーバーサイド用）
+ * @param param0 - パラメータオブジェクト
+ * @param {string} param0.authId - ユーザーの認証ID（必須）
+ * @returns { role: string | null, error: PostgrestError | null } - ユーザーロールとエラー
  */
-export async function fetchUserRoleByAuthId(
-  authId?: string
-): Promise<{ role: string | null; error: PostgrestError | null }> {
-  let targetAuthId = authId;
-  if (!targetAuthId) {
-    const currentUser = await getServerCurrentUser();
-    if (!currentUser?.auth_id) {
-      return { role: null, error: null };
-    }
-    targetAuthId = currentUser.auth_id;
-  }
-
+export async function fetchUserRoleByAuthId({
+  authId,
+}: {
+  authId: string;
+}): Promise<{ role: string | null; error: PostgrestError | null }> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("users")
     .select("role")
-    .eq("auth_id", targetAuthId)
+    .eq("auth_id", authId)
     .eq("is_deleted", false)
     .maybeSingle();
 
   if (error || !data) {
+    console.error("Supabase ユーザーロール取得エラー:", error?.message || "No data found");
     return { role: null, error };
   }
 
