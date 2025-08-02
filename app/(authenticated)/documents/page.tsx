@@ -5,19 +5,19 @@ import { fetchCategoriesByType } from '@/app/services/api/categories';
 import { DocumentsPageTemplate } from './components/Template';
 
 export default async function DocumentsPage() {
-  const { data, error } = await fetchDocuments();
-  const { data: dataCategory, error: errorCategory } = await fetchCategoriesByType("documents");
-
-  // サーバーサイドで利用ユーザーのroleを参照
-  const { auth_id, error: SupabaseError } = await getServerCurrentUser();
-  if (!auth_id || SupabaseError) {
-    console.error("認証情報の取得に失敗:", SupabaseError);
+  // サーバーサイドで利用ユーザー情報を参照
+  const { authId, error: currentUserError } = await getServerCurrentUser();
+  if (currentUserError) {
+    console.error("認証情報の取得に失敗:", currentUserError);
     return <p>認証情報が取得できませんでした。</p>;
   }
-  const { role, error: UserError } = await fetchUserRoleByAuthId({ authId: auth_id });
 
-  if (!role || error || errorCategory || UserError) {
-    console.error("データ取得エラー:", error || errorCategory || UserError);
+  const { data, error } = await fetchDocuments();
+  const { data: dataCategory, error: errorCategory } = await fetchCategoriesByType("documents");
+  const { role, error: roleError } = await fetchUserRoleByAuthId({ authId: authId });
+
+  if (error || errorCategory || roleError) {
+    console.error("データ取得エラー:", error || errorCategory || roleError);
     return <p>データを取得できませんでした。</p>;
   }
 

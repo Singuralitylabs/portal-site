@@ -10,7 +10,7 @@ import { notifications } from '@mantine/notifications';
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
-  currentUserRole: string | null; // アクセスユーザーの役割（role）
+  currentUserRole: string; // アクセスユーザーの役割（role）
 }
 
 export function DocumentCard({ document, currentUserRole }: DocumentCardProps) {

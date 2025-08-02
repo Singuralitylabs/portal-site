@@ -1,5 +1,5 @@
 import { UserStatusType } from "@/app/types";
-import { getServerCurrentUser, createServerSupabaseClient } from "./supabase-server";
+import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 
@@ -35,13 +35,13 @@ export async function fetchUserStatusByIdInServer({
  * usersテーブルから指定のauth_idのユーザーのロールを取得する（サーバーサイド用）
  * @param param0 - パラメータオブジェクト
  * @param {string} param0.authId - ユーザーの認証ID（必須）
- * @returns { role: string | null, error: PostgrestError | null } - ユーザーロールとエラー
+ * @returns { role: string, error: PostgrestError | null } - ユーザーロールとエラー
  */
 export async function fetchUserRoleByAuthId({
   authId,
 }: {
   authId: string;
-}): Promise<{ role: string | null; error: PostgrestError | null }> {
+}): Promise<{ role: string; error: PostgrestError | null }> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("users")
@@ -52,7 +52,7 @@ export async function fetchUserRoleByAuthId({
 
   if (error || !data) {
     console.error("Supabase ユーザーロール取得エラー:", error?.message || "No data found");
-    return { role: null, error };
+    return { role: "", error };
   }
 
   return { role: data.role, error: null };
