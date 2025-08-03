@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import "@mantine/core/styles.css";
+import '@mantine/notifications/styles.css';
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
 import { SupabaseAuthProvider } from "@/app/providers/supabase-auth-provider";
+import { Notifications } from "@mantine/notifications";
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -31,6 +33,7 @@ export default function RootLayout({
       <body>
         <SupabaseAuthProvider>
           <MantineProvider>
+            <Notifications position="top-right" />
             <div className="min-h-screen">{children}</div>
           </MantineProvider>
         </SupabaseAuthProvider>

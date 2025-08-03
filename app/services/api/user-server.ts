@@ -30,3 +30,30 @@ export async function fetchUserStatusByIdInServer({
 
   return { status: data.status, error: null };
 }
+
+/**
+ * usersテーブルから指定のauth_idのユーザーのロールを取得する（サーバーサイド用）
+ * @param param0 - パラメータオブジェクト
+ * @param {string} param0.authId - ユーザーの認証ID（必須）
+ * @returns { role: string, error: PostgrestError | null } - ユーザーロールとエラー
+ */
+export async function fetchUserRoleByAuthId({
+  authId,
+}: {
+  authId: string;
+}): Promise<{ role: string; error: PostgrestError | null }> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", authId)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("Supabase ユーザーロール取得エラー:", error?.message || "No data found");
+    return { role: "", error };
+  }
+
+  return { role: data.role, error: null };
+}

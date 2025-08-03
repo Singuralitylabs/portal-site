@@ -1,14 +1,31 @@
+import { getServerCurrentUser } from '@/app/services/api/supabase-server';
+import { fetchUserRoleByAuthId } from '@/app/services/api/user-server';
 import { fetchDocuments } from '@/app/services/api/documents';
 import { fetchCategoriesByType } from '@/app/services/api/categories';
 import { DocumentsPageTemplate } from './components/Template';
 
 export default async function DocumentsPage() {
-  const { data, error } = await fetchDocuments();
-  const { data:dataCategory, error:errorCategory } = await fetchCategoriesByType("documents");
+  // サーバーサイドで利用ユーザー情報を参照
+  const { authId, error: currentUserError } = await getServerCurrentUser();
+  if (currentUserError) {
+    console.error("認証情報の取得に失敗:", currentUserError);
+    return <p>認証情報が取得できませんでした。</p>;
+  }
 
-  if (error || errorCategory) {
+  const { data, error } = await fetchDocuments();
+  const { data: dataCategory, error: errorCategory } = await fetchCategoriesByType("documents");
+  const { role, error: roleError } = await fetchUserRoleByAuthId({ authId: authId });
+
+  if (error || errorCategory || roleError) {
+    console.error("データ取得エラー:", error || errorCategory || roleError);
     return <p>データを取得できませんでした。</p>;
   }
 
-  return <DocumentsPageTemplate documents={data} categories={dataCategory} />;
+  return (
+    <DocumentsPageTemplate
+      documents={data}
+      categories={dataCategory}
+      currentUserRole={role}
+    />
+  );
 }
