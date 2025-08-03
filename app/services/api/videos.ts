@@ -1,10 +1,10 @@
-import { createServerSupabaseClient } from "./supabase";
+import { createServerSupabaseClient } from "./supabase-server";
 
 export async function fetchVideos() {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
-    .select("*")
+    .select(`*, category:categories (name)`)
     .eq("is_deleted", false);
 
   if (error) {
@@ -19,7 +19,7 @@ export async function fetchVideoById(videoId: number) {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
-    .select("*")
+    .select(`*, category:categories(name)`)
     .eq("id", videoId)
     .eq("is_deleted", false)
     .maybeSingle();

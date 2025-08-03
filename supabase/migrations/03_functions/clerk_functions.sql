@@ -1,6 +1,6 @@
 -- 関数作成
 
--- クライアントからClerk IDを設定するための関数
+-- クライアントからClerk IDを設定するための関数（現在未使用）
 CREATE OR REPLACE FUNCTION set_clerk_user_id(clerk_id TEXT)
 RETURNS VOID AS $$
 BEGIN
@@ -8,7 +8,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- セッション変数からClerk IDを取得する関数
+-- セッション変数からClerk IDを取得する関数（現在未使用）
 CREATE OR REPLACE FUNCTION get_clerk_user_id()
 RETURNS TEXT AS $$
 BEGIN
@@ -18,7 +18,7 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Clerk IDがusersテーブルに存在し、削除されていないかチェックする関数
+-- Clerk IDがusersテーブルに存在し、削除されていないかチェックする関数（現在未使用）
 CREATE OR REPLACE FUNCTION is_registered_user()
 RETURNS BOOLEAN AS $$
 DECLARE

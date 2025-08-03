@@ -1,13 +1,14 @@
 'use client';
 
-import { VideoType } from '@/app/types';
+import { VideoWithCategoryType } from '@/app/types';
 import { Paper, Button, Flex, Text, Grid, Divider } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
+import { getYouTubeVideoId } from '@/app/(authenticated)/videos/utils';
 import Link from 'next/link';
 import YouTube from 'react-youtube';
 
 interface VideoDetailPageProps {
-  video: VideoType;
+  video: VideoWithCategoryType;
 }
 
 export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
@@ -21,7 +22,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
           <div className="max-w-[800px] w-full shadow-md rounded-b-md">
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
               <YouTube
-                videoId={video.url.replace(/(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})(?:\S+)?$/, "$1")}
+                videoId={getYouTubeVideoId({ url: video.url })}
                 title={video.name}
                 opts={{
                   width: "100%",
@@ -37,7 +38,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                   <Grid.Col span={6}>
                     {/* 動画のカテゴリー */}
                     <Button component="div" radius="md" size="compact-sm" c="rgb(23,23,23)" bg="gray.2" fs="0.875rem">
-                      {video.category}
+                      {video.category?.name}
                     </Button>
                   </Grid.Col>
                   <Grid.Col span={6}>

@@ -1,6 +1,8 @@
 # 会員制ポータルサイト
 
-会員限定のコンテンツを提供するためのポータルサイトです。Google認証による会員管理と承認機能を備え、承認された会員のみがコンテンツを視聴できます。
+会員限定のコンテンツを提供するためのポータルサイトです。Google認証による会員管理と承認機能を備え、承認された会員のみがコンテンツを視聴できます。  
+
+こちらの[開発ガイドライン](https://github.com/Singuralitylabs/portal-site/wiki/%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%AB%E3%82%B5%E3%82%A4%E3%83%88%E9%96%8B%E7%99%BA%E3%82%AC%E3%82%A4%E3%83%89%E3%83%A9%E3%82%A4%E3%83%B3)も合わせてご覧ください。 
 
 ## 機能概要
 
@@ -17,7 +19,7 @@
 
 ### バックエンド/インフラ
 
-- Clerk (認証)
+- Supabase Auth (認証)
 - Supabase (データベース)
 - Vercel (ホスティング)
 
@@ -46,13 +48,10 @@
    環境変数の値については、プロジェクトリーダーに確認してください。
 
    ```bash
-   # Clerk認証関連
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_********
-   CLERK_SECRET_KEY=sk_********
-
-   # Supabase関連
+   # Supabase関連（認証・データベース）
    NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
+   SUPABASE_PROJECT_ID=************
    ```
 
 4. 開発サーバーの起動

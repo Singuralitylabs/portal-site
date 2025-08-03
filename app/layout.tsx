@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import "@mantine/core/styles.css";
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
+import { SupabaseAuthProvider } from "@/app/providers/supabase-auth-provider";
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
@@ -29,11 +29,11 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body>
-        <ClerkProvider>
+        <SupabaseAuthProvider>
           <MantineProvider>
             <div className="min-h-screen">{children}</div>
           </MantineProvider>
-        </ClerkProvider>
+        </SupabaseAuthProvider>
       </body>
     </html>
   );
