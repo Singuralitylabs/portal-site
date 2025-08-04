@@ -1,6 +1,6 @@
 import { getServerCurrentUser } from '@/app/services/api/supabase-server';
-import { fetchUserRoleByAuthId } from '@/app/services/api/user-server';
-import { fetchDocuments } from '@/app/services/api/documents';
+import { fetchUserInfoByAuthId } from '@/app/services/api/user-server';
+import { fetchDocuments } from '@/app/services/api/documents-server';
 import { fetchCategoriesByType } from '@/app/services/api/categories';
 import { DocumentsPageTemplate } from './components/Template';
 
@@ -14,7 +14,7 @@ export default async function DocumentsPage() {
 
   const { data, error } = await fetchDocuments();
   const { data: dataCategory, error: errorCategory } = await fetchCategoriesByType("documents");
-  const { role, error: roleError } = await fetchUserRoleByAuthId({ authId: authId });
+  const { id, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
 
   if (error || errorCategory || roleError) {
     console.error("データ取得エラー:", error || errorCategory || roleError);
@@ -26,6 +26,7 @@ export default async function DocumentsPage() {
       documents={data}
       categories={dataCategory}
       currentUserRole={role}
+      userId={Number(id)}
     />
   );
 }
