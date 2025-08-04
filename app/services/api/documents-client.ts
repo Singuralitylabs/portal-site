@@ -1,5 +1,6 @@
 import { createClientSupabaseClient } from "./supabase-client";
 import type { PostgrestError } from "@supabase/supabase-js";
+import type { DocumentWithCategoryType } from "@/app/types"; // ←DBレコード型を使う
 
 /**
  * 指定したidの資料を論理削除する
@@ -29,7 +30,7 @@ interface CreateDocumentParams {
 
 export async function createDocumentOnServer(
   params: CreateDocumentParams
-): Promise<{ data: CreateDocumentParams; error: PostgrestError | null }> {
+): Promise<{ data: DocumentWithCategoryType | null; error: PostgrestError | null }> {
   const supabase = await createClientSupabaseClient();
 
   const { data, error } = await supabase
@@ -42,8 +43,8 @@ export async function createDocumentOnServer(
         url: params.url,
         assignee: params.assignee,
         is_deleted: false,
-        created_by: params.userId, // 作成者のユーザーID
-        updated_by: params.userId, // 今回は作成者と更新者を同じにする
+        created_by: params.userId,
+        updated_by: params.userId,
       },
     ])
     .select()

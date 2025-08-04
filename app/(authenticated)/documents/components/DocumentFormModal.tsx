@@ -22,10 +22,18 @@ interface Props {
 export function DocumentFormModal({ opened, onClose, categories, onSubmit, form, setForm }: Props) {
     const handleSubmit = async () => {
         // URLバリデーション
+        if (!form.url || form.url.trim() === "") {
+            notifications.show({
+                title: '入力エラー',
+                message: 'URLを入力してください',
+                color: 'red',
+            });
+            return;
+        }
+        // 不正なURLの場合はポップアップで通知
         try {
             new URL(form.url);
         } catch {
-            // 不正なURLの場合はポップアップで通知
             notifications.show({
                 title: '入力エラー',
                 message: '正しいURLを入力してください',
