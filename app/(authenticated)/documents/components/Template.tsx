@@ -5,9 +5,7 @@ import { DocumentCard } from './DocumentCard';
 import { Grid, Paper, Button, Group } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
 import { DocumentFormModal } from './DocumentFormModal';
-
-import { DocumentWithCategoryType } from '@/app/types';
-import { CategoryType } from '@/app/types';
+import { DocumentWithCategoryType, CategoryType } from '@/app/types';
 
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];

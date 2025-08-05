@@ -33,7 +33,7 @@ export async function createServerSupabaseClient() {
  * @returns 認証ユーザー情報（authIdなど）
  */
 export async function getServerCurrentUser(): Promise<{
-  authId: string;
+  authId: number;
   error: AuthError | null;
 }> {
   const supabase = await createServerSupabaseClient();
@@ -41,8 +41,8 @@ export async function getServerCurrentUser(): Promise<{
 
   if (error || !data || !data.user) {
     console.error("認証ユーザー情報取得エラー:", error?.message || "No data found");
-    return { authId: "", error };
+    return { authId: 0, error };
   }
 
-  return { authId: data.user.id, error: null };
+  return { authId: Number(data.user.id), error: null };
 }
