@@ -1,36 +1,46 @@
-import { Modal, TextInput, Select, Textarea, Group, Button } from '@mantine/core';
+import { useState } from 'react';
+import { Modal, TextInput, Select, Textarea, Button, Group } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { CategoryType } from '@/app/types';
-
-export interface FormType {
-    name: string;
-    categoryId: number; // 未設定は0
-    description: string;
-    url: string;
-    assignee: string;
-}
+import { registerDocument } from '@/app/services/api/documents-client';
+import type { CategoryType } from '@/app/types';
 
 interface Props {
     opened: boolean;
     onClose: () => void;
     categories: CategoryType[];
-    onSubmit: (form: FormType) => Promise<boolean>;
-    form: FormType;
-    setForm: React.Dispatch<React.SetStateAction<FormType>>;
+    userId: number;
 }
 
-export function DocumentFormModal({ opened, onClose, categories, onSubmit, form, setForm }: Props) {
+export function DocumentFormModal({ opened, onClose, categories, userId }: Props) {
+    const [form, setForm] = useState({
+        name: '',
+        categoryId: 0,
+        description: '',
+        url: '',
+        assignee: '',
+    });
+
+    // モーダルを閉じる時にフォームもリセット
+    const handleClose = () => {
+        setForm({
+            name: '',
+            categoryId: 0,
+            description: '',
+            url: '',
+            assignee: '',
+        });
+        onClose();
+    };
+
     const handleSubmit = async () => {
-        // URLバリデーション
-        if (!form.url || form.url.trim() === "") {
+        if (!form.name || !form.url || form.categoryId === 0 || form.url.trim() === "") {
             notifications.show({
                 title: '入力エラー',
-                message: 'URLを入力してください',
+                message: '資料名とURL及びカテゴリーは必須です',
                 color: 'red',
             });
             return;
         }
-        // 不正なURLの場合はポップアップで通知
         try {
             new URL(form.url);
         } catch {
@@ -42,15 +52,34 @@ export function DocumentFormModal({ opened, onClose, categories, onSubmit, form,
             return;
         }
 
-        const result = await onSubmit(form);
-        // onSubmitが成功した場合のみフォームをリセット
-        if (result) {
-            setForm({ name: '', categoryId: 0, description: '', url: '', assignee: '' });
+        const { error } = await registerDocument({
+            name: form.name,
+            categoryId: form.categoryId,
+            description: form.description,
+            url: form.url,
+            assignee: form.assignee,
+            userId,
+        });
+
+        if (error) {
+            notifications.show({
+                title: '登録エラー',
+                message: `ドキュメントの作成に失敗: ${error.hint || error.message}`, // ユーザー向けのエラーメッセージを表示
+                color: 'red',
+            });
+            return;
         }
+
+        notifications.show({
+            title: '登録完了',
+            message: '正常に登録されました',
+            color: 'green',
+        });
+        handleClose();
     };
 
     return (
-        <Modal opened={opened} onClose={onClose} title="資料新規登録" centered>
+        <Modal opened={opened} onClose={handleClose} title="資料新規登録" centered>
             <TextInput
                 label="資料名"
                 value={form.name}
@@ -60,11 +89,11 @@ export function DocumentFormModal({ opened, onClose, categories, onSubmit, form,
             />
             <Select
                 label="カテゴリー"
-                data={categories.map((cat) => ({
-                    value: String(cat.id), // valueはID
-                    label: cat.name        // 画面に表示されるのは名称
+                data={categories.map((category) => ({
+                    value: String(category.id),
+                    label: category.name,
                 }))}
-                value={form.categoryId ? String(form.categoryId) : ''}
+                value={String(form.categoryId)}
                 onChange={(value) => setForm((f) => ({ ...f, categoryId: Number(value) }))}
                 required
                 mb="sm"
@@ -89,7 +118,7 @@ export function DocumentFormModal({ opened, onClose, categories, onSubmit, form,
                 mb="sm"
             />
             <Group mt="md" justify="flex-end">
-                <Button variant="default" onClick={onClose}>キャンセル</Button>
+                <Button variant="default" onClick={handleClose}>キャンセル</Button>
                 <Button color="blue" onClick={handleSubmit}>登録</Button>
             </Group>
         </Modal>

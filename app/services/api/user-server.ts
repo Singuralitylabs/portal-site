@@ -35,13 +35,13 @@ export async function fetchUserStatusByIdInServer({
  * usersテーブルから指定のauth_idのユーザーの情報（id, role）を取得する（サーバーサイド用）
  * @param param0 - パラメータオブジェクト
  * @param {string} param0.authId - ユーザーの認証ID（必須）
- * @returns { id: string, role: string, error: PostgrestError | null } - ユーザーID・ロールとエラー
+ * @returns { id: number, role: string, error: PostgrestError | null } - ユーザーID・ロールとエラー
  */
 export async function fetchUserInfoByAuthId({
   authId,
 }: {
   authId: string;
-}): Promise<{ id: string; role: string; error: PostgrestError | null }> {
+}): Promise<{ id: number; role: string; error: PostgrestError | null }> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("users")
@@ -52,7 +52,7 @@ export async function fetchUserInfoByAuthId({
 
   if (error || !data) {
     console.error("Supabase ユーザー情報取得エラー:", error?.message || "No data found");
-    return { id: "", role: "", error };
+    return { id: 0, role: "", error };
   }
 
   return { id: data.id, role: data.role, error: null };

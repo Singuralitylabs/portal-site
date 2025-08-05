@@ -26,7 +26,7 @@ export default async function DocumentsPage() {
       documents={data}
       categories={dataCategory}
       currentUserRole={role}
-      userId={Number(id)}
+      userId={id}
     />
   );
 }

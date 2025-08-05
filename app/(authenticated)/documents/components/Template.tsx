@@ -4,12 +4,10 @@ import { useState } from 'react';
 import { DocumentCard } from './DocumentCard';
 import { Grid, Paper, Button, Group } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
-import { FormType, DocumentFormModal } from './DocumentFormModal';
-import { notifications } from '@mantine/notifications';
+import { DocumentFormModal } from './DocumentFormModal';
 
 import { DocumentWithCategoryType } from '@/app/types';
 import { CategoryType } from '@/app/types';
-import { createDocumentOnServer } from '@/app/services/api/documents-client';
 
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
@@ -24,52 +22,13 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole, 
 
   // モーダル用の状態
   const [modalOpened, setModalOpened] = useState(false);
-  const [form, setForm] = useState<FormType>({
-    name: '',
-    categoryId: 0,
-    description: '',
-    url: '',
-    assignee: '',
-  });
-
-  // 新規登録用のフォーム処理
-  async function handleCreate(form: FormType): Promise<boolean> {
-    const { data, error } = await createDocumentOnServer({
-      name: form.name,
-      categoryId: Number(form.categoryId),
-      description: form.description,
-      url: form.url,
-      assignee: form.assignee,
-      userId: userId
-    });
-
-    if (error) {
-      console.error("ドキュメントの作成に失敗:", error.message);
-      notifications.show({
-        title: '登録エラー',
-        message: `ドキュメントの作成に失敗: ${error.message}`,
-        color: 'red',
-      });
-      return false;
-    }
-
-    setModalOpened(false);
-
-    // 正常時のポップアップ
-    notifications.show({
-      title: '登録完了',
-      message: `"${data?.name}" が正常に登録されました`,
-      color: 'green',
-    });
-
-    return true;
-  }
+  const isAdmin = currentUserRole === 'admin';
 
   return (
     <Paper m="0 2rem">
       <Group justify="space-between" align="center" mb="md">
         <PageTitle>資料一覧</PageTitle>
-        {currentUserRole === 'admin' && (
+        {isAdmin && (
           <Button onClick={() => setModalOpened(true)} color="blue">
             新規登録
           </Button>
@@ -80,9 +39,7 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole, 
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
         categories={categories}
-        onSubmit={handleCreate}
-        form={form}
-        setForm={setForm}
+        userId={userId}
       />
 
       <Paper mb="md" p="md">

@@ -1,6 +1,6 @@
 import { createClientSupabaseClient } from "./supabase-client";
 import type { PostgrestError } from "@supabase/supabase-js";
-import type { DocumentWithCategoryType } from "@/app/types"; // ←DBレコード型を使う
+import type { DocumentWithCategoryType, DocumentInsertFormType } from "@/app/types";
 
 /**
  * 指定したidの資料を論理削除する
@@ -18,37 +18,28 @@ export async function deleteDocument(id: number) {
 
   return { success: true, error: null };
 }
-
-interface CreateDocumentParams {
-  name: string;
-  categoryId: number;
-  description: string;
-  url: string;
-  assignee: string;
-  userId: number; // 作成者のユーザーID
-}
-
-export async function createDocumentOnServer(
-  params: CreateDocumentParams
-): Promise<{ data: DocumentWithCategoryType | null; error: PostgrestError | null }> {
+/**
+ * サーバーサイドで資料を登録する
+ * @param params 資料のデータ
+ * @returns 登録された資料とエラー
+ */
+export async function registerDocument(
+  params: DocumentInsertFormType
+): Promise<{ error: PostgrestError | null }> {
   const supabase = await createClientSupabaseClient();
 
-  const { data, error } = await supabase
-    .from("documents")
-    .insert([
-      {
-        name: params.name,
-        category_id: params.categoryId,
-        description: params.description,
-        url: params.url,
-        assignee: params.assignee,
-        is_deleted: false,
-        created_by: params.userId,
-        updated_by: params.userId,
-      },
-    ])
-    .select()
-    .single();
+  const { error } = await supabase.from("documents").insert([
+    {
+      name: params.name,
+      category_id: params.categoryId,
+      description: params.description,
+      url: params.url,
+      assignee: params.assignee,
+      is_deleted: false,
+      created_by: params.userId,
+      updated_by: params.userId,
+    },
+  ]);
 
-  return { data, error };
+  return { error };
 }
