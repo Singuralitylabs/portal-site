@@ -14,7 +14,7 @@ interface Props {
 export function DocumentFormModal({ opened, onClose, categories, userId }: Props) {
     const [form, setForm] = useState({
         name: '',
-        categoryId: 0,
+        caegory_id: 0,
         description: '',
         url: '',
         assignee: '',
@@ -22,18 +22,11 @@ export function DocumentFormModal({ opened, onClose, categories, userId }: Props
 
     // モーダルを閉じる時にフォームもリセット
     const handleClose = () => {
-        setForm({
-            name: '',
-            categoryId: 0,
-            description: '',
-            url: '',
-            assignee: '',
-        });
         onClose();
     };
 
     const handleSubmit = async () => {
-        if (!form.name || !form.url || form.categoryId === 0 || form.url.trim() === "") {
+        if (!form.name || !form.url || form.caegory_id === 0 || form.url.trim() === "") {
             notifications.show({
                 title: '入力エラー',
                 message: '資料名とURL及びカテゴリーは必須です',
@@ -54,11 +47,11 @@ export function DocumentFormModal({ opened, onClose, categories, userId }: Props
 
         const { error } = await registerDocument({
             name: form.name,
-            categoryId: form.categoryId,
+            category_id: form.caegory_id,
             description: form.description,
             url: form.url,
             assignee: form.assignee,
-            userId,
+            created_by: userId, // 作成者のユーザーIDを設定
         });
 
         if (error) {
@@ -93,8 +86,8 @@ export function DocumentFormModal({ opened, onClose, categories, userId }: Props
                     value: String(category.id),
                     label: category.name,
                 }))}
-                value={String(form.categoryId)}
-                onChange={(value) => setForm((f) => ({ ...f, categoryId: Number(value) }))}
+                value={String(form.caegory_id)}
+                onChange={(value) => setForm((f) => ({ ...f, caegory_id: Number(value) }))}
                 required
                 mb="sm"
             />

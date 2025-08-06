@@ -21,23 +21,25 @@ export async function deleteDocument(id: number) {
 /**
  * サーバーサイドで資料を登録する
  * @param params 資料のデータ
- * @returns 登録された資料とエラー
+ * @returns 登録された資料
  */
 export async function registerDocument(
   params: DocumentInsertFormType
 ): Promise<{ error: PostgrestError | null }> {
   const supabase = await createClientSupabaseClient();
 
+  const { name, category_id, description, url, assignee, created_by } = params;
+
   const { error } = await supabase.from("documents").insert([
     {
-      name: params.name,
-      category_id: params.categoryId,
-      description: params.description,
-      url: params.url,
-      assignee: params.assignee,
+      name,
+      category_id: category_id,
+      description,
+      url,
+      assignee,
       is_deleted: false,
-      created_by: params.userId,
-      updated_by: params.userId,
+      created_by: created_by,
+      updated_by: created_by,
     },
   ]);
 
