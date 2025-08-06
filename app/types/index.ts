@@ -4,10 +4,6 @@ type DocumentsTable = Database["public"]["Tables"]["documents"];
 export type DocumentWithCategoryType = DocumentsTable["Row"] & {
   category: { name: string } | null;
 };
-export type DocumentFormType = Pick<
-  DocumentsTable["Row"],
-  "name" | "category_id" | "description" | "url" | "assignee"
->;
 export type DocumentInsertFormType = Omit<
   DocumentsTable["Row"],
   "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
