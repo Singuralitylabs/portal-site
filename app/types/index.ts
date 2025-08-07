@@ -4,6 +4,10 @@ type DocumentsTable = Database["public"]["Tables"]["documents"];
 export type DocumentWithCategoryType = DocumentsTable["Row"] & {
   category: { name: string } | null;
 };
+export type DocumentInsertFormType = Omit<
+  DocumentsTable["Row"],
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
+>;
 
 type VideosTable = Database["public"]["Tables"]["videos"];
 export type VideoWithCategoryType = VideosTable["Row"] & {
