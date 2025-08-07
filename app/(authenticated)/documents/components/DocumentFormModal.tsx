@@ -4,14 +4,14 @@ import { notifications } from '@mantine/notifications';
 import { registerDocument } from '@/app/services/api/documents-client';
 import type { CategoryType } from '@/app/types';
 
-interface Props {
+interface DocumentFormModalProps {
     opened: boolean;
     onClose: () => void;
     categories: CategoryType[];
     userId: number;
 }
 
-export function DocumentFormModal({ opened, onClose, categories, userId }: Props) {
+export function DocumentFormModal({ opened, onClose, categories, userId }: DocumentFormModalProps) {
     const [form, setForm] = useState({
         name: '',
         caegory_id: 0,
@@ -19,11 +19,6 @@ export function DocumentFormModal({ opened, onClose, categories, userId }: Props
         url: '',
         assignee: '',
     });
-
-    // モーダルを閉じる時にフォームもリセット
-    const handleClose = () => {
-        onClose();
-    };
 
     const handleSubmit = async () => {
         if (!form.name || !form.url || form.caegory_id === 0 || form.url.trim() === "") {
@@ -45,7 +40,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId }: Props
             return;
         }
 
-        const { error } = await registerDocument({
+        const result = await registerDocument({
             name: form.name,
             category_id: form.caegory_id,
             description: form.description,
@@ -54,25 +49,25 @@ export function DocumentFormModal({ opened, onClose, categories, userId }: Props
             created_by: userId, // 作成者のユーザーIDを設定
         });
 
-        if (error) {
+        if (result?.success) {
             notifications.show({
-                title: '登録エラー',
-                message: `ドキュメントの作成に失敗: ${error.hint || error.message}`, // ユーザー向けのエラーメッセージを表示
+                title: '登録完了',
+                message: '資料が正常に登録されました。',
+                color: 'green',
+            });
+        } else {
+            notifications.show({
+                title: '登録失敗',
+                message: String(result?.error) || '不明なエラー',
                 color: 'red',
             });
             return;
         }
-
-        notifications.show({
-            title: '登録完了',
-            message: '正常に登録されました',
-            color: 'green',
-        });
-        handleClose();
+        onClose();
     };
 
     return (
-        <Modal opened={opened} onClose={handleClose} title="資料新規登録" centered>
+        <Modal opened={opened} onClose={onClose} title="資料新規登録" centered>
             <TextInput
                 label="資料名"
                 value={form.name}
@@ -111,7 +106,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId }: Props
                 mb="sm"
             />
             <Group mt="md" justify="flex-end">
-                <Button variant="default" onClick={handleClose}>キャンセル</Button>
+                <Button variant="default" onClick={onClose}>キャンセル</Button>
                 <Button color="blue" onClick={handleSubmit}>登録</Button>
             </Group>
         </Modal>

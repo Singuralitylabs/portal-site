@@ -6,6 +6,8 @@ import type { DocumentInsertFormType } from "@/app/types";
  * 指定したidの資料を論理削除する
  * @param id 資料のid
  * @returns 削除結果
+ * - success: 成功した場合はtrue
+ * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
 export async function deleteDocument(id: number) {
   const supabase = createClientSupabaseClient();
@@ -21,7 +23,9 @@ export async function deleteDocument(id: number) {
 /**
  * サーバーサイドで資料を登録する
  * @param  DocumentInsertFormType 資料のデータ
- * @returns 登録された資料
+ * @return 登録結果
+ * - success: 成功した場合はtrue
+ * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
 export async function registerDocument({
   name,
@@ -30,23 +34,25 @@ export async function registerDocument({
   url,
   assignee,
   created_by,
-}: DocumentInsertFormType): Promise<{ error: PostgrestError | null }> {
+}: DocumentInsertFormType) {
   const supabase = await createClientSupabaseClient();
-  if (!name || !url || category_id === 0) {
-    throw new Error("必須項目が未入力です");
-  }
   const { error } = await supabase.from("documents").insert([
     {
       name,
-      category_id: category_id,
+      category_id,
       description,
       url,
       assignee,
       is_deleted: false,
-      created_by: created_by,
+      created_by,
       updated_by: created_by,
     },
   ]);
+  // エラーが発生した場合はコンソールにエラーメッセージを出力
+  if (error) {
+    console.error("Supabase 資料登録エラー:", error.message);
+    return { success: false, error };
+  }
 
-  return { error };
+  return { success: true, error: null };
 }
