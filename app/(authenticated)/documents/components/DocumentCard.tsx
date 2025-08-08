@@ -17,8 +17,8 @@ interface DocumentCardProps {
 }
 
 export function DocumentCard({ document, currentUserRole, categories, userId }: DocumentCardProps) {
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);　// 削除モーダル用
-  const [editModalOpened, setEditModalOpened] = useState(false); // 編集モーダル用
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);  // 削除モーダル用
+  const [editModalOpened, setEditModalOpened] = useState(false);  // 編集モーダル用
   const router = useRouter();
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
@@ -103,7 +103,7 @@ export function DocumentCard({ document, currentUserRole, categories, userId }: 
         editData={{
           id: document.id,
           name: document.name,
-          caegory_id: document.category_id,
+          category_id: document.category_id,
           description: document.description ?? '',
           url: document.url,
           assignee: document.assignee ?? '',

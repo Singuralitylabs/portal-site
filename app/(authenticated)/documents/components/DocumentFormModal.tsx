@@ -14,7 +14,7 @@ interface DocumentFormModalProps {
     editData?: {
         id: number;
         name: string;
-        caegory_id: number;
+        category_id: number;
         description: string;
         url: string;
         assignee: string;
@@ -24,7 +24,7 @@ interface DocumentFormModalProps {
 export function DocumentFormModal({ opened, onClose, categories, userId, type, editData }: DocumentFormModalProps) {
     const [form, setForm] = useState({
         name: editData?.name ?? '',
-        caegory_id: editData?.caegory_id ?? 0,
+        category_id: editData?.category_id ?? 0,
         description: editData?.description ?? '',
         url: editData?.url ?? '',
         assignee: editData?.assignee ?? '',
@@ -38,7 +38,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, type, e
             if (type === 'edit' && editData) {
                 setForm({
                     name: editData.name,
-                    caegory_id: editData.caegory_id,
+                    category_id: editData.category_id,
                     description: editData.description,
                     url: editData.url,
                     assignee: editData.assignee,
@@ -46,7 +46,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, type, e
             } else {
                 setForm({
                     name: '',
-                    caegory_id: 0,
+                    category_id: 0,
                     description: '',
                     url: '',
                     assignee: '',
@@ -56,7 +56,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, type, e
     }, [opened, type, editData]);
 
     const handleSubmit = async () => {
-        if (!form.name || !form.url || form.caegory_id === 0 || form.url.trim() === "") {
+        if (!form.name || !form.url || form.category_id === 0 || form.url.trim() === "") {
             notifications.show({
                 title: '入力エラー',
                 message: '資料名とURL及びカテゴリーは必須です',
@@ -85,7 +85,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, type, e
             result = await updateDocument({
                 id: editData.id,
                 name: form.name,
-                category_id: form.caegory_id,
+                category_id: form.category_id,
                 description: form.description,
                 url: form.url,
                 assignee: form.assignee,
@@ -95,7 +95,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, type, e
             // 新規登録時
             result = await registerDocument({
                 name: form.name,
-                category_id: form.caegory_id,
+                category_id: form.category_id,
                 description: form.description,
                 url: form.url,
                 assignee: form.assignee,
@@ -135,8 +135,8 @@ export function DocumentFormModal({ opened, onClose, categories, userId, type, e
                     value: String(category.id),
                     label: category.name,
                 }))}
-                value={String(form.caegory_id)}
-                onChange={(value) => setForm((f) => ({ ...f, caegory_id: Number(value) }))}
+                value={String(form.category_id)}
+                onChange={(value) => setForm((f) => ({ ...f, category_id: Number(value) }))}
                 required
                 mb="sm"
             />
