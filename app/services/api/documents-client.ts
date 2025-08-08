@@ -1,6 +1,6 @@
 import { createClientSupabaseClient } from "./supabase-client";
 import type { PostgrestError } from "@supabase/supabase-js";
-import type { DocumentInsertFormType } from "@/app/types";
+import type { DocumentInsertFormType, DocumentUpdateFormType } from "@/app/types";
 
 /**
  * 指定したidの資料を論理削除する
@@ -51,6 +51,45 @@ export async function registerDocument({
   // エラーが発生した場合はコンソールにエラーメッセージを出力
   if (error) {
     console.error("Supabase 資料登録エラー:", error.message);
+    return { success: false, error };
+  }
+
+  return { success: true, error: null };
+}
+
+/**
+ * サーバーサイドで資料を更新する
+ * @param id 資料のID
+ * @param DocumentUpdateFormType 資料の更新データ
+ * @return 更新結果
+ * - success: 成功した場合はtrue
+ * - error: エラーが発生した場合はPostgrestErrorオブジェクト
+ */
+export async function updateDocument({
+  id,
+  name,
+  category_id,
+  description,
+  url,
+  assignee,
+  updated_by,
+}: DocumentUpdateFormType & { id: number; updated_by: number }) {
+  const supabase = await createClientSupabaseClient();
+  const { error } = await supabase
+    .from("documents")
+    .update({
+      name,
+      category_id,
+      description,
+      url,
+      assignee,
+      updated_by,
+    })
+    .eq("id", id);
+
+  // エラーが発生した場合はコンソールにエラーメッセージを出力
+  if (error) {
+    console.error("Supabase 資料更新エラー:", error.message);
     return { success: false, error };
   }
 

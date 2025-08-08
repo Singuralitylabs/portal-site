@@ -38,6 +38,7 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole, 
         onClose={() => setModalOpened(false)}
         categories={categories}
         userId={userId}
+        type="create"
       />
 
       <Paper mb="md" p="md">
@@ -62,6 +63,8 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole, 
                     <DocumentCard
                       document={document}
                       currentUserRole={currentUserRole}
+                      categories={categories}
+                      userId={userId}
                     />
                   </Grid.Col>
                 ))}
