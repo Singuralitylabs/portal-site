@@ -62,6 +62,8 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole, 
                     <DocumentCard
                       document={document}
                       currentUserRole={currentUserRole}
+                      categories={categories}
+                      userId={userId}
                     />
                   </Grid.Col>
                 ))}
