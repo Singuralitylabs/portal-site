@@ -73,7 +73,7 @@ export async function updateDocument({
   url,
   assignee,
   updated_by,
-}: DocumentUpdateFormType & { id: number; updated_by: number }) {
+}: DocumentUpdateFormType) {
   const supabase = await createClientSupabaseClient();
   const { error } = await supabase
     .from("documents")

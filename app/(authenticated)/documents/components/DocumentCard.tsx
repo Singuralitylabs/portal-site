@@ -99,8 +99,7 @@ export function DocumentCard({ document, currentUserRole, categories, userId }: 
         }}
         categories={categories}
         userId={userId ?? 0}
-        type="edit"
-        editData={{
+        initialData={{
           id: document.id,
           name: document.name,
           category_id: document.category_id,

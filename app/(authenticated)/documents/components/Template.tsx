@@ -38,7 +38,6 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole, 
         onClose={() => setModalOpened(false)}
         categories={categories}
         userId={userId}
-        type="create"
       />
 
       <Paper mb="md" p="md">
