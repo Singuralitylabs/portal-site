@@ -22,7 +22,7 @@ export function VideosPageTemplate({ videos, categories }: VideosPageTemplatePro
 
       <Paper mb="md" p="md">
         <div className="flex flex-wrap items-center">
-          {existingCategories.map((category, index) => (
+          {existingCategories.map((category) => (
             <div key={category.id}>
               <a href={`#category-${category.id}`} className="text-blue-600 mr-4">{category.name}</a>
             </div>
