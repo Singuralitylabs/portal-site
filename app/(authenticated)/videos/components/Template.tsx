@@ -22,10 +22,9 @@ export function VideosPageTemplate({ videos, categories }: VideosPageTemplatePro
 
       <Paper mb="md" p="md">
         <div className="flex flex-wrap items-center">
-          {existingCategories.map((category, index) => (
+          {existingCategories.map((category) => (
             <div key={category.id}>
-              {index > 0 && <span className="text-gray-500 mx-2">|</span>}
-              <a href={`#category-${category.id}`} className="text-blue-600">{category.name}</a>
+              <a href={`#category-${category.id}`} className="text-blue-600 mr-4">{category.name}</a>
             </div>
           ))}
         </div>
@@ -43,10 +42,15 @@ export function VideosPageTemplate({ videos, categories }: VideosPageTemplatePro
                   </Grid.Col>
               ))}
             </Grid>
-            <br/>
           </div>
         ))}
       </Paper>
+
+      <div className="text-left mt-8 mb-4 ml-6">
+        <a href="#" className="text-blue-600">
+          TOPへ
+        </a>
+      </div>
     </Paper>
   );
 }
