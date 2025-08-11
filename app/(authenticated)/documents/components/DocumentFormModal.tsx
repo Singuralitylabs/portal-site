@@ -4,29 +4,24 @@ import { notifications } from '@mantine/notifications';
 import { registerDocument, updateDocument } from '@/app/services/api/documents-client';
 import type { CategoryType } from '@/app/types';
 import { z } from 'zod';
+import type { DocumentUpdateFormType } from "@/app/types";
 
-interface DocumentUpdateFormType {
+interface DocumentUpdateFormProps {
     opened: boolean;
     onClose: () => void;
     categories: CategoryType[];
     userId: number;
-    initialData?: {
-        id: number;
-        name: string;
-        category_id: number;
-        description: string;
-        url: string;
-        assignee: string;
-    }; // 編集時のデータ
+    initialData?: DocumentUpdateFormType | null; // 編集時のデータ
 }
 
-export function DocumentFormModal({ opened, onClose, categories, userId, initialData }: DocumentUpdateFormType) {
+export function DocumentFormModal({ opened, onClose, categories, userId, initialData }: DocumentUpdateFormProps) {
     const [form, setForm] = useState({
         name: initialData?.name ?? '',
         category_id: initialData?.category_id ?? 0,
         description: initialData?.description ?? '',
         url: initialData?.url ?? '',
         assignee: initialData?.assignee ?? '',
+        userId: initialData?.updated_by ?? 0,
     });
 
     // モーダルが開かれたとき、編集時はinitialDataでformを更新
@@ -37,6 +32,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, initial
             description: initialData?.description ?? "",
             url: initialData?.url ?? "",
             assignee: initialData?.assignee ?? "",
+            userId: initialData?.updated_by ?? 0,
         });
     }, [opened, initialData]);
 
@@ -64,29 +60,10 @@ export function DocumentFormModal({ opened, onClose, categories, userId, initial
             return;
         }
 
-        let result;
-        if (initialData) {
-            // 編集時
-            result = await updateDocument({
-                id: initialData.id,
-                name: form.name,
-                category_id: form.category_id,
-                description: form.description,
-                url: form.url,
-                assignee: form.assignee,
-                updated_by: userId,
-            });
-        } else {
-            // 新規登録時
-            result = await registerDocument({
-                name: form.name,
-                category_id: form.category_id,
-                description: form.description,
-                url: form.url,
-                assignee: form.assignee,
-                created_by: userId,
-            });
-        }
+        // API呼び出し(初期値あり：編集時は更新、初期値なし：新規登録)
+        const result = initialData
+            ? await updateDocument({ ...form, id: initialData.id, updated_by: userId })
+            : await registerDocument({ ...form, created_by: userId });
 
         if (result?.success) {
             notifications.show({

@@ -1,5 +1,4 @@
 import { createClientSupabaseClient } from "./supabase-client";
-import type { PostgrestError } from "@supabase/supabase-js";
 import type { DocumentInsertFormType, DocumentUpdateFormType } from "@/app/types";
 
 /**

@@ -98,14 +98,12 @@ export function DocumentCard({ document, currentUserRole, categories, userId }: 
           router.refresh();
         }}
         categories={categories}
-        userId={userId ?? 0}
+        userId={userId}
         initialData={{
-          id: document.id,
-          name: document.name,
-          category_id: document.category_id,
+          ...document,
           description: document.description ?? '',
-          url: document.url,
           assignee: document.assignee ?? '',
+          updated_by: document.updated_by ?? userId,
         }}
       />
       {/* 削除モーダル */}
