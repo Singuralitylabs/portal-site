@@ -1,20 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { DocumentWithCategoryType } from '@/app/types';
+import { DocumentWithCategoryType, CategoryType } from '@/app/types';
 import { FileText, FileType, Calendar } from 'lucide-react';
 import { Button, Card, Flex, Text, Modal, Group } from '@mantine/core';
 import { deleteDocument } from '@/app/services/api/documents-client';
 import { useRouter } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
+import { DocumentFormModal } from './DocumentFormModal';
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
-  currentUserRole: string; // アクセスユーザーの役割（role）
+  currentUserRole: string;
+  categories: CategoryType[];
+  userId: number;
 }
 
-export function DocumentCard({ document, currentUserRole }: DocumentCardProps) {
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+export function DocumentCard({ document, currentUserRole, categories, userId }: DocumentCardProps) {
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);  // 削除モーダル用
+  const [editModalOpened, setEditModalOpened] = useState(false);  // 編集モーダル用
   const router = useRouter();
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
@@ -77,13 +81,26 @@ export function DocumentCard({ document, currentUserRole }: DocumentCardProps) {
         </Button>
         {isAdmin && (
           <Group m="0 1rem 1rem" gap="xs">
-            {/* TODO: Implement the edit functionality */}
+            <Button color="blue" onClick={() => setEditModalOpened(true)}>
+              編集
+            </Button>
             <Button color="red" onClick={() => setDeleteModalOpened(true)}>
               削除
             </Button>
           </Group>
         )}
       </Card.Section>
+      {/* 編集モーダル */}
+      <DocumentFormModal
+        opened={editModalOpened}
+        onClose={() => {
+          setEditModalOpened(false);
+        }}
+        categories={categories}
+        userId={userId}
+        initialData={document}
+      />
+      {/* 削除モーダル */}
       <Modal
         opened={deleteModalOpened}
         onClose={() => setDeleteModalOpened(false)}

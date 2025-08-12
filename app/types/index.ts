@@ -8,6 +8,10 @@ export type DocumentInsertFormType = Omit<
   DocumentsTable["Row"],
   "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
 >;
+export type DocumentUpdateFormType = Omit<
+  DocumentsTable["Row"],
+  "created_at" | "updated_at" | "created_by" | "is_deleted"
+>;
 
 type VideosTable = Database["public"]["Tables"]["videos"];
 export type VideoWithCategoryType = VideosTable["Row"] & {
