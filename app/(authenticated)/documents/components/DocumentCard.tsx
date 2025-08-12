@@ -98,7 +98,7 @@ export function DocumentCard({ document, currentUserRole, categories, userId }: 
         }}
         categories={categories}
         userId={userId}
-        initialData={{ ...document }}
+        initialData={document}
       />
       {/* 削除モーダル */}
       <Modal
