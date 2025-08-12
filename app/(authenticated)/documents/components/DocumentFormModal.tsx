@@ -1,28 +1,29 @@
 import { useState, useEffect } from 'react';
 import { Modal, TextInput, Select, Textarea, Button, Group } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useRouter } from 'next/navigation';
 import { registerDocument, updateDocument } from '@/app/services/api/documents-client';
 import type { CategoryType } from '@/app/types';
 import { z } from 'zod';
 import type { DocumentUpdateFormType } from "@/app/types";
 
-interface DocumentUpdateFormProps {
+interface DocumentFormModalProps {
     opened: boolean;
     onClose: () => void;
     categories: CategoryType[];
     userId: number;
-    initialData?: DocumentUpdateFormType | null; // 編集時のデータ
+    initialData?: DocumentUpdateFormType; // 編集時のデータ
 }
 
-export function DocumentFormModal({ opened, onClose, categories, userId, initialData }: DocumentUpdateFormProps) {
+export function DocumentFormModal({ opened, onClose, categories, userId, initialData }: DocumentFormModalProps) {
     const [form, setForm] = useState({
         name: initialData?.name ?? '',
         category_id: initialData?.category_id ?? 0,
         description: initialData?.description ?? '',
         url: initialData?.url ?? '',
         assignee: initialData?.assignee ?? '',
-        userId: initialData?.updated_by ?? 0,
     });
+    const router = useRouter();
 
     // モーダルが開かれたとき、編集時はinitialDataでformを更新
     useEffect(() => {
@@ -32,7 +33,6 @@ export function DocumentFormModal({ opened, onClose, categories, userId, initial
             description: initialData?.description ?? "",
             url: initialData?.url ?? "",
             assignee: initialData?.assignee ?? "",
-            userId: initialData?.updated_by ?? 0,
         });
     }, [opened, initialData]);
 
@@ -71,6 +71,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, initial
                 message: initialData ? '資料が正常に更新されました。' : '資料が正常に登録されました。',
                 color: 'green',
             });
+            router.refresh();
         } else {
             notifications.show({
                 title: initialData ? '更新失敗' : '登録失敗',

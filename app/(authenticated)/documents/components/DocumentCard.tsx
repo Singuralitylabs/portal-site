@@ -95,16 +95,10 @@ export function DocumentCard({ document, currentUserRole, categories, userId }: 
         opened={editModalOpened}
         onClose={() => {
           setEditModalOpened(false);
-          router.refresh();
         }}
         categories={categories}
         userId={userId}
-        initialData={{
-          ...document,
-          description: document.description ?? '',
-          assignee: document.assignee ?? '',
-          updated_by: document.updated_by ?? userId,
-        }}
+        initialData={{ ...document }}
       />
       {/* 削除モーダル */}
       <Modal
