@@ -1,24 +1,43 @@
 'use client';
 
+import { useState } from 'react';
 import { VideoCard } from './VideoCard';
-import { Grid, Paper } from '@mantine/core';
+import { Grid, Paper, Button, Group } from '@mantine/core';
 import { PageTitle } from '@/app/components/PageTitle';
-
-import { VideoWithCategoryType } from '@/app/types';
-import { CategoryType } from '@/app/types';
+import { VideoFormModal } from './VideoFormModal';
+import { VideoWithCategoryType, CategoryType } from '@/app/types';
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
   categories: CategoryType[];
-}
+  currentUserRole: string;
+  userId: number;
+};
 
-export function VideosPageTemplate({ videos, categories }: VideosPageTemplateProps) {
+export function VideosPageTemplate({ videos, categories, currentUserRole, userId }: VideosPageTemplateProps) {
   const videoCategoryNames = new Set(videos.map((video) => video.category?.name));
   const existingCategories = categories.filter((category) => videoCategoryNames.has(category.name));
 
+  const [modalOpened, setModalOpened] = useState(false);
+  const isAdmin = currentUserRole === 'admin';
+
   return (
     <Paper m="0 2rem">
-      <PageTitle>動画一覧</PageTitle>
+      <Group justify="space-between" align="center" mb="md">
+        <PageTitle>動画一覧</PageTitle>
+        {isAdmin && (
+          <Button onClick={() => setModalOpened(true)} color="blue">
+            新規登録
+          </Button>
+        )}
+      </Group>
+
+      <VideoFormModal
+        opened={modalOpened}
+        onClose={() => setModalOpened(false)}
+        categories={categories}
+        userId={userId}
+      />
 
       <Paper mb="md" p="md">
         <div className="flex flex-wrap items-center">
@@ -38,9 +57,14 @@ export function VideosPageTemplate({ videos, categories }: VideosPageTemplatePro
               {videos.filter((video) => video.category?.name === category.name)
                 .map((video) => (
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
-                    <VideoCard video={video} />
+                    <VideoCard
+                      video={video}
+                      currentUserRole={currentUserRole}
+                      categories={categories}
+                      userId={userId}
+                    />
                   </Grid.Col>
-              ))}
+                ))}
             </Grid>
           </div>
         ))}
