@@ -68,8 +68,8 @@ export function VideoCard({ video, currentUserRole, categories, userId }: VideoC
 
   const thumbnailUrl = getThumbnailUrl(video);
   return (
-    <Card component="a" href={`/videos/${video.id}`} shadow="sm" padding="0" radius="md" w="100%" withBorder className="hover:shadow-lg transition-shadow">
-      <Card.Section>
+    <Card shadow="sm" padding="0" radius="md" w="100%" withBorder className="hover:shadow-lg transition-shadow">
+      <Card.Section component="a" href={`/videos/${video.id}`} >
         <div className="aspect-video mx-auto" style={{ position: 'relative' }}>
           <Image
             src={thumbnailUrl}
@@ -79,7 +79,7 @@ export function VideoCard({ video, currentUserRole, categories, userId }: VideoC
           />
         </div>
       </Card.Section>
-      <Card.Section p="md">
+      <Card.Section p="md" component="a" href={`/videos/${video.id}`} >
         <Text fw={700} size="lg" mb="xs">{video.name}</Text>
         <Text component="div" lineClamp={2} c="dimmed" mb="md">
           {video.description}
@@ -87,6 +87,8 @@ export function VideoCard({ video, currentUserRole, categories, userId }: VideoC
         <Button component="div" radius="md" size="compact-sm" c="rgb(23,23,23)" bg="gray.2" fs="0.875rem">
           {video.category?.name}
         </Button>
+      </Card.Section>
+      <Card.Section>
         {isAdmin && (
           <Group m="0 1rem 1rem" gap="xs">
             <Button color="blue" onClick={() => setEditModalOpened(true)}>
