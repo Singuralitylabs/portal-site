@@ -15,34 +15,29 @@ interface VideoFormModalProps {
     initialData?: VideoWithCategoryType;
 }
 
+function toVideoFormState(data?: VideoWithCategoryType) {
+    return {
+        name: data?.name ?? '',
+        category_id: data?.category_id ?? 0,
+        description: data?.description ?? '',
+        url: data?.url ?? '',
+        thumbnail_path: data?.thumbnail_path ?? '',
+        thumbnail_time: data?.thumbnail_time ?? 0,
+        length: data?.length ?? 0,
+        assignee: data?.assignee ?? '',
+    };
+}
+
 export function VideoFormModal({ opened, onClose, categories, userId, initialData }: VideoFormModalProps) {
-    const [form, setForm] = useState({
-        name: initialData?.name ?? '',
-        category_id: initialData?.category_id ?? 0,
-        description: initialData?.description ?? '',
-        url: initialData?.url ?? '',
-        thumbnail_path: initialData?.thumbnail_path ?? '',
-        thumbnail_time: initialData?.thumbnail_time ?? 0,
-        length: initialData?.length ?? 0,
-        assignee: initialData?.assignee ?? '',
-    });
+    const [form, setForm] = useState(toVideoFormState(initialData));
     const router = useRouter();
 
     useEffect(() => {
-        setForm({
-            name: initialData?.name ?? "",
-            category_id: initialData?.category_id ?? 0,
-            description: initialData?.description ?? "",
-            url: initialData?.url ?? "",
-            thumbnail_path: initialData?.thumbnail_path ?? "",
-            thumbnail_time: initialData?.thumbnail_time ?? 0,
-            length: initialData?.length ?? 0,
-            assignee: initialData?.assignee ?? "",
-        });
+        setForm(toVideoFormState(initialData));
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
-        if (!form.name || !form.url || form.category_id === 0 || form.url.trim() === "") {
+        if (!form.name || !form.url?.trim() || form.category_id === 0) {
             notifications.show({
                 title: '入力エラー',
                 message: '動画名とURL及びカテゴリーは必須です',
