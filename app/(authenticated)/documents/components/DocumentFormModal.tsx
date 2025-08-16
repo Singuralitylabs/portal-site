@@ -15,29 +15,27 @@ interface DocumentFormModalProps {
     initialData?: DocumentUpdateFormType; // 編集時のデータ
 }
 
+function toDocumentFormState(document?: DocumentUpdateFormType) {
+    return {
+        name: document?.name ?? '',
+        category_id: document?.category_id ?? 0,
+        description: document?.description ?? '',
+        url: document?.url ?? '',
+        assignee: document?.assignee ?? '',
+    };
+}
+
 export function DocumentFormModal({ opened, onClose, categories, userId, initialData }: DocumentFormModalProps) {
-    const [form, setForm] = useState({
-        name: initialData?.name ?? '',
-        category_id: initialData?.category_id ?? 0,
-        description: initialData?.description ?? '',
-        url: initialData?.url ?? '',
-        assignee: initialData?.assignee ?? '',
-    });
+    const [form, setForm] = useState(toDocumentFormState(initialData));
     const router = useRouter();
 
     // モーダルが開かれたとき、編集時はinitialDataでformを更新
     useEffect(() => {
-        setForm({
-            name: initialData?.name ?? "",
-            category_id: initialData?.category_id ?? 0,
-            description: initialData?.description ?? "",
-            url: initialData?.url ?? "",
-            assignee: initialData?.assignee ?? "",
-        });
+        setForm(toDocumentFormState(initialData));
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
-        if (!form.name || !form.url || form.category_id === 0 || form.url.trim() === "") {
+        if (!form.name || !form.url?.trim() || form.category_id === 0) {
             notifications.show({
                 title: '入力エラー',
                 message: '資料名とURL及びカテゴリーは必須です',
