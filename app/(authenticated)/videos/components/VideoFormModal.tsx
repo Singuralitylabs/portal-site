@@ -4,45 +4,40 @@ import { useState, useEffect } from 'react';
 import { Modal, TextInput, Select, Textarea, Button, Group, NumberInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
-import { registerVideo, updateVideo } from '@/app/services/api/video-client';
-import type { CategoryType, VideoWithCategoryType } from '@/app/types';
+import { registerVideo, updateVideo } from '@/app/services/api/videos-client';
+import type { CategoryType, VideoUpdateFormType } from '@/app/types';
 
 interface VideoFormModalProps {
     opened: boolean;
     onClose: () => void;
     categories: CategoryType[];
     userId: number;
-    initialData?: VideoWithCategoryType;
+    initialData?: VideoUpdateFormType;
+}
+
+function toVideoFormState(video?: VideoUpdateFormType) {
+    return {
+        name: video?.name ?? '',
+        category_id: video?.category_id ?? 0,
+        description: video?.description ?? '',
+        url: video?.url ?? '',
+        thumbnail_path: video?.thumbnail_path ?? '',
+        thumbnail_time: video?.thumbnail_time ?? 0,
+        length: video?.length ?? 0,
+        assignee: video?.assignee ?? '',
+    };
 }
 
 export function VideoFormModal({ opened, onClose, categories, userId, initialData }: VideoFormModalProps) {
-    const [form, setForm] = useState({
-        name: initialData?.name ?? '',
-        category_id: initialData?.category_id ?? 0,
-        description: initialData?.description ?? '',
-        url: initialData?.url ?? '',
-        thumbnail_path: initialData?.thumbnail_path ?? '',
-        thumbnail_time: initialData?.thumbnail_time ?? 0,
-        length: initialData?.length ?? 0,
-        assignee: initialData?.assignee ?? '',
-    });
+    const [form, setForm] = useState(toVideoFormState(initialData));
     const router = useRouter();
 
     useEffect(() => {
-        setForm({
-            name: initialData?.name ?? "",
-            category_id: initialData?.category_id ?? 0,
-            description: initialData?.description ?? "",
-            url: initialData?.url ?? "",
-            thumbnail_path: initialData?.thumbnail_path ?? "",
-            thumbnail_time: initialData?.thumbnail_time ?? 0,
-            length: initialData?.length ?? 0,
-            assignee: initialData?.assignee ?? "",
-        });
+        setForm(toVideoFormState(initialData));
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
-        if (!form.name || !form.url || form.category_id === 0 || form.url.trim() === "") {
+        if (!form.name || !form.url?.trim() || form.category_id === 0) {
             notifications.show({
                 title: '入力エラー',
                 message: '動画名とURL及びカテゴリーは必須です',
@@ -61,21 +56,10 @@ export function VideoFormModal({ opened, onClose, categories, userId, initialDat
             return;
         }
 
-        let result;
-        if (initialData) {
-            // 編集
-            result = await updateVideo({
-                ...form,
-                id: initialData.id,
-                updated_by: userId,
-            });
-        } else {
-            // 新規登録
-            result = await registerVideo({
-                ...form,
-                created_by: userId,
-            });
-        }
+        // API呼び出し(初期値あり：編集時は更新、初期値なし：新規登録)
+        const result = initialData
+            ? await updateVideo({ ...form, id: initialData.id, updated_by: userId })
+            : await registerVideo({ ...form, created_by: userId });
 
         if (result?.success) {
             notifications.show({
@@ -87,7 +71,7 @@ export function VideoFormModal({ opened, onClose, categories, userId, initialDat
         } else {
             notifications.show({
                 title: initialData ? '更新失敗' : '登録失敗',
-                message: String(result?.error) || '不明なエラー',
+                message: String(result?.error?.hint) || '不明なエラー',
                 color: 'red',
             });
             return;

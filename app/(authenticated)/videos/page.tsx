@@ -1,6 +1,6 @@
 import { getServerCurrentUser } from '@/app/services/api/supabase-server';
 import { fetchUserInfoByAuthId } from '@/app/services/api/user-server';
-import { fetchVideos } from '@/app/services/api/videos';
+import { fetchVideos } from '@/app/services/api/videos-server';
 import { fetchCategoriesByType } from '@/app/services/api/categories';
 import { VideosPageTemplate } from './components/Template';
 
@@ -17,6 +17,7 @@ export default async function VideosPage() {
   const { id, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
 
   if (error || errorCategory || roleError) {
+    console.error("データの取得に失敗:", error || errorCategory || roleError);
     return <p>データを取得できませんでした。</p>;
   }
 

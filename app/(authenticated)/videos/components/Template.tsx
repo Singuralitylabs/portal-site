@@ -59,7 +59,7 @@ export function VideosPageTemplate({ videos, categories, currentUserRole, userId
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
                     <VideoCard
                       video={video}
-                      currentUserRole={currentUserRole}
+                      isAdmin={isAdmin}
                       categories={categories}
                       userId={userId}
                     />

@@ -16,6 +16,7 @@ export async function registerVideo(params: VideoInsertFormType) {
     },
   ]);
   if (error) {
+    console.error("動画の登録に失敗:", error);
     return { success: false, error };
   }
   return { success: true, error: null };
@@ -32,6 +33,7 @@ export async function updateVideo(params: VideoUpdateFormType) {
   const { id, ...updateFields } = params;
   const { error } = await supabase.from("videos").update(updateFields).eq("id", id);
   if (error) {
+    console.error("動画の更新に失敗:", error);
     return { success: false, error };
   }
   return { success: true, error: null };
@@ -40,68 +42,20 @@ export async function updateVideo(params: VideoUpdateFormType) {
 /**
  * 動画を論理削除する
  * @param id 動画ID
+ * @param userId 更新者のユーザーID
  * @returns 削除結果
  */
-export async function deleteVideo(id: number) {
+export async function deleteVideo(id: number, userId: number) {
   const supabase = await createClientSupabaseClient();
-  const { error } = await supabase.from("videos").update({ is_deleted: true }).eq("id", id);
+  const { error } = await supabase
+    .from("videos")
+    .update({ is_deleted: true, updated_by: userId })
+    .eq("id", id);
   if (error) {
+    console.error("動画の削除に失敗:", error);
     return { success: false, error };
   }
   return { success: true, error: null };
-}
-
-/**
- * 動画一覧を取得する
- * @param page ページ番号
- * @param limit 1ページあたりの件数
- * @returns 動画一覧
- */
-export async function getVideos(params: {
-  page: number;
-  limit: number;
-  search?: string;
-  category_id?: number;
-}) {
-  const supabase = await createClientSupabaseClient();
-  let query = supabase
-    .from("videos")
-    .select("*, categories (name)")
-    .eq("is_deleted", false)
-    .order("id", { ascending: false })
-    .range((params.page - 1) * params.limit, params.page * params.limit - 1);
-
-  if (params.search) {
-    query = query.ilike("name", `%${params.search}%`);
-  }
-
-  if (params.category_id) {
-    query = query.eq("category_id", params.category_id);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    return { success: false, error };
-  }
-  return { success: true, data, error: null };
-}
-
-/**
- * 動画詳細を取得する
- * @param id 動画ID
- * @returns 動画詳細
- */
-export async function getVideoDetail(id: number) {
-  const supabase = await createClientSupabaseClient();
-  const { data, error } = await supabase
-    .from("videos")
-    .select("*, categories (name)")
-    .eq("id", id)
-    .single();
-  if (error) {
-    return { success: false, error };
-  }
-  return { success: true, data, error: null };
 }
 
 /**
@@ -115,6 +69,7 @@ export async function getCategories() {
     .select("*")
     .order("id", { ascending: true });
   if (error) {
+    console.error("カテゴリ一覧の取得に失敗:", error);
     return { success: false, error };
   }
   return { success: true, data, error: null };

@@ -1,19 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Button, Group, Text, Flex, Modal } from '@mantine/core';
-import { Calendar } from 'lucide-react';
+import { Card, Button, Group, Text, Modal } from '@mantine/core';
 import { VideoWithCategoryType, CategoryType } from '@/app/types';
-import { deleteVideo } from '@/app/services/api/video-client';
+import { deleteVideo } from '@/app/services/api/videos-client';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { VideoFormModal } from './VideoFormModal';
 import Image from 'next/image';
 import { getYouTubeVideoId } from '@/app/(authenticated)/videos/utils';
+//import { Box } from 'lucide-react';
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
-  currentUserRole: string;
+  isAdmin: boolean;
   categories: CategoryType[];
   userId: number;
 }
@@ -31,15 +31,14 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
   return "/default_video_thumbnail.png";
 }
 
-export function VideoCard({ video, currentUserRole, categories, userId }: VideoCardProps) {
+export function VideoCard({ video, isAdmin, categories, userId }: VideoCardProps) {
   const [editModalOpened, setEditModalOpened] = useState(false);
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const router = useRouter();
-  const isAdmin = currentUserRole === 'admin';
 
   const handleDelete = async (id: number) => {
     try {
-      const result = await deleteVideo(id);
+      const result = await deleteVideo(id, userId);
       setDeleteModalOpened(false);
       if (result?.success) {
         notifications.show({
@@ -78,15 +77,15 @@ export function VideoCard({ video, currentUserRole, categories, userId }: VideoC
             style={{ objectFit: 'cover' }}
           />
         </div>
-      </Card.Section>
-      <Card.Section p="md" component="a" href={`/videos/${video.id}`} >
-        <Text fw={700} size="lg" mb="xs">{video.name}</Text>
-        <Text component="div" lineClamp={2} c="dimmed" mb="md">
-          {video.description}
-        </Text>
-        <Button component="div" radius="md" size="compact-sm" c="rgb(23,23,23)" bg="gray.2" fs="0.875rem">
-          {video.category?.name}
-        </Button>
+        <div className="p-4">
+          <Text fw={700} size="lg" mb="xs">{video.name}</Text>
+          <Text component="div" lineClamp={2} c="dimmed" mb="md">
+            {video.description}
+          </Text>
+          <Button component="div" radius="md" size="compact-sm" c="rgb(23,23,23)" bg="gray.2" fs="0.875rem">
+            {video.category?.name}
+          </Button>
+        </div>
       </Card.Section>
       <Card.Section>
         {isAdmin && (
@@ -105,7 +104,6 @@ export function VideoCard({ video, currentUserRole, categories, userId }: VideoC
         opened={editModalOpened}
         onClose={() => {
           setEditModalOpened(false);
-          router.refresh();
         }}
         categories={categories}
         userId={userId}
@@ -128,6 +126,6 @@ export function VideoCard({ video, currentUserRole, categories, userId }: VideoC
           </Button>
         </Group>
       </Modal>
-    </Card>
+    </Card >
   );
 }
