@@ -4,13 +4,17 @@ import type { DocumentInsertFormType, DocumentUpdateFormType } from "@/app/types
 /**
  * 指定したidの資料を論理削除する
  * @param id 資料のid
+ * @param userId ユーザーID
  * @returns 削除結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
-export async function deleteDocument(id: number) {
+export async function deleteDocument(id: number, userId: number) {
   const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("documents").update({ is_deleted: true }).eq("id", id);
+  const { error } = await supabase
+    .from("documents")
+    .update({ is_deleted: true, updated_by: userId })
+    .eq("id", id);
 
   if (error) {
     console.error("Supabase 資料削除エラー:", error.message);
