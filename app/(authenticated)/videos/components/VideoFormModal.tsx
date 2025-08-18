@@ -15,7 +15,7 @@ interface VideoFormModalProps {
     initialData?: VideoUpdateFormType;
 }
 
-function toVideoFormState(video?: VideoUpdateFormType) {
+function setVideoFormState(video?: VideoUpdateFormType) {
     return {
         name: video?.name ?? '',
         category_id: video?.category_id ?? 0,
@@ -29,11 +29,11 @@ function toVideoFormState(video?: VideoUpdateFormType) {
 }
 
 export function VideoFormModal({ opened, onClose, categories, userId, initialData }: VideoFormModalProps) {
-    const [form, setForm] = useState(toVideoFormState(initialData));
+    const [form, setForm] = useState(setVideoFormState(initialData));
     const router = useRouter();
 
     useEffect(() => {
-        setForm(toVideoFormState(initialData));
+        setForm(setVideoFormState(initialData));
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
