@@ -15,7 +15,7 @@ interface DocumentFormModalProps {
     initialData?: DocumentUpdateFormType; // 編集時のデータ
 }
 
-function toDocumentFormState(document?: DocumentUpdateFormType) {
+function setDocumentFormState(document?: DocumentUpdateFormType) {
     return {
         name: document?.name ?? '',
         category_id: document?.category_id ?? 0,
@@ -26,12 +26,12 @@ function toDocumentFormState(document?: DocumentUpdateFormType) {
 }
 
 export function DocumentFormModal({ opened, onClose, categories, userId, initialData }: DocumentFormModalProps) {
-    const [form, setForm] = useState(toDocumentFormState(initialData));
+    const [form, setForm] = useState(setDocumentFormState(initialData));
     const router = useRouter();
 
     // モーダルが開かれたとき、編集時はinitialDataでformを更新
     useEffect(() => {
-        setForm(toDocumentFormState(initialData));
+        setForm(setDocumentFormState(initialData));
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
