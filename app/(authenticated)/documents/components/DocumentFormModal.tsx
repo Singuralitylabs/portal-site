@@ -15,23 +15,25 @@ interface DocumentFormModalProps {
     initialData?: DocumentUpdateFormType; // 編集時のデータ
 }
 
-function setDocumentFormState(document?: DocumentUpdateFormType) {
-    return {
-        name: document?.name ?? '',
-        category_id: document?.category_id ?? 0,
-        description: document?.description ?? '',
-        url: document?.url ?? '',
-        assignee: document?.assignee ?? '',
-    };
-}
-
 export function DocumentFormModal({ opened, onClose, categories, userId, initialData }: DocumentFormModalProps) {
-    const [form, setForm] = useState(setDocumentFormState(initialData));
+    const [form, setForm] = useState({
+        name: initialData?.name ?? '',
+        category_id: initialData?.category_id ?? 0,
+        description: initialData?.description ?? '',
+        url: initialData?.url ?? '',
+        assignee: initialData?.assignee ?? '',
+    });
     const router = useRouter();
 
     // モーダルが開かれたとき、編集時はinitialDataでformを更新
     useEffect(() => {
-        setForm(setDocumentFormState(initialData));
+        setForm({
+            name: initialData?.name ?? "",
+            category_id: initialData?.category_id ?? 0,
+            description: initialData?.description ?? "",
+            url: initialData?.url ?? "",
+            assignee: initialData?.assignee ?? "",
+        });
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
