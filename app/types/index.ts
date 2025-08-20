@@ -17,6 +17,14 @@ type VideosTable = Database["public"]["Tables"]["videos"];
 export type VideoWithCategoryType = VideosTable["Row"] & {
   category: { name: string } | null;
 };
+export type VideoInsertFormType = Omit<
+  VideosTable["Row"],
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
+>;
+export type VideoUpdateFormType = Omit<
+  VideosTable["Row"],
+  "created_at" | "updated_at" | "created_by" | "is_deleted"
+>;
 
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];

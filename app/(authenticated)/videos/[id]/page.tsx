@@ -1,6 +1,6 @@
 'use server';
 
-import { fetchVideoById } from '@/app/services/api/videos';
+import { fetchVideoById } from '@/app/services/api/videos-server';
 import { VideoDetailPageTemplate } from './components/Template';
 
 export default async function VideoDetailPage({
