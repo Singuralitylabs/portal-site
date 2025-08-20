@@ -57,20 +57,3 @@ export async function deleteVideo(id: number, userId: number) {
   }
   return { success: true, error: null };
 }
-
-/**
- * カテゴリ一覧を取得する
- * @returns カテゴリ一覧
- */
-export async function getCategories() {
-  const supabase = await createClientSupabaseClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("id", { ascending: true });
-  if (error) {
-    console.error("カテゴリ一覧の取得に失敗:", error);
-    return { success: false, error };
-  }
-  return { success: true, data, error: null };
-}

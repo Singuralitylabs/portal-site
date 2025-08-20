@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import { VideoFormModal } from './VideoFormModal';
 import Image from 'next/image';
 import { getYouTubeVideoId } from '@/app/(authenticated)/videos/utils';
-//import { Box } from 'lucide-react';
 
 interface VideoCardProps {
   video: VideoWithCategoryType;

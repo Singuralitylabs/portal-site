@@ -15,25 +15,30 @@ interface VideoFormModalProps {
     initialData?: VideoUpdateFormType;
 }
 
-function setVideoFormState(video?: VideoUpdateFormType) {
-    return {
-        name: video?.name ?? '',
-        category_id: video?.category_id ?? 0,
-        description: video?.description ?? '',
-        url: video?.url ?? '',
-        thumbnail_path: video?.thumbnail_path ?? '',
-        thumbnail_time: video?.thumbnail_time ?? 0,
-        length: video?.length ?? 0,
-        assignee: video?.assignee ?? '',
-    };
-}
-
 export function VideoFormModal({ opened, onClose, categories, userId, initialData }: VideoFormModalProps) {
-    const [form, setForm] = useState(setVideoFormState(initialData));
+    const [form, setForm] = useState({
+        name: initialData?.name ?? '',
+        category_id: initialData?.category_id ?? 0,
+        description: initialData?.description ?? '',
+        url: initialData?.url ?? '',
+        thumbnail_path: initialData?.thumbnail_path ?? '',
+        thumbnail_time: initialData?.thumbnail_time ?? 0,
+        length: initialData?.length ?? 0,
+        assignee: initialData?.assignee ?? '',
+    });
     const router = useRouter();
 
     useEffect(() => {
-        setForm(setVideoFormState(initialData));
+        setForm({
+            name: initialData?.name ?? '',
+            category_id: initialData?.category_id ?? 0,
+            description: initialData?.description ?? '',
+            url: initialData?.url ?? '',
+            thumbnail_path: initialData?.thumbnail_path ?? '',
+            thumbnail_time: initialData?.thumbnail_time ?? 0,
+            length: initialData?.length ?? 0,
+            assignee: initialData?.assignee ?? '',
+        });
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
