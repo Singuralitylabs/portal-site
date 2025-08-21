@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Button, Group, Text, Modal } from '@mantine/core';
+import { Card, Button, Group, Text } from '@mantine/core';
 import { VideoWithCategoryType, CategoryType } from '@/app/types';
 import { deleteVideo } from '@/app/services/api/videos-client';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { VideoFormModal } from './VideoFormModal';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import Image from 'next/image';
 import { getYouTubeVideoId } from '@/app/(authenticated)/videos/utils';
 
@@ -109,22 +110,11 @@ export function VideoCard({ video, isAdmin, categories, userId }: VideoCardProps
         initialData={video}
       />
       {/* 削除モーダル */}
-      <Modal
+      <DeleteConfirmationModal
         opened={deleteModalOpened}
         onClose={() => setDeleteModalOpened(false)}
-        title="削除の確認"
-        centered
-      >
-        <Text mb="md">本当にこの動画を削除しますか？</Text>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={() => setDeleteModalOpened(false)}>
-            キャンセル
-          </Button>
-          <Button color="red" onClick={() => handleDelete(video.id)}>
-            削除
-          </Button>
-        </Group>
-      </Modal>
+        onConfirm={() => handleDelete(video.id)}
+      />
     </Card >
   );
 }
