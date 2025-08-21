@@ -37,7 +37,7 @@ export function DocumentFormModal({ opened, onClose, categories, userId, initial
     }, [opened, initialData]);
 
     const handleSubmit = async () => {
-        if (!form.name || !form.url || form.category_id === 0 || form.url.trim() === "") {
+        if (!form.name || !form.url?.trim() || form.category_id === 0) {
             notifications.show({
                 title: '入力エラー',
                 message: '資料名とURL及びカテゴリーは必須です',

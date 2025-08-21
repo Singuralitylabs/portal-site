@@ -11,12 +11,12 @@ import { DocumentFormModal } from './DocumentFormModal';
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
-  currentUserRole: string;
+  isAdmin: boolean;
   categories: CategoryType[];
   userId: number;
 }
 
-export function DocumentCard({ document, currentUserRole, categories, userId }: DocumentCardProps) {
+export function DocumentCard({ document, isAdmin, categories, userId }: DocumentCardProps) {
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);  // 削除モーダル用
   const [editModalOpened, setEditModalOpened] = useState(false);  // 編集モーダル用
   const router = useRouter();
@@ -31,7 +31,7 @@ export function DocumentCard({ document, currentUserRole, categories, userId }: 
 
   const handleDelete = async (id: number) => {
     try {
-      const result = await deleteDocument(id);
+      const result = await deleteDocument(id, userId);
       setDeleteModalOpened(false);
       if (result?.success) {
         notifications.show({
@@ -57,7 +57,6 @@ export function DocumentCard({ document, currentUserRole, categories, userId }: 
       console.error(e);
     }
   };
-  const isAdmin = currentUserRole === 'admin';
 
   return (
     <Card component="div" shadow="sm" padding="lg" radius="md" w="100%" withBorder>

@@ -60,7 +60,7 @@ export function DocumentsPageTemplate({ documents, categories, currentUserRole, 
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + '_grid'}>
                     <DocumentCard
                       document={document}
-                      currentUserRole={currentUserRole}
+                      isAdmin={isAdmin}
                       categories={categories}
                       userId={userId}
                     />
