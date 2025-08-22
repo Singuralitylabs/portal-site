@@ -110,7 +110,13 @@ export function SideNav() {
             href="/"
             className="text-xl font-bold flex items-center space-x-2 no-underline  text-inherit"
           >
-            <Image src="/icon.png" alt="Sinlab Logo" className="w-auto h-[1em] origin-center" />
+            <Image
+              src="/icon.png"
+              width={24}
+              height={24}
+              alt="Sinlab Logo"
+              className="w-auto h-[1em] origin-center"
+            />
             <div className="font-bold">Sinlab Portal</div>
           </Link>
         </div>
