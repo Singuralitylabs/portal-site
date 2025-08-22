@@ -80,24 +80,26 @@ export function SideNav() {
         <nav className="space-y-2">
           {navItems.map(item =>
             item.title === "ログアウト" ? (
-              <button
-                key={item.title}
-                onClick={handleSignOut}
-                className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground w-full text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
-              >
-                {item.icon}
-                {item.title}
-              </button>
+              <div key={item.title} className="px-3 py-2">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
+                >
+                  {item.icon}
+                  {item.title}
+                </button>
+              </div>
             ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
-              >
-                {item.icon}
-                {item.title}
-              </Link>
+              <div key={item.href} className="px-3 py-2">
+                <Link
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
+                >
+                  {item.icon}
+                  {item.title}
+                </Link>
+              </div>
             )
           )}
         </nav>
@@ -123,23 +125,25 @@ export function SideNav() {
         <nav className="flex-1 space-y-2 p-4">
           {navItems.map(item =>
             item.title === "ログアウト" ? (
-              <button
-                key={item.title}
-                onClick={handleSignOut}
-                className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground w-full text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
-              >
-                {item.icon}
-                {item.title}
-              </button>
+              <div key={item.title} className="px-3 py-2">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
+                >
+                  {item.icon}
+                  {item.title}
+                </button>
+              </div>
             ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 rounded-sm px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
-              >
-                {item.icon}
-                {item.title}
-              </Link>
+              <div key={item.href} className="px-3 py-2">
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
+                >
+                  {item.icon}
+                  {item.title}
+                </Link>
+              </div>
             )
           )}
         </nav>
