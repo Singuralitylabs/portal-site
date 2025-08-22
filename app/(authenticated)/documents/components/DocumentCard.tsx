@@ -1,58 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { DocumentWithCategoryType } from "@/app/types";
 import { FileText, FileType, Calendar } from "lucide-react";
-import { Button, Card, Flex, Text, Modal, Group } from "@mantine/core";
-import { deleteDocument } from "@/app/services/api/documents-client";
-import { useRouter } from "next/navigation";
-import { notifications } from "@mantine/notifications";
+import { Button, Card, Flex, Text, Group } from "@mantine/core";
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
   isAdmin: boolean;
-  userId: number;
   onEdit: (document: DocumentWithCategoryType) => void;
+  onDelete: (documentId: number) => void;
 }
 
-export function DocumentCard({ document, isAdmin, userId, onEdit }: DocumentCardProps) {
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
-  const router = useRouter();
+export function DocumentCard({ document, isAdmin, onEdit, onDelete }: DocumentCardProps) {
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
       case "pdf":
         return <FileText style={{ width: "1.25rem", height: "1.25rem" }} />;
       default:
         return <FileType style={{ width: "1.25rem", height: "1.25rem" }} />;
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      const result = await deleteDocument(id, userId);
-      setDeleteModalOpened(false);
-      if (result?.success) {
-        notifications.show({
-          title: "削除完了",
-          message: "資料を削除しました。",
-          color: "green",
-        });
-        router.refresh();
-      } else {
-        notifications.show({
-          title: "削除失敗",
-          message: String(result?.error) || "不明なエラー",
-          color: "red",
-        });
-      }
-    } catch (e) {
-      setDeleteModalOpened(false);
-      notifications.show({
-        title: "エラー",
-        message: "削除処理で予期しないエラーが発生しました",
-        color: "red",
-      });
-      console.error(e);
     }
   };
 
@@ -105,29 +70,12 @@ export function DocumentCard({ document, isAdmin, userId, onEdit }: DocumentCard
             <Button color="blue" onClick={() => onEdit(document)}>
               編集
             </Button>
-            <Button color="red" onClick={() => setDeleteModalOpened(true)}>
+            <Button color="red" onClick={() => onDelete(document.id)}>
               削除
             </Button>
           </Group>
         )}
       </Card.Section>
-
-      <Modal
-        opened={deleteModalOpened}
-        onClose={() => setDeleteModalOpened(false)}
-        title="削除の確認"
-        centered
-      >
-        <Text mb="md">本当にこの資料を削除しますか？</Text>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={() => setDeleteModalOpened(false)}>
-            キャンセル
-          </Button>
-          <Button color="red" onClick={() => handleDelete(document.id)}>
-            削除
-          </Button>
-        </Group>
-      </Modal>
     </Card>
   );
 }

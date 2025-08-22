@@ -6,6 +6,7 @@ import { Grid, Paper, Button, Group } from "@mantine/core";
 import { PageTitle } from "@/app/components/PageTitle";
 import { DocumentFormModal } from "./DocumentFormModal";
 import { DocumentWithCategoryType, CategoryType, DocumentUpdateFormType } from "@/app/types";
+import { DocumentDeleteModal } from "./DocumentDeleteModal";
 
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
@@ -25,13 +26,20 @@ export function DocumentsPageTemplate({
     documentCategoryNames.has(category.name)
   );
 
-  const [modalOpened, setModalOpened] = useState(false);
+  const [formModalOpened, setFormModalOpened] = useState(false);
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DocumentUpdateFormType | null>(null);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<number>(0);
   const isAdmin = currentUserRole === "admin";
 
   const handleEditDocument = (document: DocumentUpdateFormType) => {
     setEditingDocument(document);
-    setModalOpened(true);
+    setFormModalOpened(true);
+  };
+
+  const handleDeleteDocument = (documentId: number) => {
+    setDeletingDocumentId(documentId);
+    setDeleteModalOpened(true);
   };
 
   return (
@@ -39,19 +47,11 @@ export function DocumentsPageTemplate({
       <Group justify="space-between" align="center" mb="md">
         <PageTitle>資料一覧</PageTitle>
         {isAdmin && (
-          <Button onClick={() => setModalOpened(true)} color="blue">
+          <Button onClick={() => setFormModalOpened(true)} color="blue">
             新規登録
           </Button>
         )}
       </Group>
-
-      <DocumentFormModal
-        opened={modalOpened}
-        onClose={() => setModalOpened(false)}
-        categories={categories}
-        userId={userId}
-        initialData={editingDocument || undefined}
-      />
 
       <Paper mb="md" p="md">
         <div className="flex flex-wrap items-center">
@@ -77,8 +77,8 @@ export function DocumentsPageTemplate({
                     <DocumentCard
                       document={document}
                       isAdmin={isAdmin}
-                      userId={userId}
                       onEdit={handleEditDocument}
+                      onDelete={handleDeleteDocument}
                     />
                   </Grid.Col>
                 ))}
@@ -92,6 +92,21 @@ export function DocumentsPageTemplate({
           TOPへ
         </a>
       </div>
+
+      <DocumentFormModal
+        opened={formModalOpened}
+        onClose={() => setFormModalOpened(false)}
+        categories={categories}
+        userId={userId}
+        initialData={editingDocument || undefined}
+      />
+
+      <DocumentDeleteModal
+        opened={deleteModalOpened}
+        onClose={() => setDeleteModalOpened(false)}
+        userId={userId}
+        documentId={deletingDocumentId}
+      />
     </Paper>
   );
 }
