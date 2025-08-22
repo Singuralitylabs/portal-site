@@ -37,6 +37,11 @@ export function DocumentsPageTemplate({
     setFormModalOpened(true);
   };
 
+  const handleCloseFormModal = () => {
+    setFormModalOpened(false);
+    setEditingDocument(null);
+  };
+
   const handleDeleteDocument = (documentId: number) => {
     setDeletingDocumentId(documentId);
     setDeleteModalOpened(true);
@@ -95,7 +100,7 @@ export function DocumentsPageTemplate({
 
       <DocumentFormModal
         opened={formModalOpened}
-        onClose={() => setFormModalOpened(false)}
+        onClose={handleCloseFormModal}
         categories={categories}
         userId={userId}
         initialData={editingDocument || undefined}
