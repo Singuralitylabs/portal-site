@@ -6,7 +6,7 @@ import { Button, Card, Flex, Text, Group } from "@mantine/core";
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
-  isAdmin: boolean;
+  isAdmin: boolean; // Note: This represents content management permissions (admin OR maintainer)
   onEdit: (document: DocumentWithCategoryType) => void;
   onDelete: (documentId: number) => void;
 }
