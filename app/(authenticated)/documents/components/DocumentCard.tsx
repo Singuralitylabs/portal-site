@@ -6,12 +6,12 @@ import { Button, Card, Flex, Text, Group } from "@mantine/core";
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
-  isAdmin: boolean; // Note: This represents content management permissions (admin OR maintainer)
+  isContentMgr: boolean; // Note: This represents content management permissions (admin OR maintainer)
   onEdit: (document: DocumentWithCategoryType) => void;
   onDelete: (documentId: number) => void;
 }
 
-export function DocumentCard({ document, isAdmin, onEdit, onDelete }: DocumentCardProps) {
+export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: DocumentCardProps) {
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
       case "pdf":
@@ -65,7 +65,7 @@ export function DocumentCard({ document, isAdmin, onEdit, onDelete }: DocumentCa
         >
           資料を開く
         </Button>
-        {isAdmin && (
+        {isContentMgr && (
           <Group m="0 1rem 1rem" gap="xs">
             <Button color="blue" onClick={() => onEdit(document)}>
               編集
