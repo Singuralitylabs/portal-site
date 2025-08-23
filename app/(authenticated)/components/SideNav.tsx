@@ -70,7 +70,7 @@ export function SideNav() {
         title={
           <Link
             href="/"
-            className="text-xl font-bold flex items-center space-x-2  no-underline text-inherit"
+            className="text-xl font-bold inline-flex items-center space-x-2  no-underline text-inherit"
           >
             <Image src="/icon.png" alt="Sinlab Logo" width={132} height={132} className="w-auto h-[1em] origin-center" />
             <div className="font-bold">Sinlab Portal</div>
@@ -83,7 +83,7 @@ export function SideNav() {
               <div key={item.title} className="px-3 py-2">
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
+                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
                 >
                   {item.icon}
                   {item.title}
@@ -94,7 +94,7 @@ export function SideNav() {
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
+                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
                 >
                   {item.icon}
                   {item.title}
@@ -110,7 +110,7 @@ export function SideNav() {
         <div className="p-6">
           <Link
             href="/"
-            className="text-xl font-bold flex items-center space-x-2 no-underline  text-inherit"
+            className="text-xl font-bold inline-flex items-center space-x-2 no-underline  text-inherit"
           >
             <Image
               src="/icon.png"
@@ -128,7 +128,7 @@ export function SideNav() {
               <div key={item.title} className="px-3 py-2">
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
+                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
                 >
                   {item.icon}
                   {item.title}
@@ -138,7 +138,7 @@ export function SideNav() {
               <div key={item.href} className="px-3 py-2">
                 <Link
                   href={item.href}
-                  className="flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
+                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
                 >
                   {item.icon}
                   {item.title}
