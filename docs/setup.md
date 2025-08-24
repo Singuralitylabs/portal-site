@@ -4,14 +4,15 @@
 
 ## 目次
 
-1. [プロジェクトの初期設定](#プロジェクトの初期設定)
-2. [主要パッケージのインストール](#主要パッケージのインストール)
-3. [認証の設定](#認証の設定)
-4. [開発環境の起動確認](#開発環境の起動確認)
+1. [プロジェクトの初期設定](#1-プロジェクトの初期設定)
+2. [主要パッケージのインストール](#2-主要パッケージのインストール)
+3. [認証の設定](#3-認証の設定)
+4. [開発環境の起動確認](#4-開発環境の起動確認)
+5. [トラブルシューティング](#5-トラブルシューティング)
 
-## プロジェクトの初期設定
+## 1. プロジェクトの初期設定
 
-### 1. Next.jsプロジェクトの作成
+### 1.1 Next.jsプロジェクトの作成
 
 ```bash
 npx create-next-app@latest
@@ -29,7 +30,7 @@ npx create-next-app@latest
 ✔ Would you like to customize the default import alias? → No
 ```
 
-### 2. 追加の設定ファイル
+### 1.2 追加の設定ファイル
 
 `.gitignore`に以下を追加：
 
@@ -42,9 +43,9 @@ npx create-next-app@latest
 .DS_Store
 ```
 
-## 主要パッケージのインストール
+## 2. 主要パッケージのインストール
 
-### 1. ESLintとPrettierのセットアップ
+### 2.1 ESLintとPrettierのセットアップ
 
 ```bash
 npm install --save-dev eslint-config-next @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-import eslint-config-prettier prettier
@@ -137,7 +138,7 @@ VSCodeの設定（`.vscode/settings.json`）：
 }
 ```
 
-### 2. UIライブラリ（mantine）のセットアップ
+### 2.2 UIライブラリ（mantine）のセットアップ
 
 ```bash
 # mantineの基本設定
@@ -157,16 +158,16 @@ npm install @mantine/core @mantine/hooks
 ✔ Configure the import alias for utils? → @/lib/utils
 ```
 
-### 2. 認証（Supabase Auth）のセットアップ
+### 2.3 認証（Supabase Auth）のセットアップ
 
 ```bash
 # Supabaseクライアントのインストール
 npm install @supabase/supabase-js
 ```
 
-## 認証の設定
+## 3. 認証の設定
 
-### 1. Supabase Authの設定
+### 3.1 Supabase Authの設定
 
 1. [Supabase Dashboard](https://supabase.com/dashboard/)でプロジェクトを作成
 2. Google認証の有効化:
@@ -175,7 +176,7 @@ npm install @supabase/supabase-js
 3. 環境変数の設定:
    - プロジェクト設定からSupabase URLとAnon Keyを取得
 
-## 開発環境の起動確認
+## 4. 開発環境の起動確認
 
 1. 環境変数の設定
 
@@ -191,7 +192,7 @@ npm install @supabase/supabase-js
    - http://localhost:3000 にアクセス
    - Supabase Auth認証機能の動作確認
 
-## トラブルシューティング
+## 5. トラブルシューティング
 
 よくある問題と解決方法：
 
