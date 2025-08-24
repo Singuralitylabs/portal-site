@@ -4,8 +4,8 @@
 
 1. [概要](#1-概要)
 2. [テーブル設計](#2-テーブル設計)
-3. [er図](#3-er図)
-4. [row-level-securityrlsポリシー](#4-row-level-securityrlsポリシー)
+3. [ER図](#3-er図)
+4. [Row-Level-Security(RLS)ポリシー](#4-row-level-securityrlsポリシー)
 5. [サポート関数](#5-サポート関数)
 6. [データアクセス制御の実現](#6-データアクセス制御の実現)
 
