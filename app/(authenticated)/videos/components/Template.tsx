@@ -90,7 +90,7 @@ export function VideosPageTemplate({
         ))}
       </Paper>
 
-      <div className="text-left mt-8 mb-4 ml-6">
+      <div className="text-left mt-8 mb-4">
         <a href="#" className="text-blue-600">
           TOPへ
         </a>
