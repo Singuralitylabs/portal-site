@@ -82,7 +82,7 @@ export function DocumentsPageTemplate({
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + "_grid"}>
                     <DocumentCard
                       document={document}
-                      isAdmin={isContentMgr}
+                      isContentMgr={isContentMgr}
                       onEdit={handleEditDocument}
                       onDelete={handleDeleteDocument}
                     />

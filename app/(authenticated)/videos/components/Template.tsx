@@ -80,7 +80,7 @@ export function VideosPageTemplate({
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + "_grid"}>
                     <VideoCard
                       video={video}
-                      isAdmin={isContentMgr}
+                      isContentMgr={isContentMgr}
                       onEdit={handleEditDocument}
                       onDelete={handleDeleteDocument}
                     />
