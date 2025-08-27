@@ -105,7 +105,7 @@ erDiagram
         UUID auth_id FK "Supabase Auth ユーザーID"
         VARCHAR email "Googleアカウントのメールアドレス (最大255文字)"
         VARCHAR display_name "Googleアカウントの表示名 (最大100文字)"
-        VARCHAR role "ユーザーの役割（例: member, admin） (最大50文字)"
+        VARCHAR role "ユーザーの役割（例: member, maintainer, admin） (最大50文字)"
         VARCHAR status "ユーザーの状態（例: pending, active, rejected） (最大50文字)"
         VARCHAR bio "ユーザーの自己紹介文 (最大500文字)"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
@@ -252,7 +252,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
     ```sql
     EXISTS (
         SELECT 1 FROM users
-        WHERE 
+        WHERE
         auth_id = auth.uid()
         AND role IN ('admin', 'maintainer')
         AND status = 'active'
@@ -269,9 +269,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 #### 削除ポリシー（DELETE/論理削除）
 
-- `content_managers_can_delete_documents`: 管理者またはメンテナーが資料を論理削除可能
-  - 条件: 管理者またはメンテナー権限 AND `is_deleted = TRUE`
-  - 解説: 管理者またはメンテナー権限を持つユーザーが資料の論理削除を実行可能
+- `prevent_physical_delete_documents`: 資料は論理削除のみとし、物理削除を防止
 
 ### 4.3. videos テーブルのRLSポリシー
 
@@ -288,7 +286,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
     ```sql
     EXISTS (
         SELECT 1 FROM users
-        WHERE 
+        WHERE
         auth_id = auth.uid()
         AND role IN ('admin', 'maintainer')
         AND status = 'active'
@@ -305,9 +303,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 #### 削除ポリシー（DELETE/論理削除）
 
-- `content_managers_can_delete_videos`: 管理者またはメンテナーが動画を論理削除可能
-  - 条件: 管理者またはメンテナー権限 AND `is_deleted = TRUE`
-  - 解説: 管理者またはメンテナー権限を持つユーザーが動画の論理削除を実行可能
+- `prevent_physical_delete_videos`: 資料は論理削除のみとし、物理削除を防止
 
 ### 4.4. categories テーブルのRLSポリシー
 
@@ -335,11 +331,11 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 ## 7. ユーザーロール階層
 
-| ロール        | ユーザー管理 | コンテンツ管理 | コンテンツ閲覧 |
-| ------------- | ------------ | -------------- | -------------- |
-| **admin**     | ✓            | ✓              | ✓              |
+| ロール         | ユーザー管理 | コンテンツ管理 | コンテンツ閲覧 |
+| -------------- | ------------ | -------------- | -------------- |
+| **admin**      | ✓            | ✓              | ✓              |
 | **maintainer** | ✗            | ✓              | ✓              |
-| **member**    | ✗            | ✗              | ✓              |
+| **member**     | ✗            | ✗              | ✓              |
 
 - **ユーザー管理**: ユーザーの承認・拒否・削除
 - **コンテンツ管理**: 資料・動画の追加・編集・削除

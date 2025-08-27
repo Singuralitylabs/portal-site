@@ -7,19 +7,18 @@ import { PageTitle } from "@/app/components/PageTitle";
 import { DocumentFormModal } from "./DocumentFormModal";
 import { DocumentWithCategoryType, CategoryType, DocumentUpdateFormType } from "@/app/types";
 import { DocumentDeleteModal } from "./DocumentDeleteModal";
-import { isContentManager } from "@/app/utils/permissions";
 
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
   categories: CategoryType[];
-  currentUserRole: string;
+  isContentMgr: boolean;
   userId: number;
 }
 
 export function DocumentsPageTemplate({
   documents,
   categories,
-  currentUserRole,
+  isContentMgr,
   userId,
 }: DocumentsPageTemplateProps) {
   const documentCategoryNames = new Set(documents.map(document => document.category?.name));
@@ -31,7 +30,6 @@ export function DocumentsPageTemplate({
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DocumentUpdateFormType | null>(null);
   const [deletingDocumentId, setDeletingDocumentId] = useState<number>(0);
-  const isContentMgr = isContentManager(currentUserRole);
 
   const handleEditDocument = (document: DocumentUpdateFormType) => {
     setEditingDocument(document);

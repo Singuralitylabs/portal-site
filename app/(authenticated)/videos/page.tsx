@@ -3,6 +3,7 @@ import { fetchUserInfoByAuthId } from '@/app/services/api/user-server';
 import { fetchVideos } from '@/app/services/api/videos-server';
 import { fetchCategoriesByType } from '@/app/services/api/categories';
 import { VideosPageTemplate } from './components/Template';
+import { canContentManager } from "@/app/services/auth/server-auth";
 
 export default async function VideosPage() {
   // サーバーサイドで利用ユーザー情報を参照
@@ -15,6 +16,7 @@ export default async function VideosPage() {
   const { data, error } = await fetchVideos();
   const { data: dataCategory, error: errorCategory } = await fetchCategoriesByType("videos");
   const { id, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
+  const isContentMgr = canContentManager(role);
 
   if (error || errorCategory || roleError) {
     console.error("データの取得に失敗:", error || errorCategory || roleError);
@@ -25,7 +27,7 @@ export default async function VideosPage() {
     <VideosPageTemplate
       videos={data}
       categories={dataCategory}
-      currentUserRole={role}
+      isContentMgr={isContentMgr}
       userId={id}
     />
   );

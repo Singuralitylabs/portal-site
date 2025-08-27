@@ -7,19 +7,18 @@ import { PageTitle } from "@/app/components/PageTitle";
 import { VideoFormModal } from "./VideoFormModal";
 import { VideoWithCategoryType, CategoryType, VideoUpdateFormType } from "@/app/types";
 import { VideoDeleteModal } from "./VideoDeleteModal";
-import { isContentManager } from "@/app/utils/permissions";
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
   categories: CategoryType[];
-  currentUserRole: string;
+  isContentMgr: boolean;
   userId: number;
 }
 
 export function VideosPageTemplate({
   videos,
   categories,
-  currentUserRole,
+  isContentMgr,
   userId,
 }: VideosPageTemplateProps) {
   const videoCategoryNames = new Set(videos.map(video => video.category?.name));
@@ -29,7 +28,6 @@ export function VideosPageTemplate({
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [editingVideo, setEditingVideo] = useState<VideoUpdateFormType | null>(null);
   const [deletingVideoId, setDeletingVideoId] = useState<number>(0);
-  const isContentMgr = isContentManager(currentUserRole);
 
   const handleEditDocument = (video: VideoUpdateFormType) => {
     setEditingVideo(video);
