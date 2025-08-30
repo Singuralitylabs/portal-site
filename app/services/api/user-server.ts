@@ -1,4 +1,4 @@
-import { UserStatusType } from "@/app/types";
+import { MemberType, UserStatusType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
@@ -56,4 +56,30 @@ export async function fetchUserInfoByAuthId({
   }
 
   return { id: data.id, role: data.role, error: null };
+}
+
+/**
+ * メンバー一覧を取得する
+ * @returns { data: MemberType[] | null, error: PostgrestError | null } - メンバー一覧とエラー
+ */
+export async function fetchActiveUsers(): Promise<{
+  data: MemberType[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, display_name, role, bio")
+    .eq("status", "active")
+    .eq("is_deleted", false)
+    .order("role", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Supabase メンバー一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
 }
