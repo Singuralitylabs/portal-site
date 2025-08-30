@@ -12,7 +12,7 @@ CREATE POLICY "authenticated_users_can_read_videos" ON "videos"
       AND status = 'active'
       AND is_deleted = false
     )
-    is_deleted = FALSE
+    AND is_deleted = FALSE
   );
 
 -- INSERT: adminまたはmaintainerが新規videosを作成可能
