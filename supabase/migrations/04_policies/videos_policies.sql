@@ -10,6 +10,7 @@ CREATE POLICY "authenticated_users_can_read_videos" ON "videos"
       SELECT 1 FROM users
       WHERE auth_id = auth.uid()
       AND status = 'active'
+      AND is_deleted = false
     )
     is_deleted = FALSE
   );
@@ -36,16 +37,6 @@ CREATE POLICY "content_managers_can_update_videos" ON "videos"
   FOR UPDATE
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE 
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-  )
-  WITH CHECK (
     EXISTS (
       SELECT 1 FROM users
       WHERE 

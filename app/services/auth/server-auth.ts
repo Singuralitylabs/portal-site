@@ -51,8 +51,3 @@ export async function getServerAuth(): Promise<ServerAuthResult> {
     };
   }
 }
-
-// ユーザーがコンテンツの管理対象か確認
-export function canContentManager(role: string): boolean {
-  return role === "admin" || role === "maintainer";
-}

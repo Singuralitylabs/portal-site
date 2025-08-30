@@ -7,7 +7,7 @@ import { Card, Button, Group, Text } from "@mantine/core";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
-  isContentMgr: boolean; // Note: This represents content management permissions (admin OR maintainer)
+  isContentMgr: boolean;
   onEdit: (video: VideoWithCategoryType) => void;
   onDelete: (videoId: number) => void;
 }

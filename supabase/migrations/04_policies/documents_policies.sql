@@ -10,6 +10,7 @@ CREATE POLICY "authenticated_users_can_read_documents" ON "documents"
       SELECT 1 FROM users
       WHERE auth_id = auth.uid()
       AND status = 'active'
+      AND is_deleted = false
     )
     AND is_deleted = false
   );
@@ -36,16 +37,6 @@ CREATE POLICY "content_managers_can_update_documents" ON "documents"
   FOR UPDATE
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE 
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-  )
-  WITH CHECK (
     EXISTS (
       SELECT 1 FROM users
       WHERE 
