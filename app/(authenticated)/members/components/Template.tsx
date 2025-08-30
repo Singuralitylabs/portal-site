@@ -10,7 +10,11 @@ interface MembersPageTemplateProps {
 export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
   return (
     <Container size="xl" py="md">
-      <PageTitle>メンバーリスト</PageTitle>
+      <PageTitle>会員紹介</PageTitle>
+
+      <Text my={16} size="lg" c="gray.7">
+        シンギュラリティ・ラボのメンバーをご紹介します。
+      </Text>
 
       {members.length === 0 ? (
         <Text ta="center" c="dimmed" mt="xl">

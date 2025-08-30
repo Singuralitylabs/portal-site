@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
   //   icon: <User className="h-5 w-5" />,
   // },
   {
-    title: "メンバーリスト",
+    title: "会員リスト",
     href: "/members",
     icon: <Users className="h-5 w-5" />,
   },
