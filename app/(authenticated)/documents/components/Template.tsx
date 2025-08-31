@@ -11,14 +11,14 @@ import { DocumentDeleteModal } from "./DocumentDeleteModal";
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
   categories: CategoryType[];
-  currentUserRole: string;
+  isContentMgr: boolean;
   userId: number;
 }
 
 export function DocumentsPageTemplate({
   documents,
   categories,
-  currentUserRole,
+  isContentMgr,
   userId,
 }: DocumentsPageTemplateProps) {
   const documentCategoryNames = new Set(documents.map(document => document.category?.name));
@@ -30,7 +30,6 @@ export function DocumentsPageTemplate({
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DocumentUpdateFormType | null>(null);
   const [deletingDocumentId, setDeletingDocumentId] = useState<number>(0);
-  const isAdmin = currentUserRole === "admin";
 
   const handleEditDocument = (document: DocumentUpdateFormType) => {
     setEditingDocument(document);
@@ -51,7 +50,7 @@ export function DocumentsPageTemplate({
     <Paper m="0 2rem">
       <Group justify="space-between" align="center" mb="md">
         <PageTitle>資料一覧</PageTitle>
-        {isAdmin && (
+        {isContentMgr && (
           <Button onClick={() => setFormModalOpened(true)} color="blue">
             新規登録
           </Button>
@@ -81,7 +80,7 @@ export function DocumentsPageTemplate({
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + "_grid"}>
                     <DocumentCard
                       document={document}
-                      isAdmin={isAdmin}
+                      isContentMgr={isContentMgr}
                       onEdit={handleEditDocument}
                       onDelete={handleDeleteDocument}
                     />

@@ -3,6 +3,7 @@ import { fetchUserInfoByAuthId } from '@/app/services/api/user-server';
 import { fetchDocuments } from '@/app/services/api/documents-server';
 import { fetchCategoriesByType } from '@/app/services/api/categories';
 import { DocumentsPageTemplate } from './components/Template';
+import { checkContentPermissions } from "@/app/services/auth/permissions";
 
 export default async function DocumentsPage() {
   // サーバーサイドで利用ユーザー情報を参照
@@ -15,7 +16,6 @@ export default async function DocumentsPage() {
   const { data, error } = await fetchDocuments();
   const { data: dataCategory, error: errorCategory } = await fetchCategoriesByType("documents");
   const { id, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
-
   if (error || errorCategory || roleError) {
     console.error("データ取得エラー:", error || errorCategory || roleError);
     return <p>データを取得できませんでした。</p>;
@@ -25,7 +25,7 @@ export default async function DocumentsPage() {
     <DocumentsPageTemplate
       documents={data}
       categories={dataCategory}
-      currentUserRole={role}
+      isContentMgr={checkContentPermissions(role)}
       userId={id}
     />
   );

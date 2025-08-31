@@ -11,14 +11,14 @@ import { VideoDeleteModal } from "./VideoDeleteModal";
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
   categories: CategoryType[];
-  currentUserRole: string;
+  isContentMgr: boolean;
   userId: number;
 }
 
 export function VideosPageTemplate({
   videos,
   categories,
-  currentUserRole,
+  isContentMgr,
   userId,
 }: VideosPageTemplateProps) {
   const videoCategoryNames = new Set(videos.map(video => video.category?.name));
@@ -28,7 +28,6 @@ export function VideosPageTemplate({
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [editingVideo, setEditingVideo] = useState<VideoUpdateFormType | null>(null);
   const [deletingVideoId, setDeletingVideoId] = useState<number>(0);
-  const isAdmin = currentUserRole === "admin";
 
   const handleEditDocument = (video: VideoUpdateFormType) => {
     setEditingVideo(video);
@@ -49,7 +48,7 @@ export function VideosPageTemplate({
     <Paper m="0 2rem">
       <Group justify="space-between" align="center" mb="md">
         <PageTitle>動画一覧</PageTitle>
-        {isAdmin && (
+        {isContentMgr && (
           <Button onClick={() => setFormModalOpened(true)} color="blue">
             新規登録
           </Button>
@@ -79,7 +78,7 @@ export function VideosPageTemplate({
                   <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + "_grid"}>
                     <VideoCard
                       video={video}
-                      isAdmin={isAdmin}
+                      isContentMgr={isContentMgr}
                       onEdit={handleEditDocument}
                       onDelete={handleDeleteDocument}
                     />

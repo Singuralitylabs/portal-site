@@ -7,7 +7,7 @@ import { Card, Button, Group, Text } from "@mantine/core";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
-  isAdmin: boolean;
+  isContentMgr: boolean;
   onEdit: (video: VideoWithCategoryType) => void;
   onDelete: (videoId: number) => void;
 }
@@ -25,7 +25,7 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
   return "/default_video_thumbnail.png";
 }
 
-export function VideoCard({ video, isAdmin, onEdit, onDelete }: VideoCardProps) {
+export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardProps) {
   const thumbnailUrl = getThumbnailUrl(video);
   return (
     <Card
@@ -60,7 +60,7 @@ export function VideoCard({ video, isAdmin, onEdit, onDelete }: VideoCardProps) 
         </div>
       </Card.Section>
       <Card.Section>
-        {isAdmin && (
+        {isContentMgr && (
           <Group m="0 1rem 1rem" gap="xs">
             <Button color="blue" onClick={() => onEdit(video)}>
               編集
