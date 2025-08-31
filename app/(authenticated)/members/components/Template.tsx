@@ -10,7 +10,7 @@ interface MembersPageTemplateProps {
 export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
   return (
     <Container size="xl" py="md">
-      <PageTitle>会員紹介</PageTitle>
+      <PageTitle>メンバー紹介</PageTitle>
 
       <Text my={16} size="lg" c="gray.7">
         シンギュラリティ・ラボのメンバーをご紹介します。
