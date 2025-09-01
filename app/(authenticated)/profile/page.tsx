@@ -1,19 +1,22 @@
-import { currentUser, User } from '@clerk/nextjs/server';
-import { getUserByClerkId, updateUserProfile } from '@/app/services/api/user';
+import { getServerCurrentUser } from '@/app/services/api/supabase-server';
+import { fetchUserByAuthIdInServer, updateUserProfileServerInServer } from '@/app/services/api/user-server';
 import { Template } from './components/Template';
 
 export default async function ProfilePage() {
+  // サーバーサイドで利用ユーザー情報を参照
+  const { authId, error: currentUserError } = await getServerCurrentUser();
+  if (currentUserError) {
+    console.error("認証情報の取得に失敗:", currentUserError);
+    return <p>認証情報が取得できませんでした。</p>;
+  }
 
-  let idpUser: User | null;
-  idpUser = await currentUser();
-  
-  if (!idpUser) {
+  if (!authId) {
     return <div>ユーザー情報を読み込み中...</div>;
   }
 
   // Supabaseからユーザー情報を取得
-  const { data: user, error } = await getUserByClerkId(idpUser.id);
-  
+  const { data: user, error } = await fetchUserByAuthIdInServer({ authId });
+
   if (error) {
     console.error('ユーザー取得エラー:', error);
     // ユーザーが見つからない場合は、新規ユーザーとして扱う
@@ -32,29 +35,29 @@ export default async function ProfilePage() {
 
   const userData = {
     id: user?.id || 0,
-    name: user?.display_name || idpUser.firstName || '',
+    name: user?.display_name || '',
     role: user?.role || 'メンバー',
     joinedAt: joinedDate,
     bio: user?.bio || '',
   };
 
   // プロフィール更新用のサーバーアクション
-  const updateProfile = async (displayName: string, bio: string) => {
+  async function updateProfile(displayName: string, bio: string) {
     'use server';
     
-    // 既に取得済みのユーザー情報を使用
     if (!user) {
       return { success: false, message: 'ユーザーデータが見つかりません' };
     }
-    
+
     // ユーザープロフィールを更新
-    const { error: updateError } = await updateUserProfile({
+    const { error: updateError } = await updateUserProfileServerInServer({
       id: user.id,
       displayName,
       bio,
     });
     
     if (updateError) {
+      console.error("プロフィール更新エラー:", updateError);
       return { success: false, message: 'プロフィールの更新に失敗しました' };
     }
     
