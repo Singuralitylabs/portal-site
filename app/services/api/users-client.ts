@@ -10,12 +10,6 @@ interface NewUserProps {
   avatarUrl?: string;
 }
 
-interface UpdateProfileProps {
-  id: number;
-  displayName: string;
-  bio: string;
-}
-
 /**
  * 新規ユーザーを users テーブルに追加する
  * @param {NewUserProps} props - ユーザー情報
@@ -23,7 +17,6 @@ interface UpdateProfileProps {
  */
 export async function addNewUser({ authId, email, displayName, avatarUrl }: NewUserProps) {
   const supabase = createClientSupabaseClient();
-
 
   const newUser: InsertUserType = {
     auth_id: authId,
