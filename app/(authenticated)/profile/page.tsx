@@ -36,7 +36,7 @@ export default async function ProfilePage() {
   const userData = {
     id: user?.id || 0,
     name: user?.display_name || '',
-    role: user?.role || 'メンバー',
+    role: user?.role || 'member',
     joinedAt: joinedDate,
     bio: user?.bio || '',
   };
