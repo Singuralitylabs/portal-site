@@ -100,24 +100,3 @@ export async function fetchUserIdByAuthId({
 
   return { userId: user.id, error: null };
 }
-
-export async function updateUserProfile({ id, displayName, bio }: UpdateProfileProps) {
-  const supabase = createClientSupabaseClient();
-
-  const { data, error } = await supabase
-    .from("users")
-    .update({
-      display_name: displayName,
-      bio: bio,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select();
-
-  if (error) {
-    console.error("Supabase プロフィール更新エラー:", error.message);
-    return { data: null, error };
-  }
-
-  return { data, error: null };
-}
