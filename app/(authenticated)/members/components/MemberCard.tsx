@@ -20,7 +20,14 @@ export function MemberCard({ member }: MemberCardProps) {
 
   return (
     <div>
-      <Card shadow="sm" padding="lg" radius="md" withBorder onClick={handleOpenModal}>
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+        onClick={handleOpenModal}
+        style={{ cursor: "pointer" }}
+      >
         <Group align="flex-start" gap="sm">
           <Avatar color="blue" radius="xl">
             {avatarContent}
@@ -29,11 +36,9 @@ export function MemberCard({ member }: MemberCardProps) {
             <Text fw={500} size="lg" mb={4}>
               {member.display_name}
             </Text>
-            {member.bio && (
-              <Text size="sm" c="dimmed" lineClamp={3}>
-                {member.bio}
-              </Text>
-            )}
+            <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }}>
+              {member.bio || ""}
+            </Text>
           </div>
         </Group>
       </Card>
