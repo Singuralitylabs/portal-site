@@ -33,7 +33,7 @@ export type InsertUserType = UsersTable["Insert"];
 export type UserStatusType = "pending" | "active" | "rejected";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
-export type MemberType = Pick<UserType, "id" | "display_name" | "role" | "bio">;
+export type MemberType = Pick<UserType, "id" | "display_name" | "bio">;
 
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
