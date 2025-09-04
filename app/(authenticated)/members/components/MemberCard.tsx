@@ -44,14 +44,16 @@ export function MemberCard({ member }: MemberCardProps) {
           {avatarContent}
         </Avatar>
         <div style={{ flex: 1 }}>
-          <Text fw={500} size="lg" mb={4}>
-            {member.display_name}
-          </Text>
-          <Badge color={getRoleColor(member.role)} variant="light" size="sm" mb={8}>
-            {getRoleLabel(member.role)}
-          </Badge>
+          <div className="flex items-center justify-between">
+            <Text fw={500} size="lg" mb={4}>
+              {member.display_name}
+            </Text>
+            <Badge color={getRoleColor(member.role)} variant="light" size="sm" mb={8}>
+              {getRoleLabel(member.role)}
+            </Badge>
+          </div>
           {member.bio && (
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" lineClamp={3}>
               {member.bio}
             </Text>
           )}
