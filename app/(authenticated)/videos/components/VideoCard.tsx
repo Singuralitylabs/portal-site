@@ -3,7 +3,8 @@
 import { VideoWithCategoryType } from "@/app/types";
 import Image from "next/image";
 import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
-import { Card, Button, Group, Text } from "@mantine/core";
+import { Calendar } from "lucide-react";
+import { Card, Button, Flex, Group, Menu, Text } from "@mantine/core";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
@@ -47,6 +48,16 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
           <Text component="div" lineClamp={2} c="dimmed" mb="md">
             {video.description}
           </Text>
+        </div>
+      </Card.Section>
+      <Card.Section className="p-4">
+        <Flex gap="0.25rem" justify="space-between" align="center" direction="row">
+          <Calendar style={{ width: "1rem", height: "1rem" }} />
+          <Text component="div" fs="0.875rem" lh="1.25rem">
+            {new Date(video.updated_at)
+              .toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" })
+              .replaceAll("/", "-")}
+          </Text>
           <Button
             component="div"
             radius="md"
@@ -57,19 +68,24 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
           >
             {video.category?.name}
           </Button>
-        </div>
-      </Card.Section>
-      <Card.Section>
-        {isContentMgr && (
-          <Group m="0 1rem 1rem" gap="xs">
-            <Button color="blue" onClick={() => onEdit(video)}>
-              編集
-            </Button>
-            <Button color="red" onClick={() => onDelete(video.id)}>
-              削除
-            </Button>
-          </Group>
-        )}
+          {isContentMgr && (
+            <Menu>
+              <Menu.Target>
+                <Button color="lightgray">
+                  <Text fz="lg">⋮</Text>
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={() => onEdit(video)}>
+                  編集
+                </Menu.Item>
+                <Menu.Item onClick={() => onDelete(video.id)}>
+                  削除
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          )}
+        </Flex>
       </Card.Section>
     </Card>
   );
