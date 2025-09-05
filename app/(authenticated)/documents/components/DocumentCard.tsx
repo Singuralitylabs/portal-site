@@ -2,7 +2,7 @@
 
 import { DocumentWithCategoryType } from "@/app/types";
 import { FileText, FileType, Calendar } from "lucide-react";
-import { Button, Card, Flex, Text, Group } from "@mantine/core";
+import { Button, Card, Flex, Text, Menu } from "@mantine/core";
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
@@ -24,9 +24,28 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
   return (
     <Card component="div" shadow="sm" padding="lg" radius="md" w="100%" withBorder>
       <Card.Section withBorder inheritPadding py="xs">
-        <Flex gap="0.25rem" justify="flex-start" align="flex-start" direction="row">
-          <div>{getFileTypeIcon("pdf")}</div>
-          <div>{document.name}</div>
+        <Flex gap="0.25rem" justify="space-between" align="center" direction="row">
+          <Flex gap="0.25rem" align="center" direction="row">
+            <div>{getFileTypeIcon("pdf")}</div>
+            <div>{document.name}</div>
+          </Flex>
+          {isContentMgr && (
+            <Menu>
+              <Menu.Target>
+                <Button color="lightgray">
+                  <Text fz="lg">⋮</Text>
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={() => onEdit(document)}>
+                  編集
+                </Menu.Item>
+                <Menu.Item onClick={() => onDelete(document.id)}>
+                  削除
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          )}
         </Flex>
       </Card.Section>
       <Card.Section>
@@ -65,17 +84,7 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
         >
           資料を開く
         </Button>
-        {isContentMgr && (
-          <Group m="0 1rem 1rem" gap="xs">
-            <Button color="blue" onClick={() => onEdit(document)}>
-              編集
-            </Button>
-            <Button color="red" onClick={() => onDelete(document.id)}>
-              削除
-            </Button>
-          </Group>
-        )}
       </Card.Section>
-    </Card>
+    </Card >
   );
 }
