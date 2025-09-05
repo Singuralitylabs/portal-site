@@ -8,6 +8,11 @@ interface MembersPageTemplateProps {
 }
 
 export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
+  // 日本語の名前順にソート
+  const sortedMembers = [...members].sort((a, b) =>
+    a.display_name.localeCompare(b.display_name, "ja")
+  );
+
   return (
     <Container size="xl" py="md">
       <PageTitle>メンバー紹介</PageTitle>
@@ -21,7 +26,7 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
         {members.length > 0 && (
           <>
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl" mt="lg">
-              {members.map(member => (
+              {sortedMembers.map(member => (
                 <MemberCard key={member.id} member={member} />
               ))}
             </SimpleGrid>

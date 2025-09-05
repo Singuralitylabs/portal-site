@@ -9,7 +9,7 @@ interface MemberDetailModalProps {
 
 export function MemberDetailModal({ opened, onClose, userInfo }: MemberDetailModalProps) {
   return (
-    <Modal opened={opened} onClose={onClose} title={`メンバーのご紹介`} centered size="md">
+    <Modal opened={opened} onClose={onClose} title={`メンバーのご紹介`} centered size="xl">
       <Stack gap="lg">
         <Group align="center" gap="md">
           <Avatar size="lg" radius="md" alt={userInfo.display_name} />
