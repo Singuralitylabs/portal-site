@@ -9,9 +9,7 @@ interface MembersPageTemplateProps {
 
 export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
   // 日本語の名前順にソート
-  const sortedMembers = [...members].sort((a, b) =>
-    a.display_name.localeCompare(b.display_name, "ja")
-  );
+  const sortedMembers = members.sort((a, b) => a.display_name.localeCompare(b.display_name, "ja"));
 
   return (
     <Container size="xl" py="md">
