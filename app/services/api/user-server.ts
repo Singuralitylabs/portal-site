@@ -70,7 +70,7 @@ export async function fetchActiveUsers(): Promise<{
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, display_name, role, bio")
+    .select("id, display_name, bio, avatar_url")
     .eq("status", "active")
     .eq("is_deleted", false)
     .order("role", { ascending: true })

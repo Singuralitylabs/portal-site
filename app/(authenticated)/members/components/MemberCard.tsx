@@ -29,8 +29,8 @@ export function MemberCard({ member }: MemberCardProps) {
         style={{ cursor: "pointer" }}
       >
         <Group align="flex-start" gap="sm">
-          <Avatar color="blue" radius="xl">
-            {avatarContent}
+          <Avatar src={member.avatar_url} color="blue" radius="xl">
+            {!member.avatar_url && avatarContent}
           </Avatar>
           <div style={{ flex: 1 }}>
             <Text fw={500} size="lg" mb={4}>
