@@ -101,6 +101,7 @@ export function SupabaseAuthProvider({
           authId: user.id,
           email: user.email || "",
           displayName: user.user_metadata?.full_name || "",
+          avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         });
         console.log("新規ユーザーをusersテーブルに追加:", user.id);
       }
