@@ -73,7 +73,6 @@ export async function fetchActiveUsers(): Promise<{
     .select("id, display_name, bio, avatar_url")
     .eq("status", "active")
     .eq("is_deleted", false)
-    .order("role", { ascending: true })
     .order("created_at", { ascending: true });
 
   if (error) {
