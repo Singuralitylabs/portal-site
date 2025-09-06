@@ -1,8 +1,8 @@
-import { getServerCurrentUser } from '@/app/services/api/supabase-server';
-import { fetchUserInfoByAuthId } from '@/app/services/api/user-server';
-import { fetchDocuments } from '@/app/services/api/documents-server';
-import { fetchCategoriesByType } from '@/app/services/api/categories';
-import { DocumentsPageTemplate } from './components/Template';
+import { getServerCurrentUser } from "@/app/services/api/supabase-server";
+import { fetchUserInfoByAuthId } from "@/app/services/api/users-server";
+import { fetchDocuments } from "@/app/services/api/documents-server";
+import { fetchCategoriesByType } from "@/app/services/api/categories";
+import { DocumentsPageTemplate } from "./components/Template";
 import { checkContentPermissions } from "@/app/services/auth/permissions";
 
 export default async function DocumentsPage() {
