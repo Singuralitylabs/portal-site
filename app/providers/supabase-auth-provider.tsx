@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { User, Session, AuthChangeEvent, AuthError } from "@supabase/supabase-js";
 import { createClientSupabaseClient } from "../services/api/supabase-client";
 import { UserStatusType } from "../types";
-import { addNewUser, fetchUserIdByAuthId } from "../services/api/user";
+import { addNewUser, fetchUserIdByAuthId } from "../services/api/users-client";
 
 interface SupabaseAuthContextType {
   user: User | null;
