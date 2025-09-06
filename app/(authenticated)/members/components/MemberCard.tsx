@@ -45,7 +45,7 @@ export function MemberCard({ member }: MemberCardProps) {
       <MemberDetailModal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        userInfo={member}
+        memberInfo={member}
       />
     </div>
   );
