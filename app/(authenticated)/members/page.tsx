@@ -1,5 +1,5 @@
 import { MembersPageTemplate } from "./components/Template";
-import { fetchActiveUsers } from "@/app/services/api/user-server";
+import { fetchActiveUsers } from "@/app/services/api/users-server";
 
 export default async function MembersPage() {
   const { data, error } = await fetchActiveUsers();
