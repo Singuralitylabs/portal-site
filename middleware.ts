@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { USER_STATUS } from "./app/constants/user";
-import { fetchUserStatusByIdInServer } from "./app/services/api/user-server";
+import { fetchUserStatusByIdInServer } from "./app/services/api/users-server";
 
 const publicRoutes = ["/login", "/callback", "/pending", "/rejected"];
 
