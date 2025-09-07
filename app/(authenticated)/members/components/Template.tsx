@@ -13,12 +13,12 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
 
   return (
     <Container size="xl" py="md">
-      <PageTitle>メンバー紹介</PageTitle>
+      <PageTitle>シンラボ会員一覧</PageTitle>
 
       <Text my={16} size="lg" c="gray.9">
         {members.length > 0
-          ? "シンギュラリティ・ラボのメンバーをご紹介します。"
-          : "メンバーが見つかりませんでした。"}
+          ? "シンギュラリティ・ラボの会員をご紹介します。"
+          : "会員情報の取得に失敗しました。"}
       </Text>
       <div>
         {members.length > 0 && (

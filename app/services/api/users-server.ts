@@ -59,8 +59,8 @@ export async function fetchUserInfoByAuthId({
 }
 
 /**
- * メンバー一覧を取得する
- * @returns { data: MemberType[] | null, error: PostgrestError | null } - メンバー一覧とエラー
+ * 会員一覧を取得する
+ * @returns { data: MemberType[] | null, error: PostgrestError | null } - 会員一覧とエラー
  */
 export async function fetchActiveUsers(): Promise<{
   data: MemberType[] | null;
@@ -76,7 +76,7 @@ export async function fetchActiveUsers(): Promise<{
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("Supabase メンバー一覧取得エラー:", error.message);
+    console.error("Supabase 会員一覧取得エラー:", error.message);
     return { data: null, error };
   }
 
