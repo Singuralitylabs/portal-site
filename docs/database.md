@@ -56,6 +56,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `description` | `TEXT`         |                                      | 資料の説明文                       |
 | `category_id` | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 資料の分類                         |
 | `url`         | `TEXT`         | NOT NULL                             | 資料へのリンク（Googleドライブ等） |
+| `order_by`    | `INTEGER`      |                                      | 表示順                          |
 | `created_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を作成したユーザー             |
 | `updated_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を最後に更新したユーザー       |
 | `assignee`    | `VARCHAR(100)` |                                      | 資料の担当者名                     |
@@ -77,6 +78,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス               |
 | `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算） |
 | `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）         |
+| `order_by`       | `INTEGER`      |                                      | 表示順                        |
 | `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー           |
 | `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー     |
 | `assignee`       | `VARCHAR(100)` |                                      | 動画の担当者名（講師など）       |
@@ -92,6 +94,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos`   | カテゴリーの種別                |
 | `name`          | `VARCHAR(100)` | NOT NULL                            | カテゴリー名 （例: 事務局資料） |
 | `description`   | `TEXT`         |                                     | カテゴリーの説明文              |
+| `order_by`      | `INTEGER`      |                                     | 表示順                         |
 | `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                  |
 | `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                        |
 | `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                        |
@@ -119,6 +122,7 @@ erDiagram
         TEXT description "資料の説明文"
         INTEGER category_id FK "資料のカテゴリー（categories.id）"
         TEXT url "資料へのリンク（Googleドライブ等）"
+        INTEGER order_by "表示順"
         INTEGER created_by FK "資料を作成したユーザー (users.id)"
         INTEGER updated_by FK "資料を最後に更新したユーザー (users.id)"
         VARCHAR assignee "資料の担当者名 (最大100文字)"
@@ -136,6 +140,7 @@ erDiagram
         TEXT thumbnail_path "サムネイル画像パス"
         INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
         INTEGER length "動画の再生時間（秒換算）"
+        INTEGER order_by "表示順"
         INTEGER created_by FK "動画を作成したユーザー (users.id)"
         INTEGER updated_by FK "動画を最後に更新したユーザー (users.id)"
         VARCHAR assignee "動画の担当者名（講師など）"
@@ -149,6 +154,7 @@ erDiagram
         VARCHAR category_type "カテゴリー種別 (documents OR videos) (最大50文字)"
         VARCHAR name "カテゴリー名 (最大100文字)"
         TEXT description "カテゴリーの説明文"
+        INTEGER order_by "表示順"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
