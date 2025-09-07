@@ -5,8 +5,8 @@ export default async function MembersPage() {
   const { data, error } = await fetchActiveUsers();
 
   if (error || !data) {
-    console.error("メンバー一覧の取得に失敗:", error);
-    return <p>メンバー一覧を取得できませんでした。</p>;
+    console.error("会員一覧の取得に失敗:", error);
+    return <p>会員一覧を取得できませんでした。</p>;
   }
 
   return <MembersPageTemplate members={data} />;

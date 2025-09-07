@@ -9,7 +9,7 @@ export default function Home() {
             Singularity Lab. ポータルサイトへようこそ！
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-full sm:max-w-2xl mx-auto">
-            会員向けの資料やプログラミング学習など、 シンラボ活動に役立つ情報を提供します。
+            シンラボ活動に役立つ情報を提供します。
           </p>
         </div>
 
@@ -32,10 +32,10 @@ export default function Home() {
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
-              <Link href="/members">会員リスト</Link>
+              <Link href="/members">会員一覧</Link>
             </h3>
             <p className="text-muted-foreground">
-              シンラボメンバーの紹介ページです。
+              シンラボ会員の紹介ページです。
               <br />
               メンバー同士の交流にご活用ください。
             </p>
