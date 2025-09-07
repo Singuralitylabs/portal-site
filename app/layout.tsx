@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "@mantine/core/styles.css";
-import '@mantine/notifications/styles.css';
+import "@mantine/notifications/styles.css";
 import "./globals.css";
 import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
 import { SupabaseAuthProvider } from "@/app/providers/supabase-auth-provider";
