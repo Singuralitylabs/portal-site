@@ -7,6 +7,7 @@ interface NewUserProps {
   authId: string;
   email: string;
   displayName: string;
+  avatarUrl?: string;
 }
 
 /**
@@ -14,13 +15,14 @@ interface NewUserProps {
  * @param {NewUserProps} props - ユーザー情報
  * @returns {Promise<{ data: InsertUserType[] | null, error: any }>} - 挿入結果とエラー
  */
-export async function addNewUser({ authId, email, displayName }: NewUserProps) {
+export async function addNewUser({ authId, email, displayName, avatarUrl }: NewUserProps) {
   const supabase = createClientSupabaseClient();
 
   const newUser: InsertUserType = {
     auth_id: authId,
     email: email,
     display_name: displayName,
+    avatar_url: avatarUrl,
     role: "member",
     status: "pending",
     is_deleted: false,
@@ -65,10 +67,10 @@ export async function fetchUserStatusById({
 }
 
 /**
- * usersテーブルから指定のauth_idのユーザーのステータスを取得する
- * @param param0 - ユーザーの認証ID
- * @param {string} authId - ユーザーの認証ID
- * @returns { status: UserStatusType | null, error: PostgrestError | null } - ユーザーステータスとエラー
+ * usersテーブルから指定のauth_idのユーザーのIDを取得する
+ * @param param0 - パラメータオブジェクト
+ * @param {string} param0.authId - ユーザーの認証ID
+ * @returns { userId: number | null, error: PostgrestError | null } - ユーザーIDとエラー
  */
 export async function fetchUserIdByAuthId({
   authId,

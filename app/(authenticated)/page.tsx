@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -9,7 +9,6 @@ export default function Home() {
             Singularity Lab. ポータルサイトへようこそ！
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-full sm:max-w-2xl mx-auto">
-            会員向けの資料やプログラミング学習など、
             シンラボ活動に役立つ情報を提供します。
           </p>
         </div>
@@ -19,17 +18,26 @@ export default function Home() {
             <h3 className="text-xl font-semibold mb-4">
               <Link href="/documents">資料一覧</Link>
             </h3>
-            <p className="text-muted-foreground">
-              各種申請フォームや資料のリンク集です。
-            </p>
+            <p className="text-muted-foreground">各種申請フォームや資料のリンク集です。</p>
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
               <Link href="/videos">動画一覧</Link>
             </h3>
             <p className="text-muted-foreground">
-              シンラボ活動やスキルアップなど、<br />
+              シンラボ活動やスキルアップなど、
+              <br />
               シンラボで提供された様々な動画を視聴できます。
+            </p>
+          </div>
+          <div className="bg-card p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">
+              <Link href="/members">会員一覧</Link>
+            </h3>
+            <p className="text-muted-foreground">
+              シンラボ会員の紹介ページです。
+              <br />
+              メンバー同士の交流にご活用ください。
             </p>
           </div>
         </div>

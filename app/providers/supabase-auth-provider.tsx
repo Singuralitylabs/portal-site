@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { User, Session, AuthChangeEvent, AuthError } from "@supabase/supabase-js";
 import { createClientSupabaseClient } from "../services/api/supabase-client";
 import { UserStatusType } from "../types";
-import { addNewUser, fetchUserIdByAuthId } from "../services/api/user";
+import { addNewUser, fetchUserIdByAuthId } from "../services/api/users-client";
 
 interface SupabaseAuthContextType {
   user: User | null;
@@ -101,6 +101,7 @@ export function SupabaseAuthProvider({
           authId: user.id,
           email: user.email || "",
           displayName: user.user_metadata?.full_name || "",
+          avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         });
         console.log("新規ユーザーをusersテーブルに追加:", user.id);
       }

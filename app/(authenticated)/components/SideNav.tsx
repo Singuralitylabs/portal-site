@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Drawer, Button } from "@mantine/core";
-// import { Menu, House, FileVideo, FileText, User, LogOut } from "lucide-react";
-import { Menu, House, FileVideo, FileText, LogOut } from "lucide-react";
+import { Menu, House, FileVideo, FileText, Users, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
@@ -36,6 +35,11 @@ const navItems: NavItem[] = [
   //   href: "/profile",
   //   icon: <User className="h-5 w-5" />,
   // },
+  {
+    title: "会員一覧",
+    href: "/members",
+    icon: <Users className="h-5 w-5" />,
+  },
   {
     title: "ログアウト",
     href: "/login",
@@ -72,7 +76,13 @@ export function SideNav() {
             href="/"
             className="text-xl font-bold inline-flex items-center space-x-2  no-underline text-inherit"
           >
-            <Image src="/icon.png" alt="Sinlab Logo" width={132} height={132} className="w-auto h-[1em] origin-center" />
+            <Image
+              src="/icon.png"
+              alt="Sinlab Logo"
+              width={132}
+              height={132}
+              className="w-auto h-[1em] origin-center"
+            />
             <div className="font-bold">Sinlab Portal</div>
           </Link>
         }

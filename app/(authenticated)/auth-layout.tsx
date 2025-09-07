@@ -3,7 +3,7 @@
 import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchUserStatusById } from "../services/api/user";
+import { fetchUserStatusById } from "../services/api/users-client";
 import { UserStatusType } from "../types";
 import { USER_STATUS } from "../constants/user";
 
