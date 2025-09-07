@@ -3,9 +3,9 @@ import { createServerSupabaseClient } from "./supabase-server";
 export async function fetchDocuments() {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
-  .from("documents")
-  .select(`*, category:categories (name)`)
-  .eq("is_deleted", false);
+    .from("documents")
+    .select(`*, category:categories (name)`)
+    .eq("is_deleted", false);
 
   if (error) {
     console.error("Supabase 資料一覧データ取得エラー:", error.message);
