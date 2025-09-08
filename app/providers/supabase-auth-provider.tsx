@@ -116,7 +116,6 @@ export function SupabaseAuthProvider({
               },
               body: JSON.stringify({
                 displayName: user.user_metadata?.full_name || "",
-                authId: user.id,
               }),
             });
 

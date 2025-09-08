@@ -8,21 +8,12 @@ interface SlackNotificationPayloadType {
       type: string;
       text: string;
     };
-    fields?: Array<{
-      type: string;
-      text: string;
-    }>;
   }>;
-}
-
-interface NewUserNotificationType {
-  displayName: string;
-  authId: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const userData: NewUserNotificationType = await request.json();
+    const { displayName } = await request.json();
     const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
     if (!webhookUrl) {
@@ -42,26 +33,9 @@ export async function POST(request: NextRequest) {
         },
         {
           type: "section",
-          fields: [
-            {
-              type: "mrkdwn",
-              text: `*ユーザー名:*\n${userData.displayName}`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*ステータス:*\n承認待ち`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*登録日時:*\n${new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
-            },
-          ],
-        },
-        {
-          type: "section",
           text: {
             type: "mrkdwn",
-            text: "管理者による承認作業をお願いします。\n承認は管理画面から行ってください。",
+            text: `${displayName}さんがポータルサイトに新規登録されました。管理者は承認作業をお願いします。`,
           },
         },
       ],
