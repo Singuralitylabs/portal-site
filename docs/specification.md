@@ -33,6 +33,7 @@ Supabase Authを使用したGoogleアカウントでの認証機能を提供し�
 - **データ管理**: Supabase PostgreSQL
 - **権限制御**: Row Level Security（RLS）
 - **セッション管理**: Supabase Auth
+- **通知機能**: 新規ユーザー登録時のSlack通知
 
 ### 2.2 実装方針
 
@@ -78,6 +79,7 @@ sequenceDiagram
     CB->>DB: ユーザー情報をusersテーブルに登録
     Note over DB: status='pending'で登録
     CB->>P: 承認待ち画面にリダイレクト
+    Note over CB: 新規ユーザー登録完了後、Slack通知を送信
 ```
 
 #### 2.3.2 既存ユーザーログインフロー
@@ -126,19 +128,26 @@ sequenceDiagram
      - `status`（デフォルト：`pending`）を `active` に変更する
    - 管理者が拒否した場合、`status` を `rejected` に変更する
 
-| status     | 説明     | アクセス権限 | 表示画面         |
-| ---------- | -------- | ------------ | ---------------- |
-| `pending`  | 承認待ち | なし         | 承認待ち画面     |
-| `active`   | 承認済み | 全機能       | メインコンテンツ |
-| `rejected` | 拒否済み | なし         | 拒否画面         |
+   | status     | 説明     | アクセス権限 | 表示画面         |
+   | ---------- | -------- | ------------ | ---------------- |
+   | `pending`  | 承認待ち | なし         | 承認待ち画面     |
+   | `active`   | 承認済み | 全機能       | メインコンテンツ |
+   | `rejected` | 拒否済み | なし         | 拒否画面         |
 
-4. ユーザーロール機能
+4. 新規ユーザー登録時の通知機能
 
-| ロール       | 説明             | ユーザー管理 | コンテンツ管理 | コンテンツ閲覧 |
-| ------------ | ---------------- | ------------ | -------------- | -------------- |
-| `admin`      | システム管理者   | ✓            | ✓              | ✓              |
-| `maintainer` | コンテンツ管理者 | ✗            | ✓              | ✓              |
-| `member`     | 一般メンバー     | ✗            | ✗              | ✓              |
+   - 新規ユーザーがGoogleアカウントで初回ログインし、usersテーブルに登録された際に、管理者への承認依頼としてSlack通知を自動送信
+   - 通知には登録ユーザーの表示名と登録日時が含まれる
+   - Slack通知が失敗した場合でも、ユーザー登録処理は正常に継続される
+   - 環境変数 `SLACK_WEBHOOK_URL` が未設定の場合、通知はスキップされ、エラーとはならない
+
+5. ユーザーロール機能
+
+   | ロール       | 説明             | ユーザー管理 | コンテンツ管理 | コンテンツ閲覧 |
+   | ------------ | ---------------- | ------------ | -------------- | -------------- |
+   | `admin`      | システム管理者   | ✓            | ✓              | ✓              |
+   | `maintainer` | コンテンツ管理者 | ✗            | ✓              | ✓              |
+   | `member`     | 一般メンバー     | ✗            | ✗              | ✓              |
 
 - **ユーザー管理**: ユーザーの承認・拒否・削除
 - **コンテンツ管理**: コンテンツの追加・編集・削除
@@ -209,6 +218,39 @@ sequenceDiagram
 |        <メールアドレス>           |
 |                                  |
 +----------------------------------+
+```
+
+### 2.7 Slack通知機能
+
+#### 2.7.1 概要
+
+新規ユーザー登録時に、管理者への承認依頼としてSlack通知を自動送信する機能。
+
+#### 2.7.2 処理フロー
+
+```mermaid
+sequenceDiagram
+    participant User as 新規ユーザー
+    participant Provider as SupabaseAuthProvider
+    participant API as /api/notifications/slack
+    participant Slack as Slack Webhook API
+    participant Channel as Slackチャンネル
+
+    User->>Provider: 初回Googleログイン
+    Provider->>Provider: usersテーブルにINSERT
+    Note over Provider: ユーザー作成成功後
+    Provider->>API: fetch('/api/notifications/slack')
+    API->>Slack: Webhook経由で通知送信
+    Slack->>Channel: 承認依頼メッセージ表示
+    Note over API,Channel: 通知失敗時でもユーザー作成は継続
+```
+
+#### 2.7.3 通知メッセージ例
+
+```
+新規ユーザー登録の承認依頼
+
+山田太郎さんがポータルサイトに新規登録されました。管理者は承認作業をお願いします。
 ```
 
 ## 3. 資料一覧ページ
