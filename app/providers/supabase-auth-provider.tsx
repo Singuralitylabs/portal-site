@@ -97,13 +97,39 @@ export function SupabaseAuthProvider({
       const { userId, error: userError } = await fetchUserIdByAuthId({ authId: user.id });
       // 新規ユーザーの場合、usersテーブルに追加
       if (!userId || userError) {
-        await addNewUser({
+        const { error: newUserError } = await addNewUser({
           authId: user.id,
           email: user.email || "",
           displayName: user.user_metadata?.full_name || "",
           avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         });
-        console.log("新規ユーザーをusersテーブルに追加:", user.id);
+
+        if (!newUserError) {
+          console.log("新規ユーザーをusersテーブルに追加:", user.id);
+
+          // 新規ユーザー作成成功後にSlack通知を送信（非同期で実行、エラーでも処理は継続）
+          try {
+            const response = await fetch("/api/notifications/slack", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                displayName: user.user_metadata?.full_name || "",
+              }),
+            });
+
+            if (!response.ok) {
+              const result = await response.json();
+              console.error(
+                "Slack通知の送信に失敗しましたが、ユーザー作成は完了しました:",
+                result.error
+              );
+            }
+          } catch (notificationError) {
+            console.error("Slack通知の送信に失敗:", notificationError);
+          }
+        }
       }
     } catch (error) {
       console.error("ユーザー情報の同期エラー:", error);
