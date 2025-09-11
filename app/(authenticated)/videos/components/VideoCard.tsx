@@ -3,8 +3,9 @@
 import { VideoWithCategoryType } from "@/app/types";
 import Image from "next/image";
 import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
+import { EllipsisVertical } from "lucide-react";
 import { Calendar } from "lucide-react";
-import { Card, Button, Flex, Group, Menu, Text } from "@mantine/core";
+import { Card, Button, Flex, Menu, Text } from "@mantine/core";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
@@ -38,6 +39,49 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
       className="hover:shadow-lg transition-shadow"
     >
       <Card.Section component="a" href={`/videos/${video.id}`}>
+        {isContentMgr && (
+          <div style={{ position: "absolute", top: "8px", right: "8px", zIndex: 10 }}>
+            <Menu>
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  p="4px"
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation(); // これで動画詳細ページ遷移のクリックイベントを防止
+                  }}
+                  style={{
+                    backgroundColor: "white",
+                    color: "black",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <EllipsisVertical size={16} />
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onEdit(video);
+                  }}
+                >
+                  編集
+                </Menu.Item>
+                <Menu.Item
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(video.id);
+                  }}
+                >
+                  削除
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </div>)}
         <div className="aspect-video mx-auto" style={{ position: "relative" }}>
           <Image src={thumbnailUrl} alt={video.name} fill style={{ objectFit: "cover" }} />
         </div>
@@ -68,23 +112,6 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
           >
             {video.category?.name}
           </Button>
-          {isContentMgr && (
-            <Menu>
-              <Menu.Target>
-                <Button color="lightgray">
-                  <Text fz="lg">⋮</Text>
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item onClick={() => onEdit(video)}>
-                  編集
-                </Menu.Item>
-                <Menu.Item onClick={() => onDelete(video.id)}>
-                  削除
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          )}
         </Flex>
       </Card.Section>
     </Card>

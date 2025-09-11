@@ -1,7 +1,7 @@
 "use client";
 
 import { DocumentWithCategoryType } from "@/app/types";
-import { FileText, FileType, Calendar } from "lucide-react";
+import { Calendar, EllipsisVertical, FileText, FileType } from "lucide-react";
 import { Button, Card, Flex, Text, Menu } from "@mantine/core";
 
 interface DocumentCardProps {
@@ -32,8 +32,17 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
           {isContentMgr && (
             <Menu>
               <Menu.Target>
-                <Button color="lightgray">
-                  <Text fz="lg">⋮</Text>
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  p="4px"
+                  style={{
+                    backgroundColor: "white",
+                    color: "black",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <EllipsisVertical size={16} />
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
