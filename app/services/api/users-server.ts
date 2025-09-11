@@ -103,7 +103,7 @@ export async function fetchUserByAuthIdInServer({
     .maybeSingle();
 
   if (error || !data) {
-    console.error("Supabase ユーザー情報取得エラー:", error?.message || "No data found");
+    console.error("Supabase ユーザー情報取得エラー:", error?.message);
     return { data: null, error };
   }
 
@@ -126,14 +126,14 @@ export async function updateUserProfileServerInServer({
   id: number;
   displayName: string;
   bio: string;
-}): Promise<{ data: UserType | null; error: PostgrestError | null }> {
+}): Promise<PostgrestError | null> {
   const supabase = await createServerSupabaseClient();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("users")
     .update({
       display_name: displayName,
-      bio: bio,
+      bio,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
@@ -142,9 +142,8 @@ export async function updateUserProfileServerInServer({
 
   if (error) {
     console.error("Supabase プロフィール更新エラー:", error.message);
-    return { data: null, error };
+    return error;
   }
 
-  console.log("Supabase プロフィール更新成功:", data);
-  return { data, error: null };
+  return null;
 }

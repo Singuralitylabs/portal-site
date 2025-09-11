@@ -1,6 +1,9 @@
-import { getServerCurrentUser } from '@/app/services/api/supabase-server';
-import { fetchUserByAuthIdInServer, updateUserProfileServerInServer } from '@/app/services/api/user-server';
-import { Template } from './components/Template';
+import { getServerCurrentUser } from "@/app/services/api/supabase-server";
+import {
+  fetchUserByAuthIdInServer,
+  updateUserProfileServerInServer,
+} from "@/app/services/api/users-server";
+import { Template } from "./components/Template";
 
 export default async function ProfilePage() {
   // サーバーサイドで利用ユーザー情報を参照
@@ -18,51 +21,39 @@ export default async function ProfilePage() {
   const { data: user, error } = await fetchUserByAuthIdInServer({ authId });
 
   if (error) {
-    console.error('ユーザー取得エラー:', error);
-    // ユーザーが見つからない場合は、新規ユーザーとして扱う
-    if (error.message === "ユーザーが見つかりません") {
-      return <div>ユーザー情報が登録されていません。管理者にお問い合わせください。</div>;
-    }
     return <div>ユーザー情報の取得に失敗しました</div>;
   }
 
-  // 参加日のフォーマット
-  let joinedDate = '';
-  if (user?.created_at) {
-    const date = new Date(user.created_at);
-    joinedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  if (!user) {
+    return <div>ユーザー情報が存在しません。管理者にお問い合わせください。</div>;
   }
 
-  const userData = {
-    id: user?.id || 0,
-    name: user?.display_name || '',
-    role: user?.role || 'member',
-    joinedAt: joinedDate,
-    bio: user?.bio || '',
-  };
-
   // プロフィール更新用のサーバーアクション
-  async function updateProfile(displayName: string, bio: string) {
-    'use server';
-    
+  const updateProfile = async (displayName: string, bio: string) => {
+    "use server";
+
     if (!user) {
-      return { success: false, message: 'ユーザーデータが見つかりません' };
+      return { success: false, message: "ユーザーデータが見つかりません" };
+    }
+
+    if (displayName.trim() === "") {
+      return { success: false, message: "表示名は必須です" };
     }
 
     // ユーザープロフィールを更新
-    const { error: updateError } = await updateUserProfileServerInServer({
+    const updateError = await updateUserProfileServerInServer({
       id: user.id,
       displayName,
       bio,
     });
-    
+
     if (updateError) {
       console.error("プロフィール更新エラー:", updateError);
-      return { success: false, message: 'プロフィールの更新に失敗しました' };
+      return { success: false, message: "プロフィールの更新に失敗しました" };
     }
-    
-    return { success: true };
-  }
 
-  return <Template initialUser={userData} updateProfile={updateProfile} />;
+    return { success: true };
+  };
+
+  return <Template initialUser={user} updateProfile={updateProfile} />;
 }
