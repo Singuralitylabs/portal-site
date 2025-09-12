@@ -35,6 +35,7 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
       padding="0"
       radius="md"
       w="100%"
+      h="320px"
       withBorder
       className="hover:shadow-lg transition-shadow"
     >
@@ -81,7 +82,8 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
-          </div>)}
+          </div>
+        )}
         <div className="aspect-video mx-auto" style={{ position: "relative" }}>
           <Image src={thumbnailUrl} alt={video.name} fill style={{ objectFit: "cover" }} />
         </div>
