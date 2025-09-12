@@ -29,6 +29,7 @@ export type VideoUpdateFormType = Omit<
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];
 export type InsertUserType = UsersTable["Insert"];
+export type ProfileUserType = Pick<UserType, "id" | "display_name" | "role" | "created_at" | "bio">;
 
 export type UserStatusType = "pending" | "active" | "rejected";
 export type UserRoleType = "admin" | "maintainer" | "member";
