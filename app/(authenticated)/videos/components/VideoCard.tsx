@@ -33,10 +33,8 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
       shadow="sm"
       padding="0"
       radius="md"
-      w="100%"
-      h="320px"
       withBorder
-      className="hover:shadow-lg transition-shadow"
+      className="hover:shadow-lg transition-shadow w-full h-[300px]"
     >
       <Card.Section component="a" href={`/videos/${video.id}`}>
         {isContentMgr && (
