@@ -1,7 +1,7 @@
 "use client";
 
 import { DocumentWithCategoryType } from "@/app/types";
-import { Calendar, EllipsisVertical, FileText, FileType } from "lucide-react";
+import { EllipsisVertical, FileText, FileType } from "lucide-react";
 import { Button, Card, Flex, Text, Menu } from "@mantine/core";
 
 interface DocumentCardProps {
@@ -22,8 +22,15 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
   };
 
   return (
-    <Card component="div" shadow="sm" padding="lg" radius="md" w="100%" withBorder>
-      <Card.Section withBorder inheritPadding py="xs">
+    <Card
+      component="div"
+      shadow="sm"
+      padding="0"
+      radius="md"
+      withBorder
+      className="w-full h-[240px] flex flex-col"
+    >
+      <Card.Section withBorder inheritPadding p="xs">
         <Flex gap="0.25rem" justify="space-between" align="center" direction="row">
           <Flex gap="0.25rem" align="center" direction="row">
             <div>{getFileTypeIcon("pdf")}</div>
@@ -46,54 +53,32 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item onClick={() => onEdit(document)}>
-                  編集
-                </Menu.Item>
-                <Menu.Item onClick={() => onDelete(document.id)}>
-                  削除
-                </Menu.Item>
+                <Menu.Item onClick={() => onEdit(document)}>編集</Menu.Item>
+                <Menu.Item onClick={() => onDelete(document.id)}>削除</Menu.Item>
               </Menu.Dropdown>
             </Menu>
           )}
         </Flex>
       </Card.Section>
-      <Card.Section>
-        <Text component="div" p="1rem">
+
+      <div className="flex-1 p-4">
+        <Text component="div" lineClamp={4}>
           {document.description}
         </Text>
-        <Flex gap="0.25rem" justify="flex-start" align="center" direction="row" p="0 1rem 1rem">
-          <Calendar style={{ width: "1rem", height: "1rem" }} />
-          <Text component="div" fs="0.875rem" lh="1.25rem">
-            {new Date(document.updated_at)
-              .toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" })
-              .replaceAll("/", "-")}
-          </Text>
-          <Button
-            component="div"
-            radius="md"
-            size="compact-sm"
-            c="rgb(23,23,23)"
-            bg="gray.2"
-            fs="0.875rem"
-            lh="1.25rem"
-            ml="0.5rem"
-          >
-            {document.category?.name}
-          </Button>
-        </Flex>
+      </div>
+
+      <div className="p-4 pt-0">
         <Button
           color="#000"
           component="a"
           href={document.url}
-          w={"100% - 2rem"}
-          m="0 1rem 1rem"
-          display="block"
+          fullWidth
           target="_blank"
           rel="noopener noreferrer"
         >
           資料を開く
         </Button>
-      </Card.Section>
-    </Card >
+      </div>
+    </Card>
   );
 }

@@ -60,8 +60,8 @@ export function SideNav() {
   return (
     <>
       {/* ハンバーガーメニュー (モバイル用) */}
-      <Button variant="subtle" onClick={() => setOpen(true)} className="sm:hidden">
-        <Menu size={24} className="sm:hidden" />
+      <Button variant="subtle" onClick={() => setOpen(true)} className="sm:hidden mt-4">
+        <Menu size={32} className="sm:hidden" />
       </Button>
 
       {/* モバイル用ハンバーガーメニュー */}
