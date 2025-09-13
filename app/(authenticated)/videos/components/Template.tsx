@@ -55,16 +55,14 @@ export function VideosPageTemplate({
         </div>
       )}
 
-      <div className="mb-4 py-4">
-        <div className="flex flex-wrap items-center">
-          {existingCategories.map(category => (
-            <div key={category.id}>
-              <a href={`#category-${category.id}`} className="text-blue-600 mr-4">
-                {category.name}
-              </a>
-            </div>
-          ))}
-        </div>
+      <div className="mb-4 py-4 flex flex-wrap items-center">
+        {existingCategories.map(category => (
+          <div key={category.id}>
+            <a href={`#category-${category.id}`} className="text-blue-600 mr-4">
+              {category.name}
+            </a>
+          </div>
+        ))}
       </div>
 
       <div>
