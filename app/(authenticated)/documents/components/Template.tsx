@@ -51,7 +51,7 @@ export function DocumentsPageTemplate({
       <PageTitle>資料一覧</PageTitle>
       {isContentMgr && (
         <div className="mt-4 flex justify-end">
-          <Button onClick={() => setFormModalOpened(true)} color="blue" size="xs" variant="outline">
+          <Button onClick={() => setFormModalOpened(true)} size="xs" variant="outline">
             新規登録
           </Button>
         </div>
@@ -69,7 +69,7 @@ export function DocumentsPageTemplate({
 
       <div>
         {existingCategories.map(category => (
-          <div key={category.id}>
+          <div key={category.id} className="mb-12">
             <h2 id={`category-${category.id}`}>{category.name}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mb-8">
               {documents
