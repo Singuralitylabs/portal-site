@@ -6,6 +6,7 @@ import { PageTitle } from "@/app/components/PageTitle";
 import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
 import Link from "next/link";
 import YouTube from "react-youtube";
+import { Calendar } from "lucide-react";
 
 interface VideoDetailPageProps {
   video: VideoWithCategoryType;
@@ -40,7 +41,6 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
               >
                 <Grid justify="space-between" align="center" columns={12} w="100%">
                   <Grid.Col span={6}>
-                    {/* 動画のカテゴリー */}
                     <Button
                       component="div"
                       radius="md"
@@ -53,25 +53,35 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                     </Button>
                   </Grid.Col>
                   <Grid.Col span={6}>
-                    {/* 担当者情報 */}
                     {video.assignee && (
-                      // 担当者情報ありの場合は表示する
                       <Flex w="100%" justify="flex-end">
                         <Text>担当：{video.assignee}</Text>
                       </Flex>
                     )}
                   </Grid.Col>
                 </Grid>
-                {/* 動画の長さ */}
-                {video.length && (
-                  // ビデオの長さ情報がある場合は表示する
-                  <Flex w="100%" justify="flex-end">
+                <Flex w="100%" justify="space-between" align="center">
+                  <Flex align="center" gap="0.25rem">
+                    <Calendar style={{ width: "1rem", height: "1rem" }} />
+                    <Text component="div" fs="0.875rem" lh="1.25rem">
+                      {new Date(video.updated_at)
+                        .toLocaleDateString("ja-JP", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                        })
+                        .replaceAll("/", "-")}
+                    </Text>
+                  </Flex>
+                  {video.length ? (
                     <Text>
                       ビデオの長さ {Math.floor(Number(video.length) / 60)}:
                       {(Number(video.length) % 60).toString().padStart(2, "0")}
                     </Text>
-                  </Flex>
-                )}
+                  ) : (
+                    ""
+                  )}
+                </Flex>
               </Flex>
             </div>
             <Divider color="#999" m="0 1rem" />

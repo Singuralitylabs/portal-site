@@ -4,8 +4,7 @@ import { VideoWithCategoryType } from "@/app/types";
 import Image from "next/image";
 import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
 import { EllipsisVertical } from "lucide-react";
-import { Calendar } from "lucide-react";
-import { Card, Button, Flex, Menu, Text } from "@mantine/core";
+import { Card, Button, Menu, Text } from "@mantine/core";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
@@ -88,33 +87,13 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
           <Image src={thumbnailUrl} alt={video.name} fill style={{ objectFit: "cover" }} />
         </div>
         <div className="p-4">
-          <Text fw={700} size="lg" mb="xs">
+          <Text fw={700} size="lg" mb="xs" lineClamp={1}>
             {video.name}
           </Text>
           <Text component="div" lineClamp={2} c="dimmed" mb="md">
             {video.description}
           </Text>
         </div>
-      </Card.Section>
-      <Card.Section className="p-4">
-        <Flex gap="0.25rem" justify="space-between" align="center" direction="row">
-          <Calendar style={{ width: "1rem", height: "1rem" }} />
-          <Text component="div" fs="0.875rem" lh="1.25rem">
-            {new Date(video.updated_at)
-              .toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" })
-              .replaceAll("/", "-")}
-          </Text>
-          <Button
-            component="div"
-            radius="md"
-            size="compact-sm"
-            c="rgb(23,23,23)"
-            bg="gray.2"
-            fs="0.875rem"
-          >
-            {video.category?.name}
-          </Button>
-        </Flex>
       </Card.Section>
     </Card>
   );
