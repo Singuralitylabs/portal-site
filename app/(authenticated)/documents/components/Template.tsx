@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { DocumentCard } from "./DocumentCard";
-import { Grid, Paper, Button, Group } from "@mantine/core";
+import { Button } from "@mantine/core";
 import { PageTitle } from "@/app/components/PageTitle";
 import { DocumentFormModal } from "./DocumentFormModal";
 import { DocumentWithCategoryType, CategoryType, DocumentUpdateFormType } from "@/app/types";
@@ -47,49 +47,47 @@ export function DocumentsPageTemplate({
   };
 
   return (
-    <Paper m="0 2rem">
-      <Group justify="space-between" align="center" mb="md">
-        <PageTitle>資料一覧</PageTitle>
-        {isContentMgr && (
-          <Button onClick={() => setFormModalOpened(true)} color="blue">
+    <div className="p-4 overflow-x-hidden">
+      <PageTitle>資料一覧</PageTitle>
+      {isContentMgr && (
+        <div className="mt-4 flex justify-end">
+          <Button onClick={() => setFormModalOpened(true)} color="blue" size="xs" variant="outline">
             新規登録
           </Button>
-        )}
-      </Group>
-
-      <Paper mb="md" p="md">
-        <div className="flex flex-wrap items-center">
-          {existingCategories.map(category => (
-            <div key={category.id}>
-              <a href={`#category-${category.id}`} className="text-blue-600 mr-4">
-                {category.name}
-              </a>
-            </div>
-          ))}
         </div>
-      </Paper>
+      )}
 
-      <Paper>
+      <div className="mb-4 py-4 flex flex-wrap items-center">
+        {existingCategories.map(category => (
+          <div key={category.id}>
+            <a href={`#category-${category.id}`} className="text-blue-600 mr-4">
+              {category.name}
+            </a>
+          </div>
+        ))}
+      </div>
+
+      <div>
         {existingCategories.map(category => (
           <div key={category.id}>
             <h2 id={`category-${category.id}`}>{category.name}</h2>
-            <Grid>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mb-8">
               {documents
                 .filter(document => document.category?.name === category.name)
                 .map(document => (
-                  <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={document.id + "_grid"}>
+                  <div key={document.id} className="w-full">
                     <DocumentCard
                       document={document}
                       isContentMgr={isContentMgr}
                       onEdit={handleEditDocument}
                       onDelete={handleDeleteDocument}
                     />
-                  </Grid.Col>
+                  </div>
                 ))}
-            </Grid>
+            </div>
           </div>
         ))}
-      </Paper>
+      </div>
 
       <div className="text-left mt-8 mb-4">
         <a href="#" className="text-blue-600">
@@ -111,6 +109,6 @@ export function DocumentsPageTemplate({
         userId={userId}
         documentId={deletingDocumentId}
       />
-    </Paper>
+    </div>
   );
 }
