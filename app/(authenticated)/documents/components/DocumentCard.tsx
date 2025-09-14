@@ -28,7 +28,7 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
       padding="0"
       radius="md"
       withBorder
-      className="w-full h-[240px] flex flex-col"
+      className="w-full aspect-[4/3] flex flex-col"
     >
       <Card.Section withBorder inheritPadding p="xs">
         <Flex gap="0.25rem" justify="space-between" align="center" direction="row">
@@ -61,8 +61,8 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
         </Flex>
       </Card.Section>
 
-      <div className="flex-1 p-4">
-        <Text component="div" lineClamp={4}>
+      <div className="flex-1 p-4 overflow-hidden">
+        <Text component="div" lineClamp={4} className="overflow-hidden">
           {document.description}
         </Text>
       </div>

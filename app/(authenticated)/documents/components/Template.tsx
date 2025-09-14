@@ -71,7 +71,7 @@ export function DocumentsPageTemplate({
         {existingCategories.map(category => (
           <div key={category.id} className="mb-12">
             <h2 id={`category-${category.id}`}>{category.name}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
               {documents
                 .filter(document => document.category?.name === category.name)
                 .map(document => (

@@ -1,4 +1,4 @@
-import { Container, SimpleGrid, Text } from "@mantine/core";
+import { Text } from "@mantine/core";
 import { MemberCard } from "./MemberCard";
 import { PageTitle } from "@/app/components/PageTitle";
 import { MemberType } from "@/app/types";
@@ -12,7 +12,7 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
   const sortedMembers = members.sort((a, b) => a.display_name.localeCompare(b.display_name, "ja"));
 
   return (
-    <Container size="xl" py="md">
+    <div className="p-4 overflow-x-hidden">
       <PageTitle>シンラボ会員一覧</PageTitle>
 
       <Text my={16} size="lg" c="gray.9">
@@ -23,14 +23,14 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
       <div>
         {members.length > 0 && (
           <>
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl" mt="lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
               {sortedMembers.map(member => (
                 <MemberCard key={member.id} member={member} />
               ))}
-            </SimpleGrid>
+            </div>
           </>
         )}
       </div>
-    </Container>
+    </div>
   );
 }
