@@ -7,6 +7,7 @@ import { PageTitle } from "@/app/components/PageTitle";
 import { DocumentFormModal } from "./DocumentFormModal";
 import { DocumentWithCategoryType, CategoryType, DocumentUpdateFormType } from "@/app/types";
 import { DocumentDeleteModal } from "./DocumentDeleteModal";
+import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
 
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
@@ -58,13 +59,12 @@ export function DocumentsPageTemplate({
       )}
 
       <div className="mb-4 py-4 flex flex-wrap items-center">
-        {existingCategories.map(category => (
-          <div key={category.id}>
-            <a href={`#category-${category.id}`} className="text-blue-600 mr-4">
-              {category.name}
-            </a>
-          </div>
-        ))}
+        <CategoryLink
+          categories={existingCategories.map(category => ({
+            id: category.id,
+            name: category.name,
+          }))}
+        />
       </div>
 
       <div>
