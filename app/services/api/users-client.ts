@@ -93,3 +93,89 @@ export async function fetchUserIdByAuthId({
 
   return { userId: user.id, error: null };
 }
+
+/**
+ * ユーザーを承認する（status を active に更新）
+ * @param {number} userId - ユーザーID
+ * @param {number} adminId - 管理者ID
+ * @returns { error: PostgrestError | null }
+ */
+export async function approveUser({
+  userId,
+  adminId,
+}: {
+  userId: number;
+  adminId: number;
+}): Promise<{ error: PostgrestError | null }> {
+  const supabase = createClientSupabaseClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ status: "active", updated_by: adminId })
+    .eq("id", userId)
+    .eq("is_deleted", false);
+
+  if (error) {
+    console.error("Supabase ユーザー承認エラー:", error.message);
+    return { error };
+  }
+
+  return { error: null };
+}
+
+/**
+ * ユーザーを否認する（status を rejected に更新）
+ * @param {number} userId - ユーザーID
+ * @param {number} adminId - 管理者ID
+ * @returns { error: PostgrestError | null }
+ */
+export async function rejectUser({
+  userId,
+  adminId,
+}: {
+  userId: number;
+  adminId: number;
+}): Promise<{ error: PostgrestError | null }> {
+  const supabase = createClientSupabaseClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ status: "rejected", updated_by: adminId })
+    .eq("id", userId)
+    .eq("is_deleted", false);
+
+  if (error) {
+    console.error("Supabase ユーザー否認エラー:", error.message);
+    return { error };
+  }
+
+  return { error: null };
+}
+
+/**
+ * ユーザーを論理削除する（is_deleted を true に更新）
+ * @param {number} userId - ユーザーID
+ * @param {number} adminId - 管理者ID
+ * @returns { error: PostgrestError | null }
+ */
+export async function deleteUser({
+  userId,
+  adminId,
+}: {
+  userId: number;
+  adminId: number;
+}): Promise<{ error: PostgrestError | null }> {
+  const supabase = createClientSupabaseClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ is_deleted: true, updated_by: adminId })
+    .eq("id", userId);
+
+  if (error) {
+    console.error("Supabase ユーザー削除エラー:", error.message);
+    return { error };
+  }
+
+  return { error: null };
+}

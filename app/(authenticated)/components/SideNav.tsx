@@ -46,6 +46,7 @@ const navItems: NavItem[] = [
     icon: <LogOut className="h-5 w-5" />,
   },
 ];
+// TODO : 管理者に限り、dasshboardへのリンクを表示する
 
 export function SideNav() {
   const [open, setOpen] = useState(false);
