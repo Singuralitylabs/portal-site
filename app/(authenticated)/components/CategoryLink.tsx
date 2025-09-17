@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Select } from "@mantine/core";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 interface CategoryLinkProps {
   id: number;
@@ -11,12 +11,22 @@ interface CategoryLinkProps {
 export default function CategoryLink({ categories }: { categories: CategoryLinkProps[] }) {
   const [categoryId, setCategoryId] = useState<number>(0);
 
+  const categoryNameToId = useMemo(() => {
+    return categories.reduce(
+      (map, category) => {
+        map[category.name] = category.id;
+        return map;
+      },
+      {} as Record<string, number>
+    );
+  }, [categories]);
+
   const handleSetCategoryId = (categoryName: string | null) => {
     if (!categoryName) {
       setCategoryId(0);
       return;
     }
-    setCategoryId(categories.find(category => category.name === categoryName)?.id || 0);
+    setCategoryId(categoryNameToId[categoryName]);
   };
 
   return (
@@ -42,7 +52,7 @@ export default function CategoryLink({ categories }: { categories: CategoryLinkP
         />
         <Button
           component="a"
-          href={`#category-${categoryId}`}
+          href={categoryId === 0 ? undefined : `#category-${categoryId}`}
           disabled={categoryId === 0}
           color="indigo"
         >
