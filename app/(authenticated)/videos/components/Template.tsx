@@ -7,6 +7,7 @@ import { PageTitle } from "@/app/components/PageTitle";
 import { VideoFormModal } from "./VideoFormModal";
 import { VideoWithCategoryType, CategoryType, VideoUpdateFormType } from "@/app/types";
 import { VideoDeleteModal } from "./VideoDeleteModal";
+import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
@@ -56,13 +57,12 @@ export function VideosPageTemplate({
       )}
 
       <div className="mb-4 py-4 flex flex-wrap items-center">
-        {existingCategories.map(category => (
-          <div key={category.id}>
-            <a href={`#category-${category.id}`} className="text-blue-600 mr-4">
-              {category.name}
-            </a>
-          </div>
-        ))}
+        <CategoryLink
+          categories={existingCategories.map(category => ({
+            id: category.id,
+            name: category.name,
+          }))}
+        />
       </div>
 
       <div>
