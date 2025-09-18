@@ -22,7 +22,8 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
   if (videoId) {
     return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   }
-
+  console.log("test");
+  debugger;
   return "/default_video_thumbnail.png";
 }
 
