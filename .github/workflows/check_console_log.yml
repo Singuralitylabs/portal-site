@@ -1,0 +1,27 @@
+name: Check console.log and debugger
+
+on:
+  push:
+    paths:
+      - "app/**"
+  pull_request:
+    paths:
+      - "app/**"
+  workflow_dispatch:
+
+jobs:
+  check-console-log:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Search for console.log or debugger
+        run: |
+          if grep -R -nE "console\.log|debugger" --exclude-dir=node_modules --include="*.{js,ts,jsx,tsx}" .; then
+            echo "NG! console.log or debugger found. Please remove it."
+            exit 1
+          else
+            echo "OK! No console.log or debugger found."
+          fi
