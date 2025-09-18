@@ -20,8 +20,13 @@ jobs:
       - name: Search for console.log or debugger
         run: |
           set -o pipefail
-          find app -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) \
-            ! -path "*/node_modules/*" \
-            ! -path "*/dist/*" \
-            ! -path "*/.next/*" \
-            -print0 | xargs -0 grep -nE "console\\.log|debugger"
+          if find app -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) \
+              ! -path "*/node_modules/*" \
+              ! -path "*/dist/*" \
+              ! -path "*/.next/*" \
+              -print0 | xargs -0 grep -nE "console\\.log|debugger"; then
+            echo "NG! console.log or debugger found. Please remove it."
+            exit 1
+          else
+            echo "OK! No console.log or debugger found."
+          fi
