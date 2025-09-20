@@ -89,7 +89,7 @@ export default function ContentMgrMenu<T extends DocumentWithCategoryType | Vide
       <DocumentFormModal
         opened={editDocumentModalOpened}
         onClose={() => setEditDocumentModalOpened(false)}
-        categories={categories || []}
+        categories={categories}
         userId={userId}
         initialData={content as DocumentWithCategoryType}
       />
@@ -104,7 +104,7 @@ export default function ContentMgrMenu<T extends DocumentWithCategoryType | Vide
       <VideoFormModal
         opened={editVideoModalOpened}
         onClose={() => setEditVideoModalOpened(false)}
-        categories={categories || []}
+        categories={categories}
         userId={userId}
         initialData={content as VideoWithCategoryType}
       />
