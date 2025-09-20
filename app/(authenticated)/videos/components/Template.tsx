@@ -3,6 +3,7 @@ import { PageTitle } from "@/app/components/PageTitle";
 import { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
 import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
 import ContentMgrNewButton from "@/app/(authenticated)/components/ContentMgrNewButton";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
@@ -25,7 +26,7 @@ export function VideosPageTemplate({
       <PageTitle>動画一覧</PageTitle>
       {isContentMgr && (
         <div className="mt-4 flex justify-end">
-          <ContentMgrNewButton type="video" categories={categories} userId={userId}>
+          <ContentMgrNewButton type={CONTENT_TYPE.VIDEO} categories={categories} userId={userId}>
             新規登録
           </ContentMgrNewButton>
         </div>
