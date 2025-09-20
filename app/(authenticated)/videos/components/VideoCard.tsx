@@ -1,16 +1,17 @@
 "use client";
 
-import { VideoWithCategoryType } from "@/app/types";
+import { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
 import Image from "next/image";
 import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
-import { EllipsisVertical } from "lucide-react";
-import { Card, Button, Menu, Text } from "@mantine/core";
+import { Card, Text } from "@mantine/core";
+import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
+  categories: SelectCategoryType[];
   isContentMgr: boolean;
-  onEdit: (video: VideoWithCategoryType) => void;
-  onDelete: (videoId: number) => void;
+  userId: number;
 }
 
 function getThumbnailUrl(video: VideoWithCategoryType): string {
@@ -18,7 +19,7 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
     return video.thumbnail_path;
   }
 
-  const videoId = getYouTubeVideoId({ url: video.url });
+  const videoId = getYouTubeVideoId(video.url);
   if (videoId) {
     return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   }
@@ -26,7 +27,7 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
   return "/default_video_thumbnail.png";
 }
 
-export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardProps) {
+export function VideoCard({ video, isContentMgr, categories, userId }: VideoCardProps) {
   const thumbnailUrl = getThumbnailUrl(video);
   return (
     <Card
@@ -39,46 +40,12 @@ export function VideoCard({ video, isContentMgr, onEdit, onDelete }: VideoCardPr
       <Card.Section component="a" href={`/videos/${video.id}`}>
         {isContentMgr && (
           <div style={{ position: "absolute", top: "8px", right: "8px", zIndex: 10 }}>
-            <Menu>
-              <Menu.Target>
-                <Button
-                  variant="subtle"
-                  size="compact-xs"
-                  p="4px"
-                  onClick={e => {
-                    e.preventDefault();
-                    e.stopPropagation(); // これで動画詳細ページ遷移のクリックイベントを防止
-                  }}
-                  style={{
-                    backgroundColor: "white",
-                    color: "black",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <EllipsisVertical size={16} />
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  onClick={e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onEdit(video);
-                  }}
-                >
-                  編集
-                </Menu.Item>
-                <Menu.Item
-                  onClick={e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onDelete(video.id);
-                  }}
-                >
-                  削除
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+            <ContentMgrMenu<VideoWithCategoryType>
+              type={CONTENT_TYPE.VIDEO}
+              content={video}
+              categories={categories}
+              userId={userId}
+            />
           </div>
         )}
         <div className="aspect-video mx-auto" style={{ position: "relative" }}>

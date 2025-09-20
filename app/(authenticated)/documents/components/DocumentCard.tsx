@@ -1,17 +1,19 @@
 "use client";
 
-import { DocumentWithCategoryType } from "@/app/types";
-import { EllipsisVertical, FileText, FileType } from "lucide-react";
-import { Button, Card, Flex, Text, Menu } from "@mantine/core";
+import { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
+import { FileText, FileType } from "lucide-react";
+import { Button, Card, Flex, Text } from "@mantine/core";
+import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
   isContentMgr: boolean;
-  onEdit: (document: DocumentWithCategoryType) => void;
-  onDelete: (documentId: number) => void;
+  categories: SelectCategoryType[];
+  userId: number;
 }
 
-export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: DocumentCardProps) {
+export function DocumentCard({ document, isContentMgr, categories, userId }: DocumentCardProps) {
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
       case "pdf":
@@ -37,26 +39,12 @@ export function DocumentCard({ document, isContentMgr, onEdit, onDelete }: Docum
             <div>{document.name}</div>
           </Flex>
           {isContentMgr && (
-            <Menu>
-              <Menu.Target>
-                <Button
-                  variant="subtle"
-                  size="compact-xs"
-                  p="4px"
-                  style={{
-                    backgroundColor: "white",
-                    color: "black",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <EllipsisVertical size={16} />
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item onClick={() => onEdit(document)}>編集</Menu.Item>
-                <Menu.Item onClick={() => onDelete(document.id)}>削除</Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+            <ContentMgrMenu<DocumentWithCategoryType>
+              content={document}
+              categories={categories}
+              userId={userId}
+              type={CONTENT_TYPE.DOCUMENT}
+            />
           )}
         </Flex>
       </Card.Section>

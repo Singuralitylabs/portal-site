@@ -26,6 +26,8 @@ export type VideoUpdateFormType = Omit<
   "created_at" | "updated_at" | "created_by" | "is_deleted"
 >;
 
+export type ContentType = "document" | "video";
+
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];
 export type InsertUserType = UsersTable["Insert"];
@@ -38,3 +40,4 @@ export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_
 
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
+export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
