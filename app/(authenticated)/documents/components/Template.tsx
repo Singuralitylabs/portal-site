@@ -1,17 +1,13 @@
-"use client";
-
-import { useState } from "react";
 import { DocumentCard } from "./DocumentCard";
-import { Button } from "@mantine/core";
 import { PageTitle } from "@/app/components/PageTitle";
-import { DocumentFormModal } from "./DocumentFormModal";
-import { DocumentWithCategoryType, CategoryType, DocumentUpdateFormType } from "@/app/types";
-import { DocumentDeleteModal } from "./DocumentDeleteModal";
+import { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
 import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
+import ContentMgrNewButton from "@/app/(authenticated)/components/ContentMgrNewButton";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface DocumentsPageTemplateProps {
   documents: DocumentWithCategoryType[];
-  categories: CategoryType[];
+  categories: SelectCategoryType[];
   isContentMgr: boolean;
   userId: number;
 }
@@ -27,34 +23,14 @@ export function DocumentsPageTemplate({
     documentCategoryNames.has(category.name)
   );
 
-  const [formModalOpened, setFormModalOpened] = useState(false);
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
-  const [editingDocument, setEditingDocument] = useState<DocumentUpdateFormType | null>(null);
-  const [deletingDocumentId, setDeletingDocumentId] = useState<number>(0);
-
-  const handleEditDocument = (document: DocumentUpdateFormType) => {
-    setEditingDocument(document);
-    setFormModalOpened(true);
-  };
-
-  const handleCloseFormModal = () => {
-    setFormModalOpened(false);
-    setEditingDocument(null);
-  };
-
-  const handleDeleteDocument = (documentId: number) => {
-    setDeletingDocumentId(documentId);
-    setDeleteModalOpened(true);
-  };
-
   return (
     <div className="p-4 overflow-x-hidden">
       <PageTitle>資料一覧</PageTitle>
       {isContentMgr && (
         <div className="mt-4 flex justify-end">
-          <Button onClick={() => setFormModalOpened(true)} size="xs" variant="outline">
+          <ContentMgrNewButton type={CONTENT_TYPE.DOCUMENT} categories={categories} userId={userId}>
             新規登録
-          </Button>
+          </ContentMgrNewButton>
         </div>
       )}
 
@@ -79,8 +55,8 @@ export function DocumentsPageTemplate({
                     <DocumentCard
                       document={document}
                       isContentMgr={isContentMgr}
-                      onEdit={handleEditDocument}
-                      onDelete={handleDeleteDocument}
+                      categories={categories}
+                      userId={userId}
                     />
                   </div>
                 ))}
@@ -95,20 +71,6 @@ export function DocumentsPageTemplate({
         </a>
       </div>
 
-      <DocumentFormModal
-        opened={formModalOpened}
-        onClose={handleCloseFormModal}
-        categories={categories}
-        userId={userId}
-        initialData={editingDocument || undefined}
-      />
-
-      <DocumentDeleteModal
-        opened={deleteModalOpened}
-        onClose={() => setDeleteModalOpened(false)}
-        userId={userId}
-        documentId={deletingDocumentId}
-      />
     </div>
   );
 }

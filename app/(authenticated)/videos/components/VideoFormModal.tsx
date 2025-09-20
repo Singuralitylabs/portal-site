@@ -3,12 +3,12 @@ import { Modal, TextInput, Select, Textarea, Button, Group, NumberInput } from "
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
-import type { CategoryType, VideoUpdateFormType } from "@/app/types";
+import type { SelectCategoryType, VideoUpdateFormType } from "@/app/types";
 
 interface VideoFormModalProps {
   opened: boolean;
   onClose: () => void;
-  categories: CategoryType[];
+  categories: SelectCategoryType[];
   userId: number;
   initialData?: VideoUpdateFormType;
 }
