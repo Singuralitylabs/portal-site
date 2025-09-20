@@ -1,12 +1,9 @@
-"use client";
-
 import { VideoWithCategoryType } from "@/app/types";
-import { Paper, Button, Flex, Text, Grid, Divider } from "@mantine/core";
+import { Button, Flex, Text, Divider } from "@mantine/core";
 import { PageTitle } from "@/app/components/PageTitle";
-import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
 import Link from "next/link";
-import YouTube from "react-youtube";
 import { Calendar } from "lucide-react";
+import Youtube from "./Youtube";
 
 interface VideoDetailPageProps {
   video: VideoWithCategoryType;
@@ -14,22 +11,13 @@ interface VideoDetailPageProps {
 
 export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
   return (
-    <Paper m="0.5rem 2rem">
-      <PageTitle>{video.name ? video.name : "Video Not Found"}</PageTitle>
-      <Paper p="1rem 0 0">
+    <div className="p-4 overflow-x-hidden">
+      <PageTitle>{video.name}</PageTitle>
+      <div className="mt-4">
         <Flex justify="center">
           <div className="max-w-[800px] w-full shadow-md rounded-b-md">
             <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
-              <YouTube
-                videoId={getYouTubeVideoId({ url: video.url })}
-                title={video.name}
-                opts={{
-                  width: "100%",
-                  height: "100%",
-                }}
-                className="absolute inset-0 w-full h-full"
-                iframeClassName="w-full h-full"
-              />
+              <Youtube name={video.name} url={video.url} />
             </div>
             <div>
               <Flex
@@ -39,27 +27,27 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                 direction="column"
                 p="1rem 1rem"
               >
-                <Grid justify="space-between" align="center" columns={12} w="100%">
-                  <Grid.Col span={6}>
-                    <Button
-                      component="div"
-                      radius="md"
-                      size="compact-sm"
-                      c="rgb(23,23,23)"
-                      bg="gray.2"
-                      fs="0.875rem"
-                    >
-                      {video.category?.name}
-                    </Button>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    {video.assignee && (
+                <div className="flex justify-between items-center w-full">
+                  <Button
+                    component="div"
+                    radius="md"
+                    size="compact-sm"
+                    c="rgb(23,23,23)"
+                    bg="gray.2"
+                    fs="0.875rem"
+                  >
+                    {video.category?.name}
+                  </Button>
+                  <div>
+                    {video.assignee ? (
                       <Flex w="100%" justify="flex-end">
                         <Text>担当：{video.assignee}</Text>
                       </Flex>
+                    ) : (
+                      ""
                     )}
-                  </Grid.Col>
-                </Grid>
+                  </div>
+                </div>
                 <Flex w="100%" justify="space-between" align="center">
                   <Flex align="center" gap="0.25rem">
                     <Calendar style={{ width: "1rem", height: "1rem" }} />
@@ -122,7 +110,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
             </div>
           </div>
         </Flex>
-      </Paper>
-    </Paper>
+      </div>
+    </div>
   );
 }
