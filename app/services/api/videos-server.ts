@@ -5,7 +5,8 @@ export async function fetchVideos() {
   const { data, error } = await supabase
     .from("videos")
     .select(`*, category:categories (name)`)
-    .eq("is_deleted", false);
+    .eq("is_deleted", false)
+    .order("display_order");
 
   if (error) {
     console.error("Supabase 動画一覧データ取得エラー:", error.message);

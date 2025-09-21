@@ -6,7 +6,8 @@ export async function fetchCategoriesByType(type: string) {
     .from("categories")
     .select("*")
     .eq("category_type", type)
-    .eq("is_deleted", false);
+    .eq("is_deleted", false)
+    .order("display_order");
 
   if (error) {
     console.error("Supabase カテゴリーデータ取得エラー:", error.message);
