@@ -1,17 +1,13 @@
-"use client";
-
-import { useState } from "react";
 import { VideoCard } from "./VideoCard";
-import { Button } from "@mantine/core";
 import { PageTitle } from "@/app/components/PageTitle";
-import { VideoFormModal } from "./VideoFormModal";
-import { VideoWithCategoryType, CategoryType, VideoUpdateFormType } from "@/app/types";
-import { VideoDeleteModal } from "./VideoDeleteModal";
+import { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
 import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
+import ContentMgrNewButton from "@/app/(authenticated)/components/ContentMgrNewButton";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
-  categories: CategoryType[];
+  categories: SelectCategoryType[];
   isContentMgr: boolean;
   userId: number;
 }
@@ -25,34 +21,14 @@ export function VideosPageTemplate({
   const videoCategoryNames = new Set(videos.map(video => video.category?.name));
   const existingCategories = categories.filter(category => videoCategoryNames.has(category.name));
 
-  const [formModalOpened, setFormModalOpened] = useState(false);
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
-  const [editingVideo, setEditingVideo] = useState<VideoUpdateFormType | null>(null);
-  const [deletingVideoId, setDeletingVideoId] = useState<number>(0);
-
-  const handleEditDocument = (video: VideoUpdateFormType) => {
-    setEditingVideo(video);
-    setFormModalOpened(true);
-  };
-
-  const handleCloseFormModal = () => {
-    setFormModalOpened(false);
-    setEditingVideo(null);
-  };
-
-  const handleDeleteDocument = (documentId: number) => {
-    setDeletingVideoId(documentId);
-    setDeleteModalOpened(true);
-  };
-
   return (
     <div className="p-4 overflow-x-hidden">
       <PageTitle>動画一覧</PageTitle>
       {isContentMgr && (
         <div className="mt-4 flex justify-end">
-          <Button onClick={() => setFormModalOpened(true)} size="xs" variant="outline">
+          <ContentMgrNewButton type={CONTENT_TYPE.VIDEO} categories={categories} userId={userId}>
             新規登録
-          </Button>
+          </ContentMgrNewButton>
         </div>
       )}
 
@@ -77,8 +53,8 @@ export function VideosPageTemplate({
                     <VideoCard
                       video={video}
                       isContentMgr={isContentMgr}
-                      onEdit={handleEditDocument}
-                      onDelete={handleDeleteDocument}
+                      categories={categories}
+                      userId={userId}
                     />
                   </div>
                 ))}
@@ -92,21 +68,6 @@ export function VideosPageTemplate({
           TOPへ
         </a>
       </div>
-
-      <VideoFormModal
-        opened={formModalOpened}
-        onClose={handleCloseFormModal}
-        categories={categories}
-        userId={userId}
-        initialData={editingVideo || undefined}
-      />
-
-      <VideoDeleteModal
-        opened={deleteModalOpened}
-        onClose={() => setDeleteModalOpened(false)}
-        userId={userId}
-        videoId={deletingVideoId}
-      />
     </div>
   );
 }
