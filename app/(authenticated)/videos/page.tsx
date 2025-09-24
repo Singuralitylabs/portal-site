@@ -1,7 +1,7 @@
 import { getServerCurrentUser } from "@/app/services/api/supabase-server";
 import { fetchUserInfoByAuthId } from "@/app/services/api/users-server";
 import { fetchVideos } from "@/app/services/api/videos-server";
-import { fetchCategoriesByType } from "@/app/services/api/categories";
+import { fetchCategoriesByType } from "@/app/services/api/categories-server";
 import { VideosPageTemplate } from "./components/Template";
 import { checkContentPermissions } from "@/app/services/auth/permissions";
 

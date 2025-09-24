@@ -1,6 +1,11 @@
+import { VideoWithCategoryType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
+import { PostgrestError } from "@supabase/supabase-js";
 
-export async function fetchVideos() {
+export async function fetchVideos(): Promise<{
+  data: VideoWithCategoryType[] | null;
+  error: PostgrestError | null;
+}> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
@@ -16,7 +21,10 @@ export async function fetchVideos() {
   return { data, error: null };
 }
 
-export async function fetchVideoById(videoId: number) {
+export async function fetchVideoById(videoId: number): Promise<{
+  data: VideoWithCategoryType | null;
+  error: PostgrestError | null;
+}> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
