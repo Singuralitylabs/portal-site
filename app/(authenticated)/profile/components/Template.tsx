@@ -14,7 +14,7 @@ interface ProfilePageTemplateProps {
   ) => Promise<{ success: boolean; message?: string }>;
 }
 
-export function Template({ initialUser, updateProfile }: ProfilePageTemplateProps) {
+export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageTemplateProps) {
   const [user, setUser] = useState<ProfileUserType>(initialUser);
   const [name, setName] = useState(initialUser.display_name);
   const [bio, setBio] = useState(initialUser.bio || "");

@@ -3,7 +3,7 @@ import {
   fetchUserByAuthIdInServer,
   updateUserProfileServerInServer,
 } from "@/app/services/api/users-server";
-import { Template } from "./components/Template";
+import { ProfilePageTemplate } from "./components/Template";
 
 export default async function ProfilePage() {
   // サーバーサイドで利用ユーザー情報を参照
@@ -55,5 +55,5 @@ export default async function ProfilePage() {
     return { success: true };
   };
 
-  return <Template initialUser={user} updateProfile={updateProfile} />;
+  return <ProfilePageTemplate initialUser={user} updateProfile={updateProfile} />;
 }
