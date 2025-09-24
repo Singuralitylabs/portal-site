@@ -24,7 +24,7 @@ export function DocumentsPageTemplate({
   );
 
   return (
-    <div className="p-4 overflow-x-hidden">
+    <>
       <PageTitle>資料一覧</PageTitle>
       {isContentMgr && (
         <div className="mt-4 flex justify-end">
@@ -70,7 +70,6 @@ export function DocumentsPageTemplate({
           TOPへ
         </a>
       </div>
-
-    </div>
+    </>
   );
 }
