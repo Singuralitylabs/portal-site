@@ -1,6 +1,11 @@
+import { PostgrestError } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "./supabase-server";
+import { DocumentWithCategoryType } from "@/app/types";
 
-export async function fetchDocuments() {
+export async function fetchDocuments(): Promise<{
+  data: DocumentWithCategoryType[] | null;
+  error: PostgrestError | null;
+}> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("documents")
