@@ -10,23 +10,49 @@ export default async function VideosPage() {
   const { authId, error: currentUserError } = await getServerCurrentUser();
   if (currentUserError) {
     console.error("認証情報の取得に失敗:", currentUserError);
-    return <p>認証情報が取得できませんでした。</p>;
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600 text-xl">認証情報を取得できませんでした。</p>
+      </div>
+    );
   }
 
-  const { data, error } = await fetchVideos();
-  const { data: dataCategory, error: errorCategory } = await fetchCategoriesByType("videos");
-  const { id, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
-  if (error || errorCategory || roleError) {
-    console.error("データの取得に失敗:", error || errorCategory || roleError);
-    return <p>データを取得できませんでした。</p>;
+  const { data: videos, error: videoError } = await fetchVideos();
+  if (videoError || !videos) {
+    console.error("動画データの取得に失敗:", videoError);
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600 text-xl">動画データを取得できませんでした。</p>
+      </div>
+    );
+  }
+
+  const { data: categories, error: categoryError } = await fetchCategoriesByType("videos");
+  if (categoryError || !categories) {
+    console.error("カテゴリーデータの取得に失敗:", categoryError);
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600 text-xl">カテゴリーデータを取得できませんでした。</p>
+      </div>
+    );
+  }
+
+  const { id: userId, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
+  if (roleError || !role || !userId) {
+    console.error("ユーザー情報の取得に失敗:", roleError);
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600 text-xl">ユーザー情報を取得できませんでした。</p>
+      </div>
+    );
   }
 
   return (
     <VideosPageTemplate
-      videos={data}
-      categories={dataCategory}
+      videos={videos}
+      categories={categories}
       isContentMgr={checkContentPermissions(role)}
-      userId={id}
+      userId={userId}
     />
   );
 }
