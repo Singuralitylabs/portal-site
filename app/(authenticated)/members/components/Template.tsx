@@ -12,7 +12,7 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
   const sortedMembers = members.sort((a, b) => a.display_name.localeCompare(b.display_name, "ja"));
 
   return (
-    <div className="p-4 overflow-x-hidden">
+    <>
       <PageTitle>シンラボ会員一覧</PageTitle>
 
       <Text my={16} size="lg" c="gray.9">
@@ -31,6 +31,6 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 }

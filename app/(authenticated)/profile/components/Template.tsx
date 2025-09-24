@@ -64,7 +64,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
   };
 
   return (
-    <div className="mx-8">
+    <>
       <PageTitle>プロフィール</PageTitle>
 
       {/* プロフィール情報表示 */}
@@ -109,6 +109,6 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }

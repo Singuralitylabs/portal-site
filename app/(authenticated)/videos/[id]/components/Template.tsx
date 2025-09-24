@@ -11,7 +11,7 @@ interface VideoDetailPageProps {
 
 export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
   return (
-    <div className="p-4 overflow-x-hidden">
+    <>
       <PageTitle>{video.name}</PageTitle>
       <div className="mt-4">
         <Flex justify="center">
@@ -111,6 +111,6 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
           </div>
         </Flex>
       </div>
-    </div>
+    </>
   );
 }
