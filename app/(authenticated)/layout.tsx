@@ -11,7 +11,7 @@ export default function AuthLayout({
     <AuthGuard>
       <div className="sm:flex min-h-screen">
         <SideNav />
-        <div className="flex-1 sm:ml-64">{children}</div>
+        <div className="flex-1 sm:ml-64 p-4">{children}</div>
       </div>
     </AuthGuard>
   );

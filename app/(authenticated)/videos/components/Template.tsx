@@ -22,7 +22,7 @@ export function VideosPageTemplate({
   const existingCategories = categories.filter(category => videoCategoryNames.has(category.name));
 
   return (
-    <div className="p-4 overflow-x-hidden">
+    <>
       <PageTitle>動画一覧</PageTitle>
       {isContentMgr && (
         <div className="mt-4 flex justify-end">
@@ -68,6 +68,6 @@ export function VideosPageTemplate({
           TOPへ
         </a>
       </div>
-    </div>
+    </>
   );
 }
