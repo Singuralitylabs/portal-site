@@ -17,7 +17,14 @@ export default async function VideosPage() {
     );
   }
 
-  const { data: videos, error: videoError } = await fetchVideos();
+  // 動画データ・カテゴリーデータ・ユーザー情報を並列取得して権限を確認
+  const [videosResult, categoriesResult, userResult] = await Promise.all([
+    fetchVideos(),
+    fetchCategoriesByType("videos"),
+    fetchUserInfoByAuthId({ authId: authId }),
+  ]);
+
+  const { data: videos, error: videoError } = videosResult;
   if (videoError || !videos) {
     console.error("動画データの取得に失敗:", videoError);
     return (
@@ -27,7 +34,7 @@ export default async function VideosPage() {
     );
   }
 
-  const { data: categories, error: categoryError } = await fetchCategoriesByType("videos");
+  const { data: categories, error: categoryError } = categoriesResult;
   if (categoryError || !categories) {
     console.error("カテゴリーデータの取得に失敗:", categoryError);
     return (
@@ -37,7 +44,7 @@ export default async function VideosPage() {
     );
   }
 
-  const { id: userId, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
+  const { id: userId, role, error: roleError } = userResult;
   if (roleError || !role || !userId) {
     console.error("ユーザー情報の取得に失敗:", roleError);
     return (
