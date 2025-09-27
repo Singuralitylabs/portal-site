@@ -17,7 +17,14 @@ export default async function DocumentsPage() {
     );
   }
 
-  const { data: documents, error: documentError } = await fetchDocuments();
+  // 資料データ・カテゴリーデータ・ユーザー情報を並列取得して権限を確認
+  const [documentsResult, categoriesResult, userResult] = await Promise.all([
+    fetchDocuments(),
+    fetchCategoriesByType("documents"),
+    fetchUserInfoByAuthId({ authId: authId }),
+  ]);
+
+  const { data: documents, error: documentError } = documentsResult;
   if (documentError || !documents) {
     console.error("資料データの取得に失敗:", documentError);
     return (
@@ -27,7 +34,7 @@ export default async function DocumentsPage() {
     );
   }
 
-  const { data: categories, error: categoryError } = await fetchCategoriesByType("documents");
+  const { data: categories, error: categoryError } = categoriesResult;
   if (categoryError || !categories) {
     console.error("カテゴリーデータの取得に失敗:", categoryError);
     return (
@@ -37,7 +44,7 @@ export default async function DocumentsPage() {
     );
   }
 
-  const { id: userId, role, error: roleError } = await fetchUserInfoByAuthId({ authId: authId });
+  const { id: userId, role, error: roleError } = userResult;
   if (roleError || !role || !userId) {
     console.error("ユーザー情報の取得に失敗:", roleError);
     return (
