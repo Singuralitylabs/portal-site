@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:types": "source .env.local && npx supabase gen types --lang=typescript --project-id ${SUPABASE_PROJECT_ID} --schema public > app/types/lib/database.types.ts"
+    "db:types": "source .env.local && npx supabase gen types --lang=typescript --project-id ${SUPABASE_PROJECT_ID} --schema public > app/types/lib/database.types.ts",
+    "test": "jest --coverage"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -48,8 +49,5 @@
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.4.4",
     "typescript": "^5"
-  },
-  "scripts": {
-    "test": "jest --coverage"
   }
 }
