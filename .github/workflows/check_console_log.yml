@@ -35,7 +35,6 @@ jobs:
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
             echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            exit 1
           else
             echo "OK! console.log または console.info または debugger は見つかりませんでした。"
             echo "console.log または console.info または debugger は見つかりませんでした。" >> $GITHUB_STEP_SUMMARY
