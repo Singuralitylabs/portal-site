@@ -23,28 +23,30 @@ export function VideosPageTemplate({
 
   return (
     <>
-      <PageTitle>動画一覧</PageTitle>
-      {isContentMgr && (
-        <div className="mt-4 flex justify-end">
-          <ContentMgrNewButton type={CONTENT_TYPE.VIDEO} categories={categories} userId={userId}>
-            新規登録
-          </ContentMgrNewButton>
-        </div>
-      )}
+      <div className="sticky top-0 z-10 bg-white">
+        <PageTitle>動画一覧</PageTitle>
+        {isContentMgr && (
+          <div className="mt-4 flex justify-end">
+            <ContentMgrNewButton type={CONTENT_TYPE.VIDEO} categories={categories} userId={userId}>
+              新規登録
+            </ContentMgrNewButton>
+          </div>
+        )}
 
-      <div className="mb-4 py-4 flex flex-wrap items-center">
-        <CategoryLink
-          categories={existingCategories.map(category => ({
-            id: category.id,
-            name: category.name,
-          }))}
-        />
+        <div className="mb-4 py-4 flex flex-wrap items-center">
+          <CategoryLink
+            categories={existingCategories.map(category => ({
+              id: category.id,
+              name: category.name,
+            }))}
+          />
+        </div>
       </div>
 
       <div>
         {existingCategories.map(category => (
           <div key={category.id} className="mb-12">
-            <h2 id={`category-${category.id}`}>{category.name}</h2>
+            <h2 id={`category-${category.id}`} className="scroll-mt-40">{category.name}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
               {videos
                 .filter(video => video.category?.name === category.name)
