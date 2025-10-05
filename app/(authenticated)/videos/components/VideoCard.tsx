@@ -1,12 +1,17 @@
-'use client';
+"use client";
 
-import { VideoWithCategoryType } from '@/app/types';
-import { Button, Card, Text } from '@mantine/core';
-import Image from 'next/image';
-import { getYouTubeVideoId } from '@/app/(authenticated)/videos/utils';
+import { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
+import Image from "next/image";
+import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
+import { Card, Text } from "@mantine/core";
+import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
+  categories: SelectCategoryType[];
+  isContentMgr: boolean;
+  userId: number;
 }
 
 function getThumbnailUrl(video: VideoWithCategoryType): string {
@@ -14,7 +19,7 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
     return video.thumbnail_path;
   }
 
-  const videoId = getYouTubeVideoId({ url: video.url });
+  const videoId = getYouTubeVideoId(video.url);
   if (videoId) {
     return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   }
@@ -22,28 +27,38 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
   return "/default_video_thumbnail.png";
 }
 
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, isContentMgr, categories, userId }: VideoCardProps) {
   const thumbnailUrl = getThumbnailUrl(video);
   return (
-    <Card component="a" href={`/videos/${video.id}`} shadow="sm" padding="0" radius="md" w="100%" withBorder className="hover:shadow-lg transition-shadow">
-      <Card.Section>
-        <div className="aspect-video mx-auto" style={{ position: 'relative' }}>
-          <Image
-            src={thumbnailUrl}
-            alt={video.name}
-            fill
-            style={{ objectFit: 'cover' }}
-          />
+    <Card
+      shadow="sm"
+      padding="0"
+      radius="md"
+      withBorder
+      className="hover:shadow-lg transition-shadow w-full aspect-square"
+    >
+      <Card.Section component="a" href={`/videos/${video.id}`}>
+        {isContentMgr && (
+          <div style={{ position: "absolute", top: "8px", right: "8px", zIndex: 10 }}>
+            <ContentMgrMenu<VideoWithCategoryType>
+              type={CONTENT_TYPE.VIDEO}
+              content={video}
+              categories={categories}
+              userId={userId}
+            />
+          </div>
+        )}
+        <div className="aspect-video mx-auto" style={{ position: "relative" }}>
+          <Image src={thumbnailUrl} alt={video.name} fill style={{ objectFit: "cover" }} />
         </div>
-      </Card.Section>
-      <Card.Section p="md">
-        <Text fw={700} size="lg" mb="xs">{video.name}</Text>
-        <Text component="div" lineClamp={2} c="dimmed" mb="md">
-          {video.description}
-        </Text>
-        <Button component="div" radius="md" size="compact-sm" c="rgb(23,23,23)" bg="gray.2" fs="0.875rem">
-          {video.category?.name}
-        </Button>
+        <div className="p-4">
+          <Text fw={700} size="lg" mb="xs" lineClamp={1}>
+            {video.name}
+          </Text>
+          <Text component="div" lineClamp={2} c="dimmed" mb="md">
+            {video.description}
+          </Text>
+        </div>
       </Card.Section>
     </Card>
   );

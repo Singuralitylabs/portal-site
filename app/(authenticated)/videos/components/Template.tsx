@@ -1,52 +1,73 @@
-'use client';
-
-import { VideoCard } from './VideoCard';
-import { Grid, Paper } from '@mantine/core';
-import { PageTitle } from '@/app/components/PageTitle';
-
-import { VideoWithCategoryType } from '@/app/types';
-import { CategoryType } from '@/app/types';
+import { VideoCard } from "./VideoCard";
+import { PageTitle } from "@/app/components/PageTitle";
+import { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
+import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
+import ContentMgrNewButton from "@/app/(authenticated)/components/ContentMgrNewButton";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
-  categories: CategoryType[];
+  categories: SelectCategoryType[];
+  isContentMgr: boolean;
+  userId: number;
 }
 
-export function VideosPageTemplate({ videos, categories }: VideosPageTemplateProps) {
-  const videoCategoryNames = new Set(videos.map((video) => video.category?.name));
-  const existingCategories = categories.filter((category) => videoCategoryNames.has(category.name));
+export function VideosPageTemplate({
+  videos,
+  categories,
+  isContentMgr,
+  userId,
+}: VideosPageTemplateProps) {
+  const videoCategoryNames = new Set(videos.map(video => video.category?.name));
+  const existingCategories = categories.filter(category => videoCategoryNames.has(category.name));
 
   return (
-    <Paper m="0 2rem">
+    <>
       <PageTitle>動画一覧</PageTitle>
-
-      <Paper mb="md" p="md">
-        <div className="flex flex-wrap items-center">
-          {existingCategories.map((category, index) => (
-            <div key={category.id}>
-              {index > 0 && <span className="text-gray-500 mx-2">|</span>}
-              <a href={`#category-${category.id}`} className="text-blue-600">{category.name}</a>
-            </div>
-          ))}
+      {isContentMgr && (
+        <div className="mt-4 flex justify-end">
+          <ContentMgrNewButton type={CONTENT_TYPE.VIDEO} categories={categories} userId={userId}>
+            新規登録
+          </ContentMgrNewButton>
         </div>
-      </Paper>
+      )}
 
-      <Paper>
-        {existingCategories.map((category) => (
-          <div key={category.id}>
+      <div className="mb-4 py-4 flex flex-wrap items-center">
+        <CategoryLink
+          categories={existingCategories.map(category => ({
+            id: category.id,
+            name: category.name,
+          }))}
+        />
+      </div>
+
+      <div>
+        {existingCategories.map(category => (
+          <div key={category.id} className="mb-12">
             <h2 id={`category-${category.id}`}>{category.name}</h2>
-            <Grid>
-              {videos.filter((video) => video.category?.name === category.name)
-                .map((video) => (
-                  <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={video.id + '_grid'}>
-                    <VideoCard video={video} />
-                  </Grid.Col>
-              ))}
-            </Grid>
-            <br/>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
+              {videos
+                .filter(video => video.category?.name === category.name)
+                .map(video => (
+                  <div key={video.id} className="w-full">
+                    <VideoCard
+                      video={video}
+                      isContentMgr={isContentMgr}
+                      categories={categories}
+                      userId={userId}
+                    />
+                  </div>
+                ))}
+            </div>
           </div>
         ))}
-      </Paper>
-    </Paper>
+      </div>
+
+      <div className="text-left mt-8 mb-4">
+        <a href="#" className="text-blue-600">
+          TOPへ
+        </a>
+      </div>
+    </>
   );
 }

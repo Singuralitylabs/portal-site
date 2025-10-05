@@ -1,5 +1,14 @@
 # データベース設計書
 
+## 目次
+
+1. [概要](#1-概要)
+2. [テーブル設計](#2-テーブル設計)
+3. [ER図](#3-er図)
+4. [Row-Level-Security(RLS)ポリシー](#4-row-level-securityrlsポリシー)
+5. [サポート関数](#5-サポート関数)
+6. [データアクセス制御の実現](#6-データアクセス制御の実現)
+
 ## 1. 概要
 
 本プロジェクトでは、バックエンドサービスとしてSupabaseを採用しています。
@@ -23,16 +32,17 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.1. users テーブル
 
-| カラム名       | データ型       | 制約                                | 説明                                            |
+| カラム名        | データ型         | 制約                                | 説明                                             |
 | -------------- | -------------- | ----------------------------------- | ----------------------------------------------- |
-| `id`           | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                  |
-| `auth_id`      | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                      |
-| `email`        | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字） |
-| `display_name` | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                        |
-| `role`         | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, admin）             |
-| `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected） |
-| `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                            |
-| `is_deleted`   | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                  |
+| `id`           | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                       |
+| `auth_id`      | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                       |
+| `email`        | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）       |
+| `display_name` | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                           |
+| `role`         | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）.   |
+| `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）    |
+| `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                               |
+| `avatar_url`   | `TEXT`         |                                     | Googleプロフィール画像のURL                       |
+| `is_deleted`   | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
 | `created_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                        |
 | `updated_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                        |
 
@@ -40,50 +50,53 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.2. documents テーブル
 
-| カラム名      | データ型       | 制約                                 | 説明                               |
-| ------------- | -------------- | ------------------------------------ | ---------------------------------- |
-| `id`          | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）     |
-| `name`        | `VARCHAR(255)` | NOT NULL                             | 資料名                             |
-| `description` | `TEXT`         |                                      | 資料の説明文                       |
-| `category_id` | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 資料の分類                         |
-| `url`         | `TEXT`         | NOT NULL                             | 資料へのリンク（Googleドライブ等） |
-| `created_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を作成したユーザー             |
-| `updated_by`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を最後に更新したユーザー       |
-| `assignee`    | `VARCHAR(100)` |                                      | 資料の担当者名                     |
-| `is_deleted`  | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                     |
-| `created_at`  | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                           |
-| `updated_at`  | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                           |
+| カラム名         | データ型        | 制約                                  | 説明                                |
+| --------------- | -------------- | ------------------------------------ | ---------------------------------- |
+| `id`            | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）          |
+| `name`          | `VARCHAR(255)` | NOT NULL                             | 資料名                              |
+| `description`   | `TEXT`         |                                      | 資料の説明文                         |
+| `category_id`   | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 資料の分類                          |
+| `url`           | `TEXT`         | NOT NULL                             | 資料へのリンク（Googleドライブ等）     |
+| `display_order` | `INTEGER`      |                                      | 表示順                             |
+| `created_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を作成したユーザー                |
+| `updated_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を最後に更新したユーザー           |
+| `assignee`      | `VARCHAR(100)` |                                      | 資料の担当者名                      |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                      |
+| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                           |
+| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                           |
 
 ---
 
 ### 2.3. videos テーブル
 
-| カラム名         | データ型       | 制約                                 | 説明                             |
+| カラム名          | データ型         | 制約                                 | 説明                              |
 | ---------------- | -------------- | ------------------------------------ | -------------------------------- |
-| `id`             | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）   |
-| `name`           | `VARCHAR(255)` | NOT NULL                             | 動画名                           |
-| `description`    | `TEXT`         |                                      | 動画の説明文                     |
-| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類                       |
-| `url`            | `TEXT`         | NOT NULL                             | 動画へのリンク（Youtube等）      |
-| `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス               |
-| `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算） |
-| `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）         |
-| `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー           |
-| `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー     |
-| `assignee`       | `VARCHAR(100)` |                                      | 動画の担当者名（講師など）       |
-| `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                   |
+| `id`             | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）        |
+| `name`           | `VARCHAR(255)` | NOT NULL                             | 動画名                            |
+| `description`    | `TEXT`         |                                      | 動画の説明文                       |
+| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類                        |
+| `url`            | `TEXT`         | NOT NULL                             | 動画へのリンク（Youtube等）         |
+| `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス                 |
+| `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算）      |
+| `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）            |
+| `display_order`  | `INTEGER`      |                                      | 表示順                           |
+| `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー              |
+| `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー         |
+| `assignee`       | `VARCHAR(100)` |                                      | 動画の担当者名（講師など）          |
+| `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                    |
 | `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                         |
 | `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                         |
 
 ### 2.4. categories テーブル
 
-| カラム名        | データ型       | 制約                                | 説明                            |
+| カラム名         | データ型         | 制約                                | 説明                             |
 | --------------- | -------------- | ----------------------------------- | ------------------------------- |
-| `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）  |
-| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos`   | カテゴリーの種別                |
-| `name`          | `VARCHAR(100)` | NOT NULL                            | カテゴリー名 （例: 事務局資料） |
-| `description`   | `TEXT`         |                                     | カテゴリーの説明文              |
-| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                  |
+| `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）       |
+| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos`   | カテゴリーの種別                  |
+| `name`          | `VARCHAR(100)` | NOT NULL                            | カテゴリー名 （例: 事務局資料）     |
+| `description`   | `TEXT`         |                                     | カテゴリーの説明文                |
+| `display_order` | `INTEGER`      |                                     | 表示順                          |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                   |
 | `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                        |
 | `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                        |
 
@@ -96,9 +109,10 @@ erDiagram
         UUID auth_id FK "Supabase Auth ユーザーID"
         VARCHAR email "Googleアカウントのメールアドレス (最大255文字)"
         VARCHAR display_name "Googleアカウントの表示名 (最大100文字)"
-        VARCHAR role "ユーザーの役割（例: member, admin） (最大50文字)"
+        VARCHAR role "ユーザーの役割（例: member, maintainer, admin） (最大50文字)"
         VARCHAR status "ユーザーの状態（例: pending, active, rejected） (最大50文字)"
         VARCHAR bio "ユーザーの自己紹介文 (最大500文字)"
+        TEXT avatar_url "Googleプロフィール画像のURL"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
@@ -110,6 +124,7 @@ erDiagram
         TEXT description "資料の説明文"
         INTEGER category_id FK "資料のカテゴリー（categories.id）"
         TEXT url "資料へのリンク（Googleドライブ等）"
+        INTEGER display_order "表示順"
         INTEGER created_by FK "資料を作成したユーザー (users.id)"
         INTEGER updated_by FK "資料を最後に更新したユーザー (users.id)"
         VARCHAR assignee "資料の担当者名 (最大100文字)"
@@ -127,6 +142,7 @@ erDiagram
         TEXT thumbnail_path "サムネイル画像パス"
         INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
         INTEGER length "動画の再生時間（秒換算）"
+        INTEGER display_order "表示順"
         INTEGER created_by FK "動画を作成したユーザー (users.id)"
         INTEGER updated_by FK "動画を最後に更新したユーザー (users.id)"
         VARCHAR assignee "動画の担当者名（講師など）"
@@ -140,6 +156,7 @@ erDiagram
         VARCHAR category_type "カテゴリー種別 (documents OR videos) (最大50文字)"
         VARCHAR name "カテゴリー名 (最大100文字)"
         TEXT description "カテゴリーの説明文"
+        INTEGER display_order "表示順"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
@@ -232,17 +249,69 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 #### 閲覧ポリシー（SELECT）
 
-- `registered_users_can_read_documents`: 承認済みユーザーは全てのdocumentsを閲覧可能
-  - 条件: `auth_id = auth.uid()　AND status = 'active' AND is_deleted = FALSE`
-  - 解説: `auth.uid()`を使用して、現在ログインしているユーザーがusersテーブルに正しく登録されており、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、削除されていない全ての資料（documents）にアクセスできる。つまり、シンラボメンバーとして承認されたユーザーだけが資料を閲覧できる仕組み。
+- `authenticated_users_can_read_documents`: 認証済みユーザーは全てのdocumentsを閲覧可能
+  - 条件: `auth_id = auth.uid() AND status  = 'active' AND is_deleted = FALSE`
+  - 解説: Supabase Authで認証されたユーザーであれば、論理削除されていない全ての資料にアクセス可能
+
+#### 作成ポリシー（INSERT）
+
+- `content_managers_can_insert_documents`: 管理者またはメンテナーが資料を作成可能
+  - 条件:
+    ```sql
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE
+        auth_id = auth.uid()
+        AND role IN ('admin', 'maintainer')
+        AND status = 'active'
+        AND is_deleted = FALSE
+    )
+    ```
+  - 解説: 管理者またはメンテナー権限を持つアクティブなユーザーのみが新しい資料を追加可能
+
+#### 更新ポリシー（UPDATE）
+
+- `content_managers_can_update_documents`: 管理者またはメンテナーが資料を更新可能
+  - 条件: content_managers_can_insert_documentsと同様
+  - 解説: 管理者またはメンテナー権限を持つユーザーが既存の資料を編集可能
+
+#### 削除ポリシー（DELETE/論理削除）
+
+- `prevent_physical_delete_documents`: 資料は論理削除のみとし、物理削除を防止
 
 ### 4.3. videos テーブルのRLSポリシー
 
 #### 閲覧ポリシー（SELECT）
 
-- `registered_users_can_read_videos`: 承認済みユーザーは全てのvideosを閲覧可能
-  - 条件: `auth_id = auth.uid()　AND status = 'active' AND is_deleted = FALSE`
-  - 解説: documentsテーブルと同様に、`auth.uid()`を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全ての動画（videos）にアクセスできる。未承認ユーザーは動画を閲覧できない仕組みになっている。
+- `authenticated_users_can_read_videos`: 認証済みユーザーは全てのvideosを閲覧可能
+  - 条件: `auth_id = auth.uid() AND status  = 'active' AND is_deleted = FALSE`
+  - 解説: Supabase Authで認証されたユーザーであれば、論理削除されていない全ての動画にアクセス可能
+
+#### 作成ポリシー（INSERT）
+
+- `content_managers_can_insert_videos`: 管理者またはメンテナーが動画を作成可能
+  - 条件:
+    ```sql
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE
+        auth_id = auth.uid()
+        AND role IN ('admin', 'maintainer')
+        AND status = 'active'
+        AND is_deleted = FALSE
+    )
+    ```
+  - 解説: 管理者またはメンテナー権限を持つアクティブなユーザーのみが新しい動画を追加可能
+
+#### 更新ポリシー（UPDATE）
+
+- `content_managers_can_update_videos`: 管理者またはメンテナーが動画を更新可能
+  - 条件: content_managers_can_insert_videosと同様
+  - 解説: 管理者またはメンテナー権限を持つユーザーが既存の動画を編集可能
+
+#### 削除ポリシー（DELETE/論理削除）
+
+- `prevent_physical_delete_videos`: 資料は論理削除のみとし、物理削除を防止
 
 ### 4.4. categories テーブルのRLSポリシー
 
@@ -262,7 +331,8 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 これらのRLSポリシーとSupabase Auth統合により、シンラボポータルサイトでは以下のデータアクセス制御を実現しています。
 
 - **認証ベースアクセス**: Supabase Authで認証されたユーザーのみアクセス可能
-- **管理者特権**: 管理者は全ユーザー情報を閲覧・更新可能
-- **メンバー限定コンテンツ**: 登録済みユーザーのみが資料・動画コンテンツを閲覧可能
+- **管理者特権**: 管理者は全ユーザー情報を閲覧・更新可能、およびコンテンツ管理権限
+- **メンテナー権限**: メンテナーはコンテンツの追加・編集・削除が可能
+- **メンバー限定コンテンツ**: 認証済みユーザーのみがコンテンツを閲覧可能
 - **データ保全**: 物理削除は禁止され、論理削除のみ許可（データの整合性保持）
 - **シンプルな権限管理**: Supabase Authとの統合により、複雑な認証連携処理が不要
