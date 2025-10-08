@@ -13,13 +13,9 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-10 bg-white pb-2">
+      <div className="sticky top-0 z-10 bg-white pb-4">
         <PageTitle>シンラボ会員一覧</PageTitle>
       </div>
-
-      <Text my={16} size="lg" c="gray.9">
-        {members.length === 0 && "会員情報の取得に失敗しました。"}
-      </Text>
       <div>
         {members.length > 0 && (
           <>
