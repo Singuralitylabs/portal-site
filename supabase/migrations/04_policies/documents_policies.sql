@@ -48,8 +48,8 @@ CREATE POLICY "content_managers_can_update_documents" ON "documents"
   );
 
 -- 物理削除の禁止（DELETEクエリを実行できないようにする）
-DROP POLICY IF EXISTS "prevent_physical_delete_documents" ON "users";
-CREATE POLICY "prevent_physical_delete_documents" ON "users"
+DROP POLICY IF EXISTS "prevent_physical_delete_documents" ON "documents";
+CREATE POLICY "prevent_physical_delete_documents" ON "documents"
   FOR DELETE
   USING (false);  -- 常にfalseを返すことで物理削除を防止
 
