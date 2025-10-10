@@ -48,8 +48,8 @@ CREATE POLICY "content_managers_can_update_videos" ON "videos"
   );
 
 -- 物理削除の禁止（DELETEクエリを実行できないようにする）
-DROP POLICY IF EXISTS "prevent_physical_delete_videos" ON "users";
-CREATE POLICY "prevent_physical_delete_videos" ON "users"
+DROP POLICY IF EXISTS "prevent_physical_delete_videos" ON "videos";
+CREATE POLICY "prevent_physical_delete_videos" ON "videos"
   FOR DELETE
   USING (false);  -- 常にfalseを返すことで物理削除を防止
 
