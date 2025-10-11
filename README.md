@@ -1,147 +1,98 @@
-# 会員制ポータルサイト
+# シンギュラリティ・ラボ ポータルサイト
 
-会員限定のコンテンツを提供するためのポータルサイトです。Google認証による会員管理と承認機能を備え、承認された会員のみがコンテンツを視聴できます。
+シンギュラリティ・ラボ（シンラボ）会員向けポータルサイトです。本サイトは、会員限定のコンテンツ（資料・動画等）の提供や、会員同士の交流を促進することを目的にしています。
 
-こちらの[開発ガイドライン](https://github.com/Singuralitylabs/portal-site/wiki/%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%AB%E3%82%B5%E3%82%A4%E3%83%88%E9%96%8B%E7%99%BA%E3%82%AC%E3%82%A4%E3%83%89%E3%83%A9%E3%82%A4%E3%83%B3)も合わせてご覧ください。
+本サイトはシンラボ内の希望者で開発しています。
+本開発を通じて、Webアプリ開発のスキルアップやチーム開発のノウハウを身につけます。
 
-## 機能概要
+本開発には、[シンギュラリティ・ラボ](https://sinlab.future-tech-association.org/join/)（シンラボ）に入会頂いた方のみ参画いただけます。
 
-- Google認証による会員管理
-- シンラボ内資料の一覧ページ
-- ユーザーロール管理
+詳細は[チーム開発ガイドライン](https://github.com/Singuralitylabs/team-development)をご参照ください。
+
+## 主な機能
+
+- Google認証による会員管理 - Supabase Authを使用した安全な認証
+- 資料コンテンツ - 申請フォームや各種ドキュメントへのアクセス
+- 動画コンテンツ - 学習教材等の各種動画の閲覧
+- 会員一覧 - シンラボメンバー同士の交流促進
+- コンテンツ管理 - 管理者・メンテナー向けの編集機能
 
 ## 技術スタック
 
 ### フロントエンド
 
-- Next.js (TypeScript)
-- Tailwind CSS
-- Mantine UI
+- Next.js 15 (App Router) - Reactフレームワーク
+- TypeScript - 型安全性の確保
+- Tailwind CSS - ユーティリティファーストなスタイリング
+- Mantine UI - UIコンポーネントライブラリ
 
 ### バックエンド/インフラ
 
-- Supabase Auth (認証)
-- Supabase (データベース)
-- Vercel (ホスティング)
+- Supabase Auth - Google OAuth認証
+- Supabase (PostgreSQL) - データベース
+- Row Level Security (RLS) - データアクセス制御
+- Vercel - ホスティング
 
-### 開発環境
+### 開発ツール
 
-- Git/GitHub (ソースコード管理)
-- GitHub Actions (CI/CD)
+- ESLint & Prettier - コード品質管理
+- GitHub Actions - CI/CD
+- Git/GitHub - バージョン管理
+- GitHub copilot - 生成AIによるコードレビュー
 
-## 開発環境のセットアップ
-
-1. リポジトリのクローン
-
-   ```bash
-   git clone https://github.com/Singuralitylabs/portal-site.git
-   cd portal-site
-   ```
-
-2. 依存パッケージのインストール
-
-   ```bash
-   npm install
-   ```
-
-3. 環境変数の設定
-   `.env.local`ファイルを作成し、必要な環境変数を設定します。
-   環境変数の値については、プロジェクトリーダーに確認してください。
-
-   ```bash
-   # Supabase関連（認証・データベース）
-   NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
-   SUPABASE_PROJECT_ID=************
-   ```
-
-4. 開発サーバーの起動
-
-   ```bash
-   npm run dev
-   ```
-
-## ブランチ戦略
+## プロジェクト構成
 
 ```
-release (protected) - 本番環境
-  ↑
-main (protected) - テスト環境
-  ↑
-feature/* - 機能開発
+portal-site/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # 認証関連ページ（ログイン、コールバックなど）
+│   ├── (authenticated)/   # 認証済みユーザー向けページ
+│   ├── services/          # APIクライアント（Supabase連携）
+│   ├── types/             # TypeScript型定義
+│   ├── api/               # 外部サービスとのAPI連携
+│   └── constants/         # 定数定義
+├── docs/                  # プロジェクトドキュメント
+│   ├── setup.md           # 環境構築手順
+│   ├── database.md        # データベース設計書
+│   ├── specification.md   # 機能仕様書
+│   └── testing.md         # テスト設計書
+├── supabase/              # Supabaseマイグレーション
+│   ├── migrations/        # DBマイグレーションファイル
+│   └── README.md          # Supabase設定ガイド
+└── public/                # 静的ファイル
 ```
 
-- `release`: 本番環境用ブランチ（保護済）
-- `main`: テスト環境用ブランチ（保護済）
-- `feature/*`: 機能開発用ブランチ
+## 開発環境の構築
 
-## 必要スキル
+開発環境のセットアップ方法については、[環境構築手順](docs/setup.md)を参照してください。
 
-### 基礎スキル
+## 開発フロー
+
+本開発フローの詳細は、[ポータルサイト開発フロー](https://github.com/Singuralitylabs/portal-site/wiki/%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%AB%E3%82%B5%E3%82%A4%E3%83%88%E9%96%8B%E7%99%BA%E3%83%95%E3%83%AD%E3%83%BC)をご覧ください。
+
+## 必要なスキル
+
+本プロジェクトに参加するには、以下の基礎スキルが必要です（最低限の知識があれば問題ありません）。
 
 - HTML/CSSの基本的な理解
-- JavaScriptの基本構文とES6機能の理解
+- JavaScriptの基本構文とES6機能
+- React/Next.jsの基本的な理解
 - Git/GitHubの基本操作
 
-### 学習リソース
+上記スキルは、シンラボ内で提供している講座でも学習することができます。
 
-- HTML/CSS: Progate推奨
-- JavaScript: GAS講座推奨
-- その他技術スタックは参画後に学習可能
+## 参考資料
 
-## 開発手順
+プロジェクトに関する詳細については、下記ドキュメントをご参照下さい。
 
-1. featureブランチの作成
+- [環境構築手順](docs/setup.md) - 開発環境のセットアップ方法
+- [データベース設計](docs/database.md) - テーブル構造とRLSポリシー
+- [機能仕様書](docs/specification.md) - 各機能の詳細仕様
+- [テスト設計](docs/testing.md) - テスト戦略と項目
+- [Supabaseガイド](supabase/README.md) - Supabaseの設定と使い方
+- [開発フロー](https://github.com/Singuralitylabs/portal-site/wiki/%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%AB%E3%82%B5%E3%82%A4%E3%83%88%E9%96%8B%E7%99%BA%E3%83%95%E3%83%AD%E3%83%BC) - 開発の進め方
+- [コーディング規約](https://github.com/Singuralitylabs/portal-site/wiki/%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E8%A6%8F%E7%B4%84) - コーディングを行う上でのルール
 
-   ```bash
-   git checkout main           # mainブランチに移動
-   git pull origin main       # 最新の状態に更新
-   git checkout -b feature/[機能名]  # 新しいブランチを作成
-   ```
+## ライセンス
 
-   - **重要**: 必ずmainブランチから新しいfeatureブランチを作成してください
-
-2. 実装
-
-   - コミットメッセージは変更内容が分かるように記載してください
-     ```bash
-     git add .
-     git commit -m "Add: ログイン機能の実装"
-     ```
-
-3. プルリクエストの作成
-
-   - featureブランチからmainブランチに向けて作成します
-   - 以下の項目を必ず設定してください：
-     - Assignee: 自分自身
-     - Reviewer: プロジェクトリーダー
-     - Description: 実装内容の概要（追加・修正・削除した内容）
-   - GithubActionsのテストが全てパスしていることを確認してください
-
-4. コードレビュー
-
-   - レビューでの指摘事項があった場合は対応してください
-   - 変更後は再度レビューを依頼してください
-
-5. mainブランチへのマージ
-   - プロジェクトリーダーによる承認後、マージされます
-   - マージ後、プロジェクトリーダーから全メンバーにrebaseの実行が指示されます
-6. rebaseの実行
-   ```bash
-   git checkout main          # mainブランチに移動
-   git pull origin main      # リモートの変更を取得
-   git checkout feature/[作業中の機能名]  # 作業ブランチに移動
-   git rebase main          # mainの内容で作業ブランチを更新
-   ```
-   - コンフリクトが発生した場合は解消してください
-   - 解消後は以下のコマンドで続行します
-   ```bash
-   git add .
-   git rebase --continue
-   ```
-7. ブランチの後片付け（作業完了時）
-   ```bash
-   git checkout main          # mainブランチに移動
-   git pull origin main      # 最新の状態に更新
-   git branch -d feature/[機能名]  # 作業ブランチの削除
-   ```
+このプロジェクトのライセンスはシンギュラリティ・ラボに帰属します。
