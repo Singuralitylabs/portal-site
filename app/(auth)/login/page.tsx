@@ -23,7 +23,9 @@ export default function LoginPage() {
           <div className="max-w-md bg-blue-50 border border-blue-200 rounded-lg px-4 text-sm text-gray-700">
             <p className="font-semibold text-lg text-blue-900 mb-2">ログイン時のご連絡</p>
             <p className="leading-relaxed text-base">
-              Googleアカウント選択画面では、Supabaseの認証システムを利用している仕様上、下記のURLが表示されます。本URLはシンラボのポータルサイトへのアクセスページなので、安心してログインしてください。
+              Googleアカウント選択画面では、Supabaseの認証システムを利用している仕様上、下記のURLが表示されます。
+              <br />
+              本URLはシンラボのポータルサイトへのアクセスページなので、安心してログインしてください。
             </p>
             <p className="text-center text-base">anawnwhhsgragkcorecl.supabase.co</p>
           </div>
