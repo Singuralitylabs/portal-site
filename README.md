@@ -39,6 +39,7 @@
 - GitHub Actions - CI/CD
 - Git/GitHub - バージョン管理
 - GitHub copilot - 生成AIによるコードレビュー
+- Jest - テストフレームワーク
 
 ## プロジェクト構成
 
@@ -59,6 +60,8 @@ portal-site/
 ├── supabase/              # Supabaseマイグレーション
 │   ├── migrations/        # DBマイグレーションファイル
 │   └── README.md          # Supabase設定ガイド
+├── tests/                 # テストコード
+│   └── test.ts            # 各種テストコード
 └── public/                # 静的ファイル
 ```
 
