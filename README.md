@@ -61,7 +61,7 @@ portal-site/
 │   ├── migrations/        # DBマイグレーションファイル
 │   └── README.md          # Supabase設定ガイド
 ├── tests/                 # テストコード
-│   └── test.ts            # 各種テストコード
+│   └── *.test.ts          # 各種テストコード
 └── public/                # 静的ファイル
 ```
 
