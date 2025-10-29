@@ -14,7 +14,7 @@
 本プロジェクトでは、バックエンドサービスとしてSupabaseを採用しています。
 Supabaseは、PostgreSQLを基盤としたオープンソースのバックエンドサービスです。
 
-本プロジェクトでは以下の3種類のデータを管理します。
+本プロジェクトでは以下の5種類のデータを管理します。
 
 1. **ユーザー情報**（`users`テーブル）  
    Supabase Authと連携したユーザー情報を管理します。
@@ -27,6 +27,9 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 4. **カテゴリー情報**（`categories`テーブル）  
    ドキュメントや動画情報のカテゴリー種別を管理します。
+
+5. **アプリ情報**（`apps`テーブル）  
+   アプリ解説やリンクなどのアプリ情報を管理します。
 
 ## 2. テーブル設計
 
@@ -89,16 +92,35 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.4. categories テーブル
 
-| カラム名         | データ型         | 制約                                | 説明                             |
-| --------------- | -------------- | ----------------------------------- | ------------------------------- |
-| `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）       |
-| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos`   | カテゴリーの種別                  |
-| `name`          | `VARCHAR(100)` | NOT NULL                            | カテゴリー名 （例: 事務局資料）     |
-| `description`   | `TEXT`         |                                     | カテゴリーの説明文                |
-| `display_order` | `INTEGER`      |                                     | 表示順                          |
-| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                   |
-| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                        |
-| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                        |
+| カラム名         | データ型         | 制約                                        | 説明                             |
+| --------------- | -------------- | ------------------------------------------- | ------------------------------- |
+| `id`            | `SERIAL`       | PRIMARY KEY                                 | レコードの一意な識別子（連番）       |
+| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos` OR `apps` | カテゴリーの種別                  |
+| `name`          | `VARCHAR(100)` | NOT NULL                                    | カテゴリー名 （例: 事務局資料）     |
+| `description`   | `TEXT`         |                                             | カテゴリーの説明文                |
+| `display_order` | `INTEGER`      |                                             | 表示順                          |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL                     | 論理削除フラグ                   |
+| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL         | 作成日時                        |
+| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL         | 更新日時                        |
+
+### 2.5. apps テーブル
+
+| カラム名             | データ型         | 制約                                 | 説明                           |
+| ------------------- | -------------- | ------------------------------------ | ----------------------------- |
+| `id`                | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）     |
+| `name`              | `VARCHAR(255)` | NOT NULL                             | アプリ名                       |
+| `description`       | `TEXT`         | NOT NULL                             | アプリの詳細説明文               |
+| `short_description` | `VARCHAR(200)` |                                      | アプリの短い紹介文（カード表示用）  |
+| `category_id`       | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | アプリのカテゴリー               |
+| `url`               | `TEXT`         | NOT NULL                             | アプリへのリンク                 |
+| `thumbnail_url`     | `TEXT`         |                                      | サムネイル画像のURL              |
+| `developer_id`      | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 開発者（ユーザーID）             |
+| `display_order`     | `INTEGER`      |                                      | 表示順                         |
+| `created_by`        | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを登録したユーザー          |
+| `updated_by`        | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを最後に更新したユーザー     |
+| `is_deleted`        | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                   |
+| `created_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                        |
+| `updated_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                        |
 
 ## 3. ER図
 
@@ -151,9 +173,26 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
+    apps {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        VARCHAR name "アプリ名 (最大255文字)"
+        TEXT description "アプリの詳細説明文"
+        VARCHAR short_description "アプリの短い紹介文 (最大200文字)"
+        INTEGER category_id FK "アプリのカテゴリー（categories.id）"
+        TEXT url "アプリへのリンク"
+        TEXT thumbnail_url "サムネイル画像のURL"
+        INTEGER developer_id FK "開発者（users.id）"
+        INTEGER display_order "表示順"
+        INTEGER created_by FK "アプリを登録したユーザー (users.id)"
+        INTEGER updated_by FK "アプリを最後に更新したユーザー (users.id)"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
     categories {
         SERIAL id PK "レコードの一意な識別子（連番）"
-        VARCHAR category_type "カテゴリー種別 (documents OR videos) (最大50文字)"
+        VARCHAR category_type "カテゴリー種別 (documents OR videos OR apps) (最大50文字)"
         VARCHAR name "カテゴリー名 (最大100文字)"
         TEXT description "カテゴリーの説明文"
         INTEGER display_order "表示順"
@@ -162,10 +201,13 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
-    users ||--o{ documents : "1:N"
-    users ||--o{ videos : "1:N"
+    users ||--o{ documents : "1:N (created_by)"
+    users ||--o{ videos : "1:N (created_by)"
+    users ||--o{ apps : "1:N (developer_id)"
+    users ||--o{ apps : "1:N (created_by)"
     categories ||--o{ documents : "1:N"
     categories ||--o{ videos : "1:N"
+    categories ||--o{ apps : "1:N"
 ```
 
 ## 4. Row Level Security（RLS）ポリシー
@@ -320,6 +362,49 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - `registered_users_can_read_categories`: 登録済みユーザーは全てのcategoriesを閲覧可能
   - 条件: `auth_id = auth.uid()　AND status = 'active' AND is_deleted = FALSE`
   - 解説: documentsテーブルと同様に、`auth.uid()`を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全てのカテゴリー（categories）にアクセスできる。会員以外の一般ユーザーは閲覧できない仕組みになっている。
+
+### 4.5. apps テーブルのRLSポリシー
+
+#### 閲覧ポリシー（SELECT）
+
+- `authenticated_users_can_read_apps`: 認証済みユーザーは全てのappsを閲覧可能
+  - 条件:
+    ```sql
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE auth_id = auth.uid()
+      AND status = 'active'
+      AND is_deleted = false
+    )
+    AND is_deleted = FALSE
+    ```
+  - 解説: Supabase Authで認証されたアクティブなユーザーであれば、論理削除されていない全てのアプリにアクセス可能
+
+#### 作成ポリシー（INSERT）
+
+- `content_managers_can_insert_apps`: 管理者またはメンテナーがアプリを登録可能
+  - 条件:
+    ```sql
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE
+        auth_id = auth.uid()
+        AND role IN ('admin', 'maintainer')
+        AND status = 'active'
+        AND is_deleted = FALSE
+    )
+    ```
+  - 解説: 管理者またはメンテナー権限を持つアクティブなユーザーのみが新しいアプリを追加可能
+
+#### 更新ポリシー（UPDATE）
+
+- `content_managers_can_update_apps`: 管理者またはメンテナーがアプリを更新可能
+  - 条件: content_managers_can_insert_appsと同様
+  - 解説: 管理者またはメンテナー権限を持つユーザーが既存のアプリを編集可能
+
+#### 削除ポリシー（DELETE/論理削除）
+
+- `prevent_physical_delete_apps`: アプリは論理削除のみとし、物理削除を防止
 
 ## 5. サポート関数
 
