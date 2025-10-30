@@ -29,7 +29,11 @@ export function DocumentsPageTemplate({
         <PageTitle>資料一覧</PageTitle>
         {isContentMgr && (
           <div className="mt-4 flex justify-end">
-            <ContentMgrNewButton type={CONTENT_TYPE.DOCUMENT} categories={categories} userId={userId}>
+            <ContentMgrNewButton
+              type={CONTENT_TYPE.DOCUMENT}
+              categories={categories}
+              userId={userId}
+            >
               新規登録
             </ContentMgrNewButton>
           </div>
@@ -48,8 +52,10 @@ export function DocumentsPageTemplate({
       <div>
         {existingCategories.map(category => (
           <div key={category.id} className="mb-12">
-            <h2 id={`category-${category.id}`} className="scroll-mt-40">{category.name}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
+            <h2 id={`category-${category.id}`} className="scroll-mt-40">
+              {category.name}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 mb-8 max-w-[90%]">
               {documents
                 .filter(document => document.category?.name === category.name)
                 .map(document => (
