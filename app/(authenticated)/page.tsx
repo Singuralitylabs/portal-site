@@ -32,6 +32,14 @@ export default function Home() {
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
+              <Link href="/apps">アプリ紹介</Link>
+            </h3>
+            <p className="text-muted-foreground">
+              シンラボメンバーが開発したアプリケーションを紹介しています。
+            </p>
+          </div>
+          <div className="bg-card p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">
               <Link href="/members">会員一覧</Link>
             </h3>
             <p className="text-muted-foreground">

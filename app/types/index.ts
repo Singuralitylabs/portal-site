@@ -26,7 +26,40 @@ export type VideoUpdateFormType = Omit<
   "created_at" | "updated_at" | "created_by" | "is_deleted"
 >;
 
-export type ContentType = "document" | "video";
+// Apps types
+export type AppType = {
+  id: number;
+  name: string;
+  description: string;
+  short_description: string | null;
+  category_id: number;
+  url: string;
+  thumbnail_url: string | null;
+  developer_id: number;
+  display_order: number | null;
+  created_by: number;
+  updated_by: number;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AppWithCategoryAndDeveloperType = AppType & {
+  category: { name: string } | null;
+  developer: { display_name: string } | null;
+};
+
+export type AppInsertFormType = Omit<
+  AppType,
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
+>;
+
+export type AppUpdateFormType = Omit<
+  AppType,
+  "created_at" | "updated_at" | "created_by" | "is_deleted"
+>;
+
+export type ContentType = "document" | "video" | "app";
 
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];
