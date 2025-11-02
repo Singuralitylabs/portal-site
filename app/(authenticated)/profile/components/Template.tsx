@@ -65,7 +65,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
 
   return (
     <>
-      <PageTitle>プロフィール</PageTitle>
+      <PageTitle>_プロフィール_</PageTitle>
 
       {/* プロフィール情報表示 */}
       <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
@@ -100,7 +100,14 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
               <label htmlFor="bio" className="block text-sm font-medium mb-1">
                 自己紹介
               </label>
-              <Textarea id="bio" value={bio} onChange={e => setBio(e.target.value)} minRows={3} />
+              <Textarea
+                id="bio"
+                value={bio}
+                onChange={e => setBio(e.target.value)}
+                autosize // ← これを追加して、サイズ自動調整を有効化
+                minRows={5} // ← 現実的な最小行数（例：20行）
+                maxRows={10} // maxRows を設定しなければ、入力に応じて無限に伸びます
+              />
             </div>
 
             <Button type="submit" loading={isPending}>
