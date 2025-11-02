@@ -65,7 +65,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
 
   return (
     <>
-      <PageTitle>_プロフィール_</PageTitle>
+      <PageTitle>プロフィール</PageTitle>
 
       {/* プロフィール情報表示 */}
       <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
