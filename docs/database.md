@@ -28,7 +28,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 4. **カテゴリー情報**（`categories`テーブル）  
    ドキュメントや動画情報のカテゴリー種別を管理します。
 
-5. **アプリ情報**（`apps`テーブル）  
+5. **アプリ情報**（`applications`テーブル）  
    アプリ解説やリンクなどのアプリ情報を管理します。
 
 ## 2. テーブル設計
@@ -103,7 +103,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL         | 作成日時                        |
 | `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL         | 更新日時                        |
 
-### 2.5. apps テーブル
+### 2.5. applications テーブル
 
 | カラム名             | データ型         | 制約                                 | 説明                           |
 | ------------------- | -------------- | ------------------------------------ | ----------------------------- |
@@ -173,7 +173,7 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
-    apps {
+    applications {
         SERIAL id PK "レコードの一意な識別子（連番）"
         VARCHAR name "アプリ名 (最大255文字)"
         TEXT description "アプリの詳細説明文"
@@ -192,7 +192,7 @@ erDiagram
 
     categories {
         SERIAL id PK "レコードの一意な識別子（連番）"
-        VARCHAR category_type "カテゴリー種別 (documents OR videos OR apps) (最大50文字)"
+        VARCHAR category_type "カテゴリー種別 (documents OR videos OR applications) (最大50文字)"
         VARCHAR name "カテゴリー名 (最大100文字)"
         TEXT description "カテゴリーの説明文"
         INTEGER display_order "表示順"
@@ -203,11 +203,11 @@ erDiagram
 
     users ||--o{ documents : "1:N (created_by)"
     users ||--o{ videos : "1:N (created_by)"
-    users ||--o{ apps : "1:N (developer_id)"
-    users ||--o{ apps : "1:N (created_by)"
+    users ||--o{ applications : "1:N (developer_id)"
+    users ||--o{ applications : "1:N (created_by)"
     categories ||--o{ documents : "1:N"
     categories ||--o{ videos : "1:N"
-    categories ||--o{ apps : "1:N"
+    categories ||--o{ applications : "1:N"
 ```
 
 ## 4. Row Level Security（RLS）ポリシー
@@ -363,11 +363,11 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
   - 条件: `auth_id = auth.uid()　AND status = 'active' AND is_deleted = FALSE`
   - 解説: documentsテーブルと同様に、`auth.uid()`を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全てのカテゴリー（categories）にアクセスできる。会員以外の一般ユーザーは閲覧できない仕組みになっている。
 
-### 4.5. apps テーブルのRLSポリシー
+### 4.5. applications テーブルのRLSポリシー
 
 #### 閲覧ポリシー（SELECT）
 
-- `authenticated_users_can_read_apps`: 認証済みユーザーは全てのappsを閲覧可能
+- `authenticated_users_can_read_applications`: 認証済みユーザーは全てのapplicationsを閲覧可能
   - 条件:
     ```sql
     EXISTS (
@@ -382,7 +382,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 #### 作成ポリシー（INSERT）
 
-- `content_managers_can_insert_apps`: 管理者またはメンテナーがアプリを登録可能
+- `content_managers_can_insert_applications`: 管理者またはメンテナーがアプリを登録可能
   - 条件:
     ```sql
     EXISTS (
@@ -398,13 +398,13 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 #### 更新ポリシー（UPDATE）
 
-- `content_managers_can_update_apps`: 管理者またはメンテナーがアプリを更新可能
-  - 条件: content_managers_can_insert_appsと同様
+- `content_managers_can_update_applications`: 管理者またはメンテナーがアプリを更新可能
+  - 条件: content_managers_can_insert_applicationsと同様
   - 解説: 管理者またはメンテナー権限を持つユーザーが既存のアプリを編集可能
 
 #### 削除ポリシー（DELETE/論理削除）
 
-- `prevent_physical_delete_apps`: アプリは論理削除のみとし、物理削除を防止
+- `prevent_physical_delete_applications`: アプリは論理削除のみとし、物理削除を防止
 
 ## 5. サポート関数
 

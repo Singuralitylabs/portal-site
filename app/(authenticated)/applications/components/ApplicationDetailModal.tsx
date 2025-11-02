@@ -1,17 +1,21 @@
 "use client";
 
-import { AppWithCategoryAndDeveloperType } from "@/app/types";
+import { ApplicationWithCategoryAndDeveloperType } from "@/app/types";
 import { Modal, Button, Badge, Image, Text, Stack } from "@mantine/core";
 import { ExternalLink, User } from "lucide-react";
 
-interface AppDetailModalProps {
-  app: AppWithCategoryAndDeveloperType | null;
+interface ApplicationDetailModalProps {
+  application: ApplicationWithCategoryAndDeveloperType | null;
   opened: boolean;
   onClose: () => void;
 }
 
-export function AppDetailModal({ app, opened, onClose }: AppDetailModalProps) {
-  if (!app) return null;
+export function ApplicationDetailModal({
+  application,
+  opened,
+  onClose,
+}: ApplicationDetailModalProps) {
+  if (!application) return null;
 
   return (
     <Modal
@@ -28,12 +32,12 @@ export function AppDetailModal({ app, opened, onClose }: AppDetailModalProps) {
       }}
     >
       <Stack gap="md">
-        <h2 className="text-2xl font-bold">{app.name}</h2>
+        <h2 className="text-2xl font-bold">{application.name}</h2>
 
-        {app.thumbnail_url && (
+        {application.thumbnail_url && (
           <Image
-            src={app.thumbnail_url}
-            alt={app.name}
+            src={application.thumbnail_url}
+            alt={application.name}
             radius="md"
             className="w-full"
             fallbackSrc="https://placehold.co/600x400?text=No+Image"
@@ -44,25 +48,25 @@ export function AppDetailModal({ app, opened, onClose }: AppDetailModalProps) {
           <Text size="sm" c="dimmed" mb="xs">
             詳細説明
           </Text>
-          <Text style={{ whiteSpace: "pre-wrap" }}>{app.description}</Text>
+          <Text style={{ whiteSpace: "pre-wrap" }}>{application.description}</Text>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
-          {app.category && (
+          {application.category && (
             <div>
               <Text size="sm" c="dimmed" component="span" mr="xs">
                 カテゴリー:
               </Text>
-              <Badge variant="light">{app.category.name}</Badge>
+              <Badge variant="light">{application.category.name}</Badge>
             </div>
           )}
         </div>
 
-        {app.developer && (
+        {application.developer && (
           <div className="flex items-center gap-2">
             <User size={16} />
             <Text size="sm">
-              開発者: <span className="font-semibold">{app.developer.display_name}</span>
+              開発者: <span className="font-semibold">{application.developer.display_name}</span>
             </Text>
           </div>
         )}
@@ -71,7 +75,7 @@ export function AppDetailModal({ app, opened, onClose }: AppDetailModalProps) {
           color="#000"
           fullWidth
           component="a"
-          href={app.url}
+          href={application.url}
           target="_blank"
           rel="noopener noreferrer"
           rightSection={<ExternalLink size={16} />}

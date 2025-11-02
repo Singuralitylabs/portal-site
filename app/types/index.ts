@@ -26,8 +26,8 @@ export type VideoUpdateFormType = Omit<
   "created_at" | "updated_at" | "created_by" | "is_deleted"
 >;
 
-// Apps types
-export type AppType = {
+// Applications types
+export type ApplicationType = {
   id: number;
   name: string;
   description: string;
@@ -44,22 +44,22 @@ export type AppType = {
   updated_at: string;
 };
 
-export type AppWithCategoryAndDeveloperType = AppType & {
+export type ApplicationWithCategoryAndDeveloperType = ApplicationType & {
   category: { name: string } | null;
   developer: { display_name: string } | null;
 };
 
-export type AppInsertFormType = Omit<
-  AppType,
+export type ApplicationInsertFormType = Omit<
+  ApplicationType,
   "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
 >;
 
-export type AppUpdateFormType = Omit<
-  AppType,
+export type ApplicationUpdateFormType = Omit<
+  ApplicationType,
   "created_at" | "updated_at" | "created_by" | "is_deleted"
 >;
 
-export type ContentType = "document" | "video" | "app";
+export type ContentType = "document" | "video" | "application";
 
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];

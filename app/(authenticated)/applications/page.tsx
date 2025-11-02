@@ -1,17 +1,17 @@
-import { fetchApps } from "@/app/services/api/apps-server";
+import { fetchApplications } from "@/app/services/api/applications-server";
 import { fetchCategoriesByType } from "@/app/services/api/categories-server";
-import { AppsPageTemplate } from "./components/Template";
+import { ApplicationsPageTemplate } from "./components/Template";
 
-export default async function AppsPage() {
+export default async function ApplicationsPage() {
   // アプリデータ・カテゴリーデータを並列取得
-  const [appsResult, categoriesResult] = await Promise.all([
-    fetchApps(),
-    fetchCategoriesByType("apps"),
+  const [applicationsResult, categoriesResult] = await Promise.all([
+    fetchApplications(),
+    fetchCategoriesByType("applications"),
   ]);
 
-  const { data: apps, error: appError } = appsResult;
-  if (appError || !apps) {
-    console.error("アプリデータの取得に失敗:", appError);
+  const { data: applications, error: applicationError } = applicationsResult;
+  if (applicationError || !applications) {
+    console.error("アプリデータの取得に失敗:", applicationError);
     return (
       <div className="text-center py-8">
         <p className="text-red-600 text-xl">アプリデータを取得できませんでした。</p>
@@ -29,5 +29,5 @@ export default async function AppsPage() {
     );
   }
 
-  return <AppsPageTemplate apps={apps} categories={categories} />;
+  return <ApplicationsPageTemplate applications={applications} categories={categories} />;
 }

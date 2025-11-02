@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "アプリ紹介",
-    href: "/apps",
+    href: "/applications",
     icon: <AppWindow className="h-5 w-5" />,
   },
   {
