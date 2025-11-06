@@ -105,7 +105,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 value={bio}
                 onChange={e => setBio(e.target.value)}
                 autosize // ← これを追加して、サイズ自動調整を有効化
-                minRows={5} // ← 現実的な最小行数（例：20行）
+                minRows={5} // ← 現実的な最小行数（例：5行）
                 maxRows={10} // maxRows を設定しなければ、入力に応じて無限に伸びます
               />
             </div>
