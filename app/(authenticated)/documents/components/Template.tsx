@@ -55,7 +55,7 @@ export function DocumentsPageTemplate({
             <h2 id={`category-${category.id}`} className="scroll-mt-40">
               {category.name}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-6 mb-8 px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8 px-4">
               {documents
                 .filter(document => document.category?.name === category.name)
                 .map(document => (
