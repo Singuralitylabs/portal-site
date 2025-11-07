@@ -142,15 +142,14 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.7. position_tags テーブル
 
-| カラム名        | データ型    | 制約                                | 説明                           |
-| --------------- | ----------- | ----------------------------------- | ------------------------------ |
-| `id`            | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番） |
-| `user_id`       | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                     |
-| `position_id`   | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                   |
-| `display_order` | `INTEGER`   |                                     | 表示順                         |
-| `is_deleted`    | `BOOLEAN`   | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
-| `created_at`    | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
-| `updated_at`    | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
+| カラム名      | データ型    | 制約                                | 説明                           |
+| ------------- | ----------- | ----------------------------------- | ------------------------------ |
+| `id`          | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番） |
+| `user_id`     | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                     |
+| `position_id` | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                   |
+| `is_deleted`  | `BOOLEAN`   | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
+| `created_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
+| `updated_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
 
 ## 3. ER図
 
@@ -245,7 +244,6 @@ erDiagram
         SERIAL id PK "レコードの一意な識別子（連番）"
         INTEGER user_id FK "ユーザー（users.id）"
         INTEGER position_id FK "役職・所属（positions.id）"
-        INTEGER display_order "表示順"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
