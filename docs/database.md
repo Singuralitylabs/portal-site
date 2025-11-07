@@ -31,11 +31,11 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 5. **アプリ情報**（`apps`テーブル）  
    アプリ解説やリンクなどのアプリ情報を管理します。
 
-6. **役割情報** (`roles`テーブル)  
-   役割情報を管理します。
+6. **役職情報** (`positions`テーブル)  
+   役職・所属情報を管理します。
 
-7. **役割タグ情報** (`role_tags`テーブル)  
-   ユーザーに役割タグを紐付けます。
+7. **役職タグ情報** (`position_tags`テーブル)  
+   ユーザーに役職タグを紐付けます。
 
 ## 2. テーブル設計
 
@@ -128,25 +128,25 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `created_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                           |
 | `updated_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                           |
 
-### 2.6. roles テーブル
+### 2.6. positions テーブル
 
 | カラム名        | データ型      | 制約                                | 説明                           |
 | --------------- | ------------- | ----------------------------------- | ------------------------------ |
 | `id`            | `SERIAL`      | PRIMARY KEY                         | レコードの一意な識別子（連番） |
-| `name`          | `VARCHAR(50)` | NOT NULL                            | 役割名                         |
-| `description`   | `TEXT`        |                                     | 役割の説明文                   |
+| `name`          | `VARCHAR(50)` | NOT NULL                            | 役職・所属名                   |
+| `description`   | `TEXT`        |                                     | 役職・所属の説明文             |
 | `display_order` | `INTEGER`     |                                     | 表示順                         |
 | `is_deleted`    | `BOOLEAN`     | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
 | `created_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
 | `updated_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
 
-### 2.7. role_tags テーブル
+### 2.7. position_tags テーブル
 
 | カラム名        | データ型    | 制約                                | 説明                           |
 | --------------- | ----------- | ----------------------------------- | ------------------------------ |
 | `id`            | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番） |
 | `user_id`       | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                     |
-| `role_id`       | `INTEGER`   | FOREIGN KEY(roles.id), NOT NULL     | 役割ID                         |
+| `position_id`   | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                   |
 | `display_order` | `INTEGER`   |                                     | 表示順                         |
 | `is_deleted`    | `BOOLEAN`   | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
 | `created_at`    | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
@@ -231,20 +231,20 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
-    roles {
+    positions {
         SERIAL id PK "レコードの一意な識別子（連番）"
-        VARCHAR name "役割名 (最大100文字)"
-        TEXT description "役割の説明文"
+        VARCHAR name "役職・所属名 (最大100文字)"
+        TEXT description "役職・所属の説明文"
         INTEGER display_order "表示順"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
     }
 
-    role_tags {
+    position_tags {
         SERIAL id PK "レコードの一意な識別子（連番）"
         INTEGER user_id FK "ユーザー（users.id）"
-        INTEGER role_id FK "役割（roles.id）"
+        INTEGER position_id FK "役職・所属（positions.id）"
         INTEGER display_order "表示順"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
@@ -255,8 +255,8 @@ erDiagram
     users ||--o{ videos : "1:N (created_by)"
     users ||--o{ apps : "1:N (developer_id)"
     users ||--o{ apps : "1:N (created_by)"
-    users ||--o{ role_tags : "1:N (user_id)"
-    roles ||--o{ role_tags : "1:N (role_id)"
+    users ||--o{ position_tags : "1:N (user_id)"
+    positions ||--o{ position_tags : "1:N (position_id)"
     categories ||--o{ documents : "1:N"
     categories ||--o{ videos : "1:N"
     categories ||--o{ apps : "1:N"
@@ -459,11 +459,11 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 - `prevent_physical_delete_apps`: アプリは論理削除のみとし、物理削除を防止
 
-### 4.6. roles テーブルのRLSポリシー
+### 4.6. positions テーブルのRLSポリシー
 
 documents テーブルと同様
 
-### 4.7. role_tags テーブルのRLSポリシー
+### 4.7. position_tags テーブルのRLSポリシー
 
 documents テーブルと同様
 
