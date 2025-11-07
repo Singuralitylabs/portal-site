@@ -31,40 +31,46 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 5. **アプリ情報**（`apps`テーブル）  
    アプリ解説やリンクなどのアプリ情報を管理します。
 
+6. **役割情報** (`roles`テーブル)  
+   役割情報を管理します。
+
+7. **役割タグ情報** (`role_tags`テーブル)  
+   ユーザーに役割タグを紐付けます。
+
 ## 2. テーブル設計
 
 ### 2.1. users テーブル
 
-| カラム名        | データ型         | 制約                                | 説明                                             |
-| -------------- | -------------- | ----------------------------------- | ----------------------------------------------- |
-| `id`           | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                       |
+| カラム名       | データ型       | 制約                                | 説明                                             |
+| -------------- | -------------- | ----------------------------------- | ------------------------------------------------ |
+| `id`           | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                   |
 | `auth_id`      | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                       |
-| `email`        | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）       |
-| `display_name` | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                           |
-| `role`         | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）.   |
-| `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）    |
-| `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                               |
-| `avatar_url`   | `TEXT`         |                                     | Googleプロフィール画像のURL                       |
+| `email`        | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）  |
+| `display_name` | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                         |
+| `role`         | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）. |
+| `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）  |
+| `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                             |
+| `avatar_url`   | `TEXT`         |                                     | Googleプロフィール画像のURL                      |
 | `is_deleted`   | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
-| `created_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                        |
-| `updated_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                        |
+| `created_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
+| `updated_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |
 
 ---
 
 ### 2.2. documents テーブル
 
-| カラム名         | データ型        | 制約                                  | 説明                                |
+| カラム名        | データ型       | 制約                                 | 説明                               |
 | --------------- | -------------- | ------------------------------------ | ---------------------------------- |
-| `id`            | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）          |
-| `name`          | `VARCHAR(255)` | NOT NULL                             | 資料名                              |
-| `description`   | `TEXT`         |                                      | 資料の説明文                         |
-| `category_id`   | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 資料の分類                          |
-| `url`           | `TEXT`         | NOT NULL                             | 資料へのリンク（Googleドライブ等）     |
+| `id`            | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）     |
+| `name`          | `VARCHAR(255)` | NOT NULL                             | 資料名                             |
+| `description`   | `TEXT`         |                                      | 資料の説明文                       |
+| `category_id`   | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 資料の分類                         |
+| `url`           | `TEXT`         | NOT NULL                             | 資料へのリンク（Googleドライブ等） |
 | `display_order` | `INTEGER`      |                                      | 表示順                             |
-| `created_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を作成したユーザー                |
-| `updated_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を最後に更新したユーザー           |
-| `assignee`      | `VARCHAR(100)` |                                      | 資料の担当者名                      |
-| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                      |
+| `created_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を作成したユーザー             |
+| `updated_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を最後に更新したユーザー       |
+| `assignee`      | `VARCHAR(100)` |                                      | 資料の担当者名                     |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                     |
 | `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                           |
 | `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                           |
 
@@ -72,55 +78,79 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.3. videos テーブル
 
-| カラム名          | データ型         | 制約                                 | 説明                              |
+| カラム名         | データ型       | 制約                                 | 説明                             |
 | ---------------- | -------------- | ------------------------------------ | -------------------------------- |
-| `id`             | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）        |
-| `name`           | `VARCHAR(255)` | NOT NULL                             | 動画名                            |
-| `description`    | `TEXT`         |                                      | 動画の説明文                       |
-| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類                        |
-| `url`            | `TEXT`         | NOT NULL                             | 動画へのリンク（Youtube等）         |
-| `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス                 |
-| `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算）      |
-| `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）            |
+| `id`             | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）   |
+| `name`           | `VARCHAR(255)` | NOT NULL                             | 動画名                           |
+| `description`    | `TEXT`         |                                      | 動画の説明文                     |
+| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類                       |
+| `url`            | `TEXT`         | NOT NULL                             | 動画へのリンク（Youtube等）      |
+| `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス               |
+| `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算） |
+| `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）         |
 | `display_order`  | `INTEGER`      |                                      | 表示順                           |
-| `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー              |
-| `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー         |
-| `assignee`       | `VARCHAR(100)` |                                      | 動画の担当者名（講師など）          |
-| `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                    |
+| `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー           |
+| `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー     |
+| `assignee`       | `VARCHAR(100)` |                                      | 動画の担当者名（講師など）       |
+| `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                   |
 | `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                         |
 | `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                         |
 
 ### 2.4. categories テーブル
 
-| カラム名         | データ型         | 制約                                        | 説明                             |
+| カラム名        | データ型       | 制約                                        | 説明                            |
 | --------------- | -------------- | ------------------------------------------- | ------------------------------- |
-| `id`            | `SERIAL`       | PRIMARY KEY                                 | レコードの一意な識別子（連番）       |
-| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos` OR `apps` | カテゴリーの種別                  |
-| `name`          | `VARCHAR(100)` | NOT NULL                                    | カテゴリー名 （例: 事務局資料）     |
-| `description`   | `TEXT`         |                                             | カテゴリーの説明文                |
+| `id`            | `SERIAL`       | PRIMARY KEY                                 | レコードの一意な識別子（連番）  |
+| `category_type` | `VARCHAR(50)`  | NOT NULL, `documents` OR `videos` OR `apps` | カテゴリーの種別                |
+| `name`          | `VARCHAR(100)` | NOT NULL                                    | カテゴリー名 （例: 事務局資料） |
+| `description`   | `TEXT`         |                                             | カテゴリーの説明文              |
 | `display_order` | `INTEGER`      |                                             | 表示順                          |
-| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL                     | 論理削除フラグ                   |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL                     | 論理削除フラグ                  |
 | `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL         | 作成日時                        |
 | `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL         | 更新日時                        |
 
 ### 2.5. apps テーブル
 
-| カラム名             | データ型         | 制約                                 | 説明                           |
-| ------------------- | -------------- | ------------------------------------ | ----------------------------- |
+| カラム名            | データ型       | 制約                                 | 説明                               |
+| ------------------- | -------------- | ------------------------------------ | ---------------------------------- |
 | `id`                | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）     |
-| `name`              | `VARCHAR(255)` | NOT NULL                             | アプリ名                       |
-| `description`       | `TEXT`         | NOT NULL                             | アプリの詳細説明文               |
-| `short_description` | `VARCHAR(200)` |                                      | アプリの短い紹介文（カード表示用）  |
-| `category_id`       | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | アプリのカテゴリー               |
-| `url`               | `TEXT`         | NOT NULL                             | アプリへのリンク                 |
-| `thumbnail_url`     | `TEXT`         |                                      | サムネイル画像のURL              |
-| `developer_id`      | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 開発者（ユーザーID）             |
-| `display_order`     | `INTEGER`      |                                      | 表示順                         |
-| `created_by`        | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを登録したユーザー          |
+| `name`              | `VARCHAR(255)` | NOT NULL                             | アプリ名                           |
+| `description`       | `TEXT`         | NOT NULL                             | アプリの詳細説明文                 |
+| `short_description` | `VARCHAR(200)` |                                      | アプリの短い紹介文（カード表示用） |
+| `category_id`       | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | アプリのカテゴリー                 |
+| `url`               | `TEXT`         | NOT NULL                             | アプリへのリンク                   |
+| `thumbnail_url`     | `TEXT`         |                                      | サムネイル画像のURL                |
+| `developer_id`      | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 開発者（ユーザーID）               |
+| `display_order`     | `INTEGER`      |                                      | 表示順                             |
+| `created_by`        | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを登録したユーザー           |
 | `updated_by`        | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを最後に更新したユーザー     |
-| `is_deleted`        | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                   |
-| `created_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                        |
-| `updated_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                        |
+| `is_deleted`        | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                     |
+| `created_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                           |
+| `updated_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                           |
+
+### 2.6. roles テーブル
+
+| カラム名        | データ型      | 制約                                | 説明                           |
+| --------------- | ------------- | ----------------------------------- | ------------------------------ |
+| `id`            | `SERIAL`      | PRIMARY KEY                         | レコードの一意な識別子（連番） |
+| `name`          | `VARCHAR(50)` | NOT NULL                            | 役割名                         |
+| `description`   | `TEXT`        |                                     | 役割の説明文                   |
+| `display_order` | `INTEGER`     |                                     | 表示順                         |
+| `is_deleted`    | `BOOLEAN`     | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
+| `created_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
+| `updated_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
+
+### 2.7. role_tags テーブル
+
+| カラム名        | データ型    | 制約                                | 説明                           |
+| --------------- | ----------- | ----------------------------------- | ------------------------------ |
+| `id`            | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番） |
+| `user_id`       | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                     |
+| `role_id`       | `INTEGER`   | FOREIGN KEY(roles.id), NOT NULL     | 役割ID                         |
+| `display_order` | `INTEGER`   |                                     | 表示順                         |
+| `is_deleted`    | `BOOLEAN`   | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
+| `created_at`    | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
+| `updated_at`    | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
 
 ## 3. ER図
 
@@ -201,13 +231,36 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
+    roles {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        VARCHAR name "役割名 (最大100文字)"
+        TEXT description "役割の説明文"
+        INTEGER display_order "表示順"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
+    role_tags {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        INTEGER user_id FK "ユーザー（users.id）"
+        INTEGER role_id FK "役割（roles.id）"
+        INTEGER display_order "表示順"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
     users ||--o{ documents : "1:N (created_by)"
     users ||--o{ videos : "1:N (created_by)"
     users ||--o{ apps : "1:N (developer_id)"
     users ||--o{ apps : "1:N (created_by)"
+    users ||--o{ role_tags : "1:N (user_id)"
+    roles ||--o{ role_tags : "1:N (role_id)"
     categories ||--o{ documents : "1:N"
     categories ||--o{ videos : "1:N"
     categories ||--o{ apps : "1:N"
+
 ```
 
 ## 4. Row Level Security（RLS）ポリシー
@@ -405,6 +458,14 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 #### 削除ポリシー（DELETE/論理削除）
 
 - `prevent_physical_delete_apps`: アプリは論理削除のみとし、物理削除を防止
+
+### 4.6. roles テーブルのRLSポリシー
+
+documents テーブルと同様
+
+### 4.7. role_tags テーブルのRLSポリシー
+
+documents テーブルと同様
 
 ## 5. サポート関数
 
