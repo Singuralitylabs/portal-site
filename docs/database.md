@@ -233,7 +233,7 @@ erDiagram
 
     positions {
         SERIAL id PK "レコードの一意な識別子（連番）"
-        VARCHAR name "役職・所属名 (最大100文字)"
+        VARCHAR name "役職・所属名 (最大50文字)"
         TEXT description "役職・所属の説明文"
         INTEGER display_order "表示順"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
