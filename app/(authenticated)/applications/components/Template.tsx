@@ -21,9 +21,9 @@ export function ApplicationsPageTemplate({
   const [modalOpened, setModalOpened] = useState(false);
 
   const applicationCategoryNames = new Set(
-    applications.map((application) => application.category?.name)
+    applications.map(application => application.category?.name)
   );
-  const existingCategories = categories.filter((category) =>
+  const existingCategories = categories.filter(category =>
     applicationCategoryNames.has(category.name)
   );
 
@@ -44,7 +44,7 @@ export function ApplicationsPageTemplate({
 
         <div className="mb-4 py-4 flex flex-wrap items-center">
           <CategoryLink
-            categories={existingCategories.map((category) => ({
+            categories={existingCategories.map(category => ({
               id: category.id,
               name: category.name,
             }))}
@@ -53,20 +53,17 @@ export function ApplicationsPageTemplate({
       </div>
 
       <div>
-        {existingCategories.map((category) => (
+        {existingCategories.map(category => (
           <div key={category.id} className="mb-12">
             <h2 id={`category-${category.id}`} className="scroll-mt-40">
               {category.name}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
               {applications
-                .filter((application) => application.category?.name === category.name)
-                .map((application) => (
+                .filter(application => application.category?.name === category.name)
+                .map(application => (
                   <div key={application.id} className="w-full">
-                    <ApplicationCard
-                      application={application}
-                      onDetailClick={handleDetailClick}
-                    />
+                    <ApplicationCard application={application} onDetailClick={handleDetailClick} />
                   </div>
                 ))}
             </div>
