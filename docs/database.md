@@ -105,22 +105,21 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.5. applications テーブル
 
-| カラム名            | データ型       | 制約                                 | 説明                               |
-| ------------------- | -------------- | ------------------------------------ | ---------------------------------- |
-| `id`                | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）     |
-| `name`              | `VARCHAR(255)` | NOT NULL                             | アプリ名                           |
-| `description`       | `TEXT`         | NOT NULL                             | アプリの詳細説明文                 |
-| `short_description` | `VARCHAR(200)` |                                      | アプリの短い紹介文（カード表示用） |
-| `category_id`       | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | アプリのカテゴリー                 |
-| `url`               | `TEXT`         | NOT NULL                             | アプリへのリンク                   |
-| `thumbnail_url`     | `TEXT`         |                                      | サムネイル画像のURL                |
-| `developer_id`      | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 開発者（ユーザーID）               |
-| `display_order`     | `INTEGER`      |                                      | 表示順                             |
-| `created_by`        | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを登録したユーザー           |
-| `updated_by`        | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを最後に更新したユーザー     |
-| `is_deleted`        | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                     |
-| `created_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                           |
-| `updated_at`        | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                           |
+| カラム名        | データ型       | 制約                                 | 説明                           |
+| --------------- | -------------- | ------------------------------------ | ------------------------------ |
+| `id`            | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番） |
+| `name`          | `VARCHAR(255)` | NOT NULL                             | アプリ名                       |
+| `description`   | `TEXT`         | NOT NULL                             | アプリの詳細説明文             |
+| `category_id`   | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | アプリのカテゴリー             |
+| `url`           | `TEXT`         | NOT NULL                             | アプリへのリンク               |
+| `thumbnail_url` | `TEXT`         |                                      | サムネイル画像のURL            |
+| `developer_id`  | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 開発者（ユーザーID）           |
+| `display_order` | `INTEGER`      |                                      | 表示順                         |
+| `created_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを登録したユーザー       |
+| `updated_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを最後に更新したユーザー |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                 |
+| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                       |
+| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                       |
 
 ## 3. ER図
 
@@ -177,10 +176,10 @@ erDiagram
         SERIAL id PK "レコードの一意な識別子（連番）"
         VARCHAR name "アプリ名 (最大255文字)"
         TEXT description "アプリの詳細説明文"
-        VARCHAR short_description "アプリの短い紹介文 (最大200文字)"
         INTEGER category_id FK "アプリのカテゴリー（categories.id）"
         TEXT url "アプリへのリンク"
-        TEXT thumbnail_url "サムネイル画像のURL"
+        TEXT thumbnail_path "サムネイル画像パス"
+        INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
         INTEGER developer_id FK "開発者（users.id）"
         INTEGER display_order "表示順"
         INTEGER created_by FK "アプリを登録したユーザー (users.id)"
