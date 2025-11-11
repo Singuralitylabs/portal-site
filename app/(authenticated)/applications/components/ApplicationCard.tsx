@@ -30,7 +30,7 @@ export function ApplicationCard({ application, onDetailClick }: ApplicationCardP
 
       <div className="flex-1 p-4 overflow-hidden">
         <Text component="div" lineClamp={3} className="overflow-hidden mb-2">
-          {application.short_description || application.description}
+          {application.description}
         </Text>
         <div className="mt-2">
           {application.category && <Badge variant="light">{application.category.name}</Badge>}
