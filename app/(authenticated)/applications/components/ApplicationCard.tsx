@@ -29,7 +29,7 @@ export function ApplicationCard({ application, onDetailClick }: ApplicationCardP
       </Card.Section>
 
       <div className="flex-1 p-4 overflow-hidden">
-        <Text component="div" lineClamp={3} className="overflow-hidden mb-2">
+        <Text component="div" lineClamp={2} className="overflow-hidden mb-2">
           {application.description}
         </Text>
         <div className="mt-2">

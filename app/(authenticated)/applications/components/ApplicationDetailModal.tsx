@@ -34,9 +34,9 @@ export function ApplicationDetailModal({
       <Stack gap="md">
         <h2 className="text-2xl font-bold">{application.name}</h2>
 
-        {application.thumbnail_url && (
+        {application.thumbnail_path && (
           <Image
-            src={application.thumbnail_url}
+            src={application.thumbnail_path}
             alt={application.name}
             radius="md"
             className="w-full"

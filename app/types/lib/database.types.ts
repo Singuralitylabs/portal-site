@@ -20,7 +20,6 @@ export type Database = {
           is_deleted: boolean;
           name: string;
           thumbnail_path: string | null;
-          thumbnail_time: number | null;
           updated_at: string;
           updated_by: number;
           url: string;
@@ -36,7 +35,6 @@ export type Database = {
           is_deleted?: boolean;
           name: string;
           thumbnail_path?: string | null;
-          thumbnail_time?: number | null;
           updated_at?: string;
           updated_by: number;
           url: string;
@@ -52,7 +50,6 @@ export type Database = {
           is_deleted?: boolean;
           name?: string;
           thumbnail_path?: string | null;
-          thumbnail_time?: number | null;
           updated_at?: string;
           updated_by?: number;
           url?: string;
