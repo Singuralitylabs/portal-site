@@ -1,5 +1,6 @@
 import { Database } from "./lib/database.types";
 
+// Documents types
 type DocumentsTable = Database["public"]["Tables"]["documents"];
 export type DocumentWithCategoryType = DocumentsTable["Row"] & {
   category: { name: string } | null;
@@ -13,6 +14,7 @@ export type DocumentUpdateFormType = Omit<
   "created_at" | "updated_at" | "created_by" | "is_deleted"
 >;
 
+// Videos types
 type VideosTable = Database["public"]["Tables"]["videos"];
 export type VideoWithCategoryType = VideosTable["Row"] & {
   category: { name: string } | null;
@@ -27,22 +29,8 @@ export type VideoUpdateFormType = Omit<
 >;
 
 // Applications types
-export type ApplicationType = {
-  id: number;
-  name: string;
-  description: string;
-  short_description: string | null;
-  category_id: number;
-  url: string;
-  thumbnail_url: string | null;
-  developer_id: number;
-  display_order: number | null;
-  created_by: number;
-  updated_by: number;
-  is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
-};
+type ApplicationsTable = Database["public"]["Tables"]["applications"];
+export type ApplicationType = ApplicationsTable["Row"];
 
 export type ApplicationWithCategoryAndDeveloperType = ApplicationType & {
   category: { name: string } | null;
@@ -61,6 +49,7 @@ export type ApplicationUpdateFormType = Omit<
 
 export type ContentType = "document" | "video" | "application";
 
+// Users types
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];
 export type InsertUserType = UsersTable["Insert"];
@@ -71,6 +60,7 @@ export type UserRoleType = "admin" | "maintainer" | "member";
 
 export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
 
+// Categories types
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
