@@ -32,7 +32,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
    アプリ解説やリンクなどのアプリ情報を管理します。
 
 6. **役職情報** (`positions`テーブル)  
-   役職・所属情報を管理します。
+   シンギュラリティ・ラボの役職・所属情報を管理します。
 
 7. **役職タグ情報** (`position_tags`テーブル)  
    ユーザーに役職タグを紐付けます。
@@ -147,7 +147,6 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `id`          | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番） |
 | `user_id`     | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                     |
 | `position_id` | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                   |
-| `is_deleted`  | `BOOLEAN`   | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
 | `created_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
 | `updated_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
 
@@ -244,7 +243,6 @@ erDiagram
         SERIAL id PK "レコードの一意な識別子（連番）"
         INTEGER user_id FK "ユーザー（users.id）"
         INTEGER position_id FK "役職・所属（positions.id）"
-        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
     }
@@ -464,6 +462,7 @@ documents テーブルと同様
 ### 4.7. position_tags テーブルのRLSポリシー
 
 documents テーブルと同様
+ただし、削除ポリシーは物理削除とする
 
 ## 5. サポート関数
 
