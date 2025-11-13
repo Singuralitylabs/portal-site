@@ -29,6 +29,7 @@ export function VideoFormModal({
     thumbnail_time: initialData?.thumbnail_time ?? 0,
     length: initialData?.length ?? 0,
     assignee: initialData?.assignee ?? "",
+    display_order: initialData?.display_order ?? null,
   });
   const router = useRouter();
 
@@ -42,6 +43,7 @@ export function VideoFormModal({
       thumbnail_time: initialData?.thumbnail_time ?? 0,
       length: initialData?.length ?? 0,
       assignee: initialData?.assignee ?? "",
+      display_order: initialData?.display_order ?? null,
     });
   }, [opened, initialData]);
 

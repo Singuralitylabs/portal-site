@@ -1,4 +1,3 @@
-import { Text } from "@mantine/core";
 import { MemberCard } from "./MemberCard";
 import { PageTitle } from "@/app/components/PageTitle";
 import { MemberType } from "@/app/types";

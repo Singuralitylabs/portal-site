@@ -27,6 +27,7 @@ export function DocumentFormModal({
     description: initialData?.description ?? "",
     url: initialData?.url ?? "",
     assignee: initialData?.assignee ?? "",
+    display_order: initialData?.display_order ?? null,
   });
   const router = useRouter();
 
@@ -38,6 +39,7 @@ export function DocumentFormModal({
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
       assignee: initialData?.assignee ?? "",
+      display_order: initialData?.display_order ?? null,
     });
   }, [opened, initialData]);
 
