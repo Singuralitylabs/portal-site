@@ -8,11 +8,89 @@ export type Database = {
   };
   public: {
     Tables: {
+      applications: {
+        Row: {
+          category_id: number;
+          created_at: string;
+          created_by: number;
+          description: string;
+          developer_id: number;
+          display_order: number | null;
+          id: number;
+          is_deleted: boolean;
+          name: string;
+          thumbnail_path: string | null;
+          updated_at: string;
+          updated_by: number;
+          url: string;
+        };
+        Insert: {
+          category_id: number;
+          created_at?: string;
+          created_by: number;
+          description: string;
+          developer_id: number;
+          display_order?: number | null;
+          id?: number;
+          is_deleted?: boolean;
+          name: string;
+          thumbnail_path?: string | null;
+          updated_at?: string;
+          updated_by: number;
+          url: string;
+        };
+        Update: {
+          category_id?: number;
+          created_at?: string;
+          created_by?: number;
+          description?: string;
+          developer_id?: number;
+          display_order?: number | null;
+          id?: number;
+          is_deleted?: boolean;
+          name?: string;
+          thumbnail_path?: string | null;
+          updated_at?: string;
+          updated_by?: number;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "applications_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "applications_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "applications_developer_id_fkey";
+            columns: ["developer_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "applications_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       categories: {
         Row: {
           category_type: string;
           created_at: string;
           description: string | null;
+          display_order: number | null;
           id: number;
           is_deleted: boolean;
           name: string;
@@ -22,6 +100,7 @@ export type Database = {
           category_type: string;
           created_at?: string;
           description?: string | null;
+          display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
           name: string;
@@ -31,6 +110,7 @@ export type Database = {
           category_type?: string;
           created_at?: string;
           description?: string | null;
+          display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
           name?: string;
@@ -45,6 +125,7 @@ export type Database = {
           created_at: string;
           created_by: number;
           description: string | null;
+          display_order: number | null;
           id: number;
           is_deleted: boolean;
           name: string;
@@ -58,6 +139,7 @@ export type Database = {
           created_at?: string;
           created_by: number;
           description?: string | null;
+          display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
           name: string;
@@ -71,6 +153,7 @@ export type Database = {
           created_at?: string;
           created_by?: number;
           description?: string | null;
+          display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
           name?: string;
@@ -151,6 +234,7 @@ export type Database = {
           created_at: string;
           created_by: number;
           description: string | null;
+          display_order: number | null;
           id: number;
           is_deleted: boolean;
           length: number | null;
@@ -167,6 +251,7 @@ export type Database = {
           created_at?: string;
           created_by: number;
           description?: string | null;
+          display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
           length?: number | null;
@@ -183,6 +268,7 @@ export type Database = {
           created_at?: string;
           created_by?: number;
           description?: string | null;
+          display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
           length?: number | null;
@@ -222,26 +308,11 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      get_clerk_user_id: {
-        Args: Record<PropertyKey, never>;
-        Returns: string;
-      };
-      is_authenticated_user: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
-      is_registered_user: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
-      requesting_user_id: {
-        Args: Record<PropertyKey, never>;
-        Returns: string;
-      };
-      set_clerk_user_id: {
-        Args: { clerk_id: string };
-        Returns: undefined;
-      };
+      get_clerk_user_id: { Args: never; Returns: string };
+      is_authenticated_user: { Args: never; Returns: boolean };
+      is_registered_user: { Args: never; Returns: boolean };
+      requesting_user_id: { Args: never; Returns: string };
+      set_clerk_user_id: { Args: { clerk_id: string }; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;
