@@ -141,14 +141,14 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.7. position_tags テーブル
 
-| カラム名      | データ型    | 制約                                | 説明                           |
-| ------------- | ----------- | ----------------------------------- | ------------------------------ |
-| `id`          | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番） |
-| `user_id`     | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                     |
-| `position_id` | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                   |
-| `created_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
-| `updated_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
-| `user_id`, `position_id` | - | UNIQUE(user_id, position_id) | 同一ユーザーに同じ役職を複数回割り当て不可 |
+| カラム名                 | データ型    | 制約                                | 説明                                       |
+| ------------------------ | ----------- | ----------------------------------- | ------------------------------------------ |
+| `id`                     | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番）             |
+| `user_id`                | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                                 |
+| `position_id`            | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                               |
+| `created_at`             | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                   |
+| `updated_at`             | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                   |
+| `user_id`, `position_id` | -           | UNIQUE(user_id, position_id)        | 同一ユーザーに同じ役職を複数回割り当て不可 |
 
 ## 3. ER図
 
@@ -455,12 +455,42 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 ### 4.6. positions テーブルのRLSポリシー
 
-documents テーブルと同様
+users テーブルと同様
 
 ### 4.7. position_tags テーブルのRLSポリシー
 
-documents テーブルと同様
+users テーブルと同様
 ただし、削除ポリシーは物理削除とする
+
+#### 削除ポリシー（DELETE/物理削除）
+
+- `self_user_or_admins_can_physical_delete_position_tags`: ユーザー自身または管理者のみ物理削除可能
+  - 条件:
+    ```sql
+    -- DELETE: ユーザー自身または管理者のみ物理削除可能
+      USING (
+        -- ユーザー自身の役職タグを削除できる
+        EXISTS (
+          SELECT 1 FROM users
+          WHERE
+            users.id = position_tags.user_id
+            AND users.auth_id = auth.uid()
+            AND users.status = 'active'
+            AND users.is_deleted = FALSE
+        )
+        OR
+        -- 管理者は全ての役職タグを削除できる
+        EXISTS (
+          SELECT 1 FROM users
+          WHERE
+            auth_id = auth.uid()
+            AND role = 'admin'
+            AND status = 'active'
+            AND is_deleted = FALSE
+        )
+      );
+    ```
+  - 解説: ユーザーは自分自身のデータのみ物理削除可能。管理者ロールを持つユーザーは、他のデータも物理削除が可能。
 
 ## 5. サポート関数
 
