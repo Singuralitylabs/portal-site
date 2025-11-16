@@ -31,6 +31,12 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 5. **アプリ情報**（`applications`テーブル）  
    アプリ解説やリンクなどのアプリ情報を管理します。
 
+6. **役職情報** (`positions`テーブル)  
+   シンギュラリティ・ラボの役職・所属情報を管理します。
+
+7. **役職タグ情報** (`position_tags`テーブル)  
+   ユーザーに役職タグを紐付けます。
+
 ## 2. テーブル設計
 
 ### 2.1. users テーブル
@@ -121,6 +127,29 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                       |
 | `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                       |
 
+### 2.6. positions テーブル
+
+| カラム名        | データ型      | 制約                                | 説明                           |
+| --------------- | ------------- | ----------------------------------- | ------------------------------ |
+| `id`            | `SERIAL`      | PRIMARY KEY                         | レコードの一意な識別子（連番） |
+| `name`          | `VARCHAR(50)` | NOT NULL                            | 役職・所属名                   |
+| `description`   | `TEXT`        |                                     | 役職・所属の説明文             |
+| `display_order` | `INTEGER`     |                                     | 表示順                         |
+| `is_deleted`    | `BOOLEAN`     | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
+| `created_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
+| `updated_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
+
+### 2.7. position_tags テーブル
+
+| カラム名                 | データ型    | 制約                                | 説明                                       |
+| ------------------------ | ----------- | ----------------------------------- | ------------------------------------------ |
+| `id`                     | `SERIAL`    | PRIMARY KEY                         | レコードの一意な識別子（連番）             |
+| `user_id`                | `INTEGER`   | FOREIGN KEY(users.id), NOT NULL     | ユーザーID                                 |
+| `position_id`            | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                               |
+| `created_at`             | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                   |
+| `updated_at`             | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                   |
+| `user_id`, `position_id` | -           | UNIQUE(user_id, position_id)        | 同一ユーザーに同じ役職を複数回割り当て不可 |
+
 ## 3. ER図
 
 ```mermaid
@@ -199,10 +228,30 @@ erDiagram
         TIMESTAMP updated_at "更新日時"
     }
 
+    positions {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        VARCHAR name "役職・所属名 (最大50文字)"
+        TEXT description "役職・所属の説明文"
+        INTEGER display_order "表示順"
+        BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
+    position_tags {
+        SERIAL id PK "レコードの一意な識別子（連番）"
+        INTEGER user_id FK "ユーザー（users.id）"
+        INTEGER position_id FK "役職・所属（positions.id）"
+        TIMESTAMP created_at "作成日時"
+        TIMESTAMP updated_at "更新日時"
+    }
+
     users ||--o{ documents : "1:N (created_by)"
     users ||--o{ videos : "1:N (created_by)"
     users ||--o{ applications : "1:N (developer_id)"
     users ||--o{ applications : "1:N (created_by)"
+    users ||--o{ position_tags : "1:N (user_id)"
+    positions ||--o{ position_tags : "1:N (position_id)"
     categories ||--o{ documents : "1:N"
     categories ||--o{ videos : "1:N"
     categories ||--o{ applications : "1:N"
@@ -403,6 +452,45 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 #### 削除ポリシー（DELETE/論理削除）
 
 - `prevent_physical_delete_applications`: アプリは論理削除のみとし、物理削除を防止
+
+### 4.6. positions テーブルのRLSポリシー
+
+users テーブルと同様
+
+### 4.7. position_tags テーブルのRLSポリシー
+
+users テーブルと同様
+ただし、削除ポリシーは物理削除とする
+
+#### 削除ポリシー（DELETE/物理削除）
+
+- `self_user_or_admins_can_physical_delete_position_tags`: ユーザー自身または管理者のみ物理削除可能
+  - 条件:
+    ```sql
+    -- DELETE: ユーザー自身または管理者のみ物理削除可能
+      USING (
+        -- ユーザー自身の役職タグを削除できる
+        EXISTS (
+          SELECT 1 FROM users
+          WHERE
+            users.id = position_tags.user_id
+            AND users.auth_id = auth.uid()
+            AND users.status = 'active'
+            AND users.is_deleted = FALSE
+        )
+        OR
+        -- 管理者は全ての役職タグを削除できる
+        EXISTS (
+          SELECT 1 FROM users
+          WHERE
+            auth_id = auth.uid()
+            AND role = 'admin'
+            AND status = 'active'
+            AND is_deleted = FALSE
+        )
+      );
+    ```
+  - 解説: ユーザーは自分自身のデータのみ物理削除可能。管理者ロールを持つユーザーは、他のデータも物理削除が可能。
 
 ## 5. サポート関数
 
