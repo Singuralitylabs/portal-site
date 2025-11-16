@@ -148,6 +148,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `position_id` | `INTEGER`   | FOREIGN KEY(positions.id), NOT NULL | 役職・所属ID                   |
 | `created_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
 | `updated_at`  | `TIMESTAMP` | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
+| `user_id`, `position_id` | - | UNIQUE(user_id, position_id) | 同一ユーザーに同じ役職を複数回割り当て不可 |
 
 ## 3. ER図
 
