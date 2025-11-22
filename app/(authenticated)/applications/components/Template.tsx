@@ -10,11 +10,15 @@ import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
 interface ApplicationsPageTemplateProps {
   applications: ApplicationWithCategoryAndDeveloperType[];
   categories: SelectCategoryType[];
+  isContentMgr: boolean;
+  userId: number;
 }
 
 export function ApplicationsPageTemplate({
   applications,
   categories,
+  isContentMgr,
+  userId,
 }: ApplicationsPageTemplateProps) {
   const [selectedApplication, setSelectedApplication] =
     useState<ApplicationWithCategoryAndDeveloperType | null>(null);
@@ -63,7 +67,13 @@ export function ApplicationsPageTemplate({
                 .filter(application => application.category?.name === category.name)
                 .map(application => (
                   <div key={application.id} className="w-full">
-                    <ApplicationCard application={application} onDetailClick={handleDetailClick} />
+                    <ApplicationCard
+                      application={application}
+                      isContentMgr={isContentMgr}
+                      categories={categories}
+                      userId={userId}
+                      onDetailClick={handleDetailClick}
+                    />
                   </div>
                 ))}
             </div>
