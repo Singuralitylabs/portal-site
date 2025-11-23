@@ -2,7 +2,7 @@ import { fetchApplications } from "@/app/services/api/applications-server";
 import { fetchCategoriesByType } from "@/app/services/api/categories-server";
 import { ApplicationsPageTemplate } from "./components/Template";
 import { checkContentPermissions } from "@/app/services/auth/permissions";
-import { fetchUserInfoByAuthId } from "@/app/services/api/users-server";
+import { fetchUserInfoByAuthId, fetchActiveUsers } from "@/app/services/api/users-server";
 import { getServerCurrentUser } from "@/app/services/api/supabase-server";
 
 export default async function ApplicationsPage() {
@@ -17,11 +17,12 @@ export default async function ApplicationsPage() {
     );
   }
 
-  // アプリデータ・カテゴリーデータを並列取得
-  const [applicationsResult, categoriesResult, userResult] = await Promise.all([
+  // アプリデータ・カテゴリーデータ・ユーザーデータ・開発者データを並列取得
+  const [applicationsResult, categoriesResult, userResult, developersResult] = await Promise.all([
     fetchApplications(),
     fetchCategoriesByType("applications"),
     fetchUserInfoByAuthId({ authId: authId }),
+    fetchActiveUsers(),
   ]);
 
   const { data: applications, error: applicationError } = applicationsResult;
@@ -54,10 +55,16 @@ export default async function ApplicationsPage() {
     );
   }
 
+  const { data: developers, error: developersError } = developersResult;
+  if (developersError || !developers) {
+    console.error("開発者データの取得に失敗:", developersError);
+  }
+
   return (
     <ApplicationsPageTemplate
       applications={applications}
       categories={categories}
+      developers={developers || []}
       isContentMgr={checkContentPermissions(role)}
       userId={userId}
     />

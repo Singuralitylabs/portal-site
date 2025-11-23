@@ -1,6 +1,6 @@
 "use client";
 
-import { ApplicationWithCategoryAndDeveloperType, SelectCategoryType } from "@/app/types";
+import { ApplicationWithCategoryAndDeveloperType, SelectCategoryType, SelectDeveloperType } from "@/app/types";
 import { AppWindow } from "lucide-react";
 import { Badge, Button, Card, Flex, Text } from "@mantine/core";
 import ContentMgrMenu from "../../components/ContentMgrMenu";
@@ -10,6 +10,7 @@ interface ApplicationCardProps {
   application: ApplicationWithCategoryAndDeveloperType;
   isContentMgr: boolean;
   categories: SelectCategoryType[];
+  developers: SelectDeveloperType[];
   userId: number;
   onDetailClick: (application: ApplicationWithCategoryAndDeveloperType) => void;
 }
@@ -18,6 +19,7 @@ export function ApplicationCard({
   application,
   isContentMgr,
   categories,
+  developers,
   userId,
   onDetailClick,
 }: ApplicationCardProps) {
@@ -40,6 +42,7 @@ export function ApplicationCard({
             <ContentMgrMenu<ApplicationWithCategoryAndDeveloperType>
               content={application}
               categories={categories}
+              developers={developers}
               userId={userId}
               type={CONTENT_TYPE.APPLICATION}
             />

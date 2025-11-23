@@ -8,6 +8,7 @@ import {
   ContentType,
   DocumentWithCategoryType,
   SelectCategoryType,
+  SelectDeveloperType,
   VideoWithCategoryType,
 } from "@/app/types";
 import { DocumentDeleteModal } from "../documents/components/DocumentDeleteModal";
@@ -16,6 +17,7 @@ import { DocumentFormModal } from "../documents/components/DocumentFormModal";
 import { VideoFormModal } from "../videos/components/VideoFormModal";
 import { CONTENT_TYPE } from "@/app/constants/content";
 import { ApplicationDeleteModal } from "../applications/components/ApplicationDeleteModal";
+import { ApplicationFormModal } from "../applications/components/ApplicationFormModal";
 
 interface ContentMgrMenuProps<
   T extends
@@ -26,6 +28,7 @@ interface ContentMgrMenuProps<
   type: ContentType;
   content: T;
   categories: SelectCategoryType[];
+  developers?: SelectDeveloperType[];
   userId: number;
 }
 
@@ -34,7 +37,7 @@ export default function ContentMgrMenu<
     | DocumentWithCategoryType
     | VideoWithCategoryType
     | ApplicationWithCategoryAndDeveloperType,
->({ type, content, categories, userId }: ContentMgrMenuProps<T>) {
+>({ type, content, categories, developers, userId }: ContentMgrMenuProps<T>) {
   const [editDocumentModalOpened, setEditDocumentModalOpened] = useState(false);
   const [deleteDocumentModalOpened, setDeleteDocumentModalOpened] = useState(false);
   const [editVideoModalOpened, setEditVideoModalOpened] = useState(false);
@@ -129,6 +132,15 @@ export default function ContentMgrMenu<
         onClose={() => setDeleteVideoModalOpened(false)}
         userId={userId}
         videoId={content.id}
+      />
+
+      <ApplicationFormModal
+        opened={editApplicationModalOpened}
+        onClose={() => setEditApplicationModalOpened(false)}
+        categories={categories}
+        developers={developers || []}
+        userId={userId}
+        initialData={content as ApplicationWithCategoryAndDeveloperType}
       />
 
       <ApplicationDeleteModal
