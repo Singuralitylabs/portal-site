@@ -4,6 +4,7 @@ import { ApplicationsPageTemplate } from "./components/Template";
 import { checkContentPermissions } from "@/app/services/auth/permissions";
 import { fetchUserInfoByAuthId, fetchActiveUsers } from "@/app/services/api/users-server";
 import { getServerCurrentUser } from "@/app/services/api/supabase-server";
+import type { SelectDeveloperType } from "@/app/types";
 
 export default async function ApplicationsPage() {
   // サーバーサイドで利用ユーザー情報を参照
@@ -17,12 +18,11 @@ export default async function ApplicationsPage() {
     );
   }
 
-  // アプリデータ・カテゴリーデータ・ユーザーデータ・開発者データを並列取得
-  const [applicationsResult, categoriesResult, userResult, developersResult] = await Promise.all([
+  // アプリデータ・カテゴリーデータ・ユーザーデータを並列取得
+  const [applicationsResult, categoriesResult, userResult] = await Promise.all([
     fetchApplications(),
     fetchCategoriesByType("applications"),
     fetchUserInfoByAuthId({ authId: authId }),
-    fetchActiveUsers(),
   ]);
 
   const { data: applications, error: applicationError } = applicationsResult;
@@ -55,17 +55,28 @@ export default async function ApplicationsPage() {
     );
   }
 
-  const { data: developers, error: developersError } = developersResult;
-  if (developersError || !developers) {
-    console.error("開発者データの取得に失敗:", developersError);
+  // コンテンツ管理者のみ開発者データを取得
+  const isContentMgr = checkContentPermissions(role);
+  let developers: SelectDeveloperType[] = [];
+  if (isContentMgr) {
+    const { data: developersData, error: developersError } = await fetchActiveUsers();
+    if (developersError || !developersData) {
+      console.error("開発者データの取得に失敗:", developersError);
+      // コンテンツ管理者でも開発者データ取得失敗時は空配列で継続
+    } else {
+      developers = developersData.map(developer => ({
+        id: developer.id,
+        display_name: developer.display_name,
+      }));
+    }
   }
 
   return (
     <ApplicationsPageTemplate
       applications={applications}
       categories={categories}
-      developers={developers || []}
-      isContentMgr={checkContentPermissions(role)}
+      developers={developers}
+      isContentMgr={isContentMgr}
       userId={userId}
     />
   );
