@@ -10,11 +10,11 @@ CREATE POLICY "authenticated_users_can_read_applications" ON "applications"
       SELECT 1 FROM users
       WHERE auth_id = auth.uid()
       AND status = 'active'
-      AND is_deleted = false
+      AND is_deleted = FALSE
     )
     AND (
       -- 一般ユーザー: 削除されていないもののみ
-      is_deleted = false
+      is_deleted = FALSE
       OR
       -- admin/maintainer: 削除済みも含めてすべて閲覧可能
       EXISTS (
@@ -22,7 +22,7 @@ CREATE POLICY "authenticated_users_can_read_applications" ON "applications"
         WHERE auth_id = auth.uid()
         AND role IN ('admin', 'maintainer')
         AND status = 'active'
-        AND is_deleted = false
+        AND is_deleted = FALSE
       )
     )
   );

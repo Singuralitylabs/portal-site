@@ -10,7 +10,7 @@ CREATE POLICY "authenticated_users_can_read_videos" ON "videos"
       SELECT 1 FROM users
       WHERE auth_id = auth.uid()
       AND status = 'active'
-      AND is_deleted = false
+      AND is_deleted = FALSE
     )
     AND (
       -- 一般ユーザー: 削除されていないもののみ
@@ -22,7 +22,7 @@ CREATE POLICY "authenticated_users_can_read_videos" ON "videos"
         WHERE auth_id = auth.uid()
         AND role IN ('admin', 'maintainer')
         AND status = 'active'
-        AND is_deleted = false
+        AND is_deleted = FALSE
       )
     )
   );

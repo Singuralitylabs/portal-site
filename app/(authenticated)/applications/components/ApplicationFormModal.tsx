@@ -75,10 +75,16 @@ export function ApplicationFormModal({
       return;
     }
 
+    // developer_idが0の場合はnullに変換
+    const submissionData = {
+      ...form,
+      developer_id: form.developer_id === 0 ? null : form.developer_id,
+    };
+
     // API呼び出し(初期値あり：編集時は更新、初期値なし：新規登録)
     const result = initialData
-      ? await updateApplication({ ...form, id: initialData.id, updated_by: userId })
-      : await registerApplication({ ...form, created_by: userId });
+      ? await updateApplication({ ...submissionData, id: initialData.id, updated_by: userId })
+      : await registerApplication({ ...submissionData, created_by: userId });
 
     if (result?.success) {
       notifications.show({
@@ -125,12 +131,14 @@ export function ApplicationFormModal({
       />
       <Select
         label="開発者"
+        placeholder="開発者を選択（任意）"
         data={developers.map(developer => ({
           value: String(developer.id),
           label: developer.display_name,
         }))}
-        value={String(form.developer_id)}
-        onChange={value => setForm(f => ({ ...f, developer_id: Number(value) }))}
+        value={form.developer_id === 0 ? null : String(form.developer_id)}
+        onChange={value => setForm(f => ({ ...f, developer_id: value ? Number(value) : 0 }))}
+        clearable
         mb="sm"
       />
       <Textarea
