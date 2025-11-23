@@ -10,7 +10,6 @@ import type { ApplicationInsertFormType, ApplicationUpdateFormType } from "@/app
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
 export async function deleteApplication(id: number, userId: number) {
-  console.log(`Deleting application with id: ${id} by user: ${userId}`);
   const supabase = createClientSupabaseClient();
   const { error } = await supabase
     .from("applications")
@@ -39,7 +38,7 @@ export async function registerApplication({
   developer_id,
   created_by,
 }: ApplicationInsertFormType) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   const { error } = await supabase.from("applications").insert([
     {
       name,
@@ -78,7 +77,7 @@ export async function updateApplication({
   developer_id,
   updated_by,
 }: ApplicationUpdateFormType) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   const { error } = await supabase
     .from("applications")
     .update({

@@ -7,7 +7,7 @@ import type { VideoInsertFormType, VideoUpdateFormType } from "@/app/types";
  * @returns 登録結果
  */
 export async function registerVideo(params: VideoInsertFormType) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   const { error } = await supabase.from("videos").insert([
     {
       ...params,
@@ -28,7 +28,7 @@ export async function registerVideo(params: VideoInsertFormType) {
  * @returns 更新結果
  */
 export async function updateVideo(params: VideoUpdateFormType) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   // idだけ分離し、残りをupdate対象に
   const { id, ...updateFields } = params;
   const { error } = await supabase.from("videos").update(updateFields).eq("id", id);
@@ -46,7 +46,7 @@ export async function updateVideo(params: VideoUpdateFormType) {
  * @returns 削除結果
  */
 export async function deleteVideo(id: number, userId: number) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   const { error } = await supabase
     .from("videos")
     .update({ is_deleted: true, updated_by: userId })

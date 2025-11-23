@@ -38,7 +38,7 @@ export async function registerDocument({
   assignee,
   created_by,
 }: DocumentInsertFormType) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   const { error } = await supabase.from("documents").insert([
     {
       name,
@@ -77,7 +77,7 @@ export async function updateDocument({
   assignee,
   updated_by,
 }: DocumentUpdateFormType) {
-  const supabase = await createClientSupabaseClient();
+  const supabase = createClientSupabaseClient();
   const { error } = await supabase
     .from("documents")
     .update({
