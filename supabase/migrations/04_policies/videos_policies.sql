@@ -1,6 +1,6 @@
 -- videosテーブルのポリシー
 
--- 認証済みユーザーは全てのvideosを閲覧可能
+-- SELECT: 一般ユーザーは削除されていないもののみ、admin/maintainerは全て閲覧可能
 DROP POLICY IF EXISTS "authenticated_users_can_read_videos" ON "videos";
 CREATE POLICY "authenticated_users_can_read_videos" ON "videos"
   FOR SELECT
@@ -12,7 +12,19 @@ CREATE POLICY "authenticated_users_can_read_videos" ON "videos"
       AND status = 'active'
       AND is_deleted = false
     )
-    AND is_deleted = FALSE
+    AND (
+      -- 一般ユーザー: 削除されていないもののみ
+      is_deleted = FALSE
+      OR
+      -- admin/maintainer: 削除済みも含めてすべて閲覧可能
+      EXISTS (
+        SELECT 1 FROM users
+        WHERE auth_id = auth.uid()
+        AND role IN ('admin', 'maintainer')
+        AND status = 'active'
+        AND is_deleted = false
+      )
+    )
   );
 
 -- INSERT: adminまたはmaintainerが新規videosを作成可能
@@ -37,9 +49,20 @@ CREATE POLICY "content_managers_can_update_videos" ON "videos"
   FOR UPDATE
   TO authenticated
   USING (
+    is_deleted = FALSE
+    AND EXISTS (
+      SELECT 1 FROM users
+      WHERE
+        auth_id = auth.uid()
+        AND role IN ('admin', 'maintainer')
+        AND status = 'active'
+        AND is_deleted = FALSE
+    )
+  )
+  WITH CHECK (
     EXISTS (
       SELECT 1 FROM users
-      WHERE 
+      WHERE
         auth_id = auth.uid()
         AND role IN ('admin', 'maintainer')
         AND status = 'active'
