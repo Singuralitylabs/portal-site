@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { Modal, TextInput, Select, Textarea, Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
-import type { ApplicationUpdateFormType, SelectCategoryType, SelectDeveloperType } from "@/app/types";
+import type {
+  ApplicationUpdateFormType,
+  SelectCategoryType,
+  SelectDeveloperType,
+} from "@/app/types";
 import { z } from "zod";
 import { registerApplication, updateApplication } from "@/app/services/api/applications-client";
 
@@ -51,7 +55,7 @@ export function ApplicationFormModal({
     if (!form.name || !form.url?.trim() || form.category_id === 0) {
       notifications.show({
         title: "入力エラー",
-        message: "資料名とURL及びカテゴリーは必須です",
+        message: "アプリ名とURL及びカテゴリーは必須です",
         color: "red",
       });
       return;
@@ -79,7 +83,7 @@ export function ApplicationFormModal({
     if (result?.success) {
       notifications.show({
         title: initialData ? "更新完了" : "登録完了",
-        message: initialData ? "資料が正常に更新されました。" : "資料が正常に登録されました。",
+        message: initialData ? "アプリが正常に更新されました。" : "アプリが正常に登録されました。",
         color: "green",
       });
       router.refresh();
@@ -98,11 +102,11 @@ export function ApplicationFormModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={initialData ? "資料編集" : "資料新規登録"}
+      title={initialData ? "アプリ編集" : "アプリ新規登録"}
       centered
     >
       <TextInput
-        label="資料名"
+        label="アプリ名"
         value={form.name}
         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
         required
@@ -137,7 +141,7 @@ export function ApplicationFormModal({
         mb="sm"
       />
       <TextInput
-        label="資料URL"
+        label="アプリURL"
         value={form.url}
         onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
         required

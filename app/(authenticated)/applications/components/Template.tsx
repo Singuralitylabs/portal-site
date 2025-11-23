@@ -4,8 +4,14 @@ import { useState } from "react";
 import { ApplicationCard } from "./ApplicationCard";
 import { ApplicationDetailModal } from "./ApplicationDetailModal";
 import { PageTitle } from "@/app/components/PageTitle";
-import { ApplicationWithCategoryAndDeveloperType, SelectCategoryType, SelectDeveloperType } from "@/app/types";
+import {
+  ApplicationWithCategoryAndDeveloperType,
+  SelectCategoryType,
+  SelectDeveloperType,
+} from "@/app/types";
 import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
+import ContentMgrNewButton from "../../components/ContentMgrNewButton";
+import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface ApplicationsPageTemplateProps {
   applications: ApplicationWithCategoryAndDeveloperType[];
@@ -56,6 +62,18 @@ export function ApplicationsPageTemplate({
             }))}
           />
         </div>
+        {isContentMgr && (
+          <div className="mt-4 flex justify-end">
+            <ContentMgrNewButton
+              type={CONTENT_TYPE.APPLICATION}
+              categories={categories}
+              userId={userId}
+              developers={developers}
+            >
+              新規登録
+            </ContentMgrNewButton>
+          </div>
+        )}
       </div>
 
       <div>
