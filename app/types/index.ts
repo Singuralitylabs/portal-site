@@ -63,6 +63,7 @@ export type MemberAdminType = Pick<
   UserType,
   "id" | "display_name" | "bio" | "email" | "status" | "avatar_url" | "updated_at"
 >;
+export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 
 // Categories types
 type CategoriesTable = Database["public"]["Tables"]["categories"];

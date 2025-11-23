@@ -4,12 +4,13 @@ import { useState } from "react";
 import { ApplicationCard } from "./ApplicationCard";
 import { ApplicationDetailModal } from "./ApplicationDetailModal";
 import { PageTitle } from "@/app/components/PageTitle";
-import { ApplicationWithCategoryAndDeveloperType, SelectCategoryType } from "@/app/types";
+import { ApplicationWithCategoryAndDeveloperType, SelectCategoryType, SelectDeveloperType } from "@/app/types";
 import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
 
 interface ApplicationsPageTemplateProps {
   applications: ApplicationWithCategoryAndDeveloperType[];
   categories: SelectCategoryType[];
+  developers: SelectDeveloperType[];
   isContentMgr: boolean;
   userId: number;
 }
@@ -17,6 +18,7 @@ interface ApplicationsPageTemplateProps {
 export function ApplicationsPageTemplate({
   applications,
   categories,
+  developers,
   isContentMgr,
   userId,
 }: ApplicationsPageTemplateProps) {
@@ -71,6 +73,7 @@ export function ApplicationsPageTemplate({
                       application={application}
                       isContentMgr={isContentMgr}
                       categories={categories}
+                      developers={developers}
                       userId={userId}
                       onDetailClick={handleDetailClick}
                     />
