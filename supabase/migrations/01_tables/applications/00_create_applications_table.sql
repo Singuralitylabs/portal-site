@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS applications (
     category_id INTEGER NOT NULL REFERENCES categories(id),
     url TEXT NOT NULL,
     thumbnail_path TEXT,
-    developer_id INTEGER NOT NULL REFERENCES users(id),
+    developer_id INTEGER REFERENCES users(id),
     display_order INTEGER,
     created_by INTEGER NOT NULL REFERENCES users(id),
     updated_by INTEGER NOT NULL REFERENCES users(id),

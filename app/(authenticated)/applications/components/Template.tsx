@@ -53,15 +53,6 @@ export function ApplicationsPageTemplate({
     <>
       <div className="sticky top-0 z-10 bg-white">
         <PageTitle>アプリ紹介</PageTitle>
-
-        <div className="mb-4 py-4 flex flex-wrap items-center">
-          <CategoryLink
-            categories={existingCategories.map(category => ({
-              id: category.id,
-              name: category.name,
-            }))}
-          />
-        </div>
         {isContentMgr && (
           <div className="mt-4 flex justify-end">
             <ContentMgrNewButton
@@ -74,6 +65,15 @@ export function ApplicationsPageTemplate({
             </ContentMgrNewButton>
           </div>
         )}
+
+        <div className="mb-4 py-4 flex flex-wrap items-center">
+          <CategoryLink
+            categories={existingCategories.map(category => ({
+              id: category.id,
+              name: category.name,
+            }))}
+          />
+        </div>
       </div>
 
       <div>
