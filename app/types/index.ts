@@ -59,8 +59,26 @@ export type UserStatusType = "pending" | "active" | "rejected";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
 export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
+export type MemberAdminType = Pick<
+  UserType,
+  "id" | "display_name" | "bio" | "email" | "status" | "avatar_url" | "updated_at"
+>;
 
 // Categories types
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
+
+// 承認定義
+export type ApproveAction = "approve" | "reject" | "delete";
+export const ActionLabelMap: Record<ApproveAction, string> = {
+  approve: "承認",
+  reject: "否認",
+  delete: "削除",
+};
+
+export const statusColorMap: Record<string, string> = {
+  pending: "yellow",
+  active: "blue",
+  default: "red",
+};

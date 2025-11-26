@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
+import { useEffect, useState } from "react";
 import { Drawer, Button } from "@mantine/core";
 import { Menu, House, FileVideo, FileText, Users, LogOut, User, AppWindow } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { checkAdminPermissions } from "@/app/services/auth/permissions";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
+import { fetchUserRoleById } from "@/app/services/api/users-client";
 import { useRouter } from "next/navigation";
 
 interface NavItem {
@@ -14,47 +17,79 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const navItems: NavItem[] = [
-  {
-    title: "ホーム",
-    href: "/",
-    icon: <House className="h-5 w-5" />,
-  },
-  {
-    title: "動画一覧",
-    href: "/videos",
-    icon: <FileVideo className="h-5 w-5" />,
-  },
-  {
-    title: "資料一覧",
-    href: "/documents",
-    icon: <FileText className="h-5 w-5" />,
-  },
-  {
-    title: "アプリ紹介",
-    href: "/applications",
-    icon: <AppWindow className="h-5 w-5" />,
-  },
-  {
-    title: "プロフィール",
-    href: "/profile",
-    icon: <User className="h-5 w-5" />,
-  },
-  {
-    title: "会員一覧",
-    href: "/members",
-    icon: <Users className="h-5 w-5" />,
-  },
-  {
-    title: "ログアウト",
-    href: "/login",
-    icon: <LogOut className="h-5 w-5" />,
-  },
-];
-
 export function SideNav() {
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useSupabaseAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        if (!user) {
+          router.push("/login");
+          return;
+        }
+
+        const { role, error } = await fetchUserRoleById({ authId: user.id });
+        if (error || !role) {
+          router.push("/login");
+          console.error("ユーザーロール取得失敗");
+          return;
+        }
+
+        setIsAdmin(checkAdminPermissions(role));
+      } catch (err) {
+        console.error("ユーザーロール確認エラー:", err);
+        router.push("/login");
+      }
+    };
+
+    checkRole();
+  }, [user, router]);
+
+  const navItems: NavItem[] = [
+    {
+      title: "ホーム",
+      href: "/",
+      icon: <House className="h-5 w-5" />,
+    },
+    {
+      title: "動画一覧",
+      href: "/videos",
+      icon: <FileVideo className="h-5 w-5" />,
+    },
+    {
+      title: "資料一覧",
+      href: "/documents",
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      title: "アプリ紹介",
+      href: "/applications",
+      icon: <AppWindow className="h-5 w-5" />,
+    },
+    {
+      title: "プロフィール",
+      href: "/profile",
+      icon: <User className="h-5 w-5" />,
+    },
+    {
+      title: "会員一覧",
+      href: "/members",
+      icon: <Users className="h-5 w-5" />,
+    },
+    ...(isAdmin ? [{
+      title: "管理画面",
+      href: "/dashboard",
+      icon: <LogOut className="h-5 w-5" />,
+    }] : []),
+    {
+      title: "ログアウト",
+      href: "/login",
+      icon: <LogOut className="h-5 w-5" />,
+    },
+  ];
 
   const handleSignOut = async () => {
     const supabase = createClientSupabaseClient();
