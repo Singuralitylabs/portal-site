@@ -119,7 +119,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | アプリのカテゴリー             |
 | `url`            | `TEXT`         | NOT NULL                             | アプリへのリンク               |
 | `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス             |
-| `developer_id`   | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 開発者（ユーザーID）           |
+| `developer_id`   | `INTEGER`      | FOREIGN KEY(users.id)                | 開発者（ユーザーID）           |
 | `display_order`  | `INTEGER`      |                                      | 表示順                         |
 | `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを登録したユーザー       |
 | `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | アプリを最後に更新したユーザー |

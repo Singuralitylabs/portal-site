@@ -1,51 +1,51 @@
 import { createClientSupabaseClient } from "./supabase-client";
-import type { DocumentInsertFormType, DocumentUpdateFormType } from "@/app/types";
+import type { ApplicationInsertFormType, ApplicationUpdateFormType } from "@/app/types";
 
 /**
- * 指定したidの資料を論理削除する
- * @param id 資料のid
+ * 指定したidのアプリを論理削除する
+ * @param id アプリのid
  * @param userId ユーザーID
  * @returns 削除結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
-export async function deleteDocument(id: number, userId: number) {
+export async function deleteApplication(id: number, userId: number) {
   const supabase = createClientSupabaseClient();
   const { error } = await supabase
-    .from("documents")
+    .from("applications")
     .update({ is_deleted: true, updated_by: userId })
     .eq("id", id);
 
   if (error) {
-    console.error("Supabase 資料削除エラー:", error.message);
+    console.error("Supabase アプリ削除エラー:", error.message);
     return { success: false, error };
   }
 
   return { success: true, error: null };
 }
 /**
- * サーバーサイドで資料を登録する
- * @param  DocumentInsertFormType 資料のデータ
+ * サーバーサイドでアプリを登録する
+ * @param  ApplicationInsertFormType アプリのデータ
  * @return 登録結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
-export async function registerDocument({
+export async function registerApplication({
   name,
   category_id,
   description,
   url,
-  assignee,
+  developer_id,
   created_by,
-}: DocumentInsertFormType) {
+}: ApplicationInsertFormType) {
   const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("documents").insert([
+  const { error } = await supabase.from("applications").insert([
     {
       name,
       category_id,
       description,
       url,
-      assignee,
+      developer_id,
       is_deleted: false,
       created_by,
       updated_by: created_by,
@@ -53,7 +53,7 @@ export async function registerDocument({
   ]);
   // エラーが発生した場合はコンソールにエラーメッセージを出力
   if (error) {
-    console.error("Supabase 資料登録エラー:", error.message);
+    console.error("Supabase アプリ登録エラー:", error.message);
     return { success: false, error };
   }
 
@@ -61,38 +61,38 @@ export async function registerDocument({
 }
 
 /**
- * サーバーサイドで資料を更新する
- * @param id 資料のID
- * @param DocumentUpdateFormType 資料の更新データ
+ * サーバーサイドでアプリを更新する
+ * @param id アプリのID
+ * @param ApplicationUpdateFormType アプリの更新データ
  * @return 更新結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
-export async function updateDocument({
+export async function updateApplication({
   id,
   name,
   category_id,
   description,
   url,
-  assignee,
+  developer_id,
   updated_by,
-}: DocumentUpdateFormType) {
+}: ApplicationUpdateFormType) {
   const supabase = createClientSupabaseClient();
   const { error } = await supabase
-    .from("documents")
+    .from("applications")
     .update({
       name,
       category_id,
       description,
       url,
-      assignee,
+      developer_id,
       updated_by,
     })
     .eq("id", id);
 
   // エラーが発生した場合はコンソールにエラーメッセージを出力
   if (error) {
-    console.error("Supabase 資料更新エラー:", error.message);
+    console.error("Supabase アプリ更新エラー:", error.message);
     return { success: false, error };
   }
 

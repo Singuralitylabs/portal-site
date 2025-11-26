@@ -1,6 +1,6 @@
 -- applicationsテーブルのポリシー
 
--- 認証済みユーザーは全てのapplicationsを閲覧可能
+-- SELECT: 一般ユーザーは削除されていないもののみ、admin/maintainerは全て閲覧可能
 DROP POLICY IF EXISTS "authenticated_users_can_read_applications" ON "applications";
 CREATE POLICY "authenticated_users_can_read_applications" ON "applications"
   FOR SELECT
@@ -10,9 +10,21 @@ CREATE POLICY "authenticated_users_can_read_applications" ON "applications"
       SELECT 1 FROM users
       WHERE auth_id = auth.uid()
       AND status = 'active'
-      AND is_deleted = false
+      AND is_deleted = FALSE
     )
-    AND is_deleted = false
+    AND (
+      -- 一般ユーザー: 削除されていないもののみ
+      is_deleted = FALSE
+      OR
+      -- admin/maintainer: 削除済みも含めてすべて閲覧可能
+      EXISTS (
+        SELECT 1 FROM users
+        WHERE auth_id = auth.uid()
+        AND role IN ('admin', 'maintainer')
+        AND status = 'active'
+        AND is_deleted = FALSE
+      )
+    )
   );
 
 -- INSERT: adminまたはmaintainerが新規applicationsを作成可能
@@ -37,6 +49,17 @@ CREATE POLICY "content_managers_can_update_applications" ON "applications"
   FOR UPDATE
   TO authenticated
   USING (
+    is_deleted = FALSE
+    AND EXISTS (
+      SELECT 1 FROM users
+      WHERE
+        auth_id = auth.uid()
+        AND role IN ('admin', 'maintainer')
+        AND status = 'active'
+        AND is_deleted = FALSE
+    )
+  )
+  WITH CHECK (
     EXISTS (
       SELECT 1 FROM users
       WHERE

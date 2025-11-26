@@ -59,6 +59,7 @@ export type UserStatusType = "pending" | "active" | "rejected";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
 export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
+export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 
 // Categories types
 type CategoriesTable = Database["public"]["Tables"]["categories"];

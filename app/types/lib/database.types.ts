@@ -14,7 +14,7 @@ export type Database = {
           created_at: string;
           created_by: number;
           description: string;
-          developer_id: number;
+          developer_id: number | null;
           display_order: number | null;
           id: number;
           is_deleted: boolean;
@@ -29,7 +29,7 @@ export type Database = {
           created_at?: string;
           created_by: number;
           description: string;
-          developer_id: number;
+          developer_id?: number | null;
           display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
@@ -44,7 +44,7 @@ export type Database = {
           created_at?: string;
           created_by?: number;
           description?: string;
-          developer_id?: number;
+          developer_id?: number | null;
           display_order?: number | null;
           id?: number;
           is_deleted?: boolean;
