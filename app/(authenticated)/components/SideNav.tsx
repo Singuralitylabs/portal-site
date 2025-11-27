@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { Drawer, Button } from "@mantine/core";
-import { Menu, House, FileVideo, FileText, Users, LogOut, User, AppWindow } from "lucide-react";
+import {
+  Menu,
+  House,
+  FileVideo,
+  FileText,
+  Users,
+  LogOut,
+  User,
+  AppWindow,
+  Calendar,
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
@@ -44,6 +54,11 @@ const navItems: NavItem[] = [
     title: "会員一覧",
     href: "/members",
     icon: <Users className="h-5 w-5" />,
+  },
+  {
+    title: "カレンダー",
+    href: "/calendar",
+    icon: <Calendar className="h-5 w-5" />,
   },
   {
     title: "ログアウト",
