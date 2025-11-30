@@ -48,6 +48,12 @@ export default function Home() {
               メンバー同士の交流にご活用ください。
             </p>
           </div>
+          <div className="bg-card p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">
+              <Link href="/calendar">カレンダー</Link>
+            </h3>
+            <p className="text-muted-foreground">シンラボ関連イベントや予定を確認できます。</p>
+          </div>
         </div>
       </div>
     </div>
