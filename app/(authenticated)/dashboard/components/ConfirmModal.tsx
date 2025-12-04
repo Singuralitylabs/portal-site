@@ -1,14 +1,14 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ActionLabelMap, ApproveAction, MemberAdminType } from "@/app/types";
-import { approveUser, rejectUser, deleteUser } from "@/app/services/api/users-client";
+import { approveUser, rejectUser } from "@/app/services/api/users-client";
 
 export default function ConfirmModal({
     open,
     onClose,
     type,
-    member,
-    adminId
+    member
 }: {
     open: boolean;
     onClose: () => void;
@@ -16,6 +16,7 @@ export default function ConfirmModal({
     member: MemberAdminType;
     adminId: number;
 }) {
+    const router = useRouter();
     if (!open) return null;
 
     const actionLabel = ActionLabelMap[type];
@@ -24,13 +25,12 @@ export default function ConfirmModal({
     const handleConfirm = async () => {
         try {
             if (type === "approve") {
-                await approveUser({ userId: member.id, adminId });
+                await approveUser({ userId: member.id });
             } else if (type === "reject") {
-                await rejectUser({ userId: member.id, adminId });
-            } else if (type === "delete") {
-                await deleteUser({ userId: member.id, adminId });
+                await rejectUser({ userId: member.id });
             }
             console.log(`${actionLabel} 実行成功`);
+            router.refresh();
         } catch (err) {
             console.error(`${actionLabel} 実行失敗`, err);
         } finally {

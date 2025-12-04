@@ -3,7 +3,7 @@
 import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
 import { useEffect, useState } from "react";
 import { Drawer, Button } from "@mantine/core";
-import { Menu, House, FileVideo, FileText, Users, LogOut, User, AppWindow } from "lucide-react";
+import { AppWindow, FileText, FileVideo, House, LogOut, Menu, Settings, User, Users } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { checkAdminPermissions } from "@/app/services/auth/permissions";
@@ -27,19 +27,21 @@ export function SideNav() {
     const checkRole = async () => {
       try {
         if (!user) {
-          router.push("/login");
+          setIsAdmin(false);
+          console.error("ユーザー情報が存在しないため、認証チェックをスキップします");
           return;
         }
 
         const { role, error } = await fetchUserRoleById({ authId: user.id });
         if (error || !role) {
-          router.push("/login");
+          setIsAdmin(false);
           console.error("ユーザーロール取得失敗");
           return;
         }
 
         setIsAdmin(checkAdminPermissions(role));
       } catch (err) {
+        setIsAdmin(false);
         console.error("ユーザーロール確認エラー:", err);
         router.push("/login");
       }
@@ -82,7 +84,7 @@ export function SideNav() {
     ...(isAdmin ? [{
       title: "管理画面",
       href: "/dashboard",
-      icon: <LogOut className="h-5 w-5" />,
+      icon: <Settings className="h-5 w-5" />,
     }] : []),
     {
       title: "ログアウト",

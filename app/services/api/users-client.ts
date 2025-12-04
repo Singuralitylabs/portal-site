@@ -130,10 +130,8 @@ export async function fetchUserIdByAuthId({
  */
 export async function approveUser({
   userId,
-  adminId,
 }: {
   userId: number;
-  adminId: number;
 }): Promise<{ error: PostgrestError | null }> {
   const supabase = createClientSupabaseClient();
 
@@ -159,10 +157,8 @@ export async function approveUser({
  */
 export async function rejectUser({
   userId,
-  adminId,
 }: {
   userId: number;
-  adminId: number;
 }): Promise<{ error: PostgrestError | null }> {
   const supabase = createClientSupabaseClient();
 
@@ -174,34 +170,6 @@ export async function rejectUser({
 
   if (error) {
     console.error("Supabase ユーザー否認エラー:", error.message);
-    return { error };
-  }
-
-  return { error: null };
-}
-
-/**
- * ユーザーを論理削除する（is_deleted を true に更新）
- * @param {number} userId - ユーザーID
- * @param {number} adminId - 管理者ID
- * @returns { error: PostgrestError | null }
- */
-export async function deleteUser({
-  userId,
-  adminId,
-}: {
-  userId: number;
-  adminId: number;
-}): Promise<{ error: PostgrestError | null }> {
-  const supabase = createClientSupabaseClient();
-
-  const { error } = await supabase
-    .from("users")
-    .update({ is_deleted: true, updated_at: new Date().toISOString() })
-    .eq("id", userId);
-
-  if (error) {
-    console.error("Supabase ユーザー削除エラー:", error.message);
     return { error };
   }
 

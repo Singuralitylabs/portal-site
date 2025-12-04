@@ -1,7 +1,7 @@
 "use client";
 
 import { ApproveAction, MemberAdminType } from "@/app/types";
-import { Card, Avatar, Text, Group } from "@mantine/core";
+import { Card } from "@mantine/core";
 import { useState } from "react";
 
 import ConfirmModal from "@/app/(authenticated)/dashboard/components/ConfirmModal";
@@ -14,7 +14,6 @@ interface MemberAdminCardProps {
 export function MemberApprovalCard({ member, adminId }: MemberAdminCardProps) {
     const [modalType, setModalType] = useState<ApproveAction | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const avatarContent = member.display_name.charAt(0).toUpperCase();
 
     // モーダルにセット
     const handleOpenModal = (type: ApproveAction) => {
@@ -31,19 +30,6 @@ export function MemberApprovalCard({ member, adminId }: MemberAdminCardProps) {
                 withBorder
                 style={{ cursor: "pointer" }}
             >
-                <Group align="flex-start" gap="sm">
-                    <Avatar src={member.avatar_url} color="blue" radius="xl">
-                        {!member.avatar_url && avatarContent}
-                    </Avatar>
-                    <div style={{ flex: 1 }}>
-                        <Text fw={500} size="lg" mb={4}>
-                            {member.display_name}
-                        </Text>
-                        <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }}>
-                            {member.bio || ""}
-                        </Text>
-                    </div>
-                </Group>
                 <div className="p-4 border rounded-xl shadow bg-white flex flex-col gap-2">
                     <h3 className="font-semibold">{member.display_name}</h3>
                     <p className="text-sm text-gray-600">{member.email}</p>
@@ -60,12 +46,6 @@ export function MemberApprovalCard({ member, adminId }: MemberAdminCardProps) {
                             onClick={() => handleOpenModal("reject")}
                         >
                             否認
-                        </button>
-                        <button
-                            className="px-3 py-1 bg-red-500 text-white rounded"
-                            onClick={() => handleOpenModal("delete")}
-                        >
-                            削除
                         </button>
                     </div>
 

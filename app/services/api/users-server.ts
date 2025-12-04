@@ -2,6 +2,7 @@ import { MemberType, MemberAdminType, UserStatusType, UserType } from "@/app/typ
 import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
+import { USER_STATUS } from "@/app/constants/user";
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -93,7 +94,11 @@ export async function fetchApprovalUsers(): Promise<{
 }> {
   const supabase = await createServerSupabaseClient();
 
-  const { data, error } = await supabase.from("users").select("*").eq("is_deleted", false);
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("is_deleted", false)
+    .eq("status", USER_STATUS.PENDING);
 
   if (error) {
     console.error("Supabase 会員一覧取得エラー:", error.message);
