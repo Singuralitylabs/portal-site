@@ -17,6 +17,6 @@ export default function ApprovalTemplate({ members, adminId }: { members: Member
                     <p className="text-gray-500 mt-4">承認待ちのユーザーはいません。</p>
                 )}
             </div>
-            {/* <!--- メンバー一覧（管理者）を確認:リンク表示 -->*/}</div>
+        </div>
     );
 }
