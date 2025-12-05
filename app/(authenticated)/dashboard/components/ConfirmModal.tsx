@@ -29,7 +29,7 @@ export default function ConfirmModal({
             } else if (type === "reject") {
                 await rejectUser({ userId: member.id });
             }
-            //実行成功したら再描画  console.log(`${actionLabel} 実行成功`);
+            //実行成功したら再描画
             router.refresh();
         } catch (err) {
             console.error(`${actionLabel} 実行失敗`, err);
