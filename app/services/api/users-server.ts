@@ -1,7 +1,8 @@
-import { MemberType, UserStatusType, UserType } from "@/app/types";
+import { MemberType, MemberAdminType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
+import { USER_STATUS } from "@/app/constants/user";
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -74,6 +75,30 @@ export async function fetchActiveUsers(): Promise<{
     .eq("status", "active")
     .eq("is_deleted", false)
     .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Supabase 会員一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+/**
+ * 会員一覧を取得する（管理者用）
+ * @returns { data: MemberAdminType[] | null, error: PostgrestError | null } - 会員一覧とエラー
+ */
+export async function fetchApprovalUsers(): Promise<{
+  data: MemberAdminType[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("is_deleted", false)
+    .eq("status", USER_STATUS.PENDING);
 
   if (error) {
     console.error("Supabase 会員一覧取得エラー:", error.message);
