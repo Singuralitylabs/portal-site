@@ -51,6 +51,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）  |
 | `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                             |
 | `avatar_url`   | `TEXT`         |                                     | Googleプロフィール画像のURL                      |
+| `sns_url`      | `TEXT`         |                                     | SNSアカウントや個人のHP等のURL                   |
 | `is_deleted`   | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
 | `created_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
 | `updated_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |
