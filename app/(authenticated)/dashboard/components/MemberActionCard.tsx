@@ -12,7 +12,7 @@ interface MemberAdminCardProps {
   adminId: number;
 }
 
-export function MemberApprovalCard({ member, adminId }: MemberAdminCardProps) {
+export function MemberActionCard({ member, adminId }: MemberAdminCardProps) {
   const [modalType, setModalType] = useState<ApproveAction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 

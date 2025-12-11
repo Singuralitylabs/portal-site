@@ -1,6 +1,6 @@
 import { PageTitle } from "@/app/components/PageTitle";
 import { MemberAdminType } from "@/app/types";
-import { MemberApprovalCard } from "./MemberCardApproval";
+import { MemberActionCard } from "./MemberActionCard";
 
 export default function DashboardPageTemplate({
   members,
@@ -18,7 +18,7 @@ export default function DashboardPageTemplate({
           {members.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
               {members.map(member => (
-                <MemberApprovalCard key={member.id} member={member} adminId={adminId} />
+                <MemberActionCard key={member.id} member={member} adminId={adminId} />
               ))}
             </div>
           ) : (
