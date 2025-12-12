@@ -1,59 +1,70 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ApproveAction, MemberAdminType } from "@/app/types";
+import { UserActionType, MemberAdminType } from "@/app/types";
 import { approveUser, rejectUser } from "@/app/services/api/users-client";
 import { USER_ACTION } from "@/app/constants/user";
+import { Button, Group, Modal, Text } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 
-export default function ConfirmModal({
-  open,
-  onClose,
-  type,
-  member,
-}: {
-  open: boolean;
+interface ConfirmModalProps {
+  opened: boolean;
   onClose: () => void;
-  type: ApproveAction;
+  type: UserActionType;
   member: MemberAdminType;
-  adminId: number;
-}) {
-  const router = useRouter();
-  if (!open) return null;
+}
 
-  const actionLabel = type === USER_ACTION.APPROVE ? "承認" : "否認";
+export default function ConfirmModal({ opened, onClose, type, member }: ConfirmModalProps) {
+  const router = useRouter();
+
+  const isApprove = type === USER_ACTION.APPROVE;
+  const actionLabel = isApprove ? "承認" : "否認";
 
   const handleConfirm = async () => {
     try {
-      if (type === USER_ACTION.APPROVE) {
-        await approveUser({ userId: member.id });
-      } else if (type === USER_ACTION.REJECT) {
-        await rejectUser({ userId: member.id });
+      if (isApprove) {
+        const { error } = await approveUser({ userId: member.id });
+        if (error) {
+          throw new Error(error.message);
+        }
+      } else {
+        const { error } = await rejectUser({ userId: member.id });
+        if (error) {
+          throw new Error(error.message);
+        }
       }
-      router.refresh();
-    } catch (err) {
-      console.error(`${actionLabel} 実行失敗`, err);
-    } finally {
+
       onClose();
+      notifications.show({
+        title: `${actionLabel}完了`,
+        message: `${member.display_name} さんを${actionLabel}しました。`,
+        color: isApprove ? "green" : "blue",
+      });
+      router.refresh();
+    } catch (err: unknown) {
+      onClose();
+      notifications.show({
+        title: `${actionLabel}失敗`,
+        message: err instanceof Error ? err.message : "予期しないエラーが発生しました",
+        color: "red",
+      });
+      console.error(`${actionLabel} 実行失敗`, err);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-xl shadow-xl w-96">
-        <h2 className="text-lg font-bold mb-4">{actionLabel}確認</h2>
-        <p>
-          {member.display_name} さんを {actionLabel} しますか？
-        </p>
-
-        <div className="flex justify-end gap-2 mt-4">
-          <button className="px-3 py-1 bg-gray-300 rounded" onClick={onClose}>
-            キャンセル
-          </button>
-          <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={handleConfirm}>
-            {actionLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+    <Modal opened={opened} onClose={onClose} title={`${actionLabel}確認`} centered>
+      <Text mb="md">
+        {member.display_name} さんを{actionLabel}しますか？
+      </Text>
+      <Group justify="flex-end">
+        <Button variant="default" onClick={onClose}>
+          キャンセル
+        </Button>
+        <Button color={isApprove ? "blue" : "red"} onClick={handleConfirm}>
+          {actionLabel}
+        </Button>
+      </Group>
+    </Modal>
   );
 }

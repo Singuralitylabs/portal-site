@@ -1,4 +1,4 @@
-import { UserApproveType, UserRoleType, UserStatusType } from "../types";
+import { UserActionType, UserRoleType, UserStatusType } from "../types";
 
 export const USER_STATUS: Record<string, UserStatusType> = {
   PENDING: "pending",
@@ -12,7 +12,7 @@ export const USER_ROLE: Record<string, UserRoleType> = {
   MEMBER: "member",
 } as const;
 
-export const USER_ACTION: Record<string, UserApproveType> = {
+export const USER_ACTION: Record<string, UserActionType> = {
   APPROVE: "approve",
   REJECT: "reject",
   DELETE: "delete",

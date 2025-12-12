@@ -4,10 +4,8 @@ import { MemberActionCard } from "./MemberActionCard";
 
 export default function DashboardPageTemplate({
   members,
-  adminId,
 }: {
   members: MemberAdminType[];
-  adminId: number;
 }) {
   return (
     <div className="p-6">
@@ -18,7 +16,7 @@ export default function DashboardPageTemplate({
           {members.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
               {members.map(member => (
-                <MemberActionCard key={member.id} member={member} adminId={adminId} />
+                <MemberActionCard key={member.id} member={member} />
               ))}
             </div>
           ) : (

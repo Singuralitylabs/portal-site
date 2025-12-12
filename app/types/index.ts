@@ -56,7 +56,7 @@ export type InsertUserType = UsersTable["Insert"];
 export type ProfileUserType = Pick<UserType, "id" | "display_name" | "role" | "created_at" | "bio">;
 
 export type UserStatusType = "pending" | "active" | "rejected";
-export type UserApproveType = "approve" | "reject" | "delete";
+export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
 export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
@@ -70,6 +70,3 @@ export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
-
-// Approval action types
-export type ApproveAction = "approve" | "reject" | "delete";

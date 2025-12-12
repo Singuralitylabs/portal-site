@@ -1,4 +1,3 @@
-// 認証済みページレイアウト
 import { SideNav } from "./components/SideNav";
 import { AuthLayout as AuthGuard } from "./auth-layout";
 import { getServerCurrentUser } from "@/app/services/api/supabase-server";
@@ -10,7 +9,6 @@ export default async function AuthLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // サーバー側でユーザー情報を取得
   let isAdmin = false;
 
   try {
@@ -21,10 +19,15 @@ export default async function AuthLayout({
         isAdmin = checkAdminPermissions(role);
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Dynamic server usageエラーは正常な動作（認証が必要なため静的生成できない）
     // その他のエラーの場合のみログ出力
-    if (error?.digest !== 'DYNAMIC_SERVER_USAGE') {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest !== "DYNAMIC_SERVER_USAGE"
+    ) {
       console.error("レイアウトでのユーザー情報取得エラー:", error);
     }
   }

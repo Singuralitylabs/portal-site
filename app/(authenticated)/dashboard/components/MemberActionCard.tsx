@@ -1,6 +1,6 @@
 "use client";
 
-import { ApproveAction, MemberAdminType } from "@/app/types";
+import { UserActionType, MemberAdminType } from "@/app/types";
 import { Card } from "@mantine/core";
 import { useState } from "react";
 
@@ -9,15 +9,14 @@ import { USER_ACTION } from "@/app/constants/user";
 
 interface MemberAdminCardProps {
   member: MemberAdminType;
-  adminId: number;
 }
 
-export function MemberActionCard({ member, adminId }: MemberAdminCardProps) {
-  const [modalType, setModalType] = useState<ApproveAction | null>(null);
+export function MemberActionCard({ member }: MemberAdminCardProps) {
+  const [actionType, setActionType] = useState<UserActionType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleOpenModal = (type: ApproveAction) => {
-    setModalType(type);
+  const handleOpenModal = (type: UserActionType) => {
+    setActionType(type);
     setIsModalOpen(true);
   };
 
@@ -36,19 +35,18 @@ export function MemberActionCard({ member, adminId }: MemberAdminCardProps) {
               承認
             </button>
             <button
-              className="px-3 py-1 bg-yellow-500 text-white rounded"
+              className="px-3 py-1 bg-red-500 text-white rounded"
               onClick={() => handleOpenModal(USER_ACTION.REJECT)}
             >
               否認
             </button>
           </div>
 
-          {modalType && (
+          {actionType && (
             <ConfirmModal
-              open={isModalOpen}
-              type={modalType}
+              opened={isModalOpen}
+              type={actionType}
               member={member}
-              adminId={adminId}
               onClose={() => setIsModalOpen(false)}
             />
           )}

@@ -18,7 +18,7 @@ export default async function DashboardPage() {
         return <p>承認待ちの会員一覧を取得できませんでした。</p>;
     }
 
-    const { id, role, error: roleError } = await fetchUserInfoByAuthId({ authId });
+    const { role, error: roleError } = await fetchUserInfoByAuthId({ authId });
     if (roleError) {
         console.error("データ取得エラー:", roleError);
         return <p>データを取得できませんでした。</p>;
@@ -29,5 +29,5 @@ export default async function DashboardPage() {
         return <p>管理者ではありません</p>;
     }
 
-    return <DashboardPageTemplate members={data} adminId={id} />;
+    return <DashboardPageTemplate members={data} />;
 }
