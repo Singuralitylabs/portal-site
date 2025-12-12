@@ -1,11 +1,11 @@
 import { PageTitle } from "@/app/components/PageTitle";
-import { MemberAdminType } from "@/app/types";
+import { PendingUserType } from "@/app/types";
 import { MemberActionCard } from "./MemberActionCard";
 
 export default function DashboardPageTemplate({
   members,
 }: {
-  members: MemberAdminType[];
+  members: PendingUserType[];
 }) {
   return (
     <div className="p-6">

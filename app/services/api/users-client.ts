@@ -125,7 +125,6 @@ export async function fetchUserIdByAuthId({
 /**
  * ユーザーを承認する（status を active に更新）
  * @param {number} userId - ユーザーID
- * @param {number} adminId - 管理者ID
  * @returns { error: PostgrestError | null }
  */
 export async function approveUser({
@@ -152,7 +151,6 @@ export async function approveUser({
 /**
  * ユーザーを否認する（status を rejected に更新）
  * @param {number} userId - ユーザーID
- * @param {number} adminId - 管理者ID
  * @returns { error: PostgrestError | null }
  */
 export async function rejectUser({

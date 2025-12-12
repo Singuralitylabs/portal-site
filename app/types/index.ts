@@ -60,10 +60,7 @@ export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
 export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
-export type MemberAdminType = Pick<
-  UserType,
-  "id" | "display_name" | "bio" | "email" | "status" | "avatar_url" | "updated_at"
->;
+export type PendingUserType = Pick<UserType, "id" | "display_name" | "email">;
 export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 
 // Categories types

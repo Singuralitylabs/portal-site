@@ -1,17 +1,17 @@
 "use client";
 
-import { UserActionType, MemberAdminType } from "@/app/types";
+import { UserActionType, PendingUserType } from "@/app/types";
 import { Card } from "@mantine/core";
 import { useState } from "react";
 
 import MemberActionModal from "@/app/(authenticated)/dashboard/components/MemberActionModal";
 import { USER_ACTION } from "@/app/constants/user";
 
-interface MemberAdminCardProps {
-  member: MemberAdminType;
+interface MemberActionCardProps {
+  member: PendingUserType;
 }
 
-export function MemberActionCard({ member }: MemberAdminCardProps) {
+export function MemberActionCard({ member }: MemberActionCardProps) {
   const [actionType, setActionType] = useState<UserActionType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 

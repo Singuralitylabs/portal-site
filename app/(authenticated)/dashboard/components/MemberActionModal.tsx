@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { UserActionType, MemberAdminType } from "@/app/types";
+import { UserActionType, PendingUserType } from "@/app/types";
 import { approveUser, rejectUser } from "@/app/services/api/users-client";
 import { USER_ACTION } from "@/app/constants/user";
 import { Button, Group, Modal, Text } from "@mantine/core";
@@ -11,7 +11,7 @@ interface MemberActionModalProps {
   opened: boolean;
   onClose: () => void;
   type: UserActionType;
-  member: MemberAdminType;
+  member: PendingUserType;
 }
 
 export default function MemberActionModal({

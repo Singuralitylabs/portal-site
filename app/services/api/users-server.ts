@@ -1,4 +1,4 @@
-import { MemberType, MemberAdminType, UserStatusType, UserType } from "@/app/types";
+import { MemberType, PendingUserType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
@@ -85,23 +85,23 @@ export async function fetchActiveUsers(): Promise<{
 }
 
 /**
- * 会員一覧を取得する（管理者用）
- * @returns { data: MemberAdminType[] | null, error: PostgrestError | null } - 会員一覧とエラー
+ * 承認待ちユーザー一覧を取得する
+ * @returns { data: PendingUserType[] | null, error: PostgrestError | null } - 承認待ちユーザー一覧とエラー
  */
 export async function fetchApprovalUsers(): Promise<{
-  data: MemberAdminType[] | null;
+  data: PendingUserType[] | null;
   error: PostgrestError | null;
 }> {
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("users")
-    .select("*")
+    .select("id, display_name, email")
     .eq("is_deleted", false)
     .eq("status", USER_STATUS.PENDING);
 
   if (error) {
-    console.error("Supabase 会員一覧取得エラー:", error.message);
+    console.error("Supabase 承認待ちユーザー一覧取得エラー:", error.message);
     return { data: null, error };
   }
 
