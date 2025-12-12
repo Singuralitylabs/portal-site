@@ -1,8 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Drawer, Button } from "@mantine/core";
-import { AppWindow, FileText, FileVideo, House, LogOut, Menu, Settings, User, Users } from "lucide-react";
+import {
+  AppWindow,
+  FileText,
+  FileVideo,
+  House,
+  LogOut,
+  Menu,
+  Settings,
+  User,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
@@ -14,52 +24,60 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
+const DEFAULT_NAV_ITEMS: NavItem[] = [
+  {
+    title: "ホーム",
+    href: "/",
+    icon: <House className="h-5 w-5" />,
+  },
+  {
+    title: "動画一覧",
+    href: "/videos",
+    icon: <FileVideo className="h-5 w-5" />,
+  },
+  {
+    title: "資料一覧",
+    href: "/documents",
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    title: "アプリ紹介",
+    href: "/applications",
+    icon: <AppWindow className="h-5 w-5" />,
+  },
+  {
+    title: "プロフィール",
+    href: "/profile",
+    icon: <User className="h-5 w-5" />,
+  },
+  {
+    title: "会員一覧",
+    href: "/members",
+    icon: <Users className="h-5 w-5" />,
+  },
+];
+
+const ADMIN_NAV_ITEM: NavItem = {
+  title: "管理画面",
+  href: "/dashboard",
+  icon: <Settings className="h-5 w-5" />,
+};
+
+const LOGOUT_NAV_ITEM: NavItem = {
+  title: "ログアウト",
+  href: "/login",
+  icon: <LogOut className="h-5 w-5" />,
+};
+
 export function SideNav({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const navItems: NavItem[] = [
-    {
-      title: "ホーム",
-      href: "/",
-      icon: <House className="h-5 w-5" />,
-    },
-    {
-      title: "動画一覧",
-      href: "/videos",
-      icon: <FileVideo className="h-5 w-5" />,
-    },
-    {
-      title: "資料一覧",
-      href: "/documents",
-      icon: <FileText className="h-5 w-5" />,
-    },
-    {
-      title: "アプリ紹介",
-      href: "/applications",
-      icon: <AppWindow className="h-5 w-5" />,
-    },
-    {
-      title: "プロフィール",
-      href: "/profile",
-      icon: <User className="h-5 w-5" />,
-    },
-    {
-      title: "会員一覧",
-      href: "/members",
-      icon: <Users className="h-5 w-5" />,
-    },
-    ...(isAdmin ? [{
-      title: "管理画面",
-      href: "/dashboard",
-      icon: <Settings className="h-5 w-5" />,
-    }] : []),
-    {
-      title: "ログアウト",
-      href: "/login",
-      icon: <LogOut className="h-5 w-5" />,
-    },
-  ];
+  // isAdminに応じて動的にnavItemsを構築
+  const navItems = useMemo<NavItem[]>(
+    () => [...DEFAULT_NAV_ITEMS, ...(isAdmin ? [ADMIN_NAV_ITEM] : []), LOGOUT_NAV_ITEM],
+    [isAdmin]
+  );
 
   const handleSignOut = async () => {
     const supabase = createClientSupabaseClient();

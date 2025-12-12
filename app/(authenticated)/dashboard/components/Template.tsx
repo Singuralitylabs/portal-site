@@ -2,13 +2,9 @@ import { PageTitle } from "@/app/components/PageTitle";
 import { PendingUserType } from "@/app/types";
 import { MemberActionCard } from "./MemberActionCard";
 
-export default function DashboardPageTemplate({
-  members,
-}: {
-  members: PendingUserType[];
-}) {
+export default function DashboardPageTemplate({ members }: { members: PendingUserType[] }) {
   return (
-    <div className="p-6">
+    <>
       <PageTitle>ダッシュボード</PageTitle>
       <div className="p-4 overflow-x-hidden">
         <h2 className="scroll-mt-40">承認管理</h2>
@@ -24,6 +20,6 @@ export default function DashboardPageTemplate({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { UserActionType, PendingUserType } from "@/app/types";
-import { Card } from "@mantine/core";
+import { Card, Text } from "@mantine/core";
 import { useState } from "react";
 
 import MemberActionModal from "@/app/(authenticated)/dashboard/components/MemberActionModal";
@@ -21,37 +21,33 @@ export function MemberActionCard({ member }: MemberActionCardProps) {
   };
 
   return (
-    <div>
-      <Card shadow="sm" padding="lg" radius="md" withBorder style={{ cursor: "pointer" }}>
-        <div className="p-4 border rounded-xl shadow bg-white flex flex-col gap-2">
-          <h3 className="font-semibold">{member.display_name}</h3>
-          <p className="text-sm text-gray-600">{member.email}</p>
-
-          <div className="flex gap-2 mt-2">
-            <button
-              className="px-3 py-1 bg-blue-500 text-white rounded"
-              onClick={() => handleOpenModal(USER_ACTION.APPROVE)}
-            >
-              承認
-            </button>
-            <button
-              className="px-3 py-1 bg-red-500 text-white rounded"
-              onClick={() => handleOpenModal(USER_ACTION.REJECT)}
-            >
-              否認
-            </button>
-          </div>
-
-          {actionType && (
-            <MemberActionModal
-              opened={isModalOpen}
-              type={actionType}
-              member={member}
-              onClose={() => setIsModalOpen(false)}
-            />
-          )}
-        </div>
-      </Card>
-    </div>
+    <Card shadow="sm" padding="lg" radius="md" withBorder style={{ cursor: "pointer" }}>
+      <Text size="md" c="black">
+        {member.display_name}
+      </Text>
+      <p className="text-sm text-gray-600">{member.email}</p>
+      <div className="flex gap-2 mt-2">
+        <button
+          className="px-3 py-1 bg-blue-500 text-white rounded"
+          onClick={() => handleOpenModal(USER_ACTION.APPROVE)}
+        >
+          承認
+        </button>
+        <button
+          className="px-3 py-1 bg-red-500 text-white rounded"
+          onClick={() => handleOpenModal(USER_ACTION.REJECT)}
+        >
+          否認
+        </button>
+      </div>
+      {actionType && (
+        <MemberActionModal
+          opened={isModalOpen}
+          type={actionType}
+          member={member}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+    </Card>
   );
 }
