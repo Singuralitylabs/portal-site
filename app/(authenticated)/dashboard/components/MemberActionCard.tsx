@@ -4,7 +4,7 @@ import { UserActionType, MemberAdminType } from "@/app/types";
 import { Card } from "@mantine/core";
 import { useState } from "react";
 
-import ConfirmModal from "@/app/(authenticated)/dashboard/components/ConfirmModal";
+import MemberActionModal from "@/app/(authenticated)/dashboard/components/MemberActionModal";
 import { USER_ACTION } from "@/app/constants/user";
 
 interface MemberAdminCardProps {
@@ -43,7 +43,7 @@ export function MemberActionCard({ member }: MemberAdminCardProps) {
           </div>
 
           {actionType && (
-            <ConfirmModal
+            <MemberActionModal
               opened={isModalOpen}
               type={actionType}
               member={member}

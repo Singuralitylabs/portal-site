@@ -7,14 +7,19 @@ import { USER_ACTION } from "@/app/constants/user";
 import { Button, Group, Modal, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 
-interface ConfirmModalProps {
+interface MemberActionModalProps {
   opened: boolean;
   onClose: () => void;
   type: UserActionType;
   member: MemberAdminType;
 }
 
-export default function ConfirmModal({ opened, onClose, type, member }: ConfirmModalProps) {
+export default function MemberActionModal({
+  opened,
+  onClose,
+  type,
+  member,
+}: MemberActionModalProps) {
   const router = useRouter();
 
   const isApprove = type === USER_ACTION.APPROVE;
