@@ -30,6 +30,7 @@ export interface CalendarEvent {
   };
   location?: string;
   htmlLink?: string;
+  calendarId?: string; // カレンダーID（色分けに使用）
 }
 
 interface FetchCalendarEventsResult {
@@ -89,7 +90,13 @@ export async function fetchCalendarEvents(
           orderBy: "startTime",
         });
 
-        return response.data.items || [];
+        // 各イベントにカレンダーIDを付与
+        const events = (response.data.items || []).map(event => ({
+          ...event,
+          calendarId,
+        }));
+
+        return events;
       } catch (error) {
         console.error(`カレンダー ${calendarId} の取得エラー:`, error);
         return [];

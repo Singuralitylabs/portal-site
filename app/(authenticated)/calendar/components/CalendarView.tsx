@@ -2,7 +2,17 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
-import { format, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, getDay } from "date-fns";
+import {
+  format,
+  parse,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfDay,
+  endOfDay,
+  getDay,
+} from "date-fns";
 import { ja } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { CalendarEvent } from "@/app/api/calendar/calendar-server";
@@ -53,6 +63,36 @@ const messages = {
   showMore: (total: number) => `+ ${total}件`,
 };
 
+// カレンダーIDごとの色定義（固定色）
+const CALENDAR_COLORS: { [key: string]: { backgroundColor: string; borderColor: string } } = {
+  // シンラボMTGカレンダー
+  "c_4df1ec54385c933420637b11092efb7af2d5e7829941f8a7527ec5a8e4a2033d@group.calendar.google.com": {
+    backgroundColor: "#9333ea", // 紫色
+    borderColor: "#7e22ce",
+  },
+  // 日本の祝日カレンダー
+  "ja.japanese#holiday@group.v.calendar.google.com": {
+    backgroundColor: "#ef4444", // 赤色
+    borderColor: "#dc2626",
+  },
+};
+
+// デフォルトの色（カレンダーIDが未設定または未定義の場合）
+const DEFAULT_COLOR = {
+  backgroundColor: "#6b7280", // グレー
+  borderColor: "#4b5563",
+};
+
+// カレンダーIDに基づいて色を取得する関数
+const getCalendarColor = (
+  calendarId?: string
+): { backgroundColor: string; borderColor: string } => {
+  if (calendarId && CALENDAR_COLORS[calendarId]) {
+    return CALENDAR_COLORS[calendarId];
+  }
+  return DEFAULT_COLOR;
+};
+
 export function CalendarView({
   events: initialEvents,
   fetchedStartDate,
@@ -93,7 +133,11 @@ export function CalendarView({
         // Agendaビューは1ヶ月分表示
         return {
           start: currentDate,
-          end: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate()),
+          end: new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            currentDate.getDate()
+          ),
         };
       default:
         return {
@@ -232,13 +276,17 @@ export function CalendarView({
             date={date}
             onNavigate={setDate}
             onSelectEvent={handleSelectEvent}
-            eventPropGetter={() => ({
-              style: {
-                backgroundColor: "#9333ea",
-                borderColor: "#7e22ce",
-                color: "white",
-              },
-            })}
+            eventPropGetter={event => {
+              const calendarId = (event.resource as CalendarEvent).calendarId;
+              const colors = getCalendarColor(calendarId);
+              return {
+                style: {
+                  backgroundColor: colors.backgroundColor,
+                  borderColor: colors.borderColor,
+                  color: "white",
+                },
+              };
+            }}
           />
         </div>
       </div>
