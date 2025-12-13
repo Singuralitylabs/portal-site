@@ -4,13 +4,9 @@ import * as path from "path";
 // カレンダーIDの定義（環境変数から取得、なければデフォルト値を使用）
 const getCalendarIds = (): string[] => {
   if (process.env.GOOGLE_CALENDAR_IDS) {
-    console.log("🔧 環境変数GOOGLE_CALENDAR_IDSから読み込み");
-    const ids = process.env.GOOGLE_CALENDAR_IDS.split(",").map((id) => id.trim());
-    console.log(`🔧 環境変数の値: ${process.env.GOOGLE_CALENDAR_IDS}`);
-    return ids;
+    return process.env.GOOGLE_CALENDAR_IDS.split(",").map((id) => id.trim());
   }
   // デフォルト値（環境変数が設定されていない場合）
-  console.log("🔧 デフォルトのカレンダーIDを使用");
   return [
     "hpb22r5bs28tr3f797l3ul3tgo@group.calendar.google.com", // シンラボMTG・イベントカレンダー1
     "pb619kfn323bjo2fbtalipd5ls@group.calendar.google.com", // シンラボMTG・イベントカレンダー2
@@ -45,16 +41,9 @@ interface FetchCalendarEventsResult {
 
 export async function fetchCalendarEvents(): Promise<FetchCalendarEventsResult> {
   try {
-    console.log("📅 カレンダーイベント取得開始");
-    console.log("📋 読み込まれたカレンダーID一覧:");
-    CALENDAR_IDS.forEach((id, index) => {
-      console.log(`  [${index + 1}] ${id}`);
-    });
-
     // 環境変数からサービスアカウントキーを取得、なければローカルファイルを使用
     let auth;
     if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
-      console.log("🔑 環境変数から認証情報を取得");
       // 本番環境：環境変数から認証情報を取得
       const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
       auth = new google.auth.GoogleAuth({
@@ -62,10 +51,8 @@ export async function fetchCalendarEvents(): Promise<FetchCalendarEventsResult> 
         scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
       });
     } else {
-      console.log("🔑 ローカルファイルから認証情報を取得");
       // 開発環境：ローカルファイルから認証情報を取得
       const keyFilePath = path.join(process.cwd(), "google-service-account.json");
-      console.log(`📁 キーファイルパス: ${keyFilePath}`);
       auth = new google.auth.GoogleAuth({
         keyFile: keyFilePath,
         scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
@@ -81,10 +68,8 @@ export async function fetchCalendarEvents(): Promise<FetchCalendarEventsResult> 
     oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
 
     // 全カレンダーからイベントを取得
-    console.log(`📆 ${CALENDAR_IDS.length}個のカレンダーから予定を取得`);
-    const allEventsPromises = CALENDAR_IDS.map(async (calendarId, index) => {
+    const allEventsPromises = CALENDAR_IDS.map(async (calendarId) => {
       try {
-        console.log(`  [${index + 1}/${CALENDAR_IDS.length}] ${calendarId} を取得中...`);
         const response = await calendar.events.list({
           calendarId,
           timeMin: now.toISOString(),
@@ -94,22 +79,15 @@ export async function fetchCalendarEvents(): Promise<FetchCalendarEventsResult> 
           orderBy: "startTime",
         });
 
-        const events = response.data.items || [];
-        console.log(`  ✅ [${index + 1}/${CALENDAR_IDS.length}] ${events.length}件の予定を取得`);
-        return events;
+        return response.data.items || [];
       } catch (error) {
-        console.error(`  ❌ [${index + 1}/${CALENDAR_IDS.length}] カレンダー ${calendarId} の取得エラー:`, error);
-        if (error instanceof Error) {
-          console.error(`     エラー詳細: ${error.message}`);
-        }
+        console.error(`カレンダー ${calendarId} の取得エラー:`, error);
         return [];
       }
     });
 
     const eventsArrays = await Promise.all(allEventsPromises);
     const allEvents = eventsArrays.flat();
-
-    console.log(`📊 合計 ${allEvents.length}件の予定を取得しました`);
 
     // 開始時刻でソート
     allEvents.sort((a, b) => {
@@ -118,7 +96,6 @@ export async function fetchCalendarEvents(): Promise<FetchCalendarEventsResult> 
       return aStart.localeCompare(bStart);
     });
 
-    console.log("✅ カレンダーイベント取得完了");
     return {
       data: allEvents as CalendarEvent[],
       error: null,

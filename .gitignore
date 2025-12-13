@@ -46,3 +46,5 @@ supabase/.local
 
 /.claude
 /.serena
+
+google-service-account.json
