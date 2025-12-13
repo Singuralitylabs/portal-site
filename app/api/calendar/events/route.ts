@@ -8,10 +8,7 @@ const getCalendarIds = (): string[] => {
     return process.env.GOOGLE_CALENDAR_IDS.split(",").map(id => id.trim());
   }
   // デフォルト値
-  return [
-    "c_4df1ec54385c933420637b11092efb7af2d5e7829941f8a7527ec5a8e4a2033d@group.calendar.google.com",
-    "ja.japanese#holiday@group.v.calendar.google.com",
-  ];
+  return ["ja.japanese#holiday@group.v.calendar.google.com"];
 };
 
 const CALENDAR_IDS = getCalendarIds();
