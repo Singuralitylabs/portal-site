@@ -195,17 +195,30 @@ export function CalendarView({
       const startDateTime = event.start?.dateTime || event.start?.date;
       const endDateTime = event.end?.dateTime || event.end?.date;
 
-      // 終日イベントの場合、終了日を1日前に調整（react-big-calendarの仕様）
-      let endDate = endDateTime ? new Date(endDateTime) : new Date(startDateTime || new Date());
-      if (event.start?.date && !event.start?.dateTime) {
-        // 終日イベント
-        endDate = new Date(endDate.getTime());
+      const isAllDayEvent = event.start?.date && !event.start?.dateTime;
+
+      let startDate = new Date(startDateTime || new Date());
+      let endDate: Date;
+
+      if (isAllDayEvent) {
+        // 終日イベントの場合、開始日を00:00:00に、終了日を23:59:59.999に設定
+        // これにより、当日のみ表示される（react-big-calendarの終了日は排他的）
+        startDate = new Date(startDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        // 終了日を開始日の23:59:59.999に設定
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        // 時刻指定イベントの場合、そのまま使用
+        startDate = new Date(startDateTime || new Date());
+        endDate = endDateTime ? new Date(endDateTime) : new Date(startDate);
       }
 
       return {
         id: event.id,
         title: event.summary,
-        start: new Date(startDateTime || new Date()),
+        start: startDate,
         end: endDate,
         resource: event,
       };
