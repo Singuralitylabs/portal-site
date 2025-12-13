@@ -1,4 +1,4 @@
-import { InsertUserType, UserStatusType, UserType } from "@/app/types";
+import { InsertUserType, UserRoleType, UserStatusType, UserType } from "@/app/types";
 import { createClientSupabaseClient } from "./supabase-client";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
@@ -36,6 +36,34 @@ export async function addNewUser({ authId, email, displayName, avatarUrl }: NewU
   }
 
   return { data, error: null };
+}
+
+/**
+ * usersテーブルから指定のauth_idのユーザーのroleを取得する（クライアントサイド用）
+ * @param param0 - パラメータオブジェクト
+ * @param {UUID | string} param0.authId - ユーザーの認証ID
+ * @returns { role: UserRoleType | null, error: PostgrestError | null } - ユーザーステータスとエラー
+ */
+export async function fetchUserRoleById({
+  authId,
+}: {
+  authId: UUID | string;
+}): Promise<{ role: UserRoleType | null; error: PostgrestError | null }> {
+  const supabase = createClientSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", authId)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("Supabase ユーザーロール取得エラー:", error?.message || "No data found");
+    return { role: null, error };
+  }
+
+  return { role: data.role, error: null };
 }
 
 /**
@@ -92,4 +120,56 @@ export async function fetchUserIdByAuthId({
   }
 
   return { userId: user.id, error: null };
+}
+
+/**
+ * ユーザーを承認する（status を active に更新）
+ * @param {number} userId - ユーザーID
+ * @returns { error: PostgrestError | null }
+ */
+export async function approveUser({
+  userId,
+}: {
+  userId: number;
+}): Promise<{ error: PostgrestError | null }> {
+  const supabase = createClientSupabaseClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ status: "active", updated_at: new Date().toISOString() })
+    .eq("id", userId)
+    .eq("is_deleted", false);
+
+  if (error) {
+    console.error("Supabase ユーザー承認エラー:", error.message);
+    return { error };
+  }
+
+  return { error: null };
+}
+
+/**
+ * ユーザーを否認する（status を rejected に更新）
+ * @param {number} userId - ユーザーID
+ * @returns { error: PostgrestError | null }
+ */
+export async function rejectUser({
+  userId,
+}: {
+  userId: number;
+}): Promise<{ error: PostgrestError | null }> {
+  const supabase = createClientSupabaseClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ status: "rejected", updated_at: new Date().toISOString() })
+    .eq("id", userId)
+    .eq("is_deleted", false);
+
+  if (error) {
+    console.error("Supabase ユーザー否認エラー:", error.message);
+    return { error };
+  }
+
+  return { error: null };
 }

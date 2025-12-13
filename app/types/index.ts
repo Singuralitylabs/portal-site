@@ -56,9 +56,11 @@ export type InsertUserType = UsersTable["Insert"];
 export type ProfileUserType = Pick<UserType, "id" | "display_name" | "role" | "created_at" | "bio">;
 
 export type UserStatusType = "pending" | "active" | "rejected";
+export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
 export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
+export type PendingUserType = Pick<UserType, "id" | "display_name" | "email">;
 export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 
 // Categories types
