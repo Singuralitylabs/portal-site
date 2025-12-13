@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { google, calendar_v3 } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
 import * as path from "path";
 
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         });
 
         // 各イベントにカレンダーIDを付与
-        const events = (response.data.items || []).map(event => ({
+        const events = (response.data.items || []).map((event: calendar_v3.Schema$Event) => ({
           ...event,
           calendarId,
         }));
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     const allEvents = eventsArrays.flat();
 
     // 開始時刻でソート
-    allEvents.sort((a, b) => {
+    allEvents.sort((a: calendar_v3.Schema$Event, b: calendar_v3.Schema$Event) => {
       const aStart = a.start?.dateTime || a.start?.date || "";
       const bStart = b.start?.dateTime || b.start?.date || "";
       return aStart.localeCompare(bStart);
