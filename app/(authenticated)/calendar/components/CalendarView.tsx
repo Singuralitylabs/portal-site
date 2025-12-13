@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
 import { format, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, getDay } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -10,6 +10,8 @@ import { EventDetailModal } from "./EventDetailModal";
 
 interface CalendarViewProps {
   events: CalendarEvent[];
+  fetchedStartDate: Date;
+  fetchedEndDate: Date;
 }
 
 // react-big-calendar用のイベント型
@@ -51,13 +53,23 @@ const messages = {
   showMore: (total: number) => `+ ${total}件`,
 };
 
-export function CalendarView({ events: initialEvents }: CalendarViewProps) {
+export function CalendarView({
+  events: initialEvents,
+  fetchedStartDate,
+  fetchedEndDate,
+}: CalendarViewProps) {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [view, setView] = useState<View>("month");
   const [date, setDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
+
+  // 取得済み期間を管理（useRefで最新の値を参照）
+  const fetchedRangeRef = useRef({
+    start: fetchedStartDate,
+    end: fetchedEndDate,
+  });
 
   // 表示期間に基づいて開始日と終了日を計算
   const getDateRange = (currentDate: Date, currentView: View): { start: Date; end: Date } => {
@@ -91,30 +103,56 @@ export function CalendarView({ events: initialEvents }: CalendarViewProps) {
     }
   };
 
-  // カレンダーイベントを取得
-  const fetchEvents = async (currentDate: Date, currentView: View) => {
+  // カレンダーイベントを取得（範囲外の場合のみ）
+  const fetchEvents = useCallback(async (currentDate: Date, currentView: View) => {
+    const { start, end } = getDateRange(currentDate, currentView);
+
+    // 既に取得済み範囲内の場合はスキップ
+    const fetchedRange = fetchedRangeRef.current;
+    if (start >= fetchedRange.start && end <= fetchedRange.end) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { start, end } = getDateRange(currentDate, currentView);
+      // 取得範囲を拡張（表示期間の前後1ヶ月）
+      const expandedStart = new Date(start.getFullYear(), start.getMonth() - 1, 1);
+      const expandedEnd = new Date(end.getFullYear(), end.getMonth() + 2, 0);
+
       const response = await fetch(
-        `/api/calendar/events?start=${start.toISOString()}&end=${end.toISOString()}`
+        `/api/calendar/events?start=${expandedStart.toISOString()}&end=${expandedEnd.toISOString()}`
       );
       const data = await response.json();
 
       if (data.success) {
-        setEvents(data.events);
+        // 既存イベントと新規イベントをマージ（重複排除）
+        setEvents(prevEvents => {
+          const mergedEvents = [...prevEvents, ...data.events];
+          const uniqueEvents = Array.from(
+            new Map(mergedEvents.map(event => [event.id, event])).values()
+          );
+          return uniqueEvents;
+        });
+
+        // 取得済み範囲を更新
+        fetchedRangeRef.current = {
+          start: new Date(
+            Math.min(fetchedRangeRef.current.start.getTime(), expandedStart.getTime())
+          ),
+          end: new Date(Math.max(fetchedRangeRef.current.end.getTime(), expandedEnd.getTime())),
+        };
       }
     } catch (error) {
       console.error("イベント取得エラー:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // 日付またはビューが変更されたときにイベントを再取得
+  // 日付またはビューが変更されたときに必要に応じてイベントを取得
   useEffect(() => {
     fetchEvents(date, view);
-  }, [date, view]);
+  }, [date, view, fetchEvents]);
 
   // レスポンシブ対応：画面サイズを検知
   useEffect(() => {

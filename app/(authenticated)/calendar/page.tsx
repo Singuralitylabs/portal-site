@@ -1,13 +1,15 @@
 import { CalendarPageTemplate } from "./components/Template";
 import { fetchCalendarEvents } from "@/app/api/calendar/calendar-server";
-import { startOfMonth, endOfMonth } from "date-fns";
 
 export default async function CalendarPage() {
-  // 初期表示は現在月のイベントを取得
+  // 初期表示は前後3ヶ月分（合計6ヶ月分）のイベントを取得
   const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 4, 0); // +3ヶ月の末日
+
   const { data: events, error } = await fetchCalendarEvents({
-    startDate: startOfMonth(now),
-    endDate: endOfMonth(now),
+    startDate,
+    endDate,
   });
 
   if (error || !events) {
@@ -24,5 +26,11 @@ export default async function CalendarPage() {
     );
   }
 
-  return <CalendarPageTemplate events={events} />;
+  return (
+    <CalendarPageTemplate
+      events={events}
+      fetchedStartDate={startDate}
+      fetchedEndDate={endDate}
+    />
+  );
 }
