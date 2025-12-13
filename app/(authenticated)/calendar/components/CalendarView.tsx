@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
+import { format, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, getDay } from "date-fns";
 import { ja } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { CalendarEvent } from "@/app/services/api/calendar-server";
@@ -51,11 +51,70 @@ const messages = {
   showMore: (total: number) => `+ ${total}件`,
 };
 
-export function CalendarView({ events }: CalendarViewProps) {
+export function CalendarView({ events: initialEvents }: CalendarViewProps) {
+  const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [view, setView] = useState<View>("month");
   const [date, setDate] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 表示期間に基づいて開始日と終了日を計算
+  const getDateRange = (currentDate: Date, currentView: View): { start: Date; end: Date } => {
+    switch (currentView) {
+      case "month":
+        return {
+          start: startOfMonth(currentDate),
+          end: endOfMonth(currentDate),
+        };
+      case "week":
+        return {
+          start: startOfWeek(currentDate, { locale: ja }),
+          end: endOfWeek(currentDate, { locale: ja }),
+        };
+      case "day":
+        return {
+          start: startOfDay(currentDate),
+          end: endOfDay(currentDate),
+        };
+      case "agenda":
+        // Agendaビューは1ヶ月分表示
+        return {
+          start: currentDate,
+          end: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate()),
+        };
+      default:
+        return {
+          start: startOfMonth(currentDate),
+          end: endOfMonth(currentDate),
+        };
+    }
+  };
+
+  // カレンダーイベントを取得
+  const fetchEvents = async (currentDate: Date, currentView: View) => {
+    setIsLoading(true);
+    try {
+      const { start, end } = getDateRange(currentDate, currentView);
+      const response = await fetch(
+        `/api/calendar/events?start=${start.toISOString()}&end=${end.toISOString()}`
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        setEvents(data.events);
+      }
+    } catch (error) {
+      console.error("イベント取得エラー:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 日付またはビューが変更されたときにイベントを再取得
+  useEffect(() => {
+    fetchEvents(date, view);
+  }, [date, view]);
 
   // レスポンシブ対応：画面サイズを検知
   useEffect(() => {
@@ -113,6 +172,14 @@ export function CalendarView({ events }: CalendarViewProps) {
   return (
     <>
       <div className="bg-white p-3 md:p-6 rounded-lg shadow-md mt-4">
+        {/* ローディング表示 */}
+        {isLoading && (
+          <div className="mb-3 text-center text-sm text-gray-600">
+            <span className="inline-block animate-spin mr-2">⏳</span>
+            イベントを読み込み中...
+          </div>
+        )}
+
         <div style={{ height: isMobile ? "500px" : "700px" }}>
           <Calendar
             localizer={localizer}

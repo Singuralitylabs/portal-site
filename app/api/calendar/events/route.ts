@@ -1,21 +1,22 @@
 import { google } from "googleapis";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import * as path from "path";
 
-// カレンダーIDを環境変数から取得
-const CALENDAR_IDS = (process.env.GOOGLE_CALENDAR_IDS || "")
-  .split(",")
-  .map(id => id.trim())
-  .filter(Boolean);
+// カレンダーIDを環境変数から取得、なければデフォルト値を使用
+const getCalendarIds = (): string[] => {
+  if (process.env.GOOGLE_CALENDAR_IDS) {
+    return process.env.GOOGLE_CALENDAR_IDS.split(",").map(id => id.trim());
+  }
+  // デフォルト値
+  return [
+    "c_4df1ec54385c933420637b11092efb7af2d5e7829941f8a7527ec5a8e4a2033d@group.calendar.google.com",
+    "ja.japanese#holiday@group.v.calendar.google.com",
+  ];
+};
 
-// カレンダーIDが設定されていない場合はエラー
-if (CALENDAR_IDS.length === 0) {
-  throw new Error(
-    "GOOGLE_CALENDAR_IDS environment variable is not configured. Please set it in your .env file."
-  );
-}
+const CALENDAR_IDS = getCalendarIds();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // 環境変数からサービスアカウントキーを取得、なければローカルファイルを使用
     let auth;
@@ -38,19 +39,29 @@ export async function GET() {
     // Google Calendar APIクライアントを作成
     const calendar = google.calendar({ version: "v3", auth });
 
-    // 現在時刻から1ヶ月後までのイベントを取得
-    const now = new Date();
-    const oneMonthLater = new Date();
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    // クエリパラメータから取得期間を取得
+    const searchParams = request.nextUrl.searchParams;
+    const startParam = searchParams.get("start");
+    const endParam = searchParams.get("end");
+
+    // 取得期間の設定（パラメータがあればそれを使用、なければデフォルト）
+    const startDate = startParam ? new Date(startParam) : new Date();
+    const endDate = endParam
+      ? new Date(endParam)
+      : (() => {
+          const oneMonthLater = new Date();
+          oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+          return oneMonthLater;
+        })();
 
     // 全カレンダーからイベントを取得
     const allEventsPromises = CALENDAR_IDS.map(async calendarId => {
       try {
         const response = await calendar.events.list({
           calendarId,
-          timeMin: now.toISOString(),
-          timeMax: oneMonthLater.toISOString(),
-          maxResults: 50,
+          timeMin: startDate.toISOString(),
+          timeMax: endDate.toISOString(),
+          maxResults: 100,
           singleEvents: true,
           orderBy: "startTime",
         });
