@@ -7,13 +7,18 @@ export const CALENDAR_COLORS: {
 } = {
   // シンラボMTGカレンダー
   "singularity-mtg": {
-    backgroundColor: colors.purple[600], // 紫色
+    backgroundColor: colors.purple[600],
     borderColor: colors.purple[700],
   },
-  // 日本の祝日カレンダー
-  "holiday": {
-    backgroundColor: colors.red[500], // 赤色
+  // シンラボイベントカレンダー
+  "singularity-event": {
+    backgroundColor: colors.red[500],
     borderColor: colors.red[600],
+  },
+  // 日本の祝日カレンダー
+  holiday: {
+    backgroundColor: colors.blue[500],
+    borderColor: colors.blue[600],
   },
 };
 
