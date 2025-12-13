@@ -1,5 +1,5 @@
 import { CalendarPageTemplate } from "./components/Template";
-import { fetchCalendarEvents } from "@/app/services/api/calendar-server";
+import { fetchCalendarEvents } from "@/app/api/calendar/calendar-server";
 import { startOfMonth, endOfMonth } from "date-fns";
 
 export default async function CalendarPage() {

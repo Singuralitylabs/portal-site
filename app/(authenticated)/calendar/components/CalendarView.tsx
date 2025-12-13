@@ -5,7 +5,7 @@ import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
 import { format, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, getDay } from "date-fns";
 import { ja } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { CalendarEvent } from "@/app/services/api/calendar-server";
+import { CalendarEvent } from "@/app/api/calendar/calendar-server";
 import { EventDetailModal } from "./EventDetailModal";
 
 interface CalendarViewProps {

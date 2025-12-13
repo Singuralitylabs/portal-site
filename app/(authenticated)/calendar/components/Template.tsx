@@ -1,5 +1,5 @@
 import { PageTitle } from "@/app/components/PageTitle";
-import { CalendarEvent } from "@/app/services/api/calendar-server";
+import { CalendarEvent } from "@/app/api/calendar/calendar-server";
 import { CalendarView } from "./CalendarView";
 
 interface CalendarPageTemplateProps {

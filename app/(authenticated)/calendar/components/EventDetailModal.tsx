@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarEvent } from "@/app/services/api/calendar-server";
+import { CalendarEvent } from "@/app/api/calendar/calendar-server";
 
 interface EventDetailModalProps {
   event: CalendarEvent | null;
