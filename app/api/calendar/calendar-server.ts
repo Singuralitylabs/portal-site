@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { google, calendar_v3 } from "googleapis";
 import * as path from "path";
 
 // カレンダーIDとエイリアスのマッピング
@@ -113,7 +113,7 @@ export async function fetchCalendarEvents(
         });
 
         // 各イベントにカレンダーエイリアスを付与（IDは付与しない）
-        const events = (response.data.items || []).map(event => ({
+        const events = (response.data.items || []).map((event: calendar_v3.Schema$Event) => ({
           ...event,
           calendarId: config.alias, // エイリアスを使用
         }));
@@ -129,7 +129,7 @@ export async function fetchCalendarEvents(
     const allEvents = eventsArrays.flat();
 
     // 開始時刻でソート
-    allEvents.sort((a, b) => {
+    allEvents.sort((a: calendar_v3.Schema$Event, b: calendar_v3.Schema$Event) => {
       const aStart = a.start?.dateTime || a.start?.date || "";
       const bStart = b.start?.dateTime || b.start?.date || "";
       return aStart.localeCompare(bStart);
