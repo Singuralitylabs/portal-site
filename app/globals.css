@@ -1,3 +1,117 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* react-big-calendar カスタムスタイル */
+@layer components {
+  /* ヘッダー */
+  .rbc-header {
+    @apply px-1 py-2.5 font-semibold text-sm text-gray-700 border-b-2 border-gray-200;
+  }
+
+  /* 今日の日付 */
+  .rbc-today {
+    @apply bg-amber-100;
+  }
+
+  /* 月ビュー：日付セル */
+  .rbc-date-cell {
+    @apply p-1 text-right;
+  }
+
+  /* イベント */
+  .rbc-event {
+    @apply px-1 py-0.5 rounded text-xs;
+  }
+
+  /* 選択された日付 */
+  .rbc-selected-cell {
+    @apply bg-purple-100;
+  }
+
+  /* ツールバー */
+  .rbc-toolbar {
+    @apply flex flex-wrap items-center justify-between mb-4 gap-2;
+  }
+
+  .rbc-toolbar button {
+    @apply px-3 py-1.5 rounded bg-gray-200 hover:bg-gray-300 text-sm;
+  }
+
+  .rbc-toolbar button.rbc-active {
+    @apply bg-purple-600 text-white hover:bg-purple-700;
+  }
+
+  /* 週ビュー：時間列 */
+  .rbc-time-slot {
+    @apply border-gray-200;
+  }
+
+  /* 週ビュー：現在時刻の線 */
+  .rbc-current-time-indicator {
+    @apply bg-red-500;
+  }
+
+  /* agendaビュー */
+  .rbc-agenda-view {
+    @apply border border-gray-200;
+  }
+
+  .rbc-agenda-table {
+    @apply w-full;
+  }
+
+  .rbc-agenda-date-cell,
+  .rbc-agenda-time-cell {
+    @apply p-2 border-b border-gray-200;
+  }
+
+  .rbc-agenda-event-cell {
+    @apply p-2 border-b border-gray-200;
+  }
+
+  /* スマホ対応：768px未満 */
+  @media (max-width: 767px) {
+    .rbc-header {
+      @apply px-0.5 py-1.5 text-xs;
+    }
+
+    .rbc-date-cell {
+      @apply p-0.5 text-xs;
+    }
+
+    .rbc-event {
+      @apply px-0.5 py-0 text-xs leading-tight;
+    }
+
+    .rbc-toolbar {
+      @apply text-sm;
+    }
+
+    .rbc-toolbar button {
+      @apply px-2 py-1 text-xs;
+    }
+
+    .rbc-toolbar-label {
+      @apply text-sm font-semibold;
+    }
+
+    /* 週ビュー：時間軸の文字サイズ */
+    .rbc-time-header-content,
+    .rbc-time-content {
+      @apply text-xs;
+    }
+
+    /* agendaビュー：スマホ最適化 */
+    .rbc-agenda-date-cell,
+    .rbc-agenda-time-cell,
+    .rbc-agenda-event-cell {
+      @apply p-1.5 text-xs;
+    }
+
+    /* 月表示の「もっと見る」リンク */
+    .rbc-show-more {
+      @apply text-xs;
+    }
+  }
+}
