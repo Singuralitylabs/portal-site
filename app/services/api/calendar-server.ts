@@ -4,12 +4,10 @@ import * as path from "path";
 // カレンダーIDの定義（環境変数から取得、なければデフォルト値を使用）
 const getCalendarIds = (): string[] => {
   if (process.env.GOOGLE_CALENDAR_IDS) {
-    return process.env.GOOGLE_CALENDAR_IDS.split(",").map((id) => id.trim());
+    return process.env.GOOGLE_CALENDAR_IDS.split(",").map(id => id.trim());
   }
   // デフォルト値（環境変数が設定されていない場合）
   return [
-    "hpb22r5bs28tr3f797l3ul3tgo@group.calendar.google.com", // シンラボMTG・イベントカレンダー1
-    "pb619kfn323bjo2fbtalipd5ls@group.calendar.google.com", // シンラボMTG・イベントカレンダー2
     "c_4df1ec54385c933420637b11092efb7af2d5e7829941f8a7527ec5a8e4a2033d@group.calendar.google.com",
     "ja.japanese#holiday@group.v.calendar.google.com", // 日本の祝日
   ];
@@ -39,7 +37,14 @@ interface FetchCalendarEventsResult {
   error: string | null;
 }
 
-export async function fetchCalendarEvents(): Promise<FetchCalendarEventsResult> {
+interface FetchCalendarEventsOptions {
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export async function fetchCalendarEvents(
+  options: FetchCalendarEventsOptions = {}
+): Promise<FetchCalendarEventsResult> {
   try {
     // 環境変数からサービスアカウントキーを取得、なければローカルファイルを使用
     let auth;
@@ -62,19 +67,24 @@ export async function fetchCalendarEvents(): Promise<FetchCalendarEventsResult> 
     // Google Calendar APIクライアントを作成
     const calendar = google.calendar({ version: "v3", auth });
 
-    // 現在時刻から1ヶ月後までのイベントを取得
-    const now = new Date();
-    const oneMonthLater = new Date();
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    // 取得期間の設定（デフォルト：現在時刻から1ヶ月後まで）
+    const startDate = options.startDate || new Date();
+    const endDate =
+      options.endDate ||
+      (() => {
+        const oneMonthLater = new Date();
+        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+        return oneMonthLater;
+      })();
 
     // 全カレンダーからイベントを取得
-    const allEventsPromises = CALENDAR_IDS.map(async (calendarId) => {
+    const allEventsPromises = CALENDAR_IDS.map(async calendarId => {
       try {
         const response = await calendar.events.list({
           calendarId,
-          timeMin: now.toISOString(),
-          timeMax: oneMonthLater.toISOString(),
-          maxResults: 50,
+          timeMin: startDate.toISOString(),
+          timeMax: endDate.toISOString(),
+          maxResults: 100,
           singleEvents: true,
           orderBy: "startTime",
         });

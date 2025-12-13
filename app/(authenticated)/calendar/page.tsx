@@ -1,8 +1,14 @@
 import { CalendarPageTemplate } from "./components/Template";
 import { fetchCalendarEvents } from "@/app/services/api/calendar-server";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 export default async function CalendarPage() {
-  const { data: events, error } = await fetchCalendarEvents();
+  // 初期表示は現在月のイベントを取得
+  const now = new Date();
+  const { data: events, error } = await fetchCalendarEvents({
+    startDate: startOfMonth(now),
+    endDate: endOfMonth(now),
+  });
 
   if (error || !events) {
     return (
