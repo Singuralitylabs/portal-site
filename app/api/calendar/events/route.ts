@@ -66,7 +66,13 @@ export async function GET(request: NextRequest) {
           orderBy: "startTime",
         });
 
-        return response.data.items || [];
+        // 各イベントにカレンダーIDを付与
+        const events = (response.data.items || []).map(event => ({
+          ...event,
+          calendarId,
+        }));
+
+        return events;
       } catch (error) {
         console.error(`カレンダー ${calendarId} の取得エラー:`, error);
         return [];
