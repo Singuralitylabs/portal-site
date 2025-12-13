@@ -1,7 +1,7 @@
 "use client";
 
 import { PageTitle } from "@/app/components/PageTitle";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -52,9 +52,31 @@ const messages = {
 };
 
 export function CalendarPageTemplate({ events }: CalendarPageTemplateProps) {
+  const [isMobile, setIsMobile] = useState(false);
   const [view, setView] = useState<View>("month");
   const [date, setDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+
+  // レスポンシブ対応：画面サイズを検知
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+
+    // 初回マウント時のみ、スマホサイズの場合はagendaビューに切り替え
+    const initialCheck = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setView("agenda");
+      }
+    };
+
+    initialCheck();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // GoogleカレンダーイベントをBigCalendarイベントに変換
   const calendarEvents: BigCalendarEvent[] = useMemo(() => {
@@ -128,12 +150,48 @@ export function CalendarPageTemplate({ events }: CalendarPageTemplateProps) {
   };
 
   return (
-    <>
+    <div className="p-3 md:p-6">
       <PageTitle>シンラボカレンダー</PageTitle>
 
       {/* カレンダー表示 */}
-      <div className="bg-white p-6 rounded-lg shadow-md mt-4">
-        <div style={{ height: "700px" }}>
+      <div className="bg-white p-3 md:p-6 rounded-lg shadow-md mt-4">
+        {/* スマホ用：ビュー切り替えボタン */}
+        {isMobile && (
+          <div className="mb-4 flex gap-2 overflow-x-auto">
+            <button
+              onClick={() => setView("agenda")}
+              className={`px-3 py-2 rounded text-sm whitespace-nowrap ${
+                view === "agenda"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              予定リスト
+            </button>
+            <button
+              onClick={() => setView("day")}
+              className={`px-3 py-2 rounded text-sm whitespace-nowrap ${
+                view === "day"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              日
+            </button>
+            <button
+              onClick={() => setView("week")}
+              className={`px-3 py-2 rounded text-sm whitespace-nowrap ${
+                view === "week"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              週
+            </button>
+          </div>
+        )}
+
+        <div style={{ height: isMobile ? "500px" : "700px" }}>
           <Calendar
             localizer={localizer}
             events={calendarEvents}
@@ -161,18 +219,18 @@ export function CalendarPageTemplate({ events }: CalendarPageTemplateProps) {
       {/* イベント詳細モーダル */}
       {selectedEvent && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl"
+            className="bg-white rounded-lg p-4 md:p-6 max-w-lg w-full shadow-xl max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-2xl font-bold text-gray-900">{selectedEvent.summary}</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 pr-4">{selectedEvent.summary}</h3>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none flex-shrink-0"
               >
                 ×
               </button>
@@ -180,41 +238,41 @@ export function CalendarPageTemplate({ events }: CalendarPageTemplateProps) {
 
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-500">日時</p>
-                <p className="text-gray-900">
+                <p className="text-xs md:text-sm text-gray-500">日時</p>
+                <p className="text-sm md:text-base text-gray-900">
                   📅 {formatDateTime(selectedEvent)} ({getDayOfWeek(selectedEvent)})
                 </p>
               </div>
 
               {selectedEvent.location && (
                 <div>
-                  <p className="text-sm text-gray-500">場所</p>
-                  <p className="text-gray-900">📍 {selectedEvent.location}</p>
+                  <p className="text-xs md:text-sm text-gray-500">場所</p>
+                  <p className="text-sm md:text-base text-gray-900">📍 {selectedEvent.location}</p>
                 </div>
               )}
 
               {selectedEvent.description && (
                 <div>
-                  <p className="text-sm text-gray-500">説明</p>
-                  <p className="text-gray-900 whitespace-pre-wrap">{selectedEvent.description}</p>
+                  <p className="text-xs md:text-sm text-gray-500">説明</p>
+                  <p className="text-sm md:text-base text-gray-900 whitespace-pre-wrap">{selectedEvent.description}</p>
                 </div>
               )}
             </div>
 
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
               {selectedEvent.htmlLink && (
                 <a
                   href={selectedEvent.htmlLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 px-4 py-2 text-center bg-purple-600 text-white rounded hover:bg-purple-700"
+                  className="flex-1 px-4 py-2 text-center text-sm md:text-base bg-purple-600 text-white rounded hover:bg-purple-700"
                 >
                   Googleカレンダーで開く
                 </a>
               )}
               <button
                 onClick={closeModal}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                className="px-4 py-2 text-sm md:text-base bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
               >
                 閉じる
               </button>
@@ -222,6 +280,6 @@ export function CalendarPageTemplate({ events }: CalendarPageTemplateProps) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
