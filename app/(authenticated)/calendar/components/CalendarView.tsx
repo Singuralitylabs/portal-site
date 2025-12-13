@@ -20,7 +20,6 @@ import { EventDetailModal } from "./EventDetailModal";
 import {
   CALENDAR_COLORS,
   CALENDAR_MESSAGES,
-  CALENDAR_RESPONSIVE,
   DEFAULT_CALENDAR_COLOR,
   EVENT_TEXT_COLOR,
 } from "@/app/constants/calendar";
@@ -29,6 +28,7 @@ interface CalendarViewProps {
   events: CalendarEvent[];
   fetchedStartDate: Date;
   fetchedEndDate: Date;
+  defaultView?: View;
 }
 
 // react-big-calendar用のイベント型
@@ -57,11 +57,11 @@ export function CalendarView({
   events: initialEvents,
   fetchedStartDate,
   fetchedEndDate,
+  defaultView = "month",
 }: CalendarViewProps) {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [view, setView] = useState<View>("month");
+  const [view, setView] = useState<View>(defaultView);
   const [date, setDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
 
@@ -158,27 +158,6 @@ export function CalendarView({
     fetchEvents(date, view);
   }, [date, view, fetchEvents]);
 
-  // レスポンシブ対応：画面サイズを検知
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < CALENDAR_RESPONSIVE.MOBILE_BREAKPOINT;
-      setIsMobile(mobile);
-    };
-
-    // 初回マウント時のみ、スマホサイズの場合はagendaビューに切り替え
-    const initialCheck = () => {
-      const mobile = window.innerWidth < CALENDAR_RESPONSIVE.MOBILE_BREAKPOINT;
-      setIsMobile(mobile);
-      if (mobile) {
-        setView("agenda");
-      }
-    };
-
-    initialCheck();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
   // カレンダーIDに基づいて色を取得する関数
   const getCalendarColor = (
     calendarId?: string
@@ -244,13 +223,7 @@ export function CalendarView({
           </div>
         )}
 
-        <div
-          style={{
-            height: isMobile
-              ? CALENDAR_RESPONSIVE.MOBILE_HEIGHT
-              : CALENDAR_RESPONSIVE.DESKTOP_HEIGHT,
-          }}
-        >
+        <div className="h-[500px] md:h-[700px]">
           <Calendar
             localizer={localizer}
             events={calendarEvents}

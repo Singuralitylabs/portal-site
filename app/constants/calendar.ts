@@ -37,12 +37,5 @@ export const CALENDAR_MESSAGES = {
   showMore: (total: number) => `+ ${total}件`,
 } as const;
 
-// レスポンシブ設定
-export const CALENDAR_RESPONSIVE = {
-  MOBILE_BREAKPOINT: 768, // px
-  MOBILE_HEIGHT: "500px",
-  DESKTOP_HEIGHT: "700px",
-} as const;
-
 // イベントのテキスト色
 export const EVENT_TEXT_COLOR = "white";
