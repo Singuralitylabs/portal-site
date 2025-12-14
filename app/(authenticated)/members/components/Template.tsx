@@ -1,4 +1,3 @@
-import { Text } from "@mantine/core";
 import { MemberCard } from "./MemberCard";
 import { PageTitle } from "@/app/components/PageTitle";
 import { MemberType } from "@/app/types";
@@ -19,7 +18,7 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
       <div>
         {members.length > 0 && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8 px-4">
               {sortedMembers.map(member => (
                 <MemberCard key={member.id} member={member} />
               ))}

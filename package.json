@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:types": "source .env.local && npx supabase gen types --lang=typescript --project-id ${SUPABASE_PROJECT_ID} --schema public > app/types/lib/database.types.ts"
+    "db:types": "source .env.local && npx supabase gen types --lang=typescript --project-id ${SUPABASE_PROJECT_ID} --schema public > app/types/lib/database.types.ts",
+    "test": "jest --coverage"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -17,7 +18,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.48.1",
     "lucide-react": "^0.475.0",
-    "next": "^15.4.1",
+    "next": "^15.4.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-youtube": "^10.1.0",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.19.8",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -38,12 +40,14 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
+    "jest": "^30.2.0",
     "postcss": "^8.5.3",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.4.2",
     "supabase": "^2.26.9",
     "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.4",
     "typescript": "^5"
   }
 }

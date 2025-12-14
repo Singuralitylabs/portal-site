@@ -4,9 +4,11 @@ import { useState } from "react";
 import { Button, Menu } from "@mantine/core";
 import { EllipsisVertical } from "lucide-react";
 import {
+  ApplicationWithCategoryAndDeveloperType,
   ContentType,
   DocumentWithCategoryType,
   SelectCategoryType,
+  SelectDeveloperType,
   VideoWithCategoryType,
 } from "@/app/types";
 import { DocumentDeleteModal } from "../documents/components/DocumentDeleteModal";
@@ -14,24 +16,34 @@ import { VideoDeleteModal } from "../videos/components/VideoDeleteModal";
 import { DocumentFormModal } from "../documents/components/DocumentFormModal";
 import { VideoFormModal } from "../videos/components/VideoFormModal";
 import { CONTENT_TYPE } from "@/app/constants/content";
+import { ApplicationDeleteModal } from "../applications/components/ApplicationDeleteModal";
+import { ApplicationFormModal } from "../applications/components/ApplicationFormModal";
 
-interface ContentMgrMenuProps<T extends DocumentWithCategoryType | VideoWithCategoryType> {
+interface ContentMgrMenuProps<
+  T extends
+    | DocumentWithCategoryType
+    | VideoWithCategoryType
+    | ApplicationWithCategoryAndDeveloperType,
+> {
   type: ContentType;
   content: T;
   categories: SelectCategoryType[];
+  developers?: SelectDeveloperType[];
   userId: number;
 }
 
-export default function ContentMgrMenu<T extends DocumentWithCategoryType | VideoWithCategoryType>({
-  type,
-  content,
-  categories,
-  userId,
-}: ContentMgrMenuProps<T>) {
+export default function ContentMgrMenu<
+  T extends
+    | DocumentWithCategoryType
+    | VideoWithCategoryType
+    | ApplicationWithCategoryAndDeveloperType,
+>({ type, content, categories, developers, userId }: ContentMgrMenuProps<T>) {
   const [editDocumentModalOpened, setEditDocumentModalOpened] = useState(false);
   const [deleteDocumentModalOpened, setDeleteDocumentModalOpened] = useState(false);
   const [editVideoModalOpened, setEditVideoModalOpened] = useState(false);
   const [deleteVideoModalOpened, setDeleteVideoModalOpened] = useState(false);
+  const [editApplicationModalOpened, setEditApplicationModalOpened] = useState(false);
+  const [deleteApplicationModalOpened, setDeleteApplicationModalOpened] = useState(false);
 
   const handleEdit = (e: React.MouseEvent) => {
     switch (type) {
@@ -42,6 +54,9 @@ export default function ContentMgrMenu<T extends DocumentWithCategoryType | Vide
         e.preventDefault();
         e.stopPropagation();
         setEditVideoModalOpened(true);
+        break;
+      case CONTENT_TYPE.APPLICATION:
+        setEditApplicationModalOpened(true);
         break;
     }
   };
@@ -55,6 +70,9 @@ export default function ContentMgrMenu<T extends DocumentWithCategoryType | Vide
         e.preventDefault();
         e.stopPropagation();
         setDeleteVideoModalOpened(true);
+        break;
+      case CONTENT_TYPE.APPLICATION:
+        setDeleteApplicationModalOpened(true);
         break;
     }
   };
@@ -114,6 +132,22 @@ export default function ContentMgrMenu<T extends DocumentWithCategoryType | Vide
         onClose={() => setDeleteVideoModalOpened(false)}
         userId={userId}
         videoId={content.id}
+      />
+
+      <ApplicationFormModal
+        opened={editApplicationModalOpened}
+        onClose={() => setEditApplicationModalOpened(false)}
+        categories={categories}
+        developers={developers || []}
+        userId={userId}
+        initialData={content as ApplicationWithCategoryAndDeveloperType}
+      />
+
+      <ApplicationDeleteModal
+        opened={deleteApplicationModalOpened}
+        onClose={() => setDeleteApplicationModalOpened(false)}
+        userId={userId}
+        applicationId={content.id}
       />
     </>
   );
