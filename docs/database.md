@@ -41,20 +41,24 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.1. users テーブル
 
-| カラム名       | データ型       | 制約                                | 説明                                             |
-| -------------- | -------------- | ----------------------------------- | ------------------------------------------------ |
-| `id`           | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                   |
-| `auth_id`      | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                       |
-| `email`        | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）  |
-| `display_name` | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                         |
-| `role`         | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）. |
-| `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）  |
-| `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                             |
-| `avatar_url`   | `TEXT`         |                                     | Googleプロフィール画像のURL                      |
-| `sns_url`      | `TEXT`         |                                     | SNSアカウントや個人のHP等のURL                   |
-| `is_deleted`   | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
-| `created_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
-| `updated_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |
+| カラム名        | データ型       | 制約                                | 説明                                             |
+| --------------- | -------------- | ----------------------------------- | ------------------------------------------------ |
+| `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                   |
+| `auth_id`       | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                       |
+| `email`         | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）  |
+| `display_name`  | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                         |
+| `role`          | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）. |
+| `status`        | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）  |
+| `bio`           | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                             |
+| `avatar_url`    | `TEXT`         |                                     | Googleプロフィール画像のURL                      |
+| `x_url`         | `TEXT`         |                                     | X（旧Twitter）アカウントURL                      |
+| `facebook_url`  | `TEXT`         |                                     | FacebookアカウントURL                            |
+| `instagram_url` | `TEXT`         |                                     | InstagramアカウントURL                           |
+| `github_url`    | `TEXT`         |                                     | GitHubアカウントURL                              |
+| `portfolio_url` | `TEXT`         |                                     | ポートフォリオサイトURL                          |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
+| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
+| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |
 
 ---
 
@@ -164,6 +168,11 @@ erDiagram
         VARCHAR status "ユーザーの状態（例: pending, active, rejected） (最大50文字)"
         VARCHAR bio "ユーザーの自己紹介文 (最大500文字)"
         TEXT avatar_url "Googleプロフィール画像のURL"
+        TEXT x_url "X（旧Twitter）アカウントURL"
+        TEXT facebook_url "FacebookアカウントURL"
+        TEXT instagram_url "InstagramアカウントURL"
+        TEXT github_url "GitHubアカウントURL"
+        TEXT portfolio_url "ポートフォリオサイトURL"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
