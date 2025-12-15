@@ -608,7 +608,7 @@ sequenceDiagram
 ### 6.5 データ取得
 
 - usersテーブルから以下のカラムを取得：
-  - `id, display_name, role, bio, avatar_url, sns_url`
+  - `id, display_name, role, bio, avatar_url, x_url, facebook_url, instagram_url, github_url, portfolio_url`
 - 取得条件：
   - `status = 'active'`（承認済みメンバーのみ）
   - `is_deleted = FALSE`（論理削除されていないメンバーのみ）
