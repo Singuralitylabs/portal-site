@@ -2,16 +2,41 @@ import { google, calendar_v3 } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
 import * as path from "path";
 
-// カレンダーIDを環境変数から取得、なければデフォルト値を使用
-const getCalendarIds = (): string[] => {
+// カレンダーIDとエイリアスのマッピング
+interface CalendarConfig {
+  alias: string;
+  id: string;
+}
+
+// カレンダー設定の取得（calendar-server.tsと同じロジック）
+const getCalendarConfigs = (): CalendarConfig[] => {
   if (process.env.GOOGLE_CALENDAR_IDS) {
-    return process.env.GOOGLE_CALENDAR_IDS.split(",").map(id => id.trim());
+    return process.env.GOOGLE_CALENDAR_IDS.split(",")
+      .map(entry => entry.trim())
+      .map(entry => {
+        // "alias:calendarId" 形式をパース
+        const [alias, encodedId] = entry.split(":");
+        if (!alias || !encodedId) {
+          console.warn(`不正なカレンダー設定: ${entry}`);
+          return null;
+        }
+        return {
+          alias: alias.trim(),
+          id: decodeURIComponent(encodedId.trim()), // URLエンコードされた#(%23)をデコード
+        };
+      })
+      .filter((config): config is CalendarConfig => config !== null);
   }
-  // デフォルト値
-  return ["ja.japanese#holiday@group.v.calendar.google.com"];
+  // デフォルト値（環境変数が設定されていない場合）
+  return [
+    {
+      alias: "holiday",
+      id: "ja.japanese#holiday@group.v.calendar.google.com",
+    },
+  ];
 };
 
-const CALENDAR_IDS = getCalendarIds();
+const CALENDAR_CONFIGS = getCalendarConfigs();
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,10 +77,10 @@ export async function GET(request: NextRequest) {
         })();
 
     // 全カレンダーからイベントを取得
-    const allEventsPromises = CALENDAR_IDS.map(async calendarId => {
+    const allEventsPromises = CALENDAR_CONFIGS.map(async config => {
       try {
         const response = await calendar.events.list({
-          calendarId,
+          calendarId: config.id,
           timeMin: startDate.toISOString(),
           timeMax: endDate.toISOString(),
           maxResults: 100,
@@ -63,15 +88,15 @@ export async function GET(request: NextRequest) {
           orderBy: "startTime",
         });
 
-        // 各イベントにカレンダーIDを付与
+        // 各イベントにカレンダーエイリアスを付与（calendar-server.tsと同じ仕様）
         const events = (response.data.items || []).map((event: calendar_v3.Schema$Event) => ({
           ...event,
-          calendarId,
+          calendarId: config.alias, // エイリアスを使用
         }));
 
         return events;
       } catch (error) {
-        console.error(`カレンダー ${calendarId} の取得エラー:`, error);
+        console.error(`カレンダー ${config.alias} (${config.id}) の取得エラー:`, error);
         return [];
       }
     });
