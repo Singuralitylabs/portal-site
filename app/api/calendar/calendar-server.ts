@@ -107,7 +107,7 @@ export async function fetchCalendarEvents(
           calendarId: config.id,
           timeMin: startDate.toISOString(),
           timeMax: endDate.toISOString(),
-          maxResults: 100,
+          maxResults: 1000,
           singleEvents: true,
           orderBy: "startTime",
         });
