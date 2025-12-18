@@ -1,4 +1,4 @@
-import { Modal, Text, Stack, Group, Avatar } from "@mantine/core";
+import { Modal, Text, Stack, Group, Avatar, Badge } from "@mantine/core";
 import type { MemberType } from "@/app/types";
 import { MarkdownText } from "@/app/components/MarkdownText";
 
@@ -18,6 +18,17 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             <Text size="xl" fw={600}>
               {memberInfo.display_name}
             </Text>
+            {memberInfo.position_tags && memberInfo.position_tags.length > 0 && (
+              <Group gap="xs">
+                {memberInfo.position_tags.map((tag, index) => (
+                  tag.positions && (
+                    <Badge key={index} variant="light" size="sm">
+                      {tag.positions.name}
+                    </Badge>
+                  )
+                ))}
+              </Group>
+            )}
           </Stack>
         </Group>
 
