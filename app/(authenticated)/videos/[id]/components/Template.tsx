@@ -2,8 +2,6 @@ import { VideoWithCategoryType } from "@/app/types";
 import { PageTitle } from "@/app/components/PageTitle";
 import { MarkdownText } from "@/app/components/MarkdownText";
 import { Button, Flex, Text, Divider } from "@mantine/core";
-import Link from "next/link";
-import remarkGfm from "remark-gfm";
 import Youtube from "./Youtube";
 import { Calendar } from "lucide-react";
 

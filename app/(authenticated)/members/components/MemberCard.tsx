@@ -1,7 +1,7 @@
 "use client";
 
 import { MemberType } from "@/app/types";
-import { Card, Avatar, Text, Group, Badge } from "@mantine/core";
+import { Card, Avatar, Text, Group } from "@mantine/core";
 import { MemberDetailModal } from "./MemberDetailModal";
 import { useState } from "react";
 import { MarkdownText } from "@/app/components/MarkdownText";
@@ -34,26 +34,9 @@ export function MemberCard({ member }: MemberCardProps) {
             {!member.avatar_url && avatarContent}
           </Avatar>
           <div style={{ flex: 1 }}>
-            <Group align="flex-start" gap="md" mb={8} style={{ minHeight: "2.5em", marginBottom: 8 }} wrap="nowrap">
-              <Text fw={500} size="lg" truncate>
-                {member.display_name}
-              </Text>
-              {member.position_tags && member.position_tags.length > 0 && (
-                <Group gap={6} style={{ maxWidth: "60%", flexWrap: "wrap", maxHeight: "2.5em", overflow: "hidden" }}>
-                  {member.position_tags.map((tag) => (
-                    <Badge
-                      key={tag.positions.id}
-                      size="xs"
-                      variant="light"
-                      color="blue"
-                      style={{ fontSize: "0.5rem" }}
-                    >
-                      {tag.positions.name}
-                    </Badge>
-                  ))}
-                </Group>
-              )}
-            </Group>
+            <Text fw={500} size="lg" mb={4}>
+              {member.display_name}
+            </Text>
             <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }}>
               <MarkdownText>{member.bio || ""}</MarkdownText>
             </Text>

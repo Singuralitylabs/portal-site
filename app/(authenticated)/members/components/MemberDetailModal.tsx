@@ -20,9 +20,9 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             </Text>
             {memberInfo.position_tags && memberInfo.position_tags.length > 0 && (
               <Group gap="xs">
-                {memberInfo.position_tags.map((tag) => (
+                {memberInfo.position_tags.map((tag, index) => (
                   tag.positions && (
-                    <Badge key={tag.positions.id} variant="light" size="sm">
+                    <Badge key={index} variant="light" size="sm">
                       {tag.positions.name}
                     </Badge>
                   )
