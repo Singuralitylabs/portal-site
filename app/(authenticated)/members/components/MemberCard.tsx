@@ -54,7 +54,7 @@ export function MemberCard({ member }: MemberCardProps) {
                 </Group>
               )}
             </Group>
-            <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }} className="prose prose-sm max-w-none" component="div">
+            <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }}>
               <MarkdownText>{member.bio || ""}</MarkdownText>
             </Text>
           </div>
