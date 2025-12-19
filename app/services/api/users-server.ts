@@ -71,9 +71,10 @@ export async function fetchActiveUsers(): Promise<{
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, display_name, bio, avatar_url")
+    .select(`id, display_name, bio, avatar_url, position_tags(positions(id, name))`)
     .eq("status", "active")
     .eq("is_deleted", false)
+    .eq("position_tags.positions.is_deleted", false)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -81,7 +82,7 @@ export async function fetchActiveUsers(): Promise<{
     return { data: null, error };
   }
 
-  return { data, error: null };
+  return { data: data as unknown as MemberType[], error: null };
 }
 
 /**

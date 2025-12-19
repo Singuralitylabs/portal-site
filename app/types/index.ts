@@ -59,7 +59,14 @@ export type UserStatusType = "pending" | "active" | "rejected";
 export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
-export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
+export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url"> & {
+  position_tags: {
+    positions: {
+      id: number;
+      name: string;
+    };
+  }[];
+};
 export type PendingUserType = Pick<UserType, "id" | "display_name" | "email">;
 export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 
@@ -67,3 +74,11 @@ export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
+
+// Positions types
+type PositionsTable = Database["public"]["Tables"]["positions"];
+export type PositionType = PositionsTable["Row"];
+
+// Positions tag types
+type PositionTagsTable = Database["public"]["Tables"]["position_tags"];
+export type PositionTagType = PositionTagsTable["Row"];
