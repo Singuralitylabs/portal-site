@@ -1,0 +1,129 @@
+import { google, calendar_v3 } from "googleapis";
+import { NextRequest, NextResponse } from "next/server";
+import * as path from "path";
+
+// カレンダーIDとエイリアスのマッピング
+interface CalendarConfig {
+  alias: string;
+  id: string;
+}
+
+// カレンダー設定の取得（calendar-server.tsと同じロジック）
+const getCalendarConfigs = (): CalendarConfig[] => {
+  if (process.env.GOOGLE_CALENDAR_IDS) {
+    return process.env.GOOGLE_CALENDAR_IDS.split(",")
+      .map(entry => entry.trim())
+      .map(entry => {
+        // "alias:calendarId" 形式をパース
+        const [alias, encodedId] = entry.split(":");
+        if (!alias || !encodedId) {
+          console.warn(`不正なカレンダー設定: ${entry}`);
+          return null;
+        }
+        return {
+          alias: alias.trim(),
+          id: decodeURIComponent(encodedId.trim()), // URLエンコードされた#(%23)をデコード
+        };
+      })
+      .filter((config): config is CalendarConfig => config !== null);
+  }
+  // デフォルト値（環境変数が設定されていない場合）
+  return [
+    {
+      alias: "holiday",
+      id: "ja.japanese#holiday@group.v.calendar.google.com",
+    },
+  ];
+};
+
+const CALENDAR_CONFIGS = getCalendarConfigs();
+
+export async function GET(request: NextRequest) {
+  try {
+    // 環境変数からサービスアカウントキーを取得、なければローカルファイルを使用
+    let auth;
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+      // 本番環境：環境変数から認証情報を取得
+      const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+      auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      });
+    } else {
+      // 開発環境：ローカルファイルから認証情報を取得
+      const keyFilePath = path.join(process.cwd(), "google-service-account.json");
+      auth = new google.auth.GoogleAuth({
+        keyFile: keyFilePath,
+        scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      });
+    }
+
+    // Google Calendar APIクライアントを作成
+    const calendar = google.calendar({ version: "v3", auth });
+
+    // クエリパラメータから取得期間を取得
+    const searchParams = request.nextUrl.searchParams;
+    const startParam = searchParams.get("start");
+    const endParam = searchParams.get("end");
+
+    // 取得期間の設定（パラメータがあればそれを使用、なければデフォルト）
+    const startDate = startParam ? new Date(startParam) : new Date();
+    const endDate = endParam
+      ? new Date(endParam)
+      : (() => {
+          const oneMonthLater = new Date();
+          oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+          return oneMonthLater;
+        })();
+
+    // 全カレンダーからイベントを取得
+    const allEventsPromises = CALENDAR_CONFIGS.map(async config => {
+      try {
+        const response = await calendar.events.list({
+          calendarId: config.id,
+          timeMin: startDate.toISOString(),
+          timeMax: endDate.toISOString(),
+          maxResults: 100,
+          singleEvents: true,
+          orderBy: "startTime",
+        });
+
+        // 各イベントにカレンダーエイリアスを付与（calendar-server.tsと同じ仕様）
+        const events = (response.data.items || []).map((event: calendar_v3.Schema$Event) => ({
+          ...event,
+          calendarId: config.alias, // エイリアスを使用
+        }));
+
+        return events;
+      } catch (error) {
+        console.error(`カレンダー ${config.alias} (${config.id}) の取得エラー:`, error);
+        return [];
+      }
+    });
+
+    const eventsArrays = await Promise.all(allEventsPromises);
+    const allEvents = eventsArrays.flat();
+
+    // 開始時刻でソート
+    allEvents.sort((a: calendar_v3.Schema$Event, b: calendar_v3.Schema$Event) => {
+      const aStart = a.start?.dateTime || a.start?.date || "";
+      const bStart = b.start?.dateTime || b.start?.date || "";
+      return aStart.localeCompare(bStart);
+    });
+
+    return NextResponse.json({
+      success: true,
+      events: allEvents,
+    });
+  } catch (error) {
+    console.error("カレンダーイベント取得エラー:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "カレンダーイベントの取得に失敗しました",
+        details: error instanceof Error ? error.message : "不明なエラー",
+      },
+      { status: 500 }
+    );
+  }
+}
