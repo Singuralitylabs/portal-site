@@ -33,7 +33,7 @@ Google Calendar APIを使用して複数のGoogleカレンダーからイベン�
 
 #### 取得対象カレンダー
 
-以下のカレンダーからイベントを取得します（環境変数で設定可能）：
+以下のカレンダーからイベントを取得します（環境変数で設定可能）
 
 - シンラボMTGカレンダー
 - シンラボイベントカレンダー
@@ -90,7 +90,7 @@ GET /api/calendar/events?start=2024-01-01T00:00:00Z&end=2024-01-31T23:59:59Z
 
 #### CalendarEvent
 
-Googleカレンダーイベントの型定義：
+Googleカレンダーイベントの型定義
 
 ```typescript
 interface CalendarEvent {
@@ -216,6 +216,7 @@ GOOGLE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"...",...}'
 **フォーマット**: `alias1:calendarId1,alias2:calendarId2`
 
 **注意事項**:
+
 - `#`記号はURLエンコード（`%23`）して記述
 - エイリアス名は `app/constants/calendar.ts` の `CALENDAR_COLORS` で色を定義する際に使用
 
@@ -228,8 +229,8 @@ GOOGLE_CALENDAR_IDS="singularity-mtg:calendar_id_1,holiday:ja.japanese%23holiday
 #### 取得期間の制限
 
 - **デフォルト開始**: 現在時刻
-- **デフォルト終了**: 現在時刻から1ヶ月後
-- **最大件数**: カレンダーごとに100件（`maxResults`パラメータ）
+- **デフォルト終了**: 現在時刻から前後3ヶ月
+- **最大件数**: カレンダーごとに1000件（`maxResults`パラメータ）
 - **クエリパラメータ**: `start`と`end`で取得期間をカスタマイズ可能
 
 #### イベントの表示形式
@@ -237,11 +238,8 @@ GOOGLE_CALENDAR_IDS="singularity-mtg:calendar_id_1,holiday:ja.japanese%23holiday
 - **色分け**: カレンダーエイリアスごとに異なる色で表示（TailwindCSSカラーパレット使用）
   - シンラボMTGカレンダー（`singularity-mtg`）: 紫色（`purple-600` / `purple-700`）
   - 日本の祝日カレンダー（`holiday`）: 赤色（`red-500` / `red-600`）
-  - その他のカレンダー: グレー（`gray-500` / `gray-600`）
-- **文字色**: 白色
-- **日本語対応**: すべてのラベルとメッセージが日本語で表示
+  - その他のカレンダー: 青色（`blue-500` / `blue-600`）
 - **日付フォーマット**: 日本のロケール形式
-- **終日イベント**: 当日のみ表示（翌日に跨らない）
 
 ## 3. Slack通知API
 
