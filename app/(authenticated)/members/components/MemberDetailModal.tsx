@@ -1,4 +1,4 @@
-import { Modal, Text, Stack, Group, Avatar } from "@mantine/core";
+import { Modal, Text, Stack, Group, Avatar, Anchor } from "@mantine/core";
 import type { MemberType } from "@/app/types";
 
 interface MemberDetailModalProps {
@@ -8,6 +8,13 @@ interface MemberDetailModalProps {
 }
 
 export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailModalProps) {
+  const hasLinks =
+    memberInfo.x_url ||
+    memberInfo.facebook_url ||
+    memberInfo.instagram_url ||
+    memberInfo.github_url ||
+    memberInfo.portfolio_url;
+
   return (
     <Modal opened={opened} onClose={onClose} title={`メンバーのご紹介`} centered size="xl">
       <Stack gap="lg">
@@ -29,6 +36,61 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
               {memberInfo.bio}
             </Text>
           </Stack>
+        )}
+
+        {hasLinks && (
+          <Group gap="md" mt="xs">
+            {memberInfo.x_url && (
+              <Anchor
+                href={memberInfo.x_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+              >
+                X URL
+              </Anchor>
+            )}
+            {memberInfo.facebook_url && (
+              <Anchor
+                href={memberInfo.facebook_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+              >
+                Facebook URL
+              </Anchor>
+            )}
+            {memberInfo.instagram_url && (
+              <Anchor
+                href={memberInfo.instagram_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+              >
+                Instagram URL
+              </Anchor>
+            )}
+            {memberInfo.github_url && (
+              <Anchor
+                href={memberInfo.github_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+              >
+                GitHub URL
+              </Anchor>
+            )}
+            {memberInfo.portfolio_url && (
+              <Anchor
+                href={memberInfo.portfolio_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+              >
+                Webサイト URL
+              </Anchor>
+            )}
+          </Group>
         )}
       </Stack>
     </Modal>
