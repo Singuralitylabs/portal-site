@@ -10,7 +10,12 @@ interface ProfilePageTemplateProps {
   initialUser: ProfileUserType;
   updateProfile: (
     displayName: string,
-    bio: string
+    bio: string,
+    x_url: string,
+    facebook_url: string,
+    instagram_url: string,
+    github_url: string,
+    portfolio_url: string
   ) => Promise<{ success: boolean; message?: string }>;
 }
 
@@ -18,6 +23,11 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
   const [user, setUser] = useState<ProfileUserType>(initialUser);
   const [name, setName] = useState(initialUser.display_name);
   const [bio, setBio] = useState(initialUser.bio || "");
+  const [x_url, setXUrl] = useState(initialUser.x_url || "");
+  const [facebook_url, setFacebookUrl] = useState(initialUser.facebook_url || "");
+  const [instagram_url, setInstagramUrl] = useState(initialUser.instagram_url || "");
+  const [github_url, setGithubUrl] = useState(initialUser.github_url || "");
+  const [portfolio_url, setPortfolioUrl] = useState(initialUser.portfolio_url || "");
   const [isPending, startTransition] = useTransition();
 
   // 初期ユーザー情報が更新されたら、状態を更新
@@ -25,6 +35,11 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
     setUser(initialUser);
     setName(initialUser.display_name);
     setBio(initialUser.bio || "");
+    setXUrl(initialUser.x_url || "");
+    setFacebookUrl(initialUser.facebook_url || "");
+    setInstagramUrl(initialUser.instagram_url || "");
+    setGithubUrl(initialUser.github_url || "");
+    setPortfolioUrl(initialUser.portfolio_url || "");
   }, [initialUser]);
 
   // プロフィール更新処理
@@ -33,7 +48,15 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
 
     startTransition(async () => {
       // サーバーアクションを呼び出してプロフィールを更新
-      const { success, message } = await updateProfile(name, bio);
+      const { success, message } = await updateProfile(
+        name,
+        bio,
+        x_url,
+        facebook_url,
+        instagram_url,
+        github_url,
+        portfolio_url
+      );
 
       if (success) {
         // 更新成功時にユーザー情報を更新（実際のデータはサーバーから再取得される）
@@ -41,6 +64,11 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
           ...user,
           display_name: name,
           bio: bio,
+          x_url: x_url,
+          facebook_url: facebook_url,
+          instagram_url: instagram_url,
+          github_url: github_url,
+          portfolio_url: portfolio_url,
         });
 
         // 成功通知
@@ -107,6 +135,66 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 autosize // ← これを追加して、サイズ自動調整を有効化
                 minRows={5} // ← 現実的な最小行数（例：5行）
                 maxRows={10} // maxRows を設定しなければ、入力に応じて無限に伸びます
+              />
+            </div>
+
+            <div>
+              <label htmlFor="x_url" className="block text-sm font-medium mb-1">
+                X URL
+              </label>
+              <TextInput
+                id="x_url"
+                placeholder="https://x.com/..."
+                value={x_url}
+                onChange={e => setXUrl(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="facebook_url" className="block text-sm font-medium mb-1">
+                Facebook URL
+              </label>
+              <TextInput
+                id="facebook_url"
+                placeholder="https://facebook.com/..."
+                value={facebook_url}
+                onChange={e => setFacebookUrl(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="instagram_url" className="block text-sm font-medium mb-1">
+                Instagram URL
+              </label>
+              <TextInput
+                id="instagram_url"
+                placeholder="https://instagram.com/..."
+                value={instagram_url}
+                onChange={e => setInstagramUrl(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="github_url" className="block text-sm font-medium mb-1">
+                GitHub URL
+              </label>
+              <TextInput
+                id="github_url"
+                placeholder="https://github.com/..."
+                value={github_url}
+                onChange={e => setGithubUrl(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="portfolio_url" className="block text-sm font-medium mb-1">
+                ホームページやポートフォリオサイトのURL
+              </label>
+              <TextInput
+                id="portfolio_url"
+                placeholder="https://your-portfolio.com/..."
+                value={portfolio_url}
+                onChange={e => setPortfolioUrl(e.target.value)}
               />
             </div>
 
