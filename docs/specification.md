@@ -896,10 +896,11 @@ sequenceDiagram
 |  [S] Sinlab Portal    |
 |                       |
 |  icon ホーム           |
-|  icon 動画一覧         |
-|  icon 資料一覧         |
 |  icon プロフィール      |
-|  icon 会員一覧         |
+|  icon 動画         |
+|  icon 資料         |
+|  icon アプリ       |
+|  icon 会員         |
 |  icon ログアウト       |
 |                       |
 |  icon 管理画面         |
