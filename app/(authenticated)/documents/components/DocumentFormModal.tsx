@@ -3,7 +3,7 @@ import { Modal, TextInput, Select, Textarea, Button, Group } from "@mantine/core
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { registerDocument, updateDocument, getDocumentsByCategory } from "@/app/services/api/documents-client";
-import type { DocumentUpdateFormType, SelectCategoryType, PlacementPositionType } from "@/app/types";
+import type { DocumentWithCategoryType, SelectCategoryType, PlacementPositionType } from "@/app/types";
 import { z } from "zod";
 
 interface DocumentFormModalProps {
@@ -11,7 +11,7 @@ interface DocumentFormModalProps {
   onClose: () => void;
   categories: SelectCategoryType[];
   userId: number;
-  initialData?: DocumentUpdateFormType;
+  initialData?: DocumentWithCategoryType;
 }
 
 export function DocumentFormModal({
