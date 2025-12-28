@@ -1,6 +1,8 @@
 "use client";
 
 import { CalendarEvent } from "@/app/api/calendar/calendar-server";
+import DOMPurify from "isomorphic-dompurify";
+import Linkify from "linkify-react";
 
 interface EventDetailModalProps {
   event: CalendarEvent | null;
@@ -70,21 +72,49 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
           <div>
             <p className="text-xs md:text-sm text-gray-500">日時</p>
             <p className="text-sm md:text-base text-gray-900">
-              📅 {formatDateTime(event)} ({getDayOfWeek(event)})
+              {formatDateTime(event)} ({getDayOfWeek(event)})
             </p>
           </div>
 
           {event.location && (
             <div>
               <p className="text-xs md:text-sm text-gray-500">場所</p>
-              <p className="text-sm md:text-base text-gray-900">📍 {event.location}</p>
+              <p className="text-sm md:text-base text-gray-900">
+                📍
+                <Linkify
+                  options={{
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    className: "text-blue-600 hover:underline",
+                  }}
+                >
+                  {event.location}
+                </Linkify>
+              </p>
             </div>
           )}
 
           {event.description && (
             <div>
               <p className="text-xs md:text-sm text-gray-500">説明</p>
-              <p className="text-sm md:text-base text-gray-900 whitespace-pre-wrap">{event.description}</p>
+              <div className="text-sm md:text-base text-gray-900 prose prose-sm max-w-none">
+                <Linkify
+                  options={{
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    className: "text-blue-600 hover:underline",
+                  }}
+                >
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(event.description, {
+                        ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "br", "p", "ul", "ol", "li"],
+                        ALLOWED_ATTR: ["href", "target", "rel"],
+                      }),
+                    }}
+                  />
+                </Linkify>
+              </div>
             </div>
           )}
         </div>
@@ -100,12 +130,6 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
               Googleカレンダーで開く
             </a>
           )}
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm md:text-base bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-          >
-            閉じる
-          </button>
         </div>
       </div>
     </div>

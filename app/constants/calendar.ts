@@ -7,18 +7,18 @@ export const CALENDAR_COLORS: {
 } = {
   // シンラボMTGカレンダー
   "singularity-mtg": {
-    backgroundColor: colors.purple[600],
-    borderColor: colors.purple[700],
+    backgroundColor: colors.green[300],
+    borderColor: colors.green[400],
   },
   // シンラボイベントカレンダー
   "singularity-event": {
-    backgroundColor: colors.red[500],
-    borderColor: colors.red[600],
+    backgroundColor: colors.blue[300],
+    borderColor: colors.blue[400],
   },
   // 日本の祝日カレンダー
   holiday: {
-    backgroundColor: colors.blue[500],
-    borderColor: colors.blue[600],
+    backgroundColor: colors.red[300],
+    borderColor: colors.red[400],
   },
 };
 
@@ -31,8 +31,8 @@ export const DEFAULT_CALENDAR_COLOR = {
 // react-big-calendar用の日本語メッセージ設定
 export const CALENDAR_MESSAGES = {
   allDay: "終日",
-  previous: "前",
-  next: "次",
+  previous: "＜",
+  next: "＞",
   today: "今日",
   month: "月",
   week: "週",
@@ -46,4 +46,4 @@ export const CALENDAR_MESSAGES = {
 } as const;
 
 // イベントのテキスト色
-export const EVENT_TEXT_COLOR = "white";
+export const EVENT_TEXT_COLOR = "black";

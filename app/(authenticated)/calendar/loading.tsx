@@ -12,12 +12,9 @@ export default function CalendarPageLoading() {
         <span className="sr-only">読み込み中...</span>
 
         {/* Calendar header skeleton */}
-        <div className="mb-4 flex justify-between items-center">
-          <div className="h-8 bg-gray-200 rounded motion-safe:animate-pulse w-48"></div>
-          <div className="flex gap-2">
-            <div className="h-10 bg-gray-200 rounded motion-safe:animate-pulse w-24"></div>
-            <div className="h-10 bg-gray-200 rounded motion-safe:animate-pulse w-24"></div>
-          </div>
+        <div className="mb-4 flex justify-end items-center gap-2">
+          <div className="h-10 bg-gray-200 rounded motion-safe:animate-pulse w-24"></div>
+          <div className="h-10 bg-gray-200 rounded motion-safe:animate-pulse w-24"></div>
         </div>
 
         {/* Calendar view toggle skeleton */}
@@ -35,10 +32,7 @@ export default function CalendarPageLoading() {
           {/* Week header */}
           <div className="grid grid-cols-7 border-b bg-gray-50">
             {[...Array(7)].map((_, index) => (
-              <div
-                key={index}
-                className="p-2 text-center border-r last:border-r-0"
-              >
+              <div key={index} className="p-2 text-center border-r last:border-r-0">
                 <div className="h-4 bg-gray-200 rounded motion-safe:animate-pulse mx-auto w-8"></div>
               </div>
             ))}
@@ -48,10 +42,7 @@ export default function CalendarPageLoading() {
           {[...Array(5)].map((_, weekIndex) => (
             <div key={weekIndex} className="grid grid-cols-7 border-b last:border-b-0">
               {[...Array(7)].map((_, dayIndex) => (
-                <div
-                  key={dayIndex}
-                  className="p-2 border-r last:border-r-0 min-h-24"
-                >
+                <div key={dayIndex} className="p-2 border-r last:border-r-0 min-h-24">
                   <div className="h-4 bg-gray-200 rounded motion-safe:animate-pulse w-6 mb-2"></div>
                   <div className="space-y-1">
                     <div className="h-6 bg-gray-200 rounded motion-safe:animate-pulse w-full"></div>
