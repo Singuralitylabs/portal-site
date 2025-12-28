@@ -1,17 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Modal, TextInput, Select, Textarea, Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
-import {
-  registerDocument,
-  updateDocument,
-  getDocumentsByCategory,
-} from "@/app/services/api/documents-client";
-import type {
-  DocumentWithCategoryType,
-  SelectCategoryType,
-  PlacementPositionType,
-} from "@/app/types";
+import { registerDocument, updateDocument } from "@/app/services/api/documents-client";
+import type { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
+import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 import { z } from "zod";
 
 interface DocumentFormModalProps {
@@ -35,12 +28,12 @@ export function DocumentFormModal({
     description: "",
     url: "",
     assignee: "",
-    position: "last",
   });
-  const [documents, setDocuments] = useState<
-    { id: number; name: string; display_order: number | null }[]
-  >([]);
   const router = useRouter();
+
+  // 表示順操作フック
+  const { position, setPosition, positionOptions, parsePosition, handleCategoryChange } =
+    useDisplayOrderForm("documents", form.category_id, initialData?.id, !!initialData);
 
   // モーダルが開かれたときの初期化処理
   useEffect(() => {
@@ -51,66 +44,17 @@ export function DocumentFormModal({
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
       assignee: initialData?.assignee ?? "",
-      position: initialData ? "current" : "last",
     });
 
-    // 資料一覧を取得（編集時のみ）
-    if (initialData?.category_id) {
-      getDocumentsByCategory(initialData.category_id, initialData.id).then(setDocuments);
-    } else {
-      setDocuments([]);
-    }
-  }, [opened, initialData]);
+    // 表示順の初期化
+    setPosition(initialData ? "current" : "last");
+  }, [opened, initialData, setPosition]);
 
-  // カテゴリー変更時に資料一覧を取得
-  const handleCategoryChange = async (value: string | null) => {
+  // カテゴリー変更時の処理
+  const handleCategoryChangeWrapper = async (value: string | null) => {
     const categoryId = Number(value);
     setForm(f => ({ ...f, category_id: categoryId }));
-
-    if (categoryId > 0) {
-      const docs = await getDocumentsByCategory(categoryId, initialData?.id);
-      setDocuments(docs);
-    } else {
-      setDocuments([]);
-    }
-  };
-
-  // 位置選択肢を構築（メモ化して不要な再計算を防ぐ）
-  const positionOptions = useMemo(() => {
-    const options: { value: string; label: string }[] = [];
-
-    // 編集時のみ「現在の位置を維持」を追加
-    if (initialData) {
-      options.push({ value: "current", label: "現在の位置を維持" });
-    }
-
-    // 「最初に配置」
-    options.push({ value: "first", label: "最初に配置" });
-
-    // 既存資料の後に配置
-    documents.forEach(doc => {
-      options.push({
-        value: `after:${doc.id}`,
-        label: `「${doc.name}」の後に配置`,
-      });
-    });
-
-    // 「最後に配置」
-    options.push({ value: "last", label: "最後に配置" });
-
-    return options;
-  }, [documents, initialData]);
-
-  // 選択値をPlacementPositionTypeに変換
-  const parsePosition = (value: string): PlacementPositionType => {
-    if (value === "current") return { type: "current" };
-    if (value === "first") return { type: "first" };
-    if (value === "last") return { type: "last" };
-    if (value.startsWith("after:")) {
-      const afterId = Number(value.split(":")[1]);
-      return { type: "after", afterId };
-    }
-    return { type: "last" }; // フォールバック
+    await handleCategoryChange(categoryId);
   };
 
   const handleSubmit = async () => {
@@ -138,7 +82,7 @@ export function DocumentFormModal({
     }
 
     // positionをPlacementPositionに変換
-    const position = parsePosition(form.position);
+    const parsedPosition = parsePosition(position);
 
     // 共通のフィールドをまとめる
     const commonData = {
@@ -147,7 +91,7 @@ export function DocumentFormModal({
       description: form.description,
       url: form.url,
       assignee: form.assignee,
-      position,
+      position: parsedPosition,
     };
 
     // API呼び出し(編集時は更新、新規時は登録)
@@ -194,7 +138,7 @@ export function DocumentFormModal({
           label: category.name,
         }))}
         value={String(form.category_id)}
-        onChange={handleCategoryChange}
+        onChange={handleCategoryChangeWrapper}
         required
         mb="sm"
       />
@@ -221,8 +165,8 @@ export function DocumentFormModal({
       <Select
         label="表示順"
         data={positionOptions}
-        value={form.position}
-        onChange={value => setForm(f => ({ ...f, position: value || "last" }))}
+        value={position}
+        onChange={value => setPosition(value || "last")}
         placeholder="配置位置を選択"
         mb="sm"
       />
