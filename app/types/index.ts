@@ -21,12 +21,12 @@ export type VideoWithCategoryType = VideosTable["Row"] & {
 };
 export type VideoInsertFormType = Omit<
   VideosTable["Row"],
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
->;
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 export type VideoUpdateFormType = Omit<
   VideosTable["Row"],
-  "created_at" | "updated_at" | "created_by" | "is_deleted"
->;
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 // Applications types
 type ApplicationsTable = Database["public"]["Tables"]["applications"];
@@ -39,13 +39,13 @@ export type ApplicationWithCategoryAndDeveloperType = ApplicationType & {
 
 export type ApplicationInsertFormType = Omit<
   ApplicationType,
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
->;
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 export type ApplicationUpdateFormType = Omit<
   ApplicationType,
-  "created_at" | "updated_at" | "created_by" | "is_deleted"
->;
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 export type ContentType = "document" | "video" | "application";
 export type ContentTableType = "documents" | "videos" | "applications";
