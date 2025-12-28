@@ -3,6 +3,7 @@
 import { MemberType } from "@/app/types";
 import { Card, Avatar, Text, Group } from "@mantine/core";
 import { MemberDetailModal } from "./MemberDetailModal";
+import ReactMarkdown from "react-markdown";
 import { useState } from "react";
 
 interface MemberCardProps {
@@ -37,7 +38,7 @@ export function MemberCard({ member }: MemberCardProps) {
               {member.display_name}
             </Text>
             <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }}>
-              {member.bio || ""}
+              <ReactMarkdown>{member.bio || ""}</ReactMarkdown>
             </Text>
           </div>
         </Group>
