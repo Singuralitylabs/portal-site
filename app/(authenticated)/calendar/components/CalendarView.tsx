@@ -37,6 +37,7 @@ interface BigCalendarEvent {
   title: string;
   start: Date;
   end: Date;
+  allDay?: boolean;
   resource: CalendarEvent;
 }
 
@@ -174,24 +175,35 @@ export function CalendarView({
       const startDateTime = event.start?.dateTime || event.start?.date;
       const endDateTime = event.end?.dateTime || event.end?.date;
 
-      const isAllDayEvent = event.start?.date && !event.start?.dateTime;
+      const isAllDayEvent = !!(event.start?.date && !event.start?.dateTime);
 
       let startDate = new Date(startDateTime || new Date());
       let endDate: Date;
 
       if (isAllDayEvent) {
-        // 終日イベントの場合、開始日を00:00:00に、終了日を23:59:59.999に設定
-        // これにより、当日のみ表示される（react-big-calendarの終了日は排他的）
+        // 終日イベントの場合、開始日と終了日を同じ日の00:00:00に設定
+        // これにより、月表示で1日だけに表示され、週/日表示ではall-dayエリアに表示される
         startDate = new Date(startDate);
         startDate.setHours(0, 0, 0, 0);
 
-        // 終了日を開始日の23:59:59.999に設定
+        // 終了日も開始日と同じ日の00:00:00に設定（react-big-calendarでは同じ日=1日表示）
         endDate = new Date(startDate);
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setHours(0, 0, 0, 0);
       } else {
         // 時刻指定イベントの場合、そのまま使用
         startDate = new Date(startDateTime || new Date());
         endDate = endDateTime ? new Date(endDateTime) : new Date(startDate);
+
+        // 23:00-0:00問題の修正: 終了時刻が翌日0:00の場合、当日23:59:59に調整
+        const isMidnight =
+          endDate.getHours() === 0 &&
+          endDate.getMinutes() === 0 &&
+          endDate.getSeconds() === 0;
+
+        if (isMidnight && endDate > startDate) {
+          // 翌日0:00の場合、1ミリ秒前（前日の23:59:59.999）に変更
+          endDate = new Date(endDate.getTime() - 1);
+        }
       }
 
       return {
@@ -199,6 +211,7 @@ export function CalendarView({
         title: event.summary,
         start: startDate,
         end: endDate,
+        allDay: isAllDayEvent,
         resource: event,
       };
     });
