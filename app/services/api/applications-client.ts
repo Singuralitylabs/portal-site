@@ -23,9 +23,10 @@ export async function deleteApplication(id: number, userId: number) {
 
   return { success: true, error: null };
 }
+
 /**
  * サーバーサイドでアプリを登録する
- * @param  ApplicationInsertFormType アプリのデータ
+ * @param ApplicationInsertFormType アプリのデータ
  * @return 登録結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
@@ -51,6 +52,7 @@ export async function registerApplication({
       updated_by: created_by,
     },
   ]);
+
   // エラーが発生した場合はコンソールにエラーメッセージを出力
   if (error) {
     console.error("Supabase アプリ登録エラー:", error.message);
@@ -62,7 +64,6 @@ export async function registerApplication({
 
 /**
  * サーバーサイドでアプリを更新する
- * @param id アプリのID
  * @param ApplicationUpdateFormType アプリの更新データ
  * @return 更新結果
  * - success: 成功した場合はtrue
@@ -78,6 +79,7 @@ export async function updateApplication({
   updated_by,
 }: ApplicationUpdateFormType) {
   const supabase = createClientSupabaseClient();
+
   const { error } = await supabase
     .from("applications")
     .update({
