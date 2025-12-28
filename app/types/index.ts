@@ -7,12 +7,12 @@ export type DocumentWithCategoryType = DocumentsTable["Row"] & {
 };
 export type DocumentInsertFormType = Omit<
   DocumentsTable["Row"],
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
->;
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 export type DocumentUpdateFormType = Omit<
   DocumentsTable["Row"],
-  "created_at" | "updated_at" | "created_by" | "is_deleted"
->;
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 // Videos types
 type VideosTable = Database["public"]["Tables"]["videos"];
@@ -48,6 +48,13 @@ export type ApplicationUpdateFormType = Omit<
 >;
 
 export type ContentType = "document" | "video" | "application";
+
+// Display order placement position types
+export type PlacementPositionType =
+  | { type: "first" }
+  | { type: "after"; afterId: number }
+  | { type: "last" }
+  | { type: "current" }; // For edits only
 
 // Users types
 type UsersTable = Database["public"]["Tables"]["users"];

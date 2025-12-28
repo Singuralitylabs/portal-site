@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Modal, TextInput, Select, Textarea, Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
-import { registerDocument, updateDocument } from "@/app/services/api/documents-client";
-import type { DocumentUpdateFormType, SelectCategoryType } from "@/app/types";
+import { registerDocument, updateDocument, getDocumentsByCategory } from "@/app/services/api/documents-client";
+import type { DocumentUpdateFormType, SelectCategoryType, PlacementPositionType } from "@/app/types";
 import { z } from "zod";
 
 interface DocumentFormModalProps {
@@ -27,21 +27,92 @@ export function DocumentFormModal({
     description: initialData?.description ?? "",
     url: initialData?.url ?? "",
     assignee: initialData?.assignee ?? "",
-    display_order: initialData?.display_order ?? null,
+    position: initialData ? "current" : "last", // 編集時は"current"、新規時は"last"
   });
+  const [documents, setDocuments] = useState<{ id: number; name: string; display_order: number | null }[]>([]);
   const router = useRouter();
 
   // モーダルが開かれたとき、編集時はinitialDataでformを更新
   useEffect(() => {
+    const loadDocuments = async () => {
+      if (initialData && initialData.category_id > 0) {
+        // 編集時: カテゴリー内の資料一覧を取得（自分自身を除外）
+        const docs = await getDocumentsByCategory(initialData.category_id, initialData.id);
+        setDocuments(docs);
+      }
+    };
+
     setForm({
       name: initialData?.name ?? "",
       category_id: initialData?.category_id ?? 0,
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
       assignee: initialData?.assignee ?? "",
-      display_order: initialData?.display_order ?? null,
+      position: initialData ? "current" : "last",
     });
+
+    loadDocuments();
   }, [opened, initialData]);
+
+  // カテゴリー変更時に資料一覧を取得し、位置の初期値を設定
+  const handleCategoryChange = async (value: string | null) => {
+    const categoryId = Number(value);
+    setForm(f => ({ ...f, category_id: categoryId }));
+
+    if (categoryId > 0) {
+      // カテゴリー内の資料一覧を取得（編集時は自分自身を除外）
+      const docs = await getDocumentsByCategory(
+        categoryId,
+        initialData?.id
+      );
+      setDocuments(docs);
+
+      // 新規登録時は位置を"last"にリセット
+      if (!initialData) {
+        setForm(f => ({ ...f, position: "last" }));
+      }
+    } else {
+      setDocuments([]);
+    }
+  };
+
+  // 位置選択肢を構築
+  const buildPositionOptions = () => {
+    const options: { value: string; label: string }[] = [];
+
+    // 編集時のみ「現在の位置を維持」を追加
+    if (initialData) {
+      options.push({ value: "current", label: "現在の位置を維持" });
+    }
+
+    // 「最初に配置」
+    options.push({ value: "first", label: "最初に配置" });
+
+    // 既存資料の後に配置
+    documents.forEach(doc => {
+      options.push({
+        value: `after:${doc.id}`,
+        label: `「${doc.name}」の後に配置`,
+      });
+    });
+
+    // 「最後に配置」
+    options.push({ value: "last", label: "最後に配置" });
+
+    return options;
+  };
+
+  // 選択値をPlacementPositionTypeに変換
+  const parsePosition = (value: string): PlacementPositionType => {
+    if (value === "current") return { type: "current" };
+    if (value === "first") return { type: "first" };
+    if (value === "last") return { type: "last" };
+    if (value.startsWith("after:")) {
+      const afterId = Number(value.split(":")[1]);
+      return { type: "after", afterId };
+    }
+    return { type: "last" }; // フォールバック
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.url?.trim() || form.category_id === 0) {
@@ -67,10 +138,30 @@ export function DocumentFormModal({
       return;
     }
 
+    // positionをPlacementPositionに変換
+    const position = parsePosition(form.position);
+
     // API呼び出し(初期値あり：編集時は更新、初期値なし：新規登録)
     const result = initialData
-      ? await updateDocument({ ...form, id: initialData.id, updated_by: userId })
-      : await registerDocument({ ...form, created_by: userId });
+      ? await updateDocument({
+          id: initialData.id,
+          name: form.name,
+          category_id: form.category_id,
+          description: form.description,
+          url: form.url,
+          assignee: form.assignee,
+          updated_by: userId,
+          position,
+        })
+      : await registerDocument({
+          name: form.name,
+          category_id: form.category_id,
+          description: form.description,
+          url: form.url,
+          assignee: form.assignee,
+          created_by: userId,
+          position,
+        });
 
     if (result?.success) {
       notifications.show({
@@ -111,7 +202,7 @@ export function DocumentFormModal({
           label: category.name,
         }))}
         value={String(form.category_id)}
-        onChange={value => setForm(f => ({ ...f, category_id: Number(value) }))}
+        onChange={handleCategoryChange}
         required
         mb="sm"
       />
@@ -133,6 +224,14 @@ export function DocumentFormModal({
         label="担当者"
         value={form.assignee}
         onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}
+        mb="sm"
+      />
+      <Select
+        label="表示順"
+        data={buildPositionOptions()}
+        value={form.position}
+        onChange={value => setForm(f => ({ ...f, position: value || "last" }))}
+        placeholder="配置位置を選択"
         mb="sm"
       />
       <Group mt="md" justify="flex-end">
