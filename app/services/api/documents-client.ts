@@ -163,10 +163,33 @@ export async function registerDocument({
   created_by,
   position,
 }: DocumentInsertFormType) {
+  const supabase = createClientSupabaseClient();
+
   // 配置位置から display_order を計算
   const display_order = await calculateDisplayOrder(category_id, position);
 
-  const supabase = createClientSupabaseClient();
+  // 新規資料を挿入する前に、指定位置以降の資料の display_order を +1 する
+  if (position.type === "first" || position.type === "after") {
+    // 指定位置以降の資料を取得
+    const { data: affectedDocs } = await supabase
+      .from("documents")
+      .select("id, display_order")
+      .eq("category_id", category_id)
+      .eq("is_deleted", false)
+      .gte("display_order", display_order)
+      .order("display_order", { ascending: false }); // 降順で取得して後ろから更新
+
+    // 後ろから順に display_order を +1 する（衝突を避けるため）
+    if (affectedDocs && affectedDocs.length > 0) {
+      for (const doc of affectedDocs) {
+        await supabase
+          .from("documents")
+          .update({ display_order: (doc.display_order ?? 0) + 1 })
+          .eq("id", doc.id);
+      }
+    }
+  }
+
   const { error } = await supabase.from("documents").insert([
     {
       name,
@@ -225,6 +248,29 @@ export async function updateDocument({
 
   // 新しい display_order を計算（編集時は自分自身を除外して計算）
   const display_order = await calculateDisplayOrder(category_id, position, currentDisplayOrder);
+
+  // 資料を更新する前に、指定位置以降の資料の display_order を +1 する
+  if (position.type === "first" || position.type === "after") {
+    // 指定位置以降の資料を取得（自分自身は除外）
+    const { data: affectedDocs } = await supabase
+      .from("documents")
+      .select("id, display_order")
+      .eq("category_id", category_id)
+      .eq("is_deleted", false)
+      .neq("id", id) // 自分自身を除外
+      .gte("display_order", display_order)
+      .order("display_order", { ascending: false }); // 降順で取得して後ろから更新
+
+    // 後ろから順に display_order を +1 する（衝突を避けるため）
+    if (affectedDocs && affectedDocs.length > 0) {
+      for (const doc of affectedDocs) {
+        await supabase
+          .from("documents")
+          .update({ display_order: (doc.display_order ?? 0) + 1 })
+          .eq("id", doc.id);
+      }
+    }
+  }
 
   const { error } = await supabase
     .from("documents")
