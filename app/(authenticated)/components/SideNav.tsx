@@ -31,28 +31,28 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     href: "/",
     icon: <House className="h-5 w-5" />,
   },
-  {
-    title: "動画一覧",
-    href: "/videos",
-    icon: <FileVideo className="h-5 w-5" />,
-  },
-  {
-    title: "資料一覧",
-    href: "/documents",
-    icon: <FileText className="h-5 w-5" />,
-  },
-  {
-    title: "アプリ紹介",
-    href: "/applications",
-    icon: <AppWindow className="h-5 w-5" />,
-  },
-  {
+    {
     title: "プロフィール",
     href: "/profile",
     icon: <User className="h-5 w-5" />,
   },
   {
-    title: "会員一覧",
+    title: "動画",
+    href: "/videos",
+    icon: <FileVideo className="h-5 w-5" />,
+  },
+  {
+    title: "資料",
+    href: "/documents",
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    title: "アプリ",
+    href: "/applications",
+    icon: <AppWindow className="h-5 w-5" />,
+  },
+  {
+    title: "会員",
     href: "/members",
     icon: <Users className="h-5 w-5" />,
   },
