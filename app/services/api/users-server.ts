@@ -82,7 +82,22 @@ export async function fetchActiveUsers(): Promise<{
     return { data: null, error };
   }
 
-  return { data: data as unknown as MemberType[], error: null };
+  if (!data) {
+    return { data: null, error: null };
+  }
+
+  // Supabaseの型推論では positions が配列になるため、MemberType[] 型に変換
+  const transformedData: MemberType[] = data.map((user) => ({
+    id: user.id,
+    display_name: user.display_name,
+    bio: user.bio,
+    avatar_url: user.avatar_url,
+    position_tags: user.position_tags.map((tag) => ({
+      positions: Array.isArray(tag.positions) ? tag.positions[0] : tag.positions,
+    })),
+  }));
+
+  return { data: transformedData, error: null };
 }
 
 /**
