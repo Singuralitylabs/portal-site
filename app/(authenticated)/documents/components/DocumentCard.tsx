@@ -5,6 +5,7 @@ import { FileText, FileType } from "lucide-react";
 import { Button, Card, Flex, Text } from "@mantine/core";
 import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
+import ReactMarkdown from "react-markdown";
 
 interface DocumentCardProps {
   document: DocumentWithCategoryType;
@@ -51,7 +52,7 @@ export function DocumentCard({ document, isContentMgr, categories, userId }: Doc
 
       <div className="flex-1 p-4 overflow-hidden">
         <Text component="div" lineClamp={4} className="overflow-hidden">
-          {document.description}
+          <ReactMarkdown>{document.description}</ReactMarkdown>
         </Text>
       </div>
 

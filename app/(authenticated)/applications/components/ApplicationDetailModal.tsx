@@ -3,6 +3,7 @@
 import { ApplicationWithCategoryAndDeveloperType } from "@/app/types";
 import { Modal, Button, Badge, Image, Text, Stack } from "@mantine/core";
 import { ExternalLink, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface ApplicationDetailModalProps {
   application: ApplicationWithCategoryAndDeveloperType | null;
@@ -48,7 +49,9 @@ export function ApplicationDetailModal({
           <Text size="sm" c="dimmed" mb="xs">
             詳細説明
           </Text>
-          <Text style={{ whiteSpace: "pre-wrap" }}>{application.description}</Text>
+          <Text style={{ whiteSpace: "pre-wrap" }}>
+            <ReactMarkdown>{application.description}</ReactMarkdown>
+          </Text>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">

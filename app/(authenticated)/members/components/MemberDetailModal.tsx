@@ -1,5 +1,6 @@
 import { Modal, Text, Stack, Group, Avatar } from "@mantine/core";
 import type { MemberType } from "@/app/types";
+import ReactMarkdown from "react-markdown";
 
 interface MemberDetailModalProps {
   opened: boolean;
@@ -26,7 +27,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
               自己紹介
             </Text>
             <Text size="sm" c="dimmed">
-              {memberInfo.bio}
+              <ReactMarkdown>{memberInfo.bio}</ReactMarkdown>
             </Text>
           </Stack>
         )}
