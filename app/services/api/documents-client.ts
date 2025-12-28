@@ -50,20 +50,19 @@ export async function calculateDisplayOrder(
   position: PlacementPositionType,
   currentDisplayOrder?: number | null
 ): Promise<number> {
-  if (
-    position.type === "current" &&
-    currentDisplayOrder !== null &&
-    currentDisplayOrder !== undefined
-  ) {
+  // 現在の位置を維持する場合
+  if (position.type === "current" && currentDisplayOrder != null) {
     return currentDisplayOrder;
   }
 
   const supabase = createClientSupabaseClient();
 
+  // 最初に配置
   if (position.type === "first") {
     return 1;
   }
 
+  // 最後に配置
   if (position.type === "last") {
     const { data } = await supabase
       .from("documents")
@@ -73,10 +72,10 @@ export async function calculateDisplayOrder(
       .order("display_order", { ascending: false })
       .limit(1);
 
-    const maxOrder = data?.[0]?.display_order;
-    return maxOrder !== null && maxOrder !== undefined ? maxOrder + 1 : 1;
+    return (data?.[0]?.display_order ?? 0) + 1;
   }
 
+  // 特定の資料の後に配置
   if (position.type === "after") {
     const { data } = await supabase
       .from("documents")
@@ -84,11 +83,50 @@ export async function calculateDisplayOrder(
       .eq("id", position.afterId)
       .single();
 
-    const afterOrder = data?.display_order;
-    return afterOrder !== null && afterOrder !== undefined ? afterOrder + 1 : 1;
+    return (data?.display_order ?? 0) + 1;
   }
 
   return 1;
+}
+
+/**
+ * 指定位置以降の資料の display_order を +1 する（共通処理）
+ * @param categoryId カテゴリーID
+ * @param displayOrder 基準となる display_order
+ * @param excludeId 除外する資料ID（編集時に自分自身を除外するため）
+ */
+async function shiftDisplayOrder(
+  categoryId: number,
+  displayOrder: number,
+  excludeId?: number
+): Promise<void> {
+  const supabase = createClientSupabaseClient();
+
+  // 指定位置以降の資料を取得
+  let query = supabase
+    .from("documents")
+    .select("id, display_order")
+    .eq("category_id", categoryId)
+    .eq("is_deleted", false)
+    .gte("display_order", displayOrder)
+    .order("display_order", { ascending: false }); // 降順で取得して後ろから更新
+
+  // 編集時は自分自身を除外
+  if (excludeId !== undefined) {
+    query = query.neq("id", excludeId);
+  }
+
+  const { data: affectedDocs } = await query;
+
+  // 後ろから順に display_order を +1 する（衝突を避けるため）
+  if (affectedDocs && affectedDocs.length > 0) {
+    for (const doc of affectedDocs) {
+      await supabase
+        .from("documents")
+        .update({ display_order: (doc.display_order ?? 0) + 1 })
+        .eq("id", doc.id);
+    }
+  }
 }
 
 /**
@@ -109,13 +147,15 @@ async function reorderDocumentsInCategory(categoryId: number): Promise<void> {
     return;
   }
 
-  // 1 から順に振り直す
-  for (let i = 0; i < documents.length; i++) {
-    await supabase
-      .from("documents")
-      .update({ display_order: i + 1 })
-      .eq("id", documents[i].id);
-  }
+  // 1 から順に振り直す（並列実行でパフォーマンス改善）
+  await Promise.all(
+    documents.map((doc, index) =>
+      supabase
+        .from("documents")
+        .update({ display_order: index + 1 })
+        .eq("id", doc.id)
+    )
+  );
 }
 
 /**
@@ -170,24 +210,7 @@ export async function registerDocument({
 
   // 新規資料を挿入する前に、指定位置以降の資料の display_order を +1 する
   if (position.type === "first" || position.type === "after") {
-    // 指定位置以降の資料を取得
-    const { data: affectedDocs } = await supabase
-      .from("documents")
-      .select("id, display_order")
-      .eq("category_id", category_id)
-      .eq("is_deleted", false)
-      .gte("display_order", display_order)
-      .order("display_order", { ascending: false }); // 降順で取得して後ろから更新
-
-    // 後ろから順に display_order を +1 する（衝突を避けるため）
-    if (affectedDocs && affectedDocs.length > 0) {
-      for (const doc of affectedDocs) {
-        await supabase
-          .from("documents")
-          .update({ display_order: (doc.display_order ?? 0) + 1 })
-          .eq("id", doc.id);
-      }
-    }
+    await shiftDisplayOrder(category_id, display_order);
   }
 
   const { error } = await supabase.from("documents").insert([
@@ -251,25 +274,7 @@ export async function updateDocument({
 
   // 資料を更新する前に、指定位置以降の資料の display_order を +1 する
   if (position.type === "first" || position.type === "after") {
-    // 指定位置以降の資料を取得（自分自身は除外）
-    const { data: affectedDocs } = await supabase
-      .from("documents")
-      .select("id, display_order")
-      .eq("category_id", category_id)
-      .eq("is_deleted", false)
-      .neq("id", id) // 自分自身を除外
-      .gte("display_order", display_order)
-      .order("display_order", { ascending: false }); // 降順で取得して後ろから更新
-
-    // 後ろから順に display_order を +1 する（衝突を避けるため）
-    if (affectedDocs && affectedDocs.length > 0) {
-      for (const doc of affectedDocs) {
-        await supabase
-          .from("documents")
-          .update({ display_order: (doc.display_order ?? 0) + 1 })
-          .eq("id", doc.id);
-      }
-    }
+    await shiftDisplayOrder(category_id, display_order, id);
   }
 
   const { error } = await supabase
