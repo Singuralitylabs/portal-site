@@ -48,6 +48,7 @@ export type ApplicationUpdateFormType = Omit<
 >;
 
 export type ContentType = "document" | "video" | "application";
+export type ContentTableType = "documents" | "videos" | "applications";
 
 // Display order placement position types
 export type PlacementPositionType =
@@ -81,6 +82,8 @@ export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 // Categories types
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
+export type CategoryItemType = Pick<CategoryType, "id" | "name" | "display_order">;
+
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
 
 // Positions types
