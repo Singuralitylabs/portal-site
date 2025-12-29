@@ -2,7 +2,6 @@
 
 import { CalendarEvent } from "@/app/api/calendar/calendar-server";
 import DOMPurify from "isomorphic-dompurify";
-import Linkify from "linkify-react";
 
 interface EventDetailModalProps {
   event: CalendarEvent | null;
@@ -11,6 +10,28 @@ interface EventDetailModalProps {
 
 export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
   if (!event) return null;
+
+  // テキストをHTML形式に変換（改行とURLリンク化）
+  const formatTextToHtml = (text: string): string => {
+    let html = text;
+
+    // HTMLタグが含まれているか確認
+    const hasHtmlTags = /<[^>]+>/g.test(text);
+
+    // HTMLタグが含まれていない場合のみURLをリンク化
+    if (!hasHtmlTags) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      html = html.replace(
+        urlRegex,
+        '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>'
+      );
+    }
+
+    // 改行を<br>タグに変換
+    html = html.replace(/\n/g, "<br>");
+
+    return html;
+  };
 
   // 日時のフォーマット関数
   const formatDateTime = (event: CalendarEvent) => {
@@ -79,42 +100,51 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
           {event.location && (
             <div>
               <p className="text-xs md:text-sm text-gray-500">場所</p>
-              <p className="text-sm md:text-base text-gray-900">
-                📍
-                <Linkify
-                  options={{
-                    target: "_blank",
-                    rel: "noopener noreferrer",
-                    className: "text-blue-600 hover:underline",
-                  }}
-                >
-                  {event.location}
-                </Linkify>
-              </p>
+              <p
+                className="text-sm md:text-base text-gray-900"
+                dangerouslySetInnerHTML={{
+                  __html: "📍 " + DOMPurify.sanitize(formatTextToHtml(event.location), {
+                    ALLOWED_TAGS: ["a", "br"],
+                    ALLOWED_ATTR: ["href", "target", "rel", "class"],
+                  }),
+                }}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.tagName === "A") {
+                    e.preventDefault();
+                    const href = target.getAttribute("href");
+                    if (href) {
+                      window.open(href, "_blank", "noopener,noreferrer");
+                    }
+                  }
+                }}
+              />
             </div>
           )}
 
           {event.description && (
             <div>
               <p className="text-xs md:text-sm text-gray-500">説明</p>
-              <div className="text-sm md:text-base text-gray-900 prose prose-sm max-w-none">
-                <Linkify
-                  options={{
-                    target: "_blank",
-                    rel: "noopener noreferrer",
-                    className: "text-blue-600 hover:underline",
-                  }}
-                >
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(event.description, {
-                        ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "br", "p", "ul", "ol", "li"],
-                        ALLOWED_ATTR: ["href", "target", "rel"],
-                      }),
-                    }}
-                  />
-                </Linkify>
-              </div>
+              <div
+                className="text-sm md:text-base text-gray-900 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(formatTextToHtml(event.description), {
+                    ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "br", "p", "ul", "ol", "li"],
+                    ALLOWED_ATTR: ["href", "target", "rel", "class"],
+                  }),
+                }}
+                onClick={(e) => {
+                  // すべてのリンクを新規タブで開く
+                  const target = e.target as HTMLElement;
+                  if (target.tagName === "A") {
+                    e.preventDefault();
+                    const href = target.getAttribute("href");
+                    if (href) {
+                      window.open(href, "_blank", "noopener,noreferrer");
+                    }
+                  }
+                }}
+              />
             </div>
           )}
         </div>
