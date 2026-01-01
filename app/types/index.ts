@@ -64,6 +64,7 @@ export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_
     positions: {
       id: number;
       name: string;
+      is_deleted: boolean;
     };
   }[];
 };
