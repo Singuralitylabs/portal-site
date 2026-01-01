@@ -71,7 +71,7 @@ export async function fetchActiveUsers(): Promise<{
 
   const { data, error } = await supabase
     .from("users")
-    .select(`id, display_name, bio, avatar_url, position_tags(positions(id, name))`)
+    .select(`id, display_name, bio, avatar_url, position_tags(positions(id, name, is_deleted))`)
     .eq("status", "active")
     .eq("is_deleted", false)
     .eq("position_tags.positions.is_deleted", false)
@@ -92,9 +92,14 @@ export async function fetchActiveUsers(): Promise<{
     display_name: user.display_name,
     bio: user.bio,
     avatar_url: user.avatar_url,
-    position_tags: user.position_tags.map((tag) => ({
-      positions: Array.isArray(tag.positions) ? tag.positions[0] : tag.positions,
-    })),
+    position_tags: user.position_tags
+      .filter((tag) => {
+        const positions = Array.isArray(tag.positions) ? tag.positions[0] : tag.positions;
+        return positions?.is_deleted === false;
+      })
+      .map((tag) => ({
+        positions: Array.isArray(tag.positions) ? tag.positions[0] : tag.positions,
+      })),
   }));
 
   return { data: transformedData, error: null };
