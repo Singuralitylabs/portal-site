@@ -12,6 +12,7 @@ import {
   Settings,
   User,
   Users,
+  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -54,6 +55,11 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     title: "会員一覧",
     href: "/members",
     icon: <Users className="h-5 w-5" />,
+  },
+  {
+    title: "カレンダー",
+    href: "/calendar",
+    icon: <Calendar className="h-5 w-5" />,
   },
 ];
 
