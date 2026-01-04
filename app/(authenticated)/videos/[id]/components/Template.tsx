@@ -1,8 +1,9 @@
 import { VideoWithCategoryType } from "@/app/types";
 import { Button, Flex, Text, Divider } from "@mantine/core";
-import { PageTitle } from "@/app/components/PageTitle";
-import Link from "next/link";
 import { Calendar } from "lucide-react";
+import { PageTitle } from "@/app/components/PageTitle";
+import remarkGfm from "remark-gfm";
+import ReactMarkdown from "react-markdown";
 import Youtube from "./Youtube";
 
 interface VideoDetailPageProps {
@@ -82,29 +83,17 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                 p="1rem 1rem"
               >
                 <Text component="div">■概要</Text>
-                <Text component="div">
-                  {String(video.description)
-                    .split("\n")
-                    .map((item, index) => {
-                      return (
-                        <div key={"description_" + index}>
-                          {
-                            // 概要欄の各行がURL形式かを判定する
-                            URL.canParse(item) ? (
-                              // 関連資料のURLがある場合は資料を別タブで開く
-                              <Link href={item} rel="noopener noreferrer" target="_blank">
-                                {item}
-                              </Link>
-                            ) : (
-                              // 資料のURL等がない場合はテキストをそのまま表示する
-                              item
-                            )
-                          }
-                          <br />
-                          {/* 改行コードはHTMLの<br />を挿入する */}
-                        </div>
-                      );
-                    })}
+                <Text component="div" className="prose prose-sm max-w-none">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      a: ({ node, ...props }) => (
+                        <a {...props} target="_blank" rel="noopener noreferrer" />
+                      ),
+                    }}
+                  >
+                    {String(video.description)}
+                  </ReactMarkdown>
                 </Text>
               </Flex>
             </div>

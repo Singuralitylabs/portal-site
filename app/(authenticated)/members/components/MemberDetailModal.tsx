@@ -26,7 +26,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             <Text size="md" fw={500}>
               自己紹介
             </Text>
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" className="prose prose-sm max-w-none" component="div">
               <ReactMarkdown>{memberInfo.bio}</ReactMarkdown>
             </Text>
           </Stack>

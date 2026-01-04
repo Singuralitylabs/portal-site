@@ -37,7 +37,7 @@ export function MemberCard({ member }: MemberCardProps) {
             <Text fw={500} size="lg" mb={4}>
               {member.display_name}
             </Text>
-            <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }}>
+            <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }} className="prose prose-sm max-w-none" component="div">
               <ReactMarkdown>{member.bio || ""}</ReactMarkdown>
             </Text>
           </div>

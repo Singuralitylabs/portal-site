@@ -49,7 +49,7 @@ export function ApplicationDetailModal({
           <Text size="sm" c="dimmed" mb="xs">
             詳細説明
           </Text>
-          <Text style={{ whiteSpace: "pre-wrap" }}>
+          <Text className="prose prose-sm max-w-none" component="div">
             <ReactMarkdown>{application.description}</ReactMarkdown>
           </Text>
         </div>

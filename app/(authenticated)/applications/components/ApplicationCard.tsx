@@ -52,7 +52,7 @@ export function ApplicationCard({
       </Card.Section>
 
       <div className="flex-1 p-4 overflow-hidden">
-        <Text component="div" lineClamp={2} className="overflow-hidden mb-2">
+        <Text component="div" lineClamp={2} className="overflow-hidden mb-2　prose prose-sm max-w-none">
           <ReactMarkdown>{application.description}</ReactMarkdown>
         </Text>
         <div className="mt-2">
