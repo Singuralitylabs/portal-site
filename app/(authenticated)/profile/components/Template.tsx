@@ -11,11 +11,11 @@ interface ProfilePageTemplateProps {
   updateProfile: (
     displayName: string,
     bio: string,
-    x_url: string,
-    facebook_url: string,
-    instagram_url: string,
-    github_url: string,
-    portfolio_url: string
+    x_url: string | null,
+    facebook_url: string | null,
+    instagram_url: string | null,
+    github_url: string | null,
+    portfolio_url: string | null
   ) => Promise<{ success: boolean; message?: string }>;
 }
 
@@ -28,6 +28,8 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
   const [instagram_url, setInstagramUrl] = useState(initialUser.instagram_url || "");
   const [github_url, setGithubUrl] = useState(initialUser.github_url || "");
   const [portfolio_url, setPortfolioUrl] = useState(initialUser.portfolio_url || "");
+  // エラーメッセージ管理用のステートを追加
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
 
   // 初期ユーザー情報が更新されたら、状態を更新
@@ -40,22 +42,61 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
     setInstagramUrl(initialUser.instagram_url || "");
     setGithubUrl(initialUser.github_url || "");
     setPortfolioUrl(initialUser.portfolio_url || "");
+    setErrors({}); // エラーもリセット
   }, [initialUser]);
+
+  // URL形式チェック関数
+  const validateUrl = (url: string | null) => {
+    if (!url) return true;
+    return /^https?:\/\//.test(url);
+  };
 
   // プロフィール更新処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // URLのバリデーションチェック
+    const newErrors: Record<string, string> = {};
+    if (!validateUrl(x_url))
+      newErrors.x_url =
+        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
+    if (!validateUrl(facebook_url))
+      newErrors.facebook_url =
+        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
+    if (!validateUrl(instagram_url))
+      newErrors.instagram_url =
+        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
+    if (!validateUrl(github_url))
+      newErrors.github_url =
+        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
+    if (!validateUrl(portfolio_url))
+      newErrors.portfolio_url =
+        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
+
+    // URL入力にエラーがあれば表示して中断
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      notifications.show({
+        title: "入力エラー",
+        message: "URLの形式を確認してください",
+        color: "red",
+      });
+      return;
+    }
+
+    // エラーがなければステートをクリアして送信開始
+    setErrors({});
 
     startTransition(async () => {
       // サーバーアクションを呼び出してプロフィールを更新
       const { success, message } = await updateProfile(
         name,
         bio,
-        x_url,
-        facebook_url,
-        instagram_url,
-        github_url,
-        portfolio_url
+        x_url || null,
+        facebook_url || null,
+        instagram_url || null,
+        github_url || null,
+        portfolio_url || null
       );
 
       if (success) {
@@ -63,12 +104,12 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
         setUser({
           ...user,
           display_name: name,
-          bio: bio,
-          x_url: x_url,
-          facebook_url: facebook_url,
-          instagram_url: instagram_url,
-          github_url: github_url,
-          portfolio_url: portfolio_url,
+          bio,
+          x_url,
+          facebook_url,
+          instagram_url,
+          github_url,
+          portfolio_url,
         });
 
         // 成功通知
@@ -95,22 +136,23 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
     <>
       <PageTitle>プロフィール</PageTitle>
 
-      {/* プロフィール情報表示 */}
-      <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold">{user.display_name}</h2>
-          <div className="flex items-center gap-4 mt-2">
-            <span className="bg-gray-200 px-3 py-1 rounded-full text-sm">{user.role}</span>
-            <span className="text-sm text-gray-600">
-              {(() => {
-                const date = new Date(user.created_at);
-                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-              })()}{" "}
-              に参加
-            </span>
-          </div>
+      {/* プロフィール情報表示*/}
+      <div className="p-4 mb-4 bg-white rounded-lg shadow-sm">
+        <h2 className="text-2xl font-bold">{user.display_name}</h2>
+        <div className="flex items-center gap-4 mt-2">
+          <span className="bg-gray-200 px-3 py-1 rounded-full text-sm">{user.role}</span>
+          <span className="text-sm text-gray-600">
+            {(() => {
+              const date = new Date(user.created_at);
+              return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+            })()}{" "}
+            に参加
+          </span>
         </div>
+
+        {/* bio（自己紹介テキスト）のみコメントアウトして非表示にする
         <p className="text-gray-700">{user.bio || "自己紹介はまだ設定されていません。"}</p>
+        */}
       </div>
 
       {/* プロフィール編集フォーム */}
@@ -147,6 +189,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 placeholder="https://x.com/..."
                 value={x_url}
                 onChange={e => setXUrl(e.target.value)}
+                error={errors.x_url}
               />
             </div>
 
@@ -159,6 +202,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 placeholder="https://facebook.com/..."
                 value={facebook_url}
                 onChange={e => setFacebookUrl(e.target.value)}
+                error={errors.facebook_url}
               />
             </div>
 
@@ -171,6 +215,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 placeholder="https://instagram.com/..."
                 value={instagram_url}
                 onChange={e => setInstagramUrl(e.target.value)}
+                error={errors.instagram_url}
               />
             </div>
 
@@ -183,18 +228,20 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 placeholder="https://github.com/..."
                 value={github_url}
                 onChange={e => setGithubUrl(e.target.value)}
+                error={errors.github_url}
               />
             </div>
 
             <div>
               <label htmlFor="portfolio_url" className="block text-sm font-medium mb-1">
-                ホームページやポートフォリオサイトのURL
+                ポートフォリオサイトのURL
               </label>
               <TextInput
                 id="portfolio_url"
                 placeholder="https://your-portfolio.com/..."
                 value={portfolio_url}
                 onChange={e => setPortfolioUrl(e.target.value)}
+                error={errors.portfolio_url}
               />
             </div>
 

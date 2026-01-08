@@ -439,11 +439,11 @@ sequenceDiagram
 
 - 名前（テキスト入力）
 - 自己紹介（テキストエリア）
-- X（旧Twitter）アカウントURL（テキスト入力）
-- FacebookアカウントURL（テキスト入力）
-- InstagramアカウントURL（テキスト入力）
-- GitHubアカウントURL（テキスト入力）
-- ポートフォリオサイトURL（テキスト入力）
+- X URL（テキスト入力）
+- Facebook URL（テキスト入力）
+- Instagram URL（テキスト入力）
+- GitHub URL（テキスト入力）
+- ポートフォリオサイトのURL（テキスト入力）
 - 保存ボタン
 
 ### 5.4 画面レイアウト
@@ -466,15 +466,15 @@ sequenceDiagram
 |  |  [                      ] ||
 |  |  [                      ] ||
 |  |                           ||
-|  |  X（旧Twitter）アカウントURL:||
+|  |  X URL:                   ||
 |  |  [                      ] ||
-|  |  FacebookアカウントURL:    ||
+|  |  Facebook URL:            ||
 |  |  [                      ] ||
-|  |  instagramアカウントURL:   ||
+|  |  Instagram URL:           ||
 |  |  [                      ] ||
-|  |  GithubアカウントURL:      ||
+|  |  Github URL:              ||
 |  |  [                      ] ||
-|  |  ポートフォリオサイトURL:   ||
+|  |  ポートフォリオサイトのURL: ||
 |  |  [                      ] ||
 |  |                           ||
 |  |  [    保存    ]           ||
@@ -536,11 +536,11 @@ sequenceDiagram
 - プロフィール画像（大きいサイズ）
 - 表示名（display_name）
 - 自己紹介（bio）- 全文表示
-- X（旧Twitter）アカウントURL - 全文表示
-- FacebookアカウントURL - 全文表示
-- InstagramアカウントURL - 全文表示
-- GitHubアカウントURL - 全文表示
-- ポートフォリオサイトURL - 全文表示
+- X URL - 全文表示
+- Facebook URL - 全文表示
+- Instagram URL - 全文表示
+- GitHub URL - 全文表示
+- ポートフォリオサイトのURL - 全文表示
 
 ### 6.4 画面レイアウト
 
@@ -589,17 +589,8 @@ sequenceDiagram
 |  |  自己紹介テキストが全文で表示されます。  | |
 |  |  改行も含めて詳細に表示されます。       | |
 |  |                                   | |
-|  |  X（旧Twitter）アカウントURL:      | |
-|  |  URLが全文表示されます。            | |
-|  |  FacebookアカウントURL:            | |
-|  |  URLが全文表示されます。            | |
-|  |  InstagramアカウントURL:           | |
-|  |  URLが全文表示されます。            | |
-|  |  GitHubアカウントURL:              | |
-|  |  URLが全文表示されます。            | |
-|  |  ポートフォリオサイトURL:           | |
-|  |  URLが全文表示されます。            | |
-|  |                                   | |
+|  |  X URL Facebook URL Instagram URL GitHub URL ポートフォリオサイトのURL:| |
+|  |  入力されたURLのリンクだけ表示されます。| |
 |  +-----------------------------------+ |
 |                                        |
 +----------------------------------------+

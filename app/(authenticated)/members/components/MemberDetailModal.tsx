@@ -87,7 +87,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
                 rel="noopener noreferrer"
                 underline="hover"
               >
-                Webサイト URL
+                ポートフォリオサイトのURL
               </Anchor>
             )}
           </Group>

@@ -158,11 +158,11 @@ export async function updateUserProfileServerInServer({
   id: number;
   displayName: string;
   bio: string;
-  x_url: string;
-  facebook_url: string;
-  instagram_url: string;
-  github_url: string;
-  portfolio_url: string;
+  x_url: null;
+  facebook_url: null;
+  instagram_url: null;
+  github_url: null;
+  portfolio_url: null;
 }): Promise<PostgrestError | null> {
   const supabase = await createServerSupabaseClient();
 
