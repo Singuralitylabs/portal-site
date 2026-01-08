@@ -53,13 +53,38 @@ export type ContentType = "document" | "video" | "application";
 type UsersTable = Database["public"]["Tables"]["users"];
 export type UserType = UsersTable["Row"];
 export type InsertUserType = UsersTable["Insert"];
-export type ProfileUserType = Pick<UserType, "id" | "display_name" | "role" | "created_at" | "bio">;
+export type ProfileUserType = Pick<
+  UserType,
+  | "id"
+  | "display_name"
+  | "role"
+  | "created_at"
+  | "bio"
+  | "avatar_url"
+  | "x_url"
+  | "facebook_url"
+  | "instagram_url"
+  | "github_url"
+  | "portfolio_url"
+>;
 
 export type UserStatusType = "pending" | "active" | "rejected";
 export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
-export type MemberType = Pick<UserType, "id" | "display_name" | "bio" | "avatar_url">;
+export type MemberType = Pick<
+  UserType,
+  | "id"
+  | "display_name"
+  | "bio"
+  | "avatar_url"
+  | "x_url"
+  | "facebook_url"
+  | "instagram_url"
+  | "github_url"
+  | "portfolio_url"
+>;
+
 export type PendingUserType = Pick<UserType, "id" | "display_name" | "email">;
 export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 

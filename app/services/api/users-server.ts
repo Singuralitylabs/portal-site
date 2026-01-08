@@ -71,7 +71,9 @@ export async function fetchActiveUsers(): Promise<{
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, display_name, bio, avatar_url")
+    .select(
+      "id, display_name, bio, avatar_url, x_url, facebook_url, instagram_url, github_url, portfolio_url"
+    )
     .eq("status", "active")
     .eq("is_deleted", false)
     .order("created_at", { ascending: true });
@@ -147,10 +149,20 @@ export async function updateUserProfileServerInServer({
   id,
   displayName,
   bio,
+  x_url,
+  facebook_url,
+  instagram_url,
+  github_url,
+  portfolio_url,
 }: {
   id: number;
   displayName: string;
   bio: string;
+  x_url: null;
+  facebook_url: null;
+  instagram_url: null;
+  github_url: null;
+  portfolio_url: null;
 }): Promise<PostgrestError | null> {
   const supabase = await createServerSupabaseClient();
 
@@ -159,6 +171,11 @@ export async function updateUserProfileServerInServer({
     .update({
       display_name: displayName,
       bio,
+      x_url,
+      facebook_url,
+      instagram_url,
+      github_url,
+      portfolio_url,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
