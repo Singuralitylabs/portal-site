@@ -30,7 +30,7 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     href: "/",
     icon: <House className="h-5 w-5" />,
   },
-    {
+  {
     title: "プロフィール",
     href: "/profile",
     icon: <User className="h-5 w-5" />,

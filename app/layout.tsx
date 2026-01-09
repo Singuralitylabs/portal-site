@@ -9,6 +9,15 @@ import { Notifications } from "@mantine/notifications";
 export const metadata: Metadata = {
   title: "Sinlab Portal",
   description: "シンギュラリティ・ラボのポータルサイトです。",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  alternates: {
+    languages: {
+      ja: "/",
+    },
+  },
+  openGraph: {
+    locale: "ja_JP",
+  },
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
