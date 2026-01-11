@@ -30,13 +30,13 @@ export default async function ProfilePage() {
 
   // プロフィール更新用のサーバーアクション
   const updateProfile = async (
-    displayName: string, 
-    bio: string, 
-    x_url: string, 
-    facebook_url: string, 
-    instagram_url: string, 
-    github_url: string, 
-    portfolio_url: string
+    displayName: string,
+    bio: string,
+    x_url: string | null,
+    facebook_url: string | null,
+    instagram_url: string | null,
+    github_url: string | null,
+    portfolio_url: string | null
   ) => {
     "use server";
 
