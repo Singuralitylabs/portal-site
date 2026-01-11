@@ -536,11 +536,11 @@ sequenceDiagram
 - プロフィール画像（大きいサイズ）
 - 表示名（display_name）
 - 自己紹介（bio）- 全文表示
-- X URL - 全文表示
-- Facebook URL - 全文表示
-- Instagram URL - 全文表示
-- GitHub URL - 全文表示
-- ポートフォリオサイトのURL - 全文表示
+- X URL - テキストリンク表示
+- Facebook URL - テキストリンク表示
+- Instagram URL - テキストリンク表示
+- GitHub URL - テキストリンク表示
+- ポートフォリオサイトのURL - テキストリンク表示
 
 ### 6.4 画面レイアウト
 
@@ -590,7 +590,7 @@ sequenceDiagram
 |  |  改行も含めて詳細に表示されます。       | |
 |  |                                   | |
 |  |  X URL Facebook URL Instagram URL GitHub URL ポートフォリオサイトのURL:| |
-|  |  入力されたURLのリンクだけ表示されます。| |
+|  |  入力されたURLのテキストリンクだけ表示されます。| |
 |  +-----------------------------------+ |
 |                                        |
 +----------------------------------------+
