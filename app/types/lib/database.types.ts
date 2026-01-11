@@ -185,6 +185,75 @@ export type Database = {
           },
         ];
       };
+      position_tags: {
+        Row: {
+          created_at: string;
+          id: number;
+          position_id: number;
+          updated_at: string;
+          user_id: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          position_id: number;
+          updated_at?: string;
+          user_id: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          position_id?: number;
+          updated_at?: string;
+          user_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "position_tags_position_id_fkey";
+            columns: ["position_id"];
+            isOneToOne: false;
+            referencedRelation: "positions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "position_tags_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      positions: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          display_order: number | null;
+          id: number;
+          is_deleted: boolean;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          display_order?: number | null;
+          id?: number;
+          is_deleted?: boolean;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          display_order?: number | null;
+          id?: number;
+          is_deleted?: boolean;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       users: {
         Row: {
           auth_id: string;
