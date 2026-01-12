@@ -159,13 +159,11 @@ export async function reorderItemsInCategory(
     return;
   }
 
-  // 1 から順に振り直す（並列実行でパフォーマンス改善）
-  await Promise.all(
-    items.map((item, index) =>
-      supabase
-        .from(table)
-        .update({ display_order: index + 1 })
-        .eq("id", item.id)
-    )
-  );
+  // 1 から順に振り直す（衝突を避けるため順次更新）
+  for (const [index, item] of items.entries()) {
+    await supabase
+      .from(table)
+      .update({ display_order: index + 1 })
+      .eq("id", item.id);
+  }
 }
