@@ -57,7 +57,7 @@ export function useDisplayOrderForm(
     items.forEach(item => {
       options.push({
         value: `after:${item.id}`,
-        label: `「${item.name}」の後に配置`,
+        label: `${item.display_order}. ${item.name}の後に配置`,
       });
     });
 
