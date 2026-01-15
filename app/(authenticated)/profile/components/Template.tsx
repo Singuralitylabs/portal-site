@@ -149,10 +149,6 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
             に参加
           </span>
         </div>
-
-        {/* bio（自己紹介テキスト）のみコメントアウトして非表示にする
-        <p className="text-gray-700">{user.bio || "自己紹介はまだ設定されていません。"}</p>
-        */}
       </div>
 
       {/* プロフィール編集フォーム */}
