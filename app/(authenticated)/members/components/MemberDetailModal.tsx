@@ -1,4 +1,4 @@
-import { Modal, Text, Stack, Group, Avatar, Anchor } from "@mantine/core";
+import { Modal, Text, Stack, Group, Avatar, Anchor, Badge } from "@mantine/core";
 import type { MemberType } from "@/app/types";
 
 interface MemberDetailModalProps {
@@ -24,6 +24,18 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             <Text size="xl" fw={600}>
               {memberInfo.display_name}
             </Text>
+            {memberInfo.position_tags && memberInfo.position_tags.length > 0 && (
+              <Group gap="xs">
+                {memberInfo.position_tags.map(
+                  tag =>
+                    tag.positions && (
+                      <Badge key={tag.positions.id} variant="light" size="sm">
+                        {tag.positions.name}
+                      </Badge>
+                    )
+                )}
+              </Group>
+            )}
           </Stack>
         </Group>
 
@@ -42,7 +54,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
           <Group gap="md" mt="xs">
             {memberInfo.x_url && (
               <Anchor
-                href={memberInfo.x_url}
+                href={memberInfo.x_url || ""}
                 target="_blank"
                 rel="noopener noreferrer"
                 underline="hover"
@@ -52,7 +64,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             )}
             {memberInfo.facebook_url && (
               <Anchor
-                href={memberInfo.facebook_url}
+                href={memberInfo.facebook_url || ""}
                 target="_blank"
                 rel="noopener noreferrer"
                 underline="hover"
@@ -62,7 +74,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             )}
             {memberInfo.instagram_url && (
               <Anchor
-                href={memberInfo.instagram_url}
+                href={memberInfo.instagram_url || ""}
                 target="_blank"
                 rel="noopener noreferrer"
                 underline="hover"
@@ -72,7 +84,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             )}
             {memberInfo.github_url && (
               <Anchor
-                href={memberInfo.github_url}
+                href={memberInfo.github_url || ""}
                 target="_blank"
                 rel="noopener noreferrer"
                 underline="hover"
@@ -82,7 +94,7 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             )}
             {memberInfo.portfolio_url && (
               <Anchor
-                href={memberInfo.portfolio_url}
+                href={memberInfo.portfolio_url || ""}
                 target="_blank"
                 rel="noopener noreferrer"
                 underline="hover"
