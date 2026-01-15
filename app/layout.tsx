@@ -1,30 +1,16 @@
 import type { Metadata } from "next";
-import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css";
 import "./globals.css";
-import { ColorSchemeScript, mantineHtmlProps, MantineProvider } from "@mantine/core";
-import { SupabaseAuthProvider } from "@/app/providers/supabase-auth-provider";
-import { Notifications } from "@mantine/notifications";
 
 export const metadata: Metadata = {
   title: "Sinlab Portal",
   description: "シンギュラリティ・ラボのポータルサイトです。",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
-  alternates: {
-    languages: {
-      ja: "/",
-    },
-  },
-  openGraph: {
-    locale: "ja_JP",
-  },
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
-    apple: "/icon.png",
+    apple: "/apple-icon.png",
     other: {
       rel: "apple-touch-icon",
-      url: "/icon.png",
+      url: "/apple-icon.png",
     },
   },
 };
@@ -35,18 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" {...mantineHtmlProps}>
-      <head>
-        <ColorSchemeScript />
-      </head>
-      <body>
-        <SupabaseAuthProvider>
-          <MantineProvider>
-            <Notifications position="top-right" />
-            <div className="min-h-screen">{children}</div>
-          </MantineProvider>
-        </SupabaseAuthProvider>
-      </body>
+    <html lang="ja">
+      <body>{children}</body>
     </html>
   );
 }
