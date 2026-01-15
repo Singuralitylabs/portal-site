@@ -7,12 +7,12 @@ export type DocumentWithCategoryType = DocumentsTable["Row"] & {
 };
 export type DocumentInsertFormType = Omit<
   DocumentsTable["Row"],
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
->;
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 export type DocumentUpdateFormType = Omit<
   DocumentsTable["Row"],
-  "created_at" | "updated_at" | "created_by" | "is_deleted"
->;
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 // Videos types
 type VideosTable = Database["public"]["Tables"]["videos"];
@@ -21,12 +21,12 @@ export type VideoWithCategoryType = VideosTable["Row"] & {
 };
 export type VideoInsertFormType = Omit<
   VideosTable["Row"],
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
->;
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 export type VideoUpdateFormType = Omit<
   VideosTable["Row"],
-  "created_at" | "updated_at" | "created_by" | "is_deleted"
->;
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 // Applications types
 type ApplicationsTable = Database["public"]["Tables"]["applications"];
@@ -39,15 +39,23 @@ export type ApplicationWithCategoryAndDeveloperType = ApplicationType & {
 
 export type ApplicationInsertFormType = Omit<
   ApplicationType,
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted"
->;
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 export type ApplicationUpdateFormType = Omit<
   ApplicationType,
-  "created_at" | "updated_at" | "created_by" | "is_deleted"
->;
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
+> & { position: PlacementPositionType };
 
 export type ContentType = "document" | "video" | "application";
+export type ContentTableType = "documents" | "videos" | "applications";
+
+// Display order placement position types
+export type PlacementPositionType =
+  | { type: "first" }
+  | { type: "after"; afterId: number }
+  | { type: "last" }
+  | { type: "current" }; // For edits only
 
 // Users types
 type UsersTable = Database["public"]["Tables"]["users"];
@@ -74,6 +82,8 @@ export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 // Categories types
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
+export type CategoryItemType = Pick<CategoryType, "id" | "name" | "display_order">;
+
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
 
 // Positions types
