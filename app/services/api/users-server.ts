@@ -71,9 +71,10 @@ export async function fetchActiveUsers(): Promise<{
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, display_name, bio, avatar_url")
+    .select(`id, display_name, bio, avatar_url, position_tags(positions(id, name, is_deleted))`)
     .eq("status", "active")
     .eq("is_deleted", false)
+    .eq("position_tags.positions.is_deleted", false)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -81,7 +82,27 @@ export async function fetchActiveUsers(): Promise<{
     return { data: null, error };
   }
 
-  return { data, error: null };
+  if (!data) {
+    return { data: null, error: null };
+  }
+
+  // Supabaseの型推論では positions が配列になるため、MemberType[] 型に変換
+  const transformedData: MemberType[] = data.map((user) => ({
+    id: user.id,
+    display_name: user.display_name,
+    bio: user.bio,
+    avatar_url: user.avatar_url,
+    position_tags: user.position_tags
+      .filter((tag) => {
+        const positions = Array.isArray(tag.positions) ? tag.positions[0] : tag.positions;
+        return positions?.is_deleted === false;
+      })
+      .map((tag) => ({
+        positions: Array.isArray(tag.positions) ? tag.positions[0] : tag.positions,
+      })),
+  }));
+
+  return { data: transformedData, error: null };
 }
 
 /**
