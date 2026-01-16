@@ -3,14 +3,15 @@ import { Modal, TextInput, Select, Textarea, Button, Group, NumberInput } from "
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
-import type { SelectCategoryType, VideoUpdateFormType } from "@/app/types";
+import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
+import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 
 interface VideoFormModalProps {
   opened: boolean;
   onClose: () => void;
   categories: SelectCategoryType[];
   userId: number;
-  initialData?: VideoUpdateFormType;
+  initialData?: VideoWithCategoryType;
 }
 
 export function VideoFormModal({
@@ -21,19 +22,24 @@ export function VideoFormModal({
   initialData,
 }: VideoFormModalProps) {
   const [form, setForm] = useState({
-    name: initialData?.name ?? "",
-    category_id: initialData?.category_id ?? 0,
-    description: initialData?.description ?? "",
-    url: initialData?.url ?? "",
-    thumbnail_path: initialData?.thumbnail_path ?? "",
-    thumbnail_time: initialData?.thumbnail_time ?? 0,
-    length: initialData?.length ?? 0,
-    assignee: initialData?.assignee ?? "",
-    display_order: initialData?.display_order ?? null,
+    name: "",
+    category_id: 0,
+    description: "",
+    url: "",
+    thumbnail_path: "",
+    thumbnail_time: 0,
+    length: 0,
+    assignee: "",
   });
   const router = useRouter();
 
+  // 表示順操作フック
+  const { position, setPosition, positionOptions, parsePosition, handleCategoryChange } =
+    useDisplayOrderForm("videos", form.category_id, initialData?.id, !!initialData);
+
+  // モーダルが開かれたときの初期化処理
   useEffect(() => {
+    // フォームを初期化
     setForm({
       name: initialData?.name ?? "",
       category_id: initialData?.category_id ?? 0,
@@ -43,9 +49,18 @@ export function VideoFormModal({
       thumbnail_time: initialData?.thumbnail_time ?? 0,
       length: initialData?.length ?? 0,
       assignee: initialData?.assignee ?? "",
-      display_order: initialData?.display_order ?? null,
     });
-  }, [opened, initialData]);
+
+    // 表示順の初期化
+    setPosition(initialData ? "current" : "last");
+  }, [opened, initialData, setPosition]);
+
+  // カテゴリー変更時の処理
+  const handleCategoryChangeWrapper = async (value: string | null) => {
+    const categoryId = Number(value);
+    setForm(f => ({ ...f, category_id: categoryId }));
+    await handleCategoryChange(categoryId);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.url?.trim() || form.category_id === 0) {
@@ -67,10 +82,26 @@ export function VideoFormModal({
       return;
     }
 
-    // API呼び出し(初期値あり：編集時は更新、初期値なし：新規登録)
+    // positionをPlacementPositionに変換
+    const parsedPosition = parsePosition(position);
+
+    // 共通のフィールドをまとめる
+    const commonData = {
+      name: form.name,
+      category_id: form.category_id,
+      description: form.description,
+      url: form.url,
+      thumbnail_path: form.thumbnail_path,
+      thumbnail_time: form.thumbnail_time,
+      length: form.length,
+      assignee: form.assignee,
+      position: parsedPosition,
+    };
+
+    // API呼び出し(編集時は更新、新規時は登録)
     const result = initialData
-      ? await updateVideo({ ...form, id: initialData.id, updated_by: userId })
-      : await registerVideo({ ...form, created_by: userId });
+      ? await updateVideo({ id: initialData.id, updated_by: userId, ...commonData })
+      : await registerVideo({ created_by: userId, ...commonData });
 
     if (result?.success) {
       notifications.show({
@@ -82,7 +113,7 @@ export function VideoFormModal({
     } else {
       notifications.show({
         title: initialData ? "更新失敗" : "登録失敗",
-        message: String(result?.error?.hint) || "不明なエラー",
+        message: String(result?.error) || "不明なエラー",
         color: "red",
       });
       return;
@@ -111,13 +142,14 @@ export function VideoFormModal({
           label: category.name,
         }))}
         value={String(form.category_id)}
-        onChange={value => setForm(f => ({ ...f, category_id: Number(value) }))}
+        onChange={handleCategoryChangeWrapper}
         required
         mb="sm"
       />
       <Textarea
         label="説明文"
         value={form.description}
+        placeholder="文字数は70文字以内にしてください。"
         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
         mb="sm"
       />
@@ -152,6 +184,14 @@ export function VideoFormModal({
         label="担当者"
         value={form.assignee}
         onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}
+        mb="sm"
+      />
+      <Select
+        label="表示順"
+        data={positionOptions}
+        value={position}
+        onChange={value => setPosition(value || "last")}
+        placeholder="配置位置を選択"
         mb="sm"
       />
       <Group mt="md" justify="flex-end">
