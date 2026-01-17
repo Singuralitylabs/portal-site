@@ -262,11 +262,16 @@ export type Database = {
           created_at: string;
           display_name: string;
           email: string;
+          facebook_url: string | null;
+          github_url: string | null;
           id: number;
+          instagram_url: string | null;
           is_deleted: boolean;
+          portfolio_url: string | null;
           role: string;
           status: string;
           updated_at: string;
+          x_url: string | null;
         };
         Insert: {
           auth_id: string;
@@ -275,11 +280,16 @@ export type Database = {
           created_at?: string;
           display_name: string;
           email: string;
+          facebook_url?: string | null;
+          github_url?: string | null;
           id?: number;
+          instagram_url?: string | null;
           is_deleted?: boolean;
+          portfolio_url?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;
+          x_url?: string | null;
         };
         Update: {
           auth_id?: string;
@@ -288,11 +298,16 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           email?: string;
+          facebook_url?: string | null;
+          github_url?: string | null;
           id?: number;
+          instagram_url?: string | null;
           is_deleted?: boolean;
+          portfolio_url?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;
+          x_url?: string | null;
         };
         Relationships: [];
       };
