@@ -44,8 +44,12 @@ next-env.d.ts
 
 supabase/.local
 
-/.claude
+# Claude Code
+# 最小構成: CLAUDE.md と .claude/settings.json のみGit管理
+.claude/settings.local.json
 /.serena
 /claudedocs
+/docs/claude-code-guide.md
+/docs/mcp-server-setup.md
 
 google-service-account.json
