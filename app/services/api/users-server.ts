@@ -71,7 +71,9 @@ export async function fetchActiveUsers(): Promise<{
 
   const { data, error } = await supabase
     .from("users")
-    .select(`id, display_name, bio, avatar_url, position_tags(positions(id, name, is_deleted))`)
+    .select(
+      "id, display_name, bio, avatar_url, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+    )
     .eq("status", "active")
     .eq("is_deleted", false)
     .eq("position_tags.positions.is_deleted", false)
@@ -87,17 +89,22 @@ export async function fetchActiveUsers(): Promise<{
   }
 
   // Supabaseの型推論では positions が配列になるため、MemberType[] 型に変換
-  const transformedData: MemberType[] = data.map((user) => ({
+  const transformedData: MemberType[] = data.map(user => ({
     id: user.id,
     display_name: user.display_name,
     bio: user.bio,
     avatar_url: user.avatar_url,
+    x_url: user.x_url,
+    facebook_url: user.facebook_url,
+    instagram_url: user.instagram_url,
+    github_url: user.github_url,
+    portfolio_url: user.portfolio_url,
     position_tags: user.position_tags
-      .filter((tag) => {
+      .filter(tag => {
         const positions = Array.isArray(tag.positions) ? tag.positions[0] : tag.positions;
         return positions?.is_deleted === false;
       })
-      .map((tag) => ({
+      .map(tag => ({
         positions: Array.isArray(tag.positions) ? tag.positions[0] : tag.positions,
       })),
   }));
@@ -168,10 +175,20 @@ export async function updateUserProfileServerInServer({
   id,
   displayName,
   bio,
+  x_url,
+  facebook_url,
+  instagram_url,
+  github_url,
+  portfolio_url,
 }: {
   id: number;
   displayName: string;
   bio: string;
+  x_url: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  github_url: string | null;
+  portfolio_url: string | null;
 }): Promise<PostgrestError | null> {
   const supabase = await createServerSupabaseClient();
 
@@ -180,6 +197,11 @@ export async function updateUserProfileServerInServer({
     .update({
       display_name: displayName,
       bio,
+      x_url,
+      facebook_url,
+      instagram_url,
+      github_url,
+      portfolio_url,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
