@@ -1,11 +1,11 @@
 import { VideoWithCategoryType } from "@/app/types";
-import { Button, Flex, Text, Divider } from "@mantine/core";
-import { Calendar } from "lucide-react";
 import { PageTitle } from "@/app/components/PageTitle";
+import { MarkdownText } from "@/app/components/MarkdownText";
+import { Button, Flex, Text, Divider } from "@mantine/core";
 import Link from "next/link";
 import remarkGfm from "remark-gfm";
-import ReactMarkdown from "react-markdown";
 import Youtube from "./Youtube";
+import { Calendar } from "lucide-react";
 
 interface VideoDetailPageProps {
   video: VideoWithCategoryType;
@@ -83,18 +83,8 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                 direction="column"
                 p="1rem 1rem"
               >
-                <Text component="div">■概要</Text>
                 <Text component="div" className="prose prose-sm max-w-none">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      a: ({ node, ...props }) => (
-                        <a {...props} target="_blank" rel="noopener noreferrer" />
-                      ),
-                    }}
-                  >
-                    {String(video.description)}
-                  </ReactMarkdown>
+                  <MarkdownText>{video.description}</MarkdownText>
                 </Text>
               </Flex>
             </div>

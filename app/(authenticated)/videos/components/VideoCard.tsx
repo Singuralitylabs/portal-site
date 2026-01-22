@@ -6,7 +6,7 @@ import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
 import { Card, Text } from "@mantine/core";
 import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
-import ReactMarkdown from "react-markdown";
+import { MarkdownText } from "@/app/components/MarkdownText";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
@@ -57,7 +57,7 @@ export function VideoCard({ video, isContentMgr, categories, userId }: VideoCard
             {video.name}
           </Text>
           <Text component="div" lineClamp={2} c="dimmed" mb="md" className="prose prose-sm max-w-none">
-            <ReactMarkdown>{video.description}</ReactMarkdown>
+            <MarkdownText>{video.description}</MarkdownText>
           </Text>
         </div>
       </Card.Section>

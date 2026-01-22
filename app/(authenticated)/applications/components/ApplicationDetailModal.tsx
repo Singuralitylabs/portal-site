@@ -3,7 +3,7 @@
 import { ApplicationWithCategoryAndDeveloperType } from "@/app/types";
 import { Modal, Button, Badge, Image, Text, Stack } from "@mantine/core";
 import { ExternalLink, User } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { MarkdownText } from "@/app/components/MarkdownText";
 
 interface ApplicationDetailModalProps {
   application: ApplicationWithCategoryAndDeveloperType | null;
@@ -50,7 +50,7 @@ export function ApplicationDetailModal({
             詳細説明
           </Text>
           <Text className="prose prose-sm max-w-none" component="div">
-            <ReactMarkdown>{application.description}</ReactMarkdown>
+            <MarkdownText>{application.description}</MarkdownText>
           </Text>
         </div>
 
