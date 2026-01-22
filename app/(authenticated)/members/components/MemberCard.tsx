@@ -1,7 +1,7 @@
 "use client";
 
 import { MemberType } from "@/app/types";
-import { Card, Avatar, Text, Group } from "@mantine/core";
+import { Card, Avatar, Text, Group, Badge } from "@mantine/core";
 import { MemberDetailModal } from "./MemberDetailModal";
 import { useState } from "react";
 import { MarkdownText } from "@/app/components/MarkdownText";
