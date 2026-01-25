@@ -40,10 +40,10 @@ Unit Tests (多数) - Component Tests
 | Workflow | 目的 | 主な実行内容 | トリガー |
 | --- | --- | --- | --- |
 | Build Test (`.github/workflows/build.yml`) | Next.js ビルドが本番相当で成立するかを検証 | Node.js 22.x で `npm ci` → `npm run build` | `push` / `pull_request` (`app/**`)、`workflow_dispatch` |
-| TypeScript Type Check (`.github/workflows/typecheck.yml`) | 型安全性と ESLint ルール違反の早期検出 | Node.js 22.x で `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run lint:unused-exports`（ts-prune／`UNUSED_EXPORTS_STRICT=true` でのみfail） | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
+| TypeScript Type Check (`.github/workflows/typecheck.yml`) | 型安全性と ESLint ルール違反の早期検出 | Node.js 22.x で `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run lint:unused-exports`（未実装） | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
 | Jest Unit Tests (`.github/workflows/test.yml`) | ユニットテストとカバレッジ確認 | Node.js 22.x で `npm ci` → `npm test` (Jest) | `push` / `pull_request` (`app/**`)、`workflow_dispatch` |
 | Check console.log and debugger (`.github/workflows/check_console_log.yml`) | デバッグ用出力を混入させないための静的検査 | `find` + `grep` で `console.log/info` と `debugger` を検出し、許可済み箇所以外が見つかれば失敗 | `push` / `pull_request` (`app/**`)、`workflow_dispatch` |
-| Supabase DB Types Consistency (`.github/workflows/db-types.yml`) | DBスキーマと型定義の同期を確認 | `npx supabase gen types` → `git diff --quiet app/types/lib/database.types.ts` で差分検知 | `push` / `pull_request`（`supabase/**`, `app/types/lib/database.types.ts` 等）、`workflow_dispatch` |
+| Supabase DB Types Consistency（未実装） (`.github/workflows/db-types.yml`) | DBスキーマと型定義の同期を確認 | `npx supabase gen types` → `git diff --quiet app/types/lib/database.types.ts` で差分検知 | `push` / `pull_request`（`supabase/**`, `app/types/lib/database.types.ts` 等）、`workflow_dispatch` |
 
 各ワークフローは軽量ジョブとして独立しており、失敗すると PR 上で即座にフィードバックされる。テスト設計上は、ローカルで同じ npm スクリプトを再現できるよう `test`, `lint`, `build` を常に最新手順に揃え、必要に応じて追加ジョブ（例: カバレッジ収集や Storybook ビルド）をこの一覧に追記する。
 
@@ -184,27 +184,26 @@ TypeScript型定義の整合性を確保する
 
 - **デバッグコード除去**: console.log、debugger文の検出
   `.github/workflows/check_console_log.yml` が `find` + `grep` で `console.log/info` や `debugger` を走査し、許可されていない出力を検出するとジョブを失敗させる。
-  ローカルでは `npm run lint:logs`（`scripts/lint-logs.cjs` を実行し、`.ts/.tsx` を再帰走査して許可リスト以外の出力を行番号付きで表示）を pre-commit Hook に組み込み、開発段階で検知できるようにする。
+  ローカルでの `npm run lint:logs` 運用は未実装のため、導入後に pre-commit Hook へ組み込み、開発段階で検知できるようにする。
 
 - **未使用コード**: 不要なimport・関数・変数の検出
   `.github/workflows/typecheck.yml` 内で実行する `npm run lint` が `eslint-plugin-import` や `no-unused-vars` 等のルールを通じて未使用コードを検知する。
-  さらに `npm run lint:unused-exports`（`scripts/lint-unused-exports.cjs` → `ts-prune --project tsconfig.json --ignore app/types/lib/database.types.ts`）を同ワークフローに追加済みで、デフォルトは警告のみを表示する。GitHub Secrets/Variables に `UNUSED_EXPORTS_STRICT=true` を設定すると CI で失敗させられるため、大規模な削除作業前後で切り替えると安全に監視できる。
+  `npm run lint:unused-exports` の運用は未実装のため、導入後に同ワークフローへ追加し、`UNUSED_EXPORTS_STRICT=true` の切り替えで CI を fail させる運用を想定する。
 
 - **コーディング規約**: ESLintルール準拠
   同じく `npm run lint` により、プロジェクトの ESLint 設定（`eslint-config-next`, `eslint-config-prettier` など）へ違反したコードを検出する。
-  `eslint --max-warnings=0` を標準とし、`lint-staged` で `next lint --fix` を自動適用することで PR 作成前に整形を強制する。
+  `eslint --max-warnings=0` を標準に設定し、`lint-staged` で `next lint --fix` を自動適用する運用は導入後に検討する。
 
 - **型安全性**: TypeScriptの型エラー検出
   `.github/workflows/typecheck.yml` で `npx tsc --noEmit` を実行し、型エラー発生時にはジョブを失敗させる。
   `incremental` オプションをオフにした専用 `tsconfig.ci.json` を用意するとキャッシュ汚染による取りこぼしを防ぎやすい。
 
 - **フォーマッタ整合**: Prettier などの自動整形ルールからの逸脱検知 *（未実装）*
-  `npm run format:check`（`prettier --check "app/**/*.{ts,tsx,js,json,md}"`）を追加し、CI のコード品質ジョブで `npm run format:check` → `npm run lint` の順に実行する。
-  ローカルでは `npm run format` を pre-commit Hook に仕込み、人手による整形差分を減らす。
+  将来的に `format:check`/`format` スクリプトを追加し、CI と pre-commit Hook で整形逸脱を検知する運用を想定している。
 
 - **依存関係健全性**: 未使用/未宣言 dependency, security fix の検出 *（未実装）*
-  `npm run depcheck`（`depcheck --specials=eslint,babel,webpack --skip-missing`）や `npm audit --omit=dev` をコード品質ジョブの末尾に足し、使用していない依存や脆弱性を検出する。
-  検出結果は GitHub Actions のアーティファクトにレポートし、Critical 以上のみで失敗させる運用にすると対応負荷を抑えられる。
+  コード品質ジョブの末尾に、使用していない依存や既知の脆弱性を検出する仕組みを追加することを想定している。
+  検出結果の扱い（アーティファクト化や fail 判定のしきい値）は運用負荷とのバランスで決定する。
 
 ### 3.6 コアコンポーネントテスト（中優先度）（未実装）
 
@@ -390,29 +389,34 @@ Supabase の Postgres・Auth・Storage・Edge Functions を本番と同じ設定
 ### 4.1 アーキテクチャ（実行方針）
 
 - **テストピラミッド**: Unit → Integration → E2E の層構造で、上位ほど本数を絞る。
-- **PR/ Nightly 分離**: PR では短時間テストを必須、E2E/大規模統合は Nightly で実行する。
+- **PR/ Nightly 分離**: PR では短時間テストを必須、E2E/大規模統合は Nightly で実行する。（Nightly 実行は未実装）
 - **モック優先**: 外部依存は MSW/モックで隔離し、統合テストは専用環境で実施する。
 
 ### 4.2 GitHub Actions（CI/CD）
 
 - **Build**: `.github/workflows/build.yml`（`npm run build`）
-- **Type Check + Lint**: `.github/workflows/typecheck.yml`（`npx tsc --noEmit`, `npm run lint`, `npm run lint:unused-exports`）
+- **Type Check + Lint**: `.github/workflows/typecheck.yml`（`npx tsc --noEmit`, `npm run lint`, `npm run lint:unused-exports`（未実装））
 - **Unit Test**: `.github/workflows/test.yml`（`npm test`）
 - **Console/Debugger 検出**: `.github/workflows/check_console_log.yml`
-- **DB Types 差分チェック**: `.github/workflows/db-types.yml`
+- **DB Types 差分チェック（未実装）**: `.github/workflows/db-types.yml`
 
 ### 4.3 テスト/品質ツール
 
+#### 導入済み
+
 - **Jest**: ユニットテスト実行基盤
+- **TypeScript**: 型チェック（`tsc --noEmit`）
+- **ESLint**: 静的解析
+- **Supabase CLI**: 型生成・スキーマ整合性確認
+
+#### 導入予定（未実装）
+
 - **React Testing Library**: コンポーネント/フック検証
 - **@testing-library/jest-dom**: DOM アサーション強化
 - **Playwright**: E2E/ページ統合/コアUI検証
 - **MSW**: API モック（フロント/サービス層）
 - **axe-core**: a11y 自動検査
-- **TypeScript**: 型チェック（`tsc --noEmit`）
-- **ESLint**: 静的解析
-- **ts-prune**: 未使用 export 検出（`npm run lint:unused-exports`）
-- **Supabase CLI**: 型生成・スキーマ整合性確認
+- **ts-prune**: 未使用 export 検出
 - **Custom Scripts**: `scripts/lint-logs.cjs`, `scripts/lint-unused-exports.cjs`
 
 ### 4.4 プラットフォーム/ランタイム
