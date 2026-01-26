@@ -44,7 +44,7 @@ export const MarkdownText = memo(
                     remarkPlugins={enableGfm ? [remarkGfm] : []}
                     components={{
                         // リンクの安全性チェック
-                        a: ({ node, ...props }) => {
+                        a: ({ ...props }) => {
                             const href = props.href || "";
 
                             // 危険なスキームまたは空のhrefをブロック

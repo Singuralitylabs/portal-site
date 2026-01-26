@@ -5,7 +5,6 @@ import { AppWindow } from "lucide-react";
 import { Badge, Button, Card, Flex, Text } from "@mantine/core";
 import ContentMgrMenu from "../../components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
-import { MarkdownText } from "@/app/components/MarkdownText";
 
 interface ApplicationCardProps {
   application: ApplicationWithCategoryAndDeveloperType;
@@ -53,7 +52,7 @@ export function ApplicationCard({
 
       <div className="flex-1 p-4 overflow-hidden">
         <Text component="div" lineClamp={2} className="overflow-hidden mb-2 prose prose-sm max-w-none">
-          <MarkdownText>{application.description}</MarkdownText>
+          {application.description}
         </Text>
         <div className="mt-2">
           {application.category && <Badge variant="light">{application.category.name}</Badge>}
@@ -65,6 +64,6 @@ export function ApplicationCard({
           詳細
         </Button>
       </div>
-    </Card >
+    </Card>
   );
 }

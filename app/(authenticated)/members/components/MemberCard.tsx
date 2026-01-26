@@ -4,7 +4,6 @@ import { MemberType } from "@/app/types";
 import { Card, Avatar, Text, Group, Badge } from "@mantine/core";
 import { MemberDetailModal } from "./MemberDetailModal";
 import { useState } from "react";
-import { MarkdownText } from "@/app/components/MarkdownText";
 
 interface MemberCardProps {
   member: MemberType;
@@ -55,7 +54,7 @@ export function MemberCard({ member }: MemberCardProps) {
               )}
             </Group>
             <Text size="sm" c="dimmed" lineClamp={3} style={{ minHeight: "4.5em" }}>
-              <MarkdownText>{member.bio || ""}</MarkdownText>
+              {member.bio || ""}
             </Text>
           </div>
         </Group>
