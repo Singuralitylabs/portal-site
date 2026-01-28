@@ -38,11 +38,11 @@ export function MemberCard({ member }: MemberCardProps) {
                 {member.display_name}
               </Text>
               {member.position_tags && member.position_tags.length > 0 && (
-                <Group gap={6} style={{ maxWidth: "60%", flexWrap: "wrap", maxHeight: "2.5em", overflow: "hidden"}}>
+                <Group gap={6} style={{ maxWidth: "60%", flexWrap: "wrap", maxHeight: "2.5em", overflow: "hidden" }}>
                   {member.position_tags.map((tag) => (
-                    <Badge 
-                      key={tag.positions.id} 
-                      size="xs" 
+                    <Badge
+                      key={tag.positions.id}
+                      size="xs"
                       variant="light"
                       color="blue"
                       style={{ fontSize: "0.5rem" }}
