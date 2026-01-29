@@ -8,7 +8,7 @@
     - [2.2 CI/CD と GitHub Actions での自動実行](#22-cicd-と-github-actions-での自動実行)
     - [2.3 テスト戦略の補足](#23-テスト戦略の補足)
 3. [テスト項目一覧](#3-テスト項目一覧)
-    - [3.1 APIサービス層の単体テスト（高優先度）（未実装）](#31-apiサービス層の単体テスト高優先度未実装)
+    - [3.1 APIサービス層の単体テスト（高優先度）](#31-apiサービス層の単体テスト高優先度)
     - [3.2 セキュリティテスト（高優先度）（未実装）](#32-セキュリティテスト高優先度未実装)
     - [3.3 型安全性テスト（高優先度）](#33-型安全性テスト高優先度)
     - [3.4 ビルドテスト（高優先度）](#34-ビルドテスト高優先度)
@@ -226,7 +226,7 @@ Supabase 側はテスト用プロジェクト（サービスロールキーを G
 - **認可制御**: ロール別機能制限（管理者・メンバー）  
   `authz.test.ts` で `canAccess(resource, role)` ヘルパーをテーブルテストし、未定義ロール時に `UnauthorizedError` を投げるかチェックする。  
   Playwright では `test.describe("role matrix", () => { test.use({ storageState: "storage/admin.json" }) ... })` を使い、管理者のみが `/admin/users` にアクセスできること、メンバーの場合は `/403` にリダイレクトされることを `await expect(page).toHaveURL(/403/)` で確認する。  
-  MSW を活用し、API レベルでも `x-role` ヘッダーによる分岐が正しく機能するかを `expect(fetchSpy).toHaveBeenCalledWith(expect.objectContaining({ headers: expect.objectContaining({ "x-role": "member" }) }))` で検証する。  
+  MSW を活用し、API レベルでも `x-role` ヘッダーによる分岐が正しく機能するかを `expect(fetchSpy).toHaveBeenCalledWith(expect.objectContaining({ headers: expect.objectContaining({ "x-role": "member" }) }))` で検証する。    
   
 - **データアクセス**: Row Level Security (RLS) による適切なデータ分離  
   Supabase のテスト環境で `supabase.auth.admin.createUser` → `client.from("documents").select("*")` をロール別に実行し、RLS ポリシーにより他組織のデータが返らないことを `expect(result.data.every(row => row.organization_id === orgIdOfUser))` で確認する。  
@@ -285,11 +285,11 @@ TypeScript型定義の整合性を確保する
 
 - **デバッグコード除去**: console.log、debugger文の検出  
   `.github/workflows/check_console_log.yml` が `find` + `grep` で `console.log/info` や `debugger` を走査し、許可されていない出力を検出するとジョブを失敗させる。  
-  ローカルでの `npm run lint:logs` 運用は未実装のため、導入後に pre-commit Hook へ組み込み、開発段階で検知できるようにする。  
+  ローカルおよび CI 向けの `npm run lint:logs` スクリプト自体は導入済みだが、STRICT モードの有効化や pre-commit Hook 連携などの運用ポリシーは今後検討する
   
 - **未使用コード**: 不要なimport・関数・変数の検出  
   `.github/workflows/typecheck.yml` 内で実行する `npm run lint` が `eslint-plugin-import` や `no-unused-vars` 等のルールを通じて未使用コードを検知する。  
-  `npm run lint:unused-exports` の運用は未実装のため、導入後に同ワークフローへ追加し、`UNUSED_EXPORTS_STRICT=true` の切り替えで CI を fail させる運用を想定する。  
+  `npm run lint:unused-exports` スクリプトおよび `.github/workflows/typecheck.yml` からの実行ステップは導入済みだが、`UNUSED_EXPORTS_STRICT=true` を標準とするかどうかなどの運用ポリシーは今後検討する。
   
 - **コーディング規約**: ESLintルール準拠  
   同じく `npm run lint` により、プロジェクトの ESLint 設定（`eslint-config-next`, `eslint-config-prettier` など）へ違反したコードを検出する。  
