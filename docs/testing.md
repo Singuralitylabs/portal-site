@@ -61,7 +61,7 @@ Unit Tests (多数) - Component Tests
 
 ## 3. テスト項目一覧
 
-### 3.1 APIサービス層の単体テスト（高優先度）（未実装）
+### 3.1 APIサービス層の単体テスト（高優先度）
 
 データの整合性とビジネスロジックの正確性を確保する
 
@@ -77,7 +77,7 @@ Unit Tests (多数) - Component Tests
 3. 例外系は代表ケースのみ実施（全網羅はしない）
 4. 結果をPRコメントまたはリリースノートに記載
 
-#### テストポイント:
+#### 3.1.1 テストポイント
 
 - **重複排除**: 認証・認可・承認フローの検証は **単体 / 統合 / E2E のいずれか1レイヤー** に集約する。
 - **簡素化**: エラーハンドリングは **代表ケースのみ** を確認し、全関数での網羅は行わない。
@@ -108,14 +108,14 @@ Unit Tests (多数) - Component Tests
   Supabase クエリビルダーのモックに対して `expect(mockClient.from("documents").select).toHaveBeenCalledWith(expect.stringContaining("is_deleted"))` のように条件が付与されるかを検証し、戻り値側も `expect(result.data).every(item => item.status === "active")` でフィルタ済みか確認する。  
   管理者・一般ユーザーの両ケースを `describe.each` で用意し、権限によってスコープが変わることを担保する。  
 
-#### 対象領域（最小範囲）:
+#### 3.1.2 対象領域（最小範囲）
 
 - コンテンツ取得（一覧・詳細）
 - コンテンツ管理（登録・更新・削除）
 - ユーザー管理（登録・承認）
 - 参照系マスタ（カテゴリ等）
 
-#### 実装手順と進め方
+#### 3.1.3 実装手順と進め方
 
 - **テスト対象の分割**:  
   `app/services/api/*` ごとに `tests/services/<service>.test.ts` を置き、CRUD/認可/通知など重要ロジックから優先実装する。3.1 のテストポイントをそのまま `describe` 単位のチェックリストにすると抜け漏れを抑えられる。  
@@ -135,6 +135,80 @@ Unit Tests (多数) - Component Tests
 - **継続的実行**:  
   `npm test -- tests/services/<service>.test.ts` で逐次実行し、十分に揃ったら `npm test` へ統合。  
   進捗は docs/testing.md のチェックリストと同期させ、完了したサービスから TODO を消し込む。
+
+#### 3.1.4 実装済みテスト一覧
+
+#### 3.1.4.1 supabase-server.test.ts 実装済みテスト一覧
+
+| テスト対象スクリプト | 対象関数 | 正常系 | 異常系 |
+| --- | --- | --- | --- |
+| app/services/api/documents-server.ts | fetchDocuments | 資料一覧取得 | エラー時の data=null |
+| app/services/api/applications-server.ts | fetchApplications | アプリ一覧取得 | エラー時の data=null |
+| app/services/api/categories-server.ts | fetchCategoriesByType | カテゴリー一覧取得 | エラー時の data=null |
+| app/services/api/videos-server.ts | fetchVideos | 動画一覧取得 | エラー時の data=null |
+| app/services/api/videos-server.ts | fetchVideoById | 動画詳細取得 | エラー時の data=null |
+| app/services/api/users-server.ts | fetchUserStatusByIdInServer | ステータス取得 | データなし時の null 返却 / エラー時の null 返却 |
+| app/services/api/users-server.ts | fetchUserInfoByAuthId | ユーザー情報取得 | データなし時の空値返却 / エラー時の空値返却 |
+| app/services/api/users-server.ts | fetchActiveUsers | 会員一覧取得・整形 | エラー時の data=null / 境界: data=null の返却 / 境界: positions 空・未定義の除外 |
+| app/services/api/users-server.ts | fetchApprovalUsers | 承認待ちユーザー取得 | エラー時の data=null |
+| app/services/api/users-server.ts | fetchUserByAuthIdInServer | ユーザー詳細取得 | エラー時の data=null / データなし時の data=null |
+| app/services/api/users-server.ts | updateUserProfileServerInServer | 更新成功時は null | 更新失敗時のエラー返却 |
+| app/services/api/supabase-server.ts | createServerSupabaseClient | cookieStore を利用した Supabase クライアント生成 | cookieStore.set 失敗時も例外なし |
+| app/services/api/supabase-server.ts | getServerCurrentUser | authId 取得 | エラー時の authId 空文字 / データなし時の authId 空文字 |
+
+#### 3.1.4.2 supabase-client.test.ts 実装済みテスト一覧
+
+| テスト対象スクリプト | 対象関数 | 正常系 | 異常系 |
+| --- | --- | --- | --- |
+| app/services/api/supabase-client.ts | createClientSupabaseClient | 環境変数からクライアント生成 | - |
+| app/services/api/applications-client.ts | getApplicationsByCategory | カテゴリー内アプリ一覧取得 | - |
+| app/services/api/applications-client.ts | deleteApplication | 論理削除成功 | エラー時失敗返却 |
+| app/services/api/applications-client.ts | registerApplication | 登録成功・表示順更新 | 登録失敗エラー返却 |
+| app/services/api/applications-client.ts | updateApplication | 更新成功・表示順再計算 | 更新失敗エラー返却 |
+| app/services/api/documents-client.ts | getDocumentsByCategory | カテゴリー内資料一覧取得 | - |
+| app/services/api/documents-client.ts | deleteDocument | 論理削除成功 | エラー時失敗返却 |
+| app/services/api/documents-client.ts | registerDocument | 登録成功・表示順更新 | 登録失敗エラー返却 |
+| app/services/api/documents-client.ts | updateDocument | 更新成功・表示順再計算 | 更新失敗エラー返却 |
+| app/services/api/videos-client.ts | getVideosByCategory | カテゴリー内動画一覧取得 | - |
+| app/services/api/videos-client.ts | deleteVideo | 論理削除成功 | エラー時失敗返却 |
+| app/services/api/videos-client.ts | registerVideo | 登録成功・表示順更新 | 登録失敗エラー返却 |
+| app/services/api/videos-client.ts | updateVideo | 更新成功・表示順再計算 | 更新失敗エラー返却 |
+| app/services/api/users-client.ts | addNewUser | 新規ユーザー追加成功 | 追加失敗エラー返却 |
+| app/services/api/users-client.ts | fetchUserRoleById | ロール取得成功 | データなし/エラー時 null |
+| app/services/api/users-client.ts | fetchUserStatusById | ステータス取得成功 | データなし/エラー時 null |
+| app/services/api/users-client.ts | fetchUserIdByAuthId | ユーザーID取得成功 | エラー時 null / 既定文言ログ |
+| app/services/api/users-client.ts | approveUser | 承認更新成功 | 更新失敗エラー返却 |
+| app/services/api/users-client.ts | rejectUser | 否認更新成功 | 更新失敗エラー返却 |
+
+#### 3.1.4.3 display-order.test.ts 実装済みテスト一覧
+
+| テスト対象スクリプト | 対象関数 | 正常系 | 異常系 |
+| --- | --- | --- | --- |
+| app/services/api/utils/display-order.ts | getItemsByCategory | 除外条件指定時のカテゴリ内アイテム取得 | Supabase エラー時に空配列+ログ出力 / データ未返却時に空配列を返す |
+| app/services/api/utils/display-order.ts | calculateDisplayOrder | ・current 指定時は Supabase を呼ばず現在の順序を返す<br>・current 指定で display_order が無い場合は 1 を返す<br>・first 指定時は display_order=1 を返す<br>・last 指定時は最大順序の後ろに配置する<br>・after 指定時は基準 ID の直後に配置する | ・last 指定で最大 display_order が null の場合は 1 を返す<br>・last 指定でデータが無い場合は 1 を返す<br>・last 指定で data が undefined の場合も 1 を返す<br>・after 指定かつ参照データなしの場合は 1 を返す |
+| app/services/api/utils/display-order.ts | shiftDisplayOrder | 指定位置以降を +1 し excludeId を除外する | 対象レコードなし時に更新無し<br>・display_order が null の場合は 1 に更新する |
+| app/services/api/utils/display-order.ts | reorderItemsInCategory | カテゴリ内アイテムを 1 から連番で再採番 | カテゴリにレコードが無い場合は更新処理をスキップ |
+
+#### 3.1.4.4 slack-notification.test.ts 実装済みテスト一覧
+
+| テスト対象スクリプト | 対象関数 | 正常系 | 異常系 |
+| --- | --- | --- | --- |
+| app/api/notifications/slack/route.ts | POST | ・Slack Webhook 送信成功<br>・環境変数未設定時に通知スキップ | ・Slack API 応答エラー時に 500 とメッセージを返却<br>・fetch が Error を投げた場合に 500 を返却<br>・Error 以外の例外で "不明なエラー" を返却 |
+
+#### 3.1.4.5 calendar.test.ts 実装済みテスト一覧
+
+| テスト対象スクリプト | 対象関数 | 正常系 | 異常系 |
+| --- | --- | --- | --- |
+| app/api/calendar/calendar-server.ts | fetchCalendarEvents | 環境変数指定の期間でイベント取得（複数カレンダーのエイリアス付与と開始時刻ソート）<br>環境変数未設定時にローカル keyFile でデフォルトカレンダーを取得<br>デフォルト期間（現在〜1ヶ月後）で終日・開始未設定イベントをフォールバック時刻込みでソート<br>items 未定義レスポンスでも空配列フォールバックと比較処理が動作することを確認 | サービスアカウント認証失敗時に data=null とエラーメッセージを返却<br>非 Error 例外でも既定メッセージとエラーログを返す<br>不正なカレンダー設定（警告）を検知して除外<br>特定カレンダーの API 失敗時に空配列として処理しエラーログを出力 |
+| app/api/calendar/events/route.ts | GET | クエリ start/end 指定でイベント取得し成功レスポンスを返す<br>環境変数未設定時にデフォルトカレンダーと1ヶ月デフォルト期間で取得<br>items 未定義レスポンスや終日イベントでもフォールバック比較でソートできる | 認証エラー時に 500 とエラーメッセージ・details を返す<br>不正なカレンダー設定（警告）を除外しログ出力<br>非 Error 例外時に "不明なエラー" を details に含め 500 を返す |
+
+#### 3.1.4.6 permissions.test.ts / server-auth.test.ts 実装済みテスト一覧
+
+| テスト対象スクリプト | 対象関数 | 正常系 | 異常系 |
+| --- | --- | --- | --- |
+| app/services/auth/permissions.ts | checkAdminPermissions | admin のみ true を返す | maintainer/member/unknown で false を返す |
+| app/services/auth/permissions.ts | checkContentPermissions | admin/maintainer で true を返す | member/unknown で false を返す |
+| app/services/auth/server-auth.ts | getServerAuth | status=pending/active/rejected を返す | 認証エラー・未認証で user=null を返す<br>ユーザー情報取得失敗/空でエラーメッセージを返す<br>例外時にサーバー認証エラーメッセージを返す |
 
 ### 3.2 セキュリティテスト（高優先度）（未実装）
 
