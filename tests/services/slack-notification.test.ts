@@ -57,7 +57,7 @@ describe("Slack 通知 API", () => {
 
     const response = await POST(request);
 
-    expect((request as { json: jest.Mock }).json).toHaveBeenCalledTimes(1); // リクエスト本文の取得が 1 回だけ行われることを確認
+    expect((request as unknown as { json: jest.Mock }).json).toHaveBeenCalledTimes(1); // リクエスト本文の取得が 1 回だけ行われることを確認
     expect(fetchMock).toHaveBeenCalledWith(
       "https://hooks.slack.com/services/test",
       expect.objectContaining({

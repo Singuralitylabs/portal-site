@@ -38,7 +38,7 @@ import {
  */
 const supabaseClientActual = jest.requireActual(
   "../../app/services/api/supabase-client"
-) as typeof import("../../../app/services/api/supabase-client");
+) as typeof import("../../app/services/api/supabase-client");
 
 /**
  * Supabase クエリの最終戻り値を表す型。
@@ -297,10 +297,11 @@ describe("applications-client", () => {
 
       const response = await registerApplication({
         name: "app",
-        category_id: 3,
+        category_id: 1,
         description: "desc",
         url: "https://example.com",
-        developer_id: 7,
+        developer_id: 1,
+        thumbnail_path: null,
         created_by: 1,
         position: { type: "first" },
       });
@@ -308,17 +309,17 @@ describe("applications-client", () => {
       // console.log("registerApplication response", response);
 
       // display_order 計算に渡す引数が正しいことを確認
-      expect(calculateDisplayOrderMock).toHaveBeenCalledWith("applications", 3, {
+      expect(calculateDisplayOrderMock).toHaveBeenCalledWith("applications", 1, {
         type: "first",
       });
       // シフト処理が呼ばれることを確認
-      expect(shiftDisplayOrderMock).toHaveBeenCalledWith("applications", 3, 5);
+      expect(shiftDisplayOrderMock).toHaveBeenCalledWith("applications", 1, 5);
       // applications テーブルに対する操作であることを確認
       expect(supabase.from).toHaveBeenCalledWith("applications");
       // insert が実行されることを確認
       expect(builder.insert).toHaveBeenCalled();
       // 並び順の再計算が行われることを確認
-      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 3);
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 1);
       // 成功レスポンスが返ることを確認
       expect(response).toEqual({ success: true, error: null });
     });
@@ -335,10 +336,11 @@ describe("applications-client", () => {
 
       const response = await registerApplication({
         name: "app",
-        category_id: 3,
+        category_id: 1,
         description: "desc",
         url: "https://example.com",
-        developer_id: 7,
+        developer_id: 1,
+        thumbnail_path: null,
         created_by: 1,
         position: { type: "last" },
       });
@@ -378,12 +380,13 @@ describe("applications-client", () => {
       const response = await updateApplication({
         id: 1,
         name: "app",
-        category_id: 2,
+        category_id: 1,
         description: "desc",
         url: "https://example.com",
-        developer_id: 7,
-        updated_by: 9,
-        position: { type: "after", id: 3 },
+        developer_id: 1,
+        thumbnail_path: null,
+        updated_by: 1,
+        position: { type: "after", afterId: 3 },
       });
 
       // console.log("updateApplication response", response);
@@ -397,18 +400,18 @@ describe("applications-client", () => {
       // display_order 計算の引数が正しいことを確認
       expect(calculateDisplayOrderMock).toHaveBeenCalledWith(
         "applications",
-        2,
-        { type: "after", id: 3 },
+        1,
+        { type: "after", afterId: 3 },
         2
       );
       // シフト処理が呼ばれることを確認
-      expect(shiftDisplayOrderMock).toHaveBeenCalledWith("applications", 2, 4, 1);
+      expect(shiftDisplayOrderMock).toHaveBeenCalledWith("applications", 1, 4, 1);
       // update が実行されることを確認
       expect(updateBuilder.update).toHaveBeenCalled();
       // 対象IDで更新していることを確認
       expect(updateBuilder.eq).toHaveBeenCalledWith("id", 1);
       // 新カテゴリで並び順再計算されることを確認
-      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 2);
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 1);
       // 旧カテゴリでも並び順再計算されることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 1);
       // 成功レスポンスが返ることを確認
@@ -433,11 +436,12 @@ describe("applications-client", () => {
       const response = await updateApplication({
         id: 2,
         name: "app",
-        category_id: 5,
+        category_id: 1,
         description: "desc",
         url: "https://example.com",
-        developer_id: 7,
-        updated_by: 9,
+        developer_id: 1,
+        thumbnail_path: null,
+        updated_by: 1,
         position: { type: "last" },
       });
 
@@ -446,7 +450,7 @@ describe("applications-client", () => {
       // current がない場合は第四引数が undefined になることを確認
       expect(calculateDisplayOrderMock).toHaveBeenCalledWith(
         "applications",
-        5,
+        1,
         { type: "last" },
         undefined
       );
@@ -457,6 +461,53 @@ describe("applications-client", () => {
       // 並び順再計算が1回のみであることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
       // 現カテゴリで並び順再計算されることを確認
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 1);
+      // 成功レスポンスが返ることを確認
+      expect(response).toEqual({ success: true, error: null });
+    });
+
+    /**
+     * 正常系: カテゴリー変更時は旧カテゴリも再計算すること。
+     */
+    it("正常系: カテゴリー変更時は旧カテゴリも再計算する", async () => {
+      const selectBuilder = createSelectBuilder({
+        data: { display_order: 2, category_id: 5 },
+        error: null,
+      });
+      const updateBuilder = createUpdateBuilder({ data: null, error: null });
+      const supabase = {
+        from: jest
+          .fn()
+          .mockImplementationOnce(() => selectBuilder)
+          .mockImplementationOnce(() => updateBuilder),
+      };
+      createClientSupabaseClientMock.mockReturnValue(supabase);
+      calculateDisplayOrderMock.mockResolvedValue(6);
+
+      const response = await updateApplication({
+        id: 7,
+        name: "app",
+        category_id: 6,
+        description: "desc",
+        url: "https://example.com",
+        developer_id: 1,
+        thumbnail_path: null,
+        updated_by: 1,
+        position: { type: "last" },
+      });
+
+      // display_order 計算の引数が正しいことを確認
+      expect(calculateDisplayOrderMock).toHaveBeenCalledWith(
+        "applications",
+        6,
+        { type: "last" },
+        2
+      );
+      // last の場合はシフトしないことを確認
+      expect(shiftDisplayOrderMock).not.toHaveBeenCalled();
+      // 現カテゴリで並び順再計算されることを確認
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 6);
+      // 旧カテゴリでも並び順再計算されることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("applications", 5);
       // 成功レスポンスが返ることを確認
       expect(response).toEqual({ success: true, error: null });
@@ -484,11 +535,12 @@ describe("applications-client", () => {
       const response = await updateApplication({
         id: 1,
         name: "app",
-        category_id: 2,
+        category_id: 1,
         description: "desc",
         url: "https://example.com",
-        developer_id: 7,
-        updated_by: 9,
+        developer_id: 1,
+        thumbnail_path: null,
+        updated_by: 1,
         position: { type: "last" },
       });
 
@@ -690,7 +742,7 @@ describe("documents-client", () => {
         url: "https://example.com",
         assignee: "owner",
         updated_by: 9,
-        position: { type: "after", id: 3 },
+        position: { type: "after", afterId: 3 },
       });
 
       // console.log("updateDocument response", response);
@@ -705,7 +757,7 @@ describe("documents-client", () => {
       expect(calculateDisplayOrderMock).toHaveBeenCalledWith(
         "documents",
         2,
-        { type: "after", id: 3 },
+        { type: "after", afterId: 3 },
         2
       );
       // シフト処理が呼ばれることを確認
@@ -1008,7 +1060,7 @@ describe("videos-client", () => {
         length: 120,
         assignee: "owner",
         updated_by: 9,
-        position: { type: "after", id: 3 },
+        position: { type: "after", afterId: 3 },
       });
 
       // console.log("updateVideo response", response);
@@ -1023,7 +1075,7 @@ describe("videos-client", () => {
       expect(calculateDisplayOrderMock).toHaveBeenCalledWith(
         "videos",
         2,
-        { type: "after", id: 3 },
+        { type: "after", afterId: 3 },
         2
       );
       // シフト処理が呼ばれることを確認

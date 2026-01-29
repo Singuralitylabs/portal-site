@@ -19,7 +19,7 @@ import { cookies } from "next/headers";
  */
 const supabaseServerActual = jest.requireActual(
   "../../app/services/api/supabase-server"
-) as typeof import("../../../app/services/api/supabase-server");
+) as typeof import("../../app/services/api/supabase-server");
 
 /**
  * Supabase クエリの最終戻り値を表す型。
