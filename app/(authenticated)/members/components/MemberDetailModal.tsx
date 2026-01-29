@@ -1,5 +1,6 @@
 import { Modal, Text, Stack, Group, Avatar, Badge } from "@mantine/core";
 import type { MemberType } from "@/app/types";
+import { MarkdownText } from "@/app/components/MarkdownText";
 
 interface MemberDetailModalProps {
   opened: boolean;
@@ -36,8 +37,8 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
             <Text size="md" fw={500}>
               自己紹介
             </Text>
-            <Text size="sm" c="dimmed">
-              {memberInfo.bio}
+            <Text size="sm" c="dimmed" className="prose prose-sm max-w-none" component="div">
+              <MarkdownText>{memberInfo.bio}</MarkdownText>
             </Text>
           </Stack>
         )}

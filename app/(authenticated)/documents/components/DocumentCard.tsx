@@ -50,7 +50,7 @@ export function DocumentCard({ document, isContentMgr, categories, userId }: Doc
       </Card.Section>
 
       <div className="flex-1 p-4 overflow-hidden">
-        <Text component="div" lineClamp={4} className="overflow-hidden">
+        <Text component="div" lineClamp={4} className="overflow-hidden prose prose-sm max-w-none">
           {document.description}
         </Text>
       </div>
