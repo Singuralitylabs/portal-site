@@ -44,7 +44,7 @@ Unit Tests (多数) - Component Tests
 | Workflow | 目的 | 主な実行内容 | トリガー |
 | --- | --- | --- | --- |
 | Build Test (`.github/workflows/build.yml`) | Next.js ビルドが本番相当で成立するかを検証 | Node.js 22.x で `npm ci` → `npm run build` | `push` / `pull_request` (`app/**`)、`workflow_dispatch` |
-| TypeScript Type Check (`.github/workflows/typecheck.yml`) | 型安全性と ESLint ルール違反の早期検出 | Node.js 22.x で `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run lint:unused-exports`（未実装） | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
+| TypeScript Type Check (`.github/workflows/typecheck.yml`) | 型安全性と ESLint ルール違反の早期検出 | Node.js 22.x で `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run lint:unused-exports` | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
 | Jest Unit Tests (`.github/workflows/test.yml`) | ユニットテストとカバレッジ確認 | Node.js 22.x で `npm ci` → `npm test` (Jest) | `push` / `pull_request` (`app/**`)、`workflow_dispatch` |
 | Check console.log and debugger (`.github/workflows/check_console_log.yml`) | デバッグ用出力を混入させないための静的検査 | `find` + `grep` で `console.log/info` と `debugger` を検出し、許可済み箇所以外が見つかれば失敗 | `push` / `pull_request` (`app/**`)、`workflow_dispatch` |
 | Supabase DB Types Consistency（未実装） (`.github/workflows/db-types.yml`) | DBスキーマと型定義の同期を確認 | `npx supabase gen types` → `git diff --quiet app/types/lib/database.types.ts` で差分検知 | `push` / `pull_request`（`supabase/**`, `app/types/lib/database.types.ts` 等）、`workflow_dispatch` |
@@ -507,7 +507,7 @@ Supabase の Postgres・Auth・Storage・Edge Functions を本番と同じ設定
   `.github/workflows/build.yml`（`npm run build`）  
 
 - **Type Check + Lint**:  
-  `.github/workflows/typecheck.yml`（`npx tsc --noEmit`, `npm run lint`, `npm run lint:unused-exports`（未実装））  
+  `.github/workflows/typecheck.yml`（`npx tsc --noEmit`, `npm run lint`, `npm run lint:unused-exports`
 
 - **Unit Test**:  
   `.github/workflows/test.yml`（`npm test`）  
@@ -526,6 +526,8 @@ Supabase の Postgres・Auth・Storage・Edge Functions を本番と同じ設定
 - **TypeScript**: 型チェック（`tsc --noEmit`）
 - **ESLint**: 静的解析
 - **Supabase CLI**: 型生成・スキーマ整合性確認
+- **ts-prune**: 未使用 export 検出
+- **Custom Scripts**: `scripts/lint-logs.cjs`, `scripts/lint-unused-exports.cjs`
 
 #### 導入予定（未実装）
 
@@ -534,8 +536,6 @@ Supabase の Postgres・Auth・Storage・Edge Functions を本番と同じ設定
 - **Playwright**: E2E/ページ統合/コアUI検証
 - **MSW**: API モック（フロント/サービス層）
 - **axe-core**: a11y 自動検査
-- **ts-prune**: 未使用 export 検出
-- **Custom Scripts**: `scripts/lint-logs.cjs`, `scripts/lint-unused-exports.cjs`
 
 ### 4.4 プラットフォーム/ランタイム
 
