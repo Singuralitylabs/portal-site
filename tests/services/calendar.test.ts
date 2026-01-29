@@ -215,9 +215,14 @@ describe("calendar-server fetchCalendarEvents", () => {
         },
       });
     const originalSort = Array.prototype.sort;
-    const sortSpy = jest.spyOn(Array.prototype, "sort").mockImplementation(function (compareFn) {
-      compareFn({} as Record<string, unknown>, { start: { date: "2024-11-10" } } as Record<string, unknown>);
-      compareFn({ start: { date: "2024-11-11" } } as Record<string, unknown>, {} as Record<string, unknown>);
+    const sortSpy = jest.spyOn(Array.prototype, "sort").mockImplementation(function (
+      this: unknown[],
+      compareFn?: (a: unknown, b: unknown) => number
+    ) {
+      if (compareFn) {
+        compareFn({} as Record<string, unknown>, { start: { date: "2024-11-10" } } as Record<string, unknown>);
+        compareFn({ start: { date: "2024-11-11" } } as Record<string, unknown>, {} as Record<string, unknown>);
+      }
       return originalSort.call(this, compareFn);
     });
 
@@ -419,9 +424,14 @@ describe("calendar events route GET", () => {
         },
       });
     const originalSort = Array.prototype.sort;
-    const sortSpy = jest.spyOn(Array.prototype, "sort").mockImplementation(function (compareFn) {
-      compareFn({} as Record<string, unknown>, { start: { date: "2024-09-11" } } as Record<string, unknown>);
-      compareFn({ start: { date: "2024-09-12" } } as Record<string, unknown>, {} as Record<string, unknown>);
+    const sortSpy = jest.spyOn(Array.prototype, "sort").mockImplementation(function (
+      this: unknown[],
+      compareFn?: (a: unknown, b: unknown) => number
+    ) {
+      if (compareFn) {
+        compareFn({} as Record<string, unknown>, { start: { date: "2024-09-11" } } as Record<string, unknown>);
+        compareFn({ start: { date: "2024-09-12" } } as Record<string, unknown>, {} as Record<string, unknown>);
+      }
       return originalSort.call(this, compareFn);
     });
 
