@@ -51,11 +51,11 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `status`        | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）  |
 | `bio`           | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                             |
 | `avatar_url`    | `TEXT`         |                                     | Googleプロフィール画像のURL                      |
-| `x_url`         | `TEXT`         |                                     | X（旧Twitter）アカウントURL                      |
-| `facebook_url`  | `TEXT`         |                                     | FacebookアカウントURL                            |
-| `instagram_url` | `TEXT`         |                                     | InstagramアカウントURL                           |
-| `github_url`    | `TEXT`         |                                     | GitHubアカウントURL                              |
-| `portfolio_url` | `TEXT`         |                                     | ポートフォリオサイトURL                          |
+| `x_url`         | `TEXT`         |                                     | XアカウントのURL                                 |
+| `facebook_url`  | `TEXT`         |                                     | FacebookアカウントのURL                          |
+| `instagram_url` | `TEXT`         |                                     | InstagramアカウントのURL                         |
+| `github_url`    | `TEXT`         |                                     | GitHubアカウントのURL                            |
+| `portfolio_url` | `TEXT`         |                                     | ポートフォリオサイトのURL                        |
 | `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
 | `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
 | `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |

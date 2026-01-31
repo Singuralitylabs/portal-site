@@ -33,23 +33,40 @@ export function MemberCard({ member }: MemberCardProps) {
             {!member.avatar_url && avatarContent}
           </Avatar>
           <div style={{ flex: 1 }}>
-            <Group align="flex-start" gap="md" mb={8} style={{ minHeight: "2.5em", marginBottom: 8 }} wrap="nowrap">
+            <Group
+              align="flex-start"
+              gap="md"
+              mb={8}
+              style={{ minHeight: "2.5em", marginBottom: 8 }}
+              wrap="nowrap"
+            >
               <Text fw={500} size="lg" truncate>
                 {member.display_name}
               </Text>
               {member.position_tags && member.position_tags.length > 0 && (
-                <Group gap={6} style={{ maxWidth: "60%", flexWrap: "wrap", maxHeight: "2.5em", overflow: "hidden" }}>
-                  {member.position_tags.map((tag) => (
-                    <Badge
-                      key={tag.positions.id}
-                      size="xs"
-                      variant="light"
-                      color="blue"
-                      style={{ fontSize: "0.5rem" }}
-                    >
-                      {tag.positions.name}
-                    </Badge>
-                  ))}
+                <Group
+                  gap={6}
+                  style={{
+                    maxWidth: "60%",
+                    flexWrap: "wrap",
+                    maxHeight: "2.5em",
+                    overflow: "hidden",
+                  }}
+                >
+                  {member.position_tags.map(
+                    tag =>
+                      tag.positions && (
+                        <Badge
+                          key={tag.positions.id}
+                          size="xs"
+                          variant="light"
+                          color="blue"
+                          style={{ fontSize: "0.5rem" }}
+                        >
+                          {tag.positions.name}
+                        </Badge>
+                      )
+                  )}
                 </Group>
               )}
             </Group>
