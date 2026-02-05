@@ -81,32 +81,54 @@ Unit Tests (多数) - Component Tests
 
 - **重複排除**: 認証・認可・承認フローの検証は **単体 / 統合 / E2E のいずれか1レイヤー** に集約する。
 - **簡素化**: エラーハンドリングは **代表ケースのみ** を確認し、全関数での網羅は行わない。
+- **認可/RLS/承認**: セキュリティ観点の詳細な検証項目は 3.2 に集約する（重複項目はコメントアウトで保持）。
+- **CRUD操作**: 作成・読込・更新・削除の正常動作（代表ケース）
+- **バリデーション**: 入力値検証（代表ケース）
 
-- **CRUD操作**: 作成・読込・更新・削除の正常動作  
-  Supabase クライアントを `jest.mock("@supabase/supabase-js")` で差し替え、サービス関数を呼び出して `insert/select/update/delete` のペイロード・戻り値を `expect(mockClient.from(...).insert).toHaveBeenCalledWith(...)` のように検証する。  
-  成功/失敗パスを `mockResolvedValueOnce` と `mockRejectedValueOnce` で切り替え、例外ハンドリングも確認する。  
-  
-- **バリデーション**: 入力値検証とエラーハンドリング  
-  Zod などのバリデーションレイヤーをテスト対象に含め、Jest で不正データを与えて `expect(() => schema.parse(badPayload)).toThrow()`、サービス関数では `rejects.toThrow(ValidationError)` を使って検証し、エラーメッセージや HTTP ステータス変換処理まで網羅する。  
-  
+<!--
+【重複のため非表示】3.2 セキュリティテスト側に集約
+
 - **権限チェック**: 認証・認可の適切な制御  
   `jest.spyOn(authProvider, "getSession")` などでユーザーのロール/権限を差し替え、サービス呼び出し時に `ForbiddenError` を投げるか、RLS 対象のクエリフィルタが適切な条件（`eq("organization_id", user.orgId)` など）になっているかをアサートする。  
+-->
   
 - **エラー処理**: ネットワークエラー、DB制約違反時の適切な処理  
-  Supabase SDK の戻り値を `{ error: { message: "duplicate key" } }` などにモックし、サービスが再スロー／リトライ／ユーザー向けメッセージ変換を行うか `expect(handleError).toHaveBeenCalledWith(...)` で確認する。  
-  `Promise.reject(new Error("fetch failed"))` を投げてリトライポリシーのテストも実施する。  
+  代表的な失敗（例: ネットワーク、制約違反）のみ確認する。
   
 - **戻り値**: 期待する型・構造でのレスポンス  
-  テスト内で `await service.getDocuments()` などを実行し、`expect(result).toMatchObject({ data: expect.arrayContaining([...]) })` でスキーマ準拠を確認。  
-  Zod で `schema.parse(result)` を通すか、`expectTypeOf` (tsd) で静的保証を追加すると型崩れを検知できる。
+  代表レスポンスが想定スキーマ（shape）に準拠することを確認する。
 
 - **外部サービス呼び出しのリトライ／デグレード**: Google Calendar や Slack など外部依存の安定運用  
-  `jest.useFakeTimers()` と `fetchMock.mockRejectedValueOnce(new Error("ETIMEDOUT"))` を組み合わせ、タイムアウト時に再試行ロジックが `setTimeout` 経由で実行されるかを `expect(fetchMock).toHaveBeenCalledTimes(retryCount)` で確認。  
-  すべて失敗した場合にはフォールバック（空配列返却や通知スキップ）が動作し、警告ログが出るかを `expect(logger.warn).toHaveBeenCalled()` で検証する。  
-  
+  実装がある場合のみ、回数・待機・フォールバックが崩れていないか代表ケースで確認する。
+
+<!--
+【実装例（詳細）のメモ：必要になったときだけ参照】
+
+- **CRUD操作**: 作成・読込・更新・削除の正常動作
+  Supabase クライアントを `jest.mock("@supabase/supabase-js")` で差し替え、サービス関数を呼び出して `insert/select/update/delete` のペイロード・戻り値を `expect(mockClient.from(...).insert).toHaveBeenCalledWith(...)` のように検証する。
+  成功/失敗パスを `mockResolvedValueOnce` と `mockRejectedValueOnce` で切り替え、例外ハンドリングも確認する。
+
+- **バリデーション**: 入力値検証とエラーハンドリング
+  Zod などのバリデーションレイヤーをテスト対象に含め、Jest で不正データを与えて `expect(() => schema.parse(badPayload)).toThrow()`、サービス関数では `rejects.toThrow(ValidationError)` を使って検証する。
+
+- **エラー処理**: ネットワークエラー、DB制約違反時の適切な処理
+  Supabase SDK の戻り値を `{ error: { message: "duplicate key" } }` などにモックし、サービスが再スロー／リトライ／ユーザー向けメッセージ変換を行うかを確認する。
+  `Promise.reject(new Error("fetch failed"))` を投げてリトライポリシーのテストも実施する。
+
+- **戻り値**: 期待する型・構造でのレスポンス
+  `expect(result).toMatchObject(...)` で shape を確認し、必要なら Zod で `schema.parse(result)` を通す。
+
+- **外部サービス呼び出しのリトライ／デグレード**
+  `jest.useFakeTimers()` と `mockRejectedValueOnce` を組み合わせ、リトライ回数やフォールバック挙動、ログ呼び出しを期待値に含める。
+-->
+
+<!--
+【重複のため非表示】3.2 セキュリティテスト側に集約
+
 - **フィルタリング／スコーピング**: RLS と同等の条件付与・権限に応じたデータ制限  
   Supabase クエリビルダーのモックに対して `expect(mockClient.from("documents").select).toHaveBeenCalledWith(expect.stringContaining("is_deleted"))` のように条件が付与されるかを検証し、戻り値側も `expect(result.data).every(item => item.status === "active")` でフィルタ済みか確認する。  
   管理者・一般ユーザーの両ケースを `describe.each` で用意し、権限によってスコープが変わることを担保する。  
+-->
 
 #### 対象領域（最小範囲）:
 
@@ -117,56 +139,106 @@ Unit Tests (多数) - Component Tests
 
 #### 実装手順と進め方
 
-- **テスト対象の分割**:  
-  `app/services/api/*` ごとに `tests/services/<service>.test.ts` を置き、CRUD/認可/通知など重要ロジックから優先実装する。3.1 のテストポイントをそのまま `describe` 単位のチェックリストにすると抜け漏れを抑えられる。  
+- まずは変更箇所のサービスから 1〜2 本だけユニットテストを追加する。
+- Supabase/外部依存はモックし、正常系 + 代表的な失敗を各 1 ケースずつに絞る。
+- リリース前にだけ、影響範囲が広い箇所を追加でつまむ（全網羅はしない）。
 
-- **Supabase モックの共通化**:  
-  `jest.mock("@supabase/supabase-js")` あるいは `createClientSupabaseClient` をスパイして、`from().select()` などの戻り値を `setupSupabaseMock` ヘルパーで注入する。`afterEach(jest.clearAllMocks)` を挟み、副作用を持つ外部 API は `msw` や `fetchMock` で差し替える。  
+<!--
+【手順の詳細メモ：必要になったときだけ参照】
 
-- **成功/失敗パス網羅**:  
-  各サービス関数で「正常系」「バリデーション例外」「Supabase error」「権限不足」などを最低 1 ケースずつ書く。`describe.each` でロールやカテゴリーの表を回し、RLS やフィルタ条件を検証する。  
+- **テスト対象の分割**:
+  `app/services/api/*` ごとに `tests/services/<service>.test.ts` を置き、重要ロジックから優先実装する。
 
-- **外部連携/リトライの検証**:  
-  Google Calendar や Slack の呼び出しは `jest.useFakeTimers()` と `mockRejectedValueOnce` を組み合わせ、リトライ回数やフォールバック挙動、`logger.warn` 等のログ呼び出しを期待値に含める。必要なら `Promise.all` で並列エラーも再現する。  
+- **Supabase モックの共通化**:
+  `jest.mock("@supabase/supabase-js")` 等で戻り値を注入し、`afterEach(jest.clearAllMocks)` を挟む。
 
-- **スキーマ/型整合の確認**:  
-  Zod などのスキーマを import し、`expect(() => schema.parse(badPayload)).toThrow()` や `await expect(serviceFn(badArgs)).rejects.toThrow()` を追加。型安全性は `expectTypeOf`（tsd）や `satisfies` を併用し、戻り値の shape を `toMatchObject` で検査する。  
+- **成功/失敗パス網羅（ただし最小）**:
+  「正常系」「バリデーション例外」「Supabase error」などを最低 1 ケースずつ。
 
-- **継続的実行**:  
-  `npm test -- tests/services/<service>.test.ts` で逐次実行し、十分に揃ったら `npm test` へ統合。  
-  進捗は docs/testing.md のチェックリストと同期させ、完了したサービスから TODO を消し込む。
+- **継続的実行**:
+  `npm test -- tests/services/<service>.test.ts` で逐次実行してから `npm test` へ統合。
+-->
 
 ### 3.2 セキュリティテスト（高優先度）（未実装）
 
 認証・認可システムの安全性を確保する。  
+PR では Jest/TS-Jest のユニット検証（ガード/判定ロジック中心）を優先し、ブラウザ遷移や実DB（Supabase）を叩く検証は 3.10 / 3.11 と重複するため当面は実施しない。  
+
+<!--
+【重複のため非表示】E2E(3.10) / Supabase統合(3.11) と観点・手段が重複
+
 Next.js `middleware.ts` と `AuthLayout` は Jest/TS-Jest でユニット検証し、Playwright で実際のブラウザ遷移を確認する。  
 Supabase 側はテスト用プロジェクト（サービスロールキーを GitHub Actions Secret `SUPABASE_SERVICE_ROLE_TEST` に設定）に対して `supabase-js` を用いた統合テストを走らせる。  
 `npm run test:security` を Jest の projects に追加し、`.github/workflows/test.yml` で `npm test -- --selectProjects security` を実行して CI で常時監視する想定。  
+-->
 
 #### テストポイント:
 
 - **認証制御**: 未認証ユーザーのアクセス阻止  
-  `middleware.test.ts` で `new NextRequest(new URL("https://example.com/documents"))` を作成し、`process.env.SUPABASE_ANON_KEY` 未設定状態で `middleware` を実行して `NextResponse.redirect("/login")` になるかを検証する。  
+  未認証で保護ページにアクセスした場合に、期待どおりにブロック/リダイレクトされる。
+
+<!--
+  例: `middleware.test.ts` で `NextRequest` を作成し、`middleware` の戻り値が `NextResponse.redirect("/login")` になるかを検証する。
+-->
+
+<!--
+【重複のため非表示】E2E(3.10) と重複
+
   Playwright では `test("redirect unauthenticated", async ({ page }) => { await page.context().clearCookies(); await page.goto("/documents"); await expect(page).toHaveURL(/login/); });` のようにミドルウェアと Layout の組み合わせを確認し、`consoleMessage` にエラーが無いことも `page.on("console")` で捕捉する。  
+-->
   
 - **認可制御**: ロール別機能制限（管理者・メンバー）  
-  `authz.test.ts` で `canAccess(resource, role)` ヘルパーをテーブルテストし、未定義ロール時に `UnauthorizedError` を投げるかチェックする。  
+  権限判定ロジック（ヘルパー/ガード）をテーブルテストで確認する。
+
+<!--
+  例: `canAccess(resource, role)` を `describe.each` で回し、未定義ロール時に `UnauthorizedError` となるかを検証する。
+-->
+
+<!--
+【重複のため非表示】E2E(3.10) と重複
+
   Playwright では `test.describe("role matrix", () => { test.use({ storageState: "storage/admin.json" }) ... })` を使い、管理者のみが `/admin/users` にアクセスできること、メンバーの場合は `/403` にリダイレクトされることを `await expect(page).toHaveURL(/403/)` で確認する。  
   MSW を活用し、API レベルでも `x-role` ヘッダーによる分岐が正しく機能するかを `expect(fetchSpy).toHaveBeenCalledWith(expect.objectContaining({ headers: expect.objectContaining({ "x-role": "member" }) }))` で検証する。  
+-->
   
 - **データアクセス**: Row Level Security (RLS) による適切なデータ分離  
+  当面は実施しない（3.11 Supabase 統合テストと重複）。  
+
+<!--
+【重複のため非表示】Supabase統合(3.11) と重複
+
   Supabase のテスト環境で `supabase.auth.admin.createUser` → `client.from("documents").select("*")` をロール別に実行し、RLS ポリシーにより他組織のデータが返らないことを `expect(result.data.every(row => row.organization_id === orgIdOfUser))` で確認する。  
   必要に応じて `supabase migrate up --db-url` でローカルにシードした DB を立ち上げ、`pgTAP` で `SELECT has_rls('public.documents')` のようなポリシーテストも自動化する。  
   Playwright では API をモックせず実際に Supabase を叩く `@security` タグ付き e2e を夜間ジョブのみ実行し、ネットワークログに異常レスポンスが無いか `await expect(response).toHaveStatus(200)` + `expect(await response.json()).toSatisfy(...)` で確認する。  
+-->
   
 - **承認ステータス制御**: `pending` / `rejected` ユーザーのガード  
-  サーバー側の `assertApprovedUser(user)` ヘルパーに対して Jest で `pending` → `ApprovalRequiredError`、`rejected` → `AccessRejectedError` となるかをテストし、Playwright では `storageState: "storage/pending.json"` の状態で `/` へアクセスした際に承認待ちページへ遷移し続けるかを確認する。  
+  未承認/拒否ユーザーが保護機能へ進めないことを確認する。
+
+<!--
+  例: `assertApprovedUser(user)` に対して `pending` → `ApprovalRequiredError`、`rejected` → `AccessRejectedError` をテストする。
+-->
+
+<!--
+【重複のため非表示】E2E(3.10) と重複
+
+  Playwright では `storageState: "storage/pending.json"` の状態で `/` へアクセスした際に承認待ちページへ遷移し続けるかを確認する。  
   Slack 通知 API へは `page.route("**/api/notifications/slack", route => route.fulfill({ status: 204 }))` を使って副作用を抑止しつつ、通知失敗時でも承認処理が継続することを `expect(page.getByText("通知に失敗しました")).not.toBeVisible()` で検証する。  
+-->
   
 - **セッション管理**: ログイン状態の正確な管理  
-  `authSession.test.ts` で `supabase.auth.onAuthStateChange` のコールバックを `jest.fn()` で捕捉し、`signOut` 後に `router.push("/login")` が呼ばれるかを確認する。  
+  サインアウト/期限切れ時に、UI/ルーティングが期待どおりにログアウト遷移する。
+
+<!--
+  例: `onAuthStateChange` のコールバックを捕捉し、`signOut` 後に `router.push("/login")` が呼ばれるかを確認する。
+-->
+
+<!--
+【重複のため非表示】E2E(3.10) と重複
+
   ブラウザ側は Playwright で `await page.context().storageState()` を取得し、`access_token` の `exp` を `Date.now()` と比較して期限切れ状態を再現、`await page.reload()` 後に `await expect(page).toHaveURL(/login/)` となることを確かめる。  
   さらに `supabase.auth.refreshSession` を MSW で 401 応答にして、強制ログアウトトーストが表示されるかを `await expect(page.getByText("再ログインが必要です")).toBeVisible()` で検証する。  
+-->
   
 ### 3.3 型安全性テスト（高優先度）
 
@@ -179,8 +251,12 @@ TypeScript型定義の整合性を確保する
   CI は `.github/workflows/db-types.yml` が同手順を自動実行（db-types.yml実装待ち）  
 
 - **API契約**: リクエスト・レスポンス型の整合性（未実装）  
-  OpenAPI 仕様や Zod スキーマを単一ソースとして定義し、`openapi-typescript` / `orval` などで型を生成 → API ハンドラでは生成型と Zod バリデーションを併用し、Jest で `expect(schema.parse(mockResponse))` を実行して契約違反を検出する。  
-  CI ではスキーマ生成コマンドと契約テストをワークフローに組み込み、差分や失敗時にブロックする。  
+  API 入出力がスキーマ（例: Zod）と矛盾しないことを、最小限のテストで確認する。
+
+<!--
+  例: OpenAPI 仕様や Zod スキーマを単一ソースとして定義し、生成型 + バリデーションを併用する。
+  Jest で `expect(schema.parse(mockResponse))` を実行して契約違反を検出する。
+-->
   
 - **コンポーネント型**: Props型定義の正確性  
   `npx tsc --noEmit` と `npm run lint` を実行し、TypeScript 上の型不整合や ESLint の型ベースルールチェックを行う  
@@ -191,17 +267,8 @@ TypeScript型定義の整合性を確保する
 
 #### テストポイント:
 
-- **コンパイル**: TypeScriptエラーの検出  
-  Next.js の `next build` には TypeScript チェックが含まれ、`.github/workflows/build.yml` で `npm run build` を実行することで型エラーを自動的に検出できる。  
-  
-- **最適化**: Next.jsビルド処理の成功  
-  `next build` が完走すること自体が最適化パイプラインの成功を意味し、CI でのビルド結果が本番相当で成立するか確認している。
-  
-- **依存関係**: パッケージ間の整合性確認  
-  `npm ci` により lockfile 通りに依存関係を再構築し、破損や不足があれば取得・ビルド段階で検知できる。  
-  
-- **静的ファイル**: アセット生成の確認  
-  ビルド結果として `.next/static` 等のアセットが生成されるため、`npm run build` の完了が静的ファイル生成フローの健全性確認となる。  
+- **ビルドが通る**: `.github/workflows/build.yml` で `npm run build` が完走する。
+- **依存関係が揃う**: `npm ci` が lockfile どおりに成功する。
   
 ### 3.5 コード品質テスト（高優先度）
 
@@ -211,19 +278,19 @@ TypeScript型定義の整合性を確保する
 
 - **デバッグコード除去**: console.log、debugger文の検出  
   `.github/workflows/check_console_log.yml` が `find` + `grep` で `console.log/info` や `debugger` を走査し、許可されていない出力を検出するとジョブを失敗させる。  
-  ローカルでの `npm run lint:logs` 運用は未実装のため、導入後に pre-commit Hook へ組み込み、開発段階で検知できるようにする。  
+  ローカルでの自動検出（例: pre-commit）は必要になった段階で導入を検討する（現時点はCIのみ）。
   
 - **未使用コード**: 不要なimport・関数・変数の検出  
   `.github/workflows/typecheck.yml` 内で実行する `npm run lint` が `eslint-plugin-import` や `no-unused-vars` 等のルールを通じて未使用コードを検知する。  
-  `npm run lint:unused-exports` の運用は未実装のため、導入後に同ワークフローへ追加し、`UNUSED_EXPORTS_STRICT=true` の切り替えで CI を fail させる運用を想定する。  
+  `npm run lint:unused-exports` の運用は未実装のため、導入後に同ワークフローへ追加する。  
   
 - **コーディング規約**: ESLintルール準拠  
   同じく `npm run lint` により、プロジェクトの ESLint 設定（`eslint-config-next`, `eslint-config-prettier` など）へ違反したコードを検出する。  
-  `eslint --max-warnings=0` を標準に設定し、`lint-staged` で `next lint --fix` を自動適用する運用は導入後に検討する。  
+  自動修正（pre-commit 等）は必要になった段階で導入を検討する。  
   
 - **型安全性**: TypeScriptの型エラー検出  
   `.github/workflows/typecheck.yml` で `npx tsc --noEmit` を実行し、型エラー発生時にはジョブを失敗させる。  
-  `incremental` オプションをオフにした専用 `tsconfig.ci.json` を用意するとキャッシュ汚染による取りこぼしを防ぎやすい。  
+  追加の厳格化（CI専用tsconfig等）は必要になった段階で導入を検討する。  
   
 - **フォーマッタ整合**: Prettier などの自動整形ルールからの逸脱検知 *（未実装）*  
   将来的に `format:check`/`format` スクリプトを追加し、CI と pre-commit Hook で整形逸脱を検知する運用を想定している。  
@@ -237,6 +304,7 @@ TypeScript型定義の整合性を確保する
 ユーザー操作に直結するUI機能の品質を確保する。  
 当面は実施しない。必要性が明確になったタイミングで、対象を**代表UIのみに限定**して再検討する。
 
+<!--
 #### テストポイント:
 
 - **イベント処理**: クリック・フォーム送信などの動作  
@@ -256,7 +324,7 @@ TypeScript型定義の整合性を確保する
   `page.route("**/videos", route => route.fulfill({ status: 500 }))` などでエラー応答を注入し、トースト・アラート・リトライボタンが表示されること、閉じる操作で UI が復元することを期待値に加える。  
   Playwright の screenshot を `test.info().attach("error-state", { body: await page.screenshot(), contentType: "image/png" })` で保存し、差分チェックを簡単にする。  
   複数エラーが同時に発生するケースは `Promise.all` で並列リクエストを発火させ、UI が競合状態に陥らないかを検証する。  
-  
+-->
 #### 対象コンポーネント（将来検討時の例）:
 
 - 代表UI（カード、フォーム、モーダル、ナビゲーション）
@@ -265,7 +333,7 @@ TypeScript型定義の整合性を確保する
 
 データフェッチ処理の信頼性を確保する。  
 当面は実施しない。必要に応じて**変更点に限った最小テスト**を追加する。
-
+<!--
 #### テストポイント:
 
 - **データ取得**: 正しいクエリでのデータ取得  
@@ -292,11 +360,11 @@ TypeScript型定義の整合性を確保する
   React Query の `staleTime` と `cacheTime` をテスト用に短縮し、`await waitFor(() => expect(result.current.isFetching).toBe(false))` の後に `jest.advanceTimersByTime(staleTime + 1)` で再検証が走るかを確認する。  
   `queryClient.invalidateQueries(["documents", { category: "program" }])` を呼んだ際に適切な範囲だけ再フェッチされることを `expect(fetchSpy).toHaveBeenCalledTimes(2)` で検証する。  
   Playwright では複数タブ (chromium context) を開き、一方で更新された値が他方で `BroadcastChannel` 経由で再取得されるか観察する。  
-  
+-->
 ### 3.8 ページレベル統合テスト（中低優先度）（当面実施しない）
 
 当面は実施しない。将来行う場合でも、**主要フロー1〜2本**に限定する。
-
+<!--
 #### テストポイント:
 
 - **データ連携**: API・コンポーネント間のデータ流れ  
@@ -326,9 +394,11 @@ TypeScript型定義の整合性を確保する
   
 - **カレンダーページ固有の表示**: カレンダーUI確認  
   月/週/日/予定リストの切替と、前後期間の追加取得が正しく動き、イベント詳細モーダルが表示されることを確認する。  
-  
+-->
 ### 3.9 UIコンポーネントテスト（中低優先度）（当面実施しない）
 
+当面は実施しない。必要性が明確になったタイミングで対象を絞って再検討する。
+<!--
 視覚的プレゼンテーションのみを担う `app/components/*`（カード、タグ、トースト、フォーム入力など）を対象に、Props → DOM 表示が仕様通りであることを確認する。  
 Storybook を「仕様の真実」として整備し、Chromatic や Jest + Testing Library + `@testing-library/jest-dom` で自動検証する。  
 
@@ -353,11 +423,11 @@ Storybook を「仕様の真実」として整備し、Chromatic や Jest + Test
   
 - **Storybook Docs との整合**: UI状態の固定化、仕様・ドキュメント・テストの一元化  
   Story args をそのまま Jest/Chromatic で再利用し、ドキュメントに掲載されたサンプルが常に動作するよう `storiesToTests` パターンを導入する。  
-  
+-->
 ### 3.10 E2Eテスト（低優先度）（リリース前のみ）
 
 実ユーザー視点の**主要ジャーニー1〜2本**のみを、**単一ブラウザ**で実施する。複数ブラウザ・全網羅は行わない。
-
+<!--
 #### テストポイント:
 
 - **ユーザーフロー**: ログインから主要機能利用まで  
@@ -387,9 +457,11 @@ Storybook を「仕様の真実」として整備し、Chromatic や Jest + Test
 1. 主要ユーザーフローを1〜2本に限定
 2. 単一ブラウザで実行
 3. 失敗時の再現ログを残す
-
+-->
 ### 3.11 Supabase 統合テスト（低優先度）（当面実施しない）
 
+当面は実施しない。必要性が明確になったタイミングで対象を絞って再検討する。
+<!--
 Supabase の Postgres・Auth・Storage・Edge Functions を本番と同じ設定で立ち上げ、マイグレーション・RLS・トリガーが期待どおり動くかを CLI ベースで検証する。  
 `supabase start` でローカルエミュレーターを起動し、Node から `supabase-js` を使った統合テストを `tests/supabase/*.test.ts` に配置する。
 
@@ -413,7 +485,7 @@ Supabase の Postgres・Auth・Storage・Edge Functions を本番と同じ設定
 - **バックアップ/ロールフォワード**: DBマイグレーションの整合性確認  
   主要マイグレーションを `supabase db diff` で差分抽出し、ロールフォワード/ロールバックのスクリプトをテスト内で実行して整合性を担保する。  
     大規模スキーマ変更前に必須。  
-  
+-->
 ## 4. テスト/CIで使用するアーキテクチャ・ツール一覧
 
 ### 4.1 アーキテクチャ（実行方針）
@@ -421,8 +493,8 @@ Supabase の Postgres・Auth・Storage・Edge Functions を本番と同じ設定
 - **テストピラミッド**:  
   Unit → Integration → E2E の層構造で、上位ほど本数を絞る。  
   
-- **PR/ Nightly 分離**:  
-  PR では短時間テストを必須、E2E/大規模統合は Nightly で実行する。（Nightly 実行は未実装）  
+- **PR / リリース前（将来 Nightly）**:  
+  PR では短時間テストを必須とし、E2E/大規模統合はリリース前（または将来的に Nightly）で実行する。（Nightly 実行は未実装）  
   
 - **モック優先**:  
   外部依存は MSW/モックで隔離し、統合テストは専用環境で実施する。
