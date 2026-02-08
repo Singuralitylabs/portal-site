@@ -41,19 +41,24 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.1. users テーブル
 
-| カラム名       | データ型       | 制約                                | 説明                                             |
-| -------------- | -------------- | ----------------------------------- | ------------------------------------------------ |
-| `id`           | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                   |
-| `auth_id`      | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                       |
-| `email`        | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）  |
-| `display_name` | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                         |
-| `role`         | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）. |
-| `status`       | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）  |
-| `bio`          | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                             |
-| `avatar_url`   | `TEXT`         |                                     | Googleプロフィール画像のURL                      |
-| `is_deleted`   | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
-| `created_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
-| `updated_at`   | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |
+| カラム名        | データ型       | 制約                                | 説明                                             |
+| --------------- | -------------- | ----------------------------------- | ------------------------------------------------ |
+| `id`            | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                   |
+| `auth_id`       | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                       |
+| `email`         | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）  |
+| `display_name`  | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                         |
+| `role`          | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）. |
+| `status`        | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）  |
+| `bio`           | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                             |
+| `avatar_url`    | `TEXT`         |                                     | Googleプロフィール画像のURL                      |
+| `x_url`         | `TEXT`         |                                     | XアカウントのURL                                 |
+| `facebook_url`  | `TEXT`         |                                     | FacebookアカウントのURL                          |
+| `instagram_url` | `TEXT`         |                                     | InstagramアカウントのURL                         |
+| `github_url`    | `TEXT`         |                                     | GitHubアカウントのURL                            |
+| `portfolio_url` | `TEXT`         |                                     | ポートフォリオサイトのURL                        |
+| `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
+| `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
+| `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |
 
 ---
 
@@ -163,6 +168,11 @@ erDiagram
         VARCHAR status "ユーザーの状態（例: pending, active, rejected） (最大50文字)"
         VARCHAR bio "ユーザーの自己紹介文 (最大500文字)"
         TEXT avatar_url "Googleプロフィール画像のURL"
+        TEXT x_url "X（旧Twitter）アカウントURL"
+        TEXT facebook_url "FacebookアカウントURL"
+        TEXT instagram_url "InstagramアカウントURL"
+        TEXT github_url "GitHubアカウントURL"
+        TEXT portfolio_url "ポートフォリオサイトURL"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
@@ -263,239 +273,66 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 ### 4.1. users テーブルのRLSポリシー
 
-#### 閲覧ポリシー（SELECT）
-
-- `users_can_read_own_data`: ユーザーは自分自身のデータのみ閲覧可能
-
-  - 条件: `auth_id = auth.uid() AND is_deleted = FALSE`
-  - 解説: 論理削除されていない自分自身のレコードのみ閲覧可能。`auth.uid()`はSupabase Authの組み込み関数で、現在認証されているユーザーのUUIDを返す。
-
-- `admins_can_read_all_users`: 管理者は全ユーザーデータを閲覧可能
-  - 条件:
-    ```sql
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE
-        auth_id = auth.uid()
-        AND role = 'admin'
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-    ```
-  - 解説: 現在ログインしているユーザーが管理者ロール（role = 'admin'）であり、承認済み (status = 'active') かつ論理削除されていない場合に全ユーザーデータの閲覧を許可。
-
-#### 挿入ポリシー（INSERT）
-
-- `authenticated_users_can_insert_own_data`: 認証済みユーザーは自分自身のデータを挿入可能
-  - 条件: `true`（実質的にサービスロールからの実行のみ許可）
-  - 解説: OAuth認証後のコールバック処理で、ユーザー自身のデータをusersテーブルに登録する際に使用。
-
-#### 更新ポリシー（UPDATE）
-
-- `users_can_update_own_data`: ユーザーは自分自身の情報のみ更新可能
-
-  - 条件1（USING）: `auth_id = auth.uid() AND is_deleted = FALSE`
-  - 条件2（WITH CHECK）: `auth_id = auth.uid() AND is_deleted = FALSE`
-  - 解説: 自分自身のデータのみ更新可能で、かつ論理削除されていない場合に限る。USINGは更新対象の行を選択する条件、WITH CHECKは更新後の値をチェックする条件を指定。ユーザーは自分のプロフィール情報などを変更できる。
-
-- `admins_can_update_all_users`: 管理者はすべてのユーザー情報を更新可能
-  - 条件:
-    ```sql
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE
-        auth_id = auth.uid()
-        AND role = 'admin'
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-    ```
-  - 解説: 管理者ロール（role = 'admin'）を持つユーザーは全ユーザーの情報を更新可能。管理者はユーザーのステータス変更や権限管理などを行える。
-
-#### 削除ポリシー（DELETE/論理削除）
-
-- `users_can_delete_own_data`: ユーザーは自分自身の論理削除のみ可能
-
-  - 条件1（USING）: `auth_id = auth.uid() AND is_deleted = FALSE`
-  - 条件2（WITH CHECK）: `auth_id = auth.uid() AND is_deleted = TRUE`
-  - 解説: ユーザーは自分自身のデータのみ論理削除可能。実際には物理削除ではなく、`is_deleted = TRUE`に更新することで論理削除を実現。退会処理に相当する。
-
-- `admins_can_delete_users`: 管理者はユーザーの論理削除が可能
-  - 条件:
-    ```sql
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE
-        auth_id = auth.uid()
-        AND role = 'admin'
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-    ```
-  - 解説: 管理者ロールを持つユーザーは、他のユーザーも含めて論理削除が可能。管理者による利用停止処理などに使用される。
+- 認証済ユーザーは削除されていないデータのみ閲覧可能
+- 新規登録は、Supabase Authからの自動登録のみ許可
+  - OAuth認証後のコールバック処理で、ユーザー自身のデータを登録する際に使用する
+- ユーザーは自身のデータのみ更新可能
+- 管理者は全ユーザー情報を更新可能
+- ユーザーは自分自身の論理削除のみ可能
+  - 退会処理に相当する
+- 管理者は全ユーザーの論理削除が可能
+  - 管理者による利用停止処理などに使用する
+- 論理削除のみとし、物理削除を防止
 
 ### 4.2. documents テーブルのRLSポリシー
 
-#### 閲覧ポリシー（SELECT）
-
-- `authenticated_users_can_read_documents`: 認証済みユーザーは全てのdocumentsを閲覧可能
-  - 条件: `auth_id = auth.uid() AND status  = 'active' AND is_deleted = FALSE`
-  - 解説: Supabase Authで認証されたユーザーであれば、論理削除されていない全ての資料にアクセス可能
-
-#### 作成ポリシー（INSERT）
-
-- `content_managers_can_insert_documents`: 管理者またはメンテナーが資料を作成可能
-  - 条件:
-    ```sql
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-    ```
-  - 解説: 管理者またはメンテナー権限を持つアクティブなユーザーのみが新しい資料を追加可能
-
-#### 更新ポリシー（UPDATE）
-
-- `content_managers_can_update_documents`: 管理者またはメンテナーが資料を更新可能
-  - 条件: content_managers_can_insert_documentsと同様
-  - 解説: 管理者またはメンテナー権限を持つユーザーが既存の資料を編集可能
-
-#### 削除ポリシー（DELETE/論理削除）
-
-- `prevent_physical_delete_documents`: 資料は論理削除のみとし、物理削除を防止
+- 認証済ユーザーは削除されていないデータのみ閲覧可能
+- 管理者またはメンテナーは全データを閲覧可能
+  - 削除機能があるため
+- 管理者またはメンテナーは全データを登録・更新可能
+- 論理削除のみとし、物理削除を防止
 
 ### 4.3. videos テーブルのRLSポリシー
 
-#### 閲覧ポリシー（SELECT）
-
-- `authenticated_users_can_read_videos`: 認証済みユーザーは全てのvideosを閲覧可能
-  - 条件: `auth_id = auth.uid() AND status  = 'active' AND is_deleted = FALSE`
-  - 解説: Supabase Authで認証されたユーザーであれば、論理削除されていない全ての動画にアクセス可能
-
-#### 作成ポリシー（INSERT）
-
-- `content_managers_can_insert_videos`: 管理者またはメンテナーが動画を作成可能
-  - 条件:
-    ```sql
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-    ```
-  - 解説: 管理者またはメンテナー権限を持つアクティブなユーザーのみが新しい動画を追加可能
-
-#### 更新ポリシー（UPDATE）
-
-- `content_managers_can_update_videos`: 管理者またはメンテナーが動画を更新可能
-  - 条件: content_managers_can_insert_videosと同様
-  - 解説: 管理者またはメンテナー権限を持つユーザーが既存の動画を編集可能
-
-#### 削除ポリシー（DELETE/論理削除）
-
-- `prevent_physical_delete_videos`: 資料は論理削除のみとし、物理削除を防止
+- 認証済ユーザーは削除されていないデータのみ閲覧可能
+- 管理者またはメンテナーは全データを閲覧可能
+  - 削除機能があるため
+- 管理者またはメンテナーは全データを登録・更新可能
+- 論理削除のみとし、物理削除を防止
 
 ### 4.4. categories テーブルのRLSポリシー
 
-#### 閲覧ポリシー（SELECT）
-
-- `registered_users_can_read_categories`: 登録済みユーザーは全てのcategoriesを閲覧可能
-  - 条件: `auth_id = auth.uid()　AND status = 'active' AND is_deleted = FALSE`
-  - 解説: documentsテーブルと同様に、`auth.uid()`を使用して、ログインユーザーが正規登録されたシンラボメンバーであり、承認済み (status = 'active') かつ論理削除されていないことを確認する。この条件を満たすユーザーのみが、論理削除されていない全てのカテゴリー（categories）にアクセスできる。会員以外の一般ユーザーは閲覧できない仕組みになっている。
+- 認証済ユーザーは削除されていないデータのみ閲覧可能
 
 ### 4.5. applications テーブルのRLSポリシー
 
-#### 閲覧ポリシー（SELECT）
-
-- `authenticated_users_can_read_applications`: 認証済みユーザーは全てのapplicationsを閲覧可能
-  - 条件:
-    ```sql
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE auth_id = auth.uid()
-      AND status = 'active'
-      AND is_deleted = false
-    )
-    AND is_deleted = FALSE
-    ```
-  - 解説: Supabase Authで認証されたアクティブなユーザーであれば、論理削除されていない全てのアプリにアクセス可能
-
-#### 作成ポリシー（INSERT）
-
-- `content_managers_can_insert_applications`: 管理者またはメンテナーがアプリを登録可能
-  - 条件:
-    ```sql
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
-    ```
-  - 解説: 管理者またはメンテナー権限を持つアクティブなユーザーのみが新しいアプリを追加可能
-
-#### 更新ポリシー（UPDATE）
-
-- `content_managers_can_update_applications`: 管理者またはメンテナーがアプリを更新可能
-  - 条件: content_managers_can_insert_applicationsと同様
-  - 解説: 管理者またはメンテナー権限を持つユーザーが既存のアプリを編集可能
-
-#### 削除ポリシー（DELETE/論理削除）
-
-- `prevent_physical_delete_applications`: アプリは論理削除のみとし、物理削除を防止
+- 認証済ユーザーは削除されていないデータのみ閲覧可能
+- 管理者またはメンテナーは全データを閲覧可能
+  - 削除機能があるため
+- 管理者またはメンテナーは全データを登録・更新可能
+- 論理削除のみとし、物理削除を防止
 
 ### 4.6. positions テーブルのRLSポリシー
 
-users テーブルと同様
+- 認証済ユーザーは削除されていないデータのみ閲覧可能
+- 管理者またはメンテナーは全データを閲覧可能
+- 管理者またはメンテナーは全データを登録・更新可能
+- 論理削除のみとし、物理削除を防止
 
 ### 4.7. position_tags テーブルのRLSポリシー
 
-users テーブルと同様
-ただし、削除ポリシーは物理削除とする
+- 認証済ユーザーは全データを閲覧可能
+  - 物理削除のため、削除フラグは考慮不要
+- ユーザーは自身のデータのみ登録・更新可能
+- 管理者またはメンテナーは全データを登録・更新可能
+- ユーザーは自身のデータのみ物理削除可能
+- 管理者またはメンテナーは全データを物理削除可能
 
-#### 削除ポリシー（DELETE/物理削除）
+## 5. サポート関数・備考
 
-- `self_user_or_admins_can_physical_delete_position_tags`: ユーザー自身または管理者のみ物理削除可能
-  - 条件:
-    ```sql
-    -- DELETE: ユーザー自身または管理者のみ物理削除可能
-      USING (
-        -- ユーザー自身の役職タグを削除できる
-        EXISTS (
-          SELECT 1 FROM users
-          WHERE
-            users.id = position_tags.user_id
-            AND users.auth_id = auth.uid()
-            AND users.status = 'active'
-            AND users.is_deleted = FALSE
-        )
-        OR
-        -- 管理者は全ての役職タグを削除できる
-        EXISTS (
-          SELECT 1 FROM users
-          WHERE
-            auth_id = auth.uid()
-            AND role = 'admin'
-            AND status = 'active'
-            AND is_deleted = FALSE
-        )
-      );
-    ```
-  - 解説: ユーザーは自分自身のデータのみ物理削除可能。管理者ロールを持つユーザーは、他のデータも物理削除が可能。
-
-## 5. サポート関数
-
-- `auth.uid()`: 現在認証されているユーザーのUUIDを取得
-  - 解説: Supabase Authが提供する組み込み関数で、現在のセッションで認証されているユーザーのUUIDを返す。未認証の場合はNULLを返す。RLSポリシーでユーザー識別に使用される。これが主要な認証識別関数として使用される。
+- `auth.uid()`
+  - Supabase Authが提供する組み込み関数で、現在のセッションで認証されているユーザーのUUIDを返す。未認証の場合はNULLを返す。RLSポリシーでユーザー識別に使用される。これが主要な認証識別関数として使用される。
+- USINGは更新対象の行を選択する条件、WITH CHECKは更新後の値をチェックする条件を指定している
 
 ## 6. データアクセス制御の実現
 

@@ -29,7 +29,15 @@ export default async function ProfilePage() {
   }
 
   // プロフィール更新用のサーバーアクション
-  const updateProfile = async (displayName: string, bio: string) => {
+  const updateProfile = async (
+    displayName: string,
+    bio: string,
+    x_url: string | null,
+    facebook_url: string | null,
+    instagram_url: string | null,
+    github_url: string | null,
+    portfolio_url: string | null
+  ) => {
     "use server";
 
     if (!user) {
@@ -45,6 +53,11 @@ export default async function ProfilePage() {
       id: user.id,
       displayName,
       bio,
+      x_url,
+      facebook_url,
+      instagram_url,
+      github_url,
+      portfolio_url,
     });
 
     if (updateError) {

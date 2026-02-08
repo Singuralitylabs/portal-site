@@ -3,7 +3,8 @@ import { Modal, TextInput, Select, Textarea, Button, Group } from "@mantine/core
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { registerDocument, updateDocument } from "@/app/services/api/documents-client";
-import type { DocumentUpdateFormType, SelectCategoryType } from "@/app/types";
+import type { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
+import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 import { z } from "zod";
 
 interface DocumentFormModalProps {
@@ -11,7 +12,7 @@ interface DocumentFormModalProps {
   onClose: () => void;
   categories: SelectCategoryType[];
   userId: number;
-  initialData?: DocumentUpdateFormType;
+  initialData?: DocumentWithCategoryType;
 }
 
 export function DocumentFormModal({
@@ -22,26 +23,39 @@ export function DocumentFormModal({
   initialData,
 }: DocumentFormModalProps) {
   const [form, setForm] = useState({
-    name: initialData?.name ?? "",
-    category_id: initialData?.category_id ?? 0,
-    description: initialData?.description ?? "",
-    url: initialData?.url ?? "",
-    assignee: initialData?.assignee ?? "",
-    display_order: initialData?.display_order ?? null,
+    name: "",
+    category_id: 0,
+    description: "",
+    url: "",
+    assignee: "",
   });
   const router = useRouter();
 
-  // モーダルが開かれたとき、編集時はinitialDataでformを更新
+  // 表示順操作フック
+  const { position, setPosition, positionOptions, parsePosition, handleCategoryChange } =
+    useDisplayOrderForm("documents", form.category_id, initialData?.id, !!initialData);
+
+  // モーダルが開かれたときの初期化処理
   useEffect(() => {
+    // フォームを初期化
     setForm({
       name: initialData?.name ?? "",
       category_id: initialData?.category_id ?? 0,
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
       assignee: initialData?.assignee ?? "",
-      display_order: initialData?.display_order ?? null,
     });
-  }, [opened, initialData]);
+
+    // 表示順の初期化
+    setPosition(initialData ? "current" : "last");
+  }, [opened, initialData, setPosition]);
+
+  // カテゴリー変更時の処理
+  const handleCategoryChangeWrapper = async (value: string | null) => {
+    const categoryId = Number(value);
+    setForm(f => ({ ...f, category_id: categoryId }));
+    await handleCategoryChange(categoryId);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.url?.trim() || form.category_id === 0) {
@@ -67,10 +81,23 @@ export function DocumentFormModal({
       return;
     }
 
-    // API呼び出し(初期値あり：編集時は更新、初期値なし：新規登録)
+    // positionをPlacementPositionに変換
+    const parsedPosition = parsePosition(position);
+
+    // 共通のフィールドをまとめる
+    const commonData = {
+      name: form.name,
+      category_id: form.category_id,
+      description: form.description,
+      url: form.url,
+      assignee: form.assignee,
+      position: parsedPosition,
+    };
+
+    // API呼び出し(編集時は更新、新規時は登録)
     const result = initialData
-      ? await updateDocument({ ...form, id: initialData.id, updated_by: userId })
-      : await registerDocument({ ...form, created_by: userId });
+      ? await updateDocument({ id: initialData.id, updated_by: userId, ...commonData })
+      : await registerDocument({ created_by: userId, ...commonData });
 
     if (result?.success) {
       notifications.show({
@@ -111,7 +138,7 @@ export function DocumentFormModal({
           label: category.name,
         }))}
         value={String(form.category_id)}
-        onChange={value => setForm(f => ({ ...f, category_id: Number(value) }))}
+        onChange={handleCategoryChangeWrapper}
         required
         mb="sm"
       />
@@ -120,6 +147,7 @@ export function DocumentFormModal({
         value={form.description}
         placeholder="文字数は70文字以内にしてください。"
         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+        rows={5}
         mb="sm"
       />
       <TextInput
@@ -133,6 +161,14 @@ export function DocumentFormModal({
         label="担当者"
         value={form.assignee}
         onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}
+        mb="sm"
+      />
+      <Select
+        label="表示順"
+        data={positionOptions}
+        value={position}
+        onChange={value => setPosition(value || "last")}
+        placeholder="配置位置を選択"
         mb="sm"
       />
       <Group mt="md" justify="flex-end">
