@@ -168,6 +168,7 @@ export function ApplicationFormModal({
         value={form.description}
         placeholder="文字数は70文字以内にしてください。"
         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+        rows={5}
         mb="sm"
       />
       <TextInput
