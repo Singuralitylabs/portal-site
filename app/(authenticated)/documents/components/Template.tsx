@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { DocumentCard } from "./DocumentCard";
+import { DocumentDetailModal } from "./DocumentDetailModal";
 import { PageTitle } from "@/app/components/PageTitle";
 import { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
 import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
@@ -18,10 +22,23 @@ export function DocumentsPageTemplate({
   isContentMgr,
   userId,
 }: DocumentsPageTemplateProps) {
+  const [selectedDocument, setSelectedDocument] = useState<DocumentWithCategoryType | null>(null);
+  const [modalOpened, setModalOpened] = useState(false);
+
   const documentCategoryNames = new Set(documents.map(document => document.category?.name));
   const existingCategories = categories.filter(category =>
     documentCategoryNames.has(category.name)
   );
+
+  const handleDetailClick = (document: DocumentWithCategoryType) => {
+    setSelectedDocument(document);
+    setModalOpened(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpened(false);
+    setSelectedDocument(null);
+  };
 
   return (
     <>
@@ -65,6 +82,7 @@ export function DocumentsPageTemplate({
                       isContentMgr={isContentMgr}
                       categories={categories}
                       userId={userId}
+                      onDetailClick={handleDetailClick}
                     />
                   </div>
                 ))}
@@ -78,6 +96,12 @@ export function DocumentsPageTemplate({
           TOPへ
         </a>
       </div>
+
+      <DocumentDetailModal
+        document={selectedDocument}
+        opened={modalOpened}
+        onClose={handleModalClose}
+      />
     </>
   );
 }
