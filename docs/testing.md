@@ -41,7 +41,7 @@ Unit Tests (多数)
 
 PR では短時間で完了するチェックを必須とし、リリース前は範囲を絞った確認を追加する。
 
-- **PRで必須**: `lint` / `tsc` / `build` / `test`（変更箇所に関係する範囲）
+- **PRで必須**: 静的解析（Lint）/ 型チェック / ビルド / ユニットテスト（変更箇所に関係する範囲）
 - **リリース前**: 影響範囲が広い変更に対して、主要フローの手動確認（または最小限のE2E）を追加
 
 CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-github-actions-ワークフロー) に記載する。
@@ -91,24 +91,24 @@ CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-gi
 TypeScript と型生成の運用によって、型の破綻を早期に検知する。
 
 - **観点**
-  - **コンポーネント/ロジック型**: `npx tsc --noEmit` と `npm run lint` により型不整合を検知する
-  - **データベース型（未実装: CI組み込み）**: `npm run db:types` を実行し、生成結果に差分がないことを確認する
+  - **コンポーネント/ロジック型**: 型チェックと静的解析により型不整合を検知する
+  - **データベース型（未実装: CI組み込み）**: 型生成コマンドを実行し、生成結果に差分がないことを確認する
 
 ### 3.4 ビルドテスト
 
 本番相当のビルドが成立することを確認する。
 
 - **観点**
-  - `npm run build` が完走する
-  - `npm ci` が lockfile どおりに成功する
+  - 本番相当のビルドが完走する
+  - 依存関係のインストールが lockfile どおりに成功する
 
 ### 3.5 コード品質テスト
 
 静的解析で品質劣化（規約違反・型エラー・デバッグ出力混入）を早期に検知する。
 
 - **観点**
-  - **ESLint**: `npm run lint` で規約違反を検知する
-  - **TypeScript**: `npx tsc --noEmit` で型エラーを検知する
+  - **Lint**: 規約違反を検知する
+  - **型チェック**: 型エラーを検知する
   - **未使用コード**: ESLintのルールにより不要なimport・変数等を検知する
   - **デバッグ出力**: `console.log/info` と `debugger` の混入を検知して失敗させる
 
@@ -127,14 +127,14 @@ TypeScript と型生成の運用によって、型の破綻を早期に検知す
 
 ### 4.1 GitHub Actions ワークフロー
 
-GitHub Actions は CI/CD の実行基盤として利用する。
+GitHub Actions は CI/CD の実行基盤として利用する。詳細は各ワークフロー定義を参照する。
 
 | Workflow | 目的 | 主な実行内容 | トリガー |
 | --- | --- | --- | --- |
-| Build Test (`.github/workflows/build.yml`) | 本番相当のビルド成立性を検証 | Node.js 22.x で `npm ci` → `npm run build` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
-| TypeScript Type Check (`.github/workflows/typecheck.yml`) | 型安全性と ESLint 違反の早期検出 | Node.js 22.x で `npm ci` → `npx tsc --noEmit` → `npm run lint` | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
-| Jest Unit Tests (`.github/workflows/test.yml`) | ユニットテスト実行 | Node.js 22.x で `npm ci` → `npm test` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
-| Check console.log and debugger (`.github/workflows/check_console_log.yml`) | デバッグ用出力の混入を防止 | `find` + `grep` で `console.log/info` と `debugger` を検出 | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| Build Test ([.github/workflows/build.yml](.github/workflows/build.yml)) | 本番相当のビルド成立性を検証 | `npm ci` → `npm run build` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| TypeScript Type Check ([.github/workflows/typecheck.yml](.github/workflows/typecheck.yml)) | 型安全性と ESLint 違反の早期検出 | `npx tsc --noEmit` → `npm run lint` | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
+| Jest Unit Tests ([.github/workflows/test.yml](.github/workflows/test.yml)) | ユニットテスト実行 | `npm test` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| Check console.log and debugger ([.github/workflows/check_console_log.yml](.github/workflows/check_console_log.yml)) | デバッグ用出力の混入を防止 | `find` + `grep` による検査 | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
 
 ### 4.2 導入済みツール
 
