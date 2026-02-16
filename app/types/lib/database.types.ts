@@ -15,7 +15,7 @@ export type Database = {
           created_by: number;
           description: string;
           developer_id: number | null;
-          display_order: number | null;
+          display_order: number;
           id: number;
           is_deleted: boolean;
           name: string;
@@ -30,7 +30,7 @@ export type Database = {
           created_by: number;
           description: string;
           developer_id?: number | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name: string;
@@ -45,7 +45,7 @@ export type Database = {
           created_by?: number;
           description?: string;
           developer_id?: number | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name?: string;
@@ -90,7 +90,7 @@ export type Database = {
           category_type: string;
           created_at: string;
           description: string | null;
-          display_order: number | null;
+          display_order: number;
           id: number;
           is_deleted: boolean;
           name: string;
@@ -100,7 +100,7 @@ export type Database = {
           category_type: string;
           created_at?: string;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name: string;
@@ -110,7 +110,7 @@ export type Database = {
           category_type?: string;
           created_at?: string;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name?: string;
@@ -125,7 +125,7 @@ export type Database = {
           created_at: string;
           created_by: number;
           description: string | null;
-          display_order: number | null;
+          display_order: number;
           id: number;
           is_deleted: boolean;
           name: string;
@@ -139,7 +139,7 @@ export type Database = {
           created_at?: string;
           created_by: number;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name: string;
@@ -153,7 +153,7 @@ export type Database = {
           created_at?: string;
           created_by?: number;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name?: string;
@@ -228,7 +228,7 @@ export type Database = {
         Row: {
           created_at: string;
           description: string | null;
-          display_order: number | null;
+          display_order: number;
           id: number;
           is_deleted: boolean;
           name: string;
@@ -237,7 +237,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name: string;
@@ -246,7 +246,7 @@ export type Database = {
         Update: {
           created_at?: string;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           name?: string;
@@ -318,7 +318,7 @@ export type Database = {
           created_at: string;
           created_by: number;
           description: string | null;
-          display_order: number | null;
+          display_order: number;
           id: number;
           is_deleted: boolean;
           length: number | null;
@@ -335,7 +335,7 @@ export type Database = {
           created_at?: string;
           created_by: number;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           length?: number | null;
@@ -352,7 +352,7 @@ export type Database = {
           created_at?: string;
           created_by?: number;
           description?: string | null;
-          display_order?: number | null;
+          display_order?: number;
           id?: number;
           is_deleted?: boolean;
           length?: number | null;

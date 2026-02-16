@@ -37,7 +37,19 @@ export async function getItemsByCategory(
     return [];
   }
 
-  return data || [];
+  // display_order が 0 または null のアイテムを末尾に移動し、連番を振り直す
+  const sorted = (data || []).sort((a, b) => {
+    const aIsUnset = !a.display_order;
+    const bIsUnset = !b.display_order;
+    if (aIsUnset && !bIsUnset) return 1;
+    if (!aIsUnset && bIsUnset) return -1;
+    return (a.display_order ?? 0) - (b.display_order ?? 0);
+  });
+
+  return sorted.map((item, index) => ({
+    ...item,
+    display_order: index + 1,
+  }));
 }
 
 /**
@@ -52,13 +64,9 @@ export async function calculateDisplayOrder(
   table: ContentTableType,
   categoryId: number,
   position: PlacementPositionType,
-  currentDisplayOrder?: number | null
+  currentDisplayOrder?: number
 ): Promise<number> {
-  if (
-    position.type === "current" &&
-    currentDisplayOrder !== null &&
-    currentDisplayOrder !== undefined
-  ) {
+  if (position.type === "current" && currentDisplayOrder !== undefined) {
     return currentDisplayOrder;
   }
 
@@ -77,8 +85,8 @@ export async function calculateDisplayOrder(
       .order("display_order", { ascending: false })
       .limit(1);
 
-    const maxOrder = data?.[0]?.display_order;
-    return maxOrder !== null && maxOrder !== undefined ? maxOrder + 1 : 1;
+    const maxOrder = data?.[0]?.display_order ?? 0;
+    return maxOrder + 1;
   }
 
   if (position.type === "after") {
@@ -88,8 +96,8 @@ export async function calculateDisplayOrder(
       .eq("id", position.afterId)
       .single();
 
-    const afterOrder = data?.display_order;
-    return afterOrder !== null && afterOrder !== undefined ? afterOrder + 1 : 1;
+    const afterOrder = data?.display_order ?? 0;
+    return afterOrder + 1;
   }
 
   return 1;
@@ -131,7 +139,7 @@ export async function shiftDisplayOrder(
     for (const item of affectedItems) {
       await supabase
         .from(table)
-        .update({ display_order: (item.display_order ?? 0) + 1 })
+        .update({ display_order: item.display_order + 1 })
         .eq("id", item.id);
     }
   }
@@ -153,7 +161,7 @@ export async function reorderItemsInCategory(
     .from(table)
     .select("id")
     .eq("category_id", categoryId)
-    .order("display_order", { ascending: true, nullsFirst: false });
+    .order("display_order", { ascending: true });
 
   if (!items || items.length === 0) {
     return;
