@@ -44,7 +44,7 @@ PR では短時間で完了するチェックを必須とし、リリース前�
 
 - **PRで必須**: `npm run lint` / `npx tsc --noEmit` / `npm run build` / `npm test`（変更箇所に関係する範囲）
 - **リリース前**: 影響範囲が広い変更に対して、主要フローの手動確認（または最小限のE2E）を追加
-- **セキュリティ関連**: セキュリティのユニットテストは毎PRで実行し、統合/E2Eはリリース前か ワークフロー手動実行 で実行する
+- **セキュリティ関連**: セキュリティのユニットテスト（例: permissions 判定など）は今後追加し、追加後は毎PRで自動実行する予定とする。統合/E2E レベルのセキュリティテストも、リリース前またはワークフロー手動実行で実行できるよう順次整備する。
 
 CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-github-actions-ワークフロー) に記載する。
 
@@ -145,10 +145,10 @@ GitHub Actions は CI/CD の実行基盤として利用する。詳細は各ワ�
 
 | Workflow | 目的 | 主な実行内容 | トリガー |
 | --- | --- | --- | --- |
-| Build Test ([.github/workflows/build.yml](.github/workflows/build.yml)) | 本番相当のビルド成立性を検証 | `npm ci` → `npm run build` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
-| TypeScript Type Check ([.github/workflows/typecheck.yml](.github/workflows/typecheck.yml)) | 型安全性と ESLint 違反の早期検出 | `npx tsc --noEmit` → `npm run lint` | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
-| Jest Unit Tests ([.github/workflows/test.yml](.github/workflows/test.yml)) | ユニットテスト実行 | `npm test` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
-| Check console.log and debugger ([.github/workflows/check_console_log.yml](.github/workflows/check_console_log.yml)) | デバッグ用出力の混入を防止 | `find` + `grep` による検査 | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| Build Test ([.github/workflows/build.yml](../.github/workflows/build.yml)) | 本番相当のビルド成立性を検証 | `npm ci` → `npm run build` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| TypeScript Type Check ([.github/workflows/typecheck.yml](../.github/workflows/typecheck.yml)) | 型安全性と ESLint 違反の早期検出 | `npx tsc --noEmit` → `npm run lint` | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
+| Jest Unit Tests ([.github/workflows/test.yml](../.github/workflows/test.yml)) | ユニットテスト実行 | `npm test` | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| Check console.log and debugger ([.github/workflows/check_console_log.yml](../.github/workflows/check_console_log.yml)) | デバッグ用出力の混入を防止 | `find` + `grep` による検査 | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
 
 ### 4.2 導入済みツール
 
