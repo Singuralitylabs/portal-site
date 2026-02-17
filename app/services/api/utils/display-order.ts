@@ -43,7 +43,7 @@ export async function getItemsByCategory(
     const bIsUnset = !b.display_order;
     if (aIsUnset && !bIsUnset) return 1;
     if (!aIsUnset && bIsUnset) return -1;
-    return (a.display_order ?? 0) - (b.display_order ?? 0);
+    return a.display_order - b.display_order;
   });
 
   return sorted.map((item, index) => ({
