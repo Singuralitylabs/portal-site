@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { POST } from "../../app/api/notifications/slack/route";
+import { POST } from "../../../app/api/notifications/slack/route";
 
 jest.mock("next/server", () => ({
   NextResponse: {

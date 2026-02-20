@@ -1,7 +1,7 @@
-import { fetchDocuments } from "../../app/services/api/documents-server";
-import { fetchApplications } from "../../app/services/api/applications-server";
-import { fetchCategoriesByType } from "../../app/services/api/categories-server";
-import { fetchVideoById, fetchVideos } from "../../app/services/api/videos-server";
+import { fetchDocuments } from "../../../app/services/api/documents-server";
+import { fetchApplications } from "../../../app/services/api/applications-server";
+import { fetchCategoriesByType } from "../../../app/services/api/categories-server";
+import { fetchVideoById, fetchVideos } from "../../../app/services/api/videos-server";
 import {
   fetchActiveUsers,
   fetchApprovalUsers,
@@ -9,8 +9,8 @@ import {
   fetchUserInfoByAuthId,
   fetchUserByAuthIdInServer,
   updateUserProfileServerInServer,
-} from "../../app/services/api/users-server";
-import { createServerSupabaseClient } from "../../app/services/api/supabase-server";
+} from "../../../app/services/api/users-server";
+import { createServerSupabaseClient } from "../../../app/services/api/supabase-server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -18,8 +18,8 @@ import { cookies } from "next/headers";
  * supabase-server の実体（createServerSupabaseClient / getServerCurrentUser）を参照する。
  */
 const supabaseServerActual = jest.requireActual(
-  "../../app/services/api/supabase-server"
-) as typeof import("../../app/services/api/supabase-server");
+  "../../../app/services/api/supabase-server"
+) as typeof import("../../../app/services/api/supabase-server");
 
 /**
  * Supabase クエリの最終戻り値を表す型。
@@ -93,8 +93,8 @@ const createQueryBuilderWithEqResult = (eqCallCount: number, result: QueryResult
 /**
  * Supabase クライアント生成関数をモック化する。
  */
-jest.mock("../../app/services/api/supabase-server", () => ({
-  ...jest.requireActual("../../app/services/api/supabase-server"),
+jest.mock("../../../app/services/api/supabase-server", () => ({
+  ...jest.requireActual("../../../app/services/api/supabase-server"),
   createServerSupabaseClient: jest.fn(),
 }));
 
@@ -578,6 +578,11 @@ describe("Supabase サーバの単体テスト", () => {
             display_name: "ユーザー1",
             bio: "bio1",
             avatar_url: "avatar1",
+            x_url: "https://x.com/user1",
+            facebook_url: null,
+            instagram_url: null,
+            github_url: "https://github.com/user1",
+            portfolio_url: null,
             position_tags: [
               { positions: { id: 1, name: "role1", is_deleted: false } },
               { positions: { id: 2, name: "role2", is_deleted: true } },
@@ -588,6 +593,11 @@ describe("Supabase サーバの単体テスト", () => {
             display_name: "ユーザー2",
             bio: "bio2",
             avatar_url: "avatar2",
+            x_url: null,
+            facebook_url: null,
+            instagram_url: "https://instagram.com/user2",
+            github_url: null,
+            portfolio_url: "https://portfolio.example.com/user2",
             position_tags: [{ positions: [{ id: 3, name: "role3", is_deleted: false }] }],
           },
         ],
@@ -605,7 +615,7 @@ describe("Supabase サーバの単体テスト", () => {
 
       // select の取得カラムが正しいことを確認
       expect(builder.select).toHaveBeenCalledWith(
-        "id, display_name, bio, avatar_url, position_tags(positions(id, name, is_deleted))"
+        "id, display_name, bio, avatar_url, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
       );
       // status=active で絞り込んでいることを確認
       expect(builder.eq).toHaveBeenCalledWith("status", "active");
@@ -622,6 +632,11 @@ describe("Supabase サーバの単体テスト", () => {
           display_name: "ユーザー1",
           bio: "bio1",
           avatar_url: "avatar1",
+          x_url: "https://x.com/user1",
+          facebook_url: null,
+          instagram_url: null,
+          github_url: "https://github.com/user1",
+          portfolio_url: null,
           position_tags: [{ positions: { id: 1, name: "role1", is_deleted: false } }],
         },
         {
@@ -629,6 +644,11 @@ describe("Supabase サーバの単体テスト", () => {
           display_name: "ユーザー2",
           bio: "bio2",
           avatar_url: "avatar2",
+          x_url: null,
+          facebook_url: null,
+          instagram_url: "https://instagram.com/user2",
+          github_url: null,
+          portfolio_url: "https://portfolio.example.com/user2",
           position_tags: [{ positions: { id: 3, name: "role3", is_deleted: false } }],
         },
       ]);
@@ -871,6 +891,11 @@ describe("Supabase サーバの単体テスト", () => {
         id: 1,
         displayName: "テストユーザー",
         bio: "テスト",
+        x_url: null,
+        facebook_url: null,
+        instagram_url: null,
+        github_url: null,
+        portfolio_url: null,
       });
 
       // console.log("updateUserProfileServerInServer response", response);
@@ -909,6 +934,11 @@ describe("Supabase サーバの単体テスト", () => {
         id: 2,
         displayName: "テストユーザー",
         bio: "テスト",
+        x_url: null,
+        facebook_url: null,
+        instagram_url: null,
+        github_url: null,
+        portfolio_url: null,
       });
 
       // console.log("updateUserProfileServerInServer error response", response);

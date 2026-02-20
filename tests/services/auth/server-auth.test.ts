@@ -1,5 +1,5 @@
-import { getServerAuth } from "../../app/services/auth/server-auth";
-import { createServerSupabaseClient } from "../../app/services/api/supabase-server";
+import { getServerAuth } from "../../../app/services/auth/server-auth";
+import { createServerSupabaseClient } from "../../../app/services/api/supabase-server";
 
 /**
  * Supabase クエリの最終戻り値を表す型。
@@ -37,8 +37,8 @@ const createQueryBuilder = (result: QueryResult) => {
 /**
  * Supabase クライアント生成関数をモック化する。
  */
-jest.mock("../../app/services/api/supabase-server", () => ({
-  ...jest.requireActual("../../app/services/api/supabase-server"),
+jest.mock("../../../app/services/api/supabase-server", () => ({
+  ...jest.requireActual("../../../app/services/api/supabase-server"),
   createServerSupabaseClient: jest.fn(),
 }));
 

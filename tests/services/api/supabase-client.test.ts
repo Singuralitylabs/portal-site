@@ -1,23 +1,23 @@
-import { createClientSupabaseClient } from "../../app/services/api/supabase-client";
+import { createClientSupabaseClient } from "../../../app/services/api/supabase-client";
 import { createBrowserClient } from "@supabase/ssr";
 import {
   deleteApplication,
   getApplicationsByCategory,
   registerApplication,
   updateApplication,
-} from "../../app/services/api/applications-client";
+} from "../../../app/services/api/applications-client";
 import {
   deleteDocument,
   getDocumentsByCategory,
   registerDocument,
   updateDocument,
-} from "../../app/services/api/documents-client";
+} from "../../../app/services/api/documents-client";
 import {
   deleteVideo,
   getVideosByCategory,
   registerVideo,
   updateVideo,
-} from "../../app/services/api/videos-client";
+} from "../../../app/services/api/videos-client";
 import {
   addNewUser,
   approveUser,
@@ -25,20 +25,20 @@ import {
   fetchUserRoleById,
   fetchUserStatusById,
   rejectUser,
-} from "../../app/services/api/users-client";
+} from "../../../app/services/api/users-client";
 import {
   calculateDisplayOrder,
   getItemsByCategory,
   reorderItemsInCategory,
   shiftDisplayOrder,
-} from "../../app/services/api/utils/display-order";
+} from "../../../app/services/api/utils/display-order";
 
 /**
  * supabase-client の実体（createClientSupabaseClient）を参照する。
  */
 const supabaseClientActual = jest.requireActual(
-  "../../app/services/api/supabase-client"
-) as typeof import("../../app/services/api/supabase-client");
+  "../../../app/services/api/supabase-client"
+) as typeof import("../../../app/services/api/supabase-client");
 
 /**
  * Supabase クエリの最終戻り値を表す型。
@@ -54,15 +54,15 @@ jest.mock("@supabase/ssr", () => ({
 /**
  * Supabase クライアント生成関数をモック化する。
  */
-jest.mock("../../app/services/api/supabase-client", () => ({
-  ...jest.requireActual("../../app/services/api/supabase-client"),
+jest.mock("../../../app/services/api/supabase-client", () => ({
+  ...jest.requireActual("../../../app/services/api/supabase-client"),
   createClientSupabaseClient: jest.fn(),
 }));
 
 /**
  * display-order ユーティリティをモック化する。
  */
-jest.mock("../../app/services/api/utils/display-order", () => ({
+jest.mock("../../../app/services/api/utils/display-order", () => ({
   getItemsByCategory: jest.fn(),
   calculateDisplayOrder: jest.fn(),
   shiftDisplayOrder: jest.fn(),

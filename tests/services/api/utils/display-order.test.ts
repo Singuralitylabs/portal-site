@@ -1,14 +1,14 @@
-jest.mock("../../app/services/api/supabase-client", () => ({
+jest.mock("../../../../app/services/api/supabase-client", () => ({
   createClientSupabaseClient: jest.fn(),
 }));
 
-import { createClientSupabaseClient } from "../../app/services/api/supabase-client";
+import { createClientSupabaseClient } from "../../../../app/services/api/supabase-client";
 import {
   calculateDisplayOrder,
   getItemsByCategory,
   reorderItemsInCategory,
   shiftDisplayOrder,
-} from "../../app/services/api/utils/display-order";
+} from "../../../../app/services/api/utils/display-order";
 
 type QueryResponse<T> = {
   data?: T;
@@ -140,6 +140,30 @@ describe("getItemsByCategory", () => {
     expect(consoleSpy).not.toHaveBeenCalled();
 
     consoleSpy.mockRestore();
+  });
+
+  /**
+   * @description display_order が 0/null の要素を末尾へ回し、連番に振り直すことを検証する。
+   */
+  it("正常系：display_order が未設定(0/null)の要素を末尾に回して連番化する", async () => {
+    const mockData = [
+      { id: 1, name: "Doc A", display_order: 0 },
+      { id: 2, name: "Doc B", display_order: 3 },
+      { id: 3, name: "Doc C", display_order: null },
+      { id: 4, name: "Doc D", display_order: 1 },
+    ];
+    const selectBuilder = createMockQueryBuilder({ data: mockData, error: null });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    const result = await getItemsByCategory("documents", 2);
+
+    expect(result).toEqual([
+      { id: 4, name: "Doc D", display_order: 1 },
+      { id: 2, name: "Doc B", display_order: 2 },
+      { id: 1, name: "Doc A", display_order: 3 },
+      { id: 3, name: "Doc C", display_order: 4 },
+    ]); // 0/null は末尾へ寄せた上で display_order を連番で再採番することを確認
   });
 });
 

@@ -1,5 +1,5 @@
-import { checkAdminPermissions, checkContentPermissions } from "../../app/services/auth/permissions";
-import { USER_ROLE } from "../../app/constants/user";
+import { checkAdminPermissions, checkContentPermissions } from "../../../app/services/auth/permissions";
+import { USER_ROLE } from "../../../app/constants/user";
 
 /**
  * 権限判定ヘルパーの単体テスト。

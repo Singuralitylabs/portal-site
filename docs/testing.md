@@ -9,8 +9,8 @@
     - [2.3 テストデータ方針](#23-テストデータ方針)
     - [2.4 可観測性](#24-可観測性)
 3. [テスト対象と観点](#3-テスト対象と観点)
-    - [3.1 サービス層ユニットテスト（未実装）](#31-サービス層ユニットテスト未実装)
-    - [3.2 セキュリティテスト（未実装）](#32-セキュリティテスト未実装)
+    - [3.1 サービス層ユニットテスト](#31-サービス層ユニットテスト)
+    - [3.2 セキュリティテスト](#32-セキュリティテスト)
     - [3.3 型安全性テスト](#33-型安全性テスト)
     - [3.4 ビルドテスト](#34-ビルドテスト)
     - [3.5 コード品質テスト](#35-コード品質テスト)
@@ -61,10 +61,11 @@ CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-gi
 
 ## 3. テスト対象と観点
 
-### 3.1 サービス層ユニットテスト（未実装）
+### 3.1 サービス層ユニットテスト
 
 サービス層（ビジネスロジック）の正しさを、外部I/Oから切り離して確認する。
 
+- **実装状況（2026-02 時点）**: `tests/services/` 配下で主要サービスのユニットテストを実装済み。
 - **観点**
   - 代表的な正常系（CRUDの代表ケース）
   - 入力のバリデーション（代表ケース）
@@ -77,11 +78,13 @@ CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-gi
   - 参照系マスタ（カテゴリ等）
 - **実行タイミング**: [2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う。
 
-### 3.2 セキュリティテスト（未実装）
+### 3.2 セキュリティテスト
 
 認証・認可・承認ステータスの制御が、意図した振る舞いを満たすことを確認する。
 
 本プロジェクトのセキュリティテストは、**単体で確認できる部分はユニット**、**実際の認証フローに関わる部分は統合/ E2E**に分類する。
+
+- **実装状況（2026-02 時点）**: 認証/認可判定ロジックはユニットテストを実装済み。統合/E2E は未実装（手動確認運用）。
 
 - **観点**
 
@@ -100,7 +103,12 @@ TypeScript と型生成の運用によって、型の破綻を早期に検知す
 
 - **観点**
   - **コンポーネント/ロジック型**: 型チェックと静的解析により型不整合を検知する
-  - **データベース型（未実装）**: 型生成の実行と差分確認により、スキーマと型定義の整合性を保つ
+  - **データベース型**: 型生成の実行と差分確認により、スキーマと型定義の整合性を保つ
+
+- **実装状況（2026-02 時点）**
+  - 型チェック（`tsc --noEmit`）と ESLint は CI で実行済み
+  - 未使用エクスポート検知（`ts-prune`）を CI に追加済み（`UNUSED_EXPORTS_STRICT` で fail 制御）
+  - DB 型整合性ワークフロー（`db-types.yml`）は作成済みだが、Supabase 環境変数未設定のため型生成/差分チェック手順は保留
 
 - **実行タイミング**: [2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う。
 
@@ -145,16 +153,19 @@ GitHub Actions は CI/CD の実行基盤として利用する。詳細は各ワ�
 | Workflow | 目的 | 主な実行内容 | トリガー |
 | --- | --- | --- | --- |
 | Build Test ([.github/workflows/build.yml](../.github/workflows/build.yml)) | 本番相当のビルド成立性を検証 | 依存関係インストール + ビルド | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
-| TypeScript Type Check ([.github/workflows/typecheck.yml](../.github/workflows/typecheck.yml)) | 型安全性と ESLint 違反の早期検出 | 型チェック + ESLint | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
+| TypeScript Type Check ([.github/workflows/typecheck.yml](../.github/workflows/typecheck.yml)) | 型安全性と静的品質の早期検出 | 型チェック + ESLint + 未使用エクスポート検知（ts-prune） | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
 | Jest Unit Tests ([.github/workflows/test.yml](../.github/workflows/test.yml)) | ユニットテスト実行 | ユニットテスト | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
 | Check console.log and debugger ([.github/workflows/check_console_log.yml](../.github/workflows/check_console_log.yml)) | デバッグ用出力の混入を防止 | console/debugger 検査 | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| Supabase DB Types Consistency ([.github/workflows/db-types.yml](../.github/workflows/db-types.yml)) | DB 型定義の整合性監視（準備中） | 依存関係インストール（型生成/差分チェックは保留） | `push` / `pull_request`（`supabase/**`, `app/types/lib/database.types.ts` 等）、`workflow_dispatch` |
 
 ### 4.2 導入済みツール
 
 - **Jest**: ユニットテスト実行基盤
 - **TypeScript**: 型チェック（`tsc --noEmit`）
 - **ESLint**: 静的解析
-- **Supabase CLI**: 型生成・スキーマ整合性確認（現状は手動）
+- **ts-prune**: 未使用エクスポート検知（`lint:unused-exports`）
+- **カスタムスクリプト**: デバッグ出力検査（`lint:logs`）
+- **Supabase CLI**: 型生成・スキーマ整合性確認（CI は準備中、現状は手動）
 
 ### 4.3 実行環境
 
@@ -176,3 +187,15 @@ GitHub Actions は CI/CD の実行基盤として利用する。詳細は各ワ�
 例:
 
 - `tests/services/auth/permissions.test.ts`
+
+### 現在の実装済みテスト一覧
+
+| テストスクリプト | テスト対象スクリプト | 対象関数 | テスト内容の概要 |
+| --- | --- | --- | --- |
+| `tests/services/auth/permissions.test.ts` | `app/services/auth/permissions.ts` | `checkAdminPermissions`, `checkContentPermissions` | ロール（admin/maintainer/member/unknown）ごとの権限判定（許可/拒否）を検証する。 |
+| `tests/services/auth/server-auth.test.ts` | `app/services/auth/server-auth.ts` | `getServerAuth` | 認証済み/未認証/認証エラー/ユーザー情報未取得/例外時の戻り値とエラーハンドリングを検証する。 |
+| `tests/services/api/utils/display-order.test.ts` | `app/services/api/utils/display-order.ts` | `getItemsByCategory`, `calculateDisplayOrder`, `shiftDisplayOrder`, `reorderItemsInCategory` | 表示順ロジック（先頭/末尾/after/current、カテゴリ内シフト、再採番、空データ時フォールバック）を検証する。 |
+| `tests/api/notifications/slack-notification.test.ts` | `app/api/notifications/slack/route.ts` | `POST` | Slack 通知 API の正常系（送信/スキップ）と異常系（Slackエラー、通信例外、非Error例外）を検証する。 |
+| `tests/api/calendar.test.ts` | `app/api/calendar/calendar-server.ts`, `app/api/calendar/events/route.ts` | `fetchCalendarEvents`, `GET` | Google Calendar 連携の取得・ソート・複数カレンダー統合・環境変数有無・不正設定・例外時レスポンスを検証する。 |
+| `tests/services/api/supabase-client.test.ts` | `app/services/api/supabase-client.ts`, `app/services/api/applications-client.ts`, `app/services/api/documents-client.ts`, `app/services/api/videos-client.ts`, `app/services/api/users-client.ts` | `createClientSupabaseClient`, `getApplicationsByCategory`, `deleteApplication`, `registerApplication`, `updateApplication`, `getDocumentsByCategory`, `deleteDocument`, `registerDocument`, `updateDocument`, `getVideosByCategory`, `deleteVideo`, `registerVideo`, `updateVideo`, `addNewUser`, `fetchUserRoleById`, `fetchUserStatusById`, `fetchUserIdByAuthId`, `approveUser`, `rejectUser` | クライアント側 CRUD とユーザー操作について、正常系/異常系、表示順ユーティリティ連携、エラーログ出力を検証する。 |
+| `tests/services/api/supabase-server.test.ts` | `app/services/api/documents-server.ts`, `app/services/api/applications-server.ts`, `app/services/api/categories-server.ts`, `app/services/api/videos-server.ts`, `app/services/api/users-server.ts`, `app/services/api/supabase-server.ts` | `fetchDocuments`, `fetchApplications`, `fetchCategoriesByType`, `fetchVideos`, `fetchVideoById`, `fetchUserStatusByIdInServer`, `fetchUserInfoByAuthId`, `fetchActiveUsers`, `fetchApprovalUsers`, `fetchUserByAuthIdInServer`, `updateUserProfileServerInServer`, `createServerSupabaseClient`, `getServerCurrentUser` | サーバー側取得/更新処理と Supabase クライアント生成処理について、正常系/異常系/境界値（null・空配列・例外）を検証する。 |
