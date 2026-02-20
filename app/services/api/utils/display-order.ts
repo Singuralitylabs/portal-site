@@ -18,8 +18,16 @@ export async function getItemsByCategory(
   excludeId?: number
 ): Promise<CategoryItemType[]> {
   const supabase = createClientSupabaseClient();
+
+  const needsAssignee = table === "videos" || table === "documents";
+  const selectColumns = needsAssignee
+    ? `id, name, display_order, assignee_id,
+      assignee:users!${table}_assignee_fk ( display_name )`
+    : `id, name, display_order `;
+
   let query = supabase
     .from(table)
+    .select(selectColumns)
     .select("id, name, display_order")
     .eq("category_id", categoryId)
     .eq("is_deleted", false)
@@ -37,7 +45,7 @@ export async function getItemsByCategory(
     return [];
   }
 
-  return data || [];
+  return (data ?? []) as CategoryItemType[];
 }
 
 /**

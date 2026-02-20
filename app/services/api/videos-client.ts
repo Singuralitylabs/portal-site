@@ -52,7 +52,7 @@ export async function registerVideo({
   thumbnail_path,
   thumbnail_time,
   length,
-  assignee,
+  assignee_id,
   created_by,
   position,
 }: VideoInsertFormType) {
@@ -74,7 +74,7 @@ export async function registerVideo({
       thumbnail_path,
       thumbnail_time,
       length,
-      assignee,
+      assignee_id,
       display_order,
       is_deleted: false,
       created_by,
@@ -107,7 +107,7 @@ export async function updateVideo({
   thumbnail_path,
   thumbnail_time,
   length,
-  assignee,
+  assignee_id,
   updated_by,
   position,
 }: VideoUpdateFormType) {
@@ -146,7 +146,7 @@ export async function updateVideo({
       thumbnail_path,
       thumbnail_time,
       length,
-      assignee,
+      assignee_id,
       display_order,
       updated_by,
     })
