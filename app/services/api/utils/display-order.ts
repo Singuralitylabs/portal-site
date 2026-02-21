@@ -60,13 +60,9 @@ export async function calculateDisplayOrder(
   table: ContentTableType,
   categoryId: number,
   position: PlacementPositionType,
-  currentDisplayOrder?: number | null
+  currentDisplayOrder?: number
 ): Promise<number> {
-  if (
-    position.type === "current" &&
-    currentDisplayOrder !== null &&
-    currentDisplayOrder !== undefined
-  ) {
+  if (position.type === "current" && currentDisplayOrder !== undefined) {
     return currentDisplayOrder;
   }
 
@@ -85,8 +81,8 @@ export async function calculateDisplayOrder(
       .order("display_order", { ascending: false })
       .limit(1);
 
-    const maxOrder = data?.[0]?.display_order;
-    return maxOrder !== null && maxOrder !== undefined ? maxOrder + 1 : 1;
+    const maxOrder = data?.[0]?.display_order ?? 0;
+    return maxOrder + 1;
   }
 
   if (position.type === "after") {
@@ -96,8 +92,8 @@ export async function calculateDisplayOrder(
       .eq("id", position.afterId)
       .single();
 
-    const afterOrder = data?.display_order;
-    return afterOrder !== null && afterOrder !== undefined ? afterOrder + 1 : 1;
+    const afterOrder = data?.display_order ?? 0;
+    return afterOrder + 1;
   }
 
   return 1;
@@ -139,7 +135,7 @@ export async function shiftDisplayOrder(
     for (const item of affectedItems) {
       await supabase
         .from(table)
-        .update({ display_order: (item.display_order ?? 0) + 1 })
+        .update({ display_order: item.display_order + 1 })
         .eq("id", item.id);
     }
   }
@@ -161,7 +157,7 @@ export async function reorderItemsInCategory(
     .from(table)
     .select("id")
     .eq("category_id", categoryId)
-    .order("display_order", { ascending: true, nullsFirst: false });
+    .order("display_order", { ascending: true });
 
   if (!items || items.length === 0) {
     return;
