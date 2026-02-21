@@ -1,34 +1,34 @@
 import { useState, useEffect } from "react";
-import { Modal, TextInput, Select, Textarea, Button, Group } from "@mantine/core";
+import { Modal, TextInput, Select, Textarea, Button, Group, NumberInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
-import { registerDocument, updateDocument } from "@/app/services/api/documents-client";
-import type { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
+import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
+import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
-import { z } from "zod";
-import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 
-interface DocumentFormModalProps {
+interface VideoFormModalProps {
   opened: boolean;
   onClose: () => void;
   categories: SelectCategoryType[];
   userId: number;
-  initialData?: DocumentWithCategoryType;
+  initialData?: VideoWithCategoryType;
 }
 
-export function DocumentFormModal({
+export function VideoFormModal({
   opened,
   onClose,
   categories,
   userId,
   initialData,
-}: DocumentFormModalProps) {
-  const supabase = createClientSupabaseClient();
+}: VideoFormModalProps) {
   const [form, setForm] = useState({
     name: "",
     category_id: 0,
     description: "",
     url: "",
+    thumbnail_path: "",
+    thumbnail_time: 0,
+    length: 0,
     assignee_id: null as number | null,
   });
   const [users, setUsers] = useState<{
@@ -38,7 +38,7 @@ export function DocumentFormModal({
 
   // 表示順操作フック
   const { position, setPosition, positionOptions, parsePosition, handleCategoryChange } =
-    useDisplayOrderForm("documents", form.category_id, initialData?.id, !!initialData);
+    useDisplayOrderForm("videos", form.category_id, initialData?.id, !!initialData);
 
   // モーダルが開かれたときの初期化処理
   useEffect(() => {
@@ -48,25 +48,15 @@ export function DocumentFormModal({
       category_id: initialData?.category_id ?? 0,
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
+      thumbnail_path: initialData?.thumbnail_path ?? "",
+      thumbnail_time: initialData?.thumbnail_time ?? 0,
+      length: initialData?.length ?? 0,
       assignee_id: initialData?.assignee_id ?? null,
     });
 
     // 表示順の初期化
     setPosition(initialData ? "current" : "last");
   }, [opened, initialData, setPosition]);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const { data } = await supabase
-        .from("users")
-        .select("id, display_name")
-        .order("display_name");
-
-      if (data) setUsers(data);
-    };
-
-    fetchUsers();
-  }, []);
 
   // カテゴリー変更時の処理
   const handleCategoryChangeWrapper = async (value: string | null) => {
@@ -79,21 +69,17 @@ export function DocumentFormModal({
     if (!form.name || !form.url?.trim() || form.category_id === 0) {
       notifications.show({
         title: "入力エラー",
-        message: "資料名とURL及びカテゴリーは必須です",
+        message: "動画名とURL及びカテゴリーは必須です",
         color: "red",
       });
       return;
     }
-    // URLの形式チェック
-    const httpUrl = z.url({
-      protocol: /^https?$/,
-      hostname: z.regexes.domain,
-    });
-    const urlValidation = httpUrl.safeParse(form.url);
-    if (!urlValidation.success) {
+    // URL形式チェック
+    const urlValidation = /^https?:\/\/.+/.test(form.url);
+    if (!urlValidation) {
       notifications.show({
         title: "入力エラー",
-        message: urlValidation.error?.message || "正しいURLを入力してください",
+        message: "正しいURLを入力してください",
         color: "red",
       });
       return;
@@ -108,19 +94,22 @@ export function DocumentFormModal({
       category_id: form.category_id,
       description: form.description,
       url: form.url,
+      thumbnail_path: form.thumbnail_path,
+      thumbnail_time: form.thumbnail_time,
+      length: form.length,
       assignee_id: form.assignee_id,
       position: parsedPosition,
     };
 
     // API呼び出し(編集時は更新、新規時は登録)
     const result = initialData
-      ? await updateDocument({ id: initialData.id, updated_by: userId, ...commonData })
-      : await registerDocument({ created_by: userId, ...commonData });
+      ? await updateVideo({ id: initialData.id, updated_by: userId, ...commonData })
+      : await registerVideo({ created_by: userId, ...commonData });
 
     if (result?.success) {
       notifications.show({
         title: initialData ? "更新完了" : "登録完了",
-        message: initialData ? "資料が正常に更新されました。" : "資料が正常に登録されました。",
+        message: initialData ? "動画が正常に更新されました。" : "動画が正常に登録されました。",
         color: "green",
       });
       router.refresh();
@@ -139,11 +128,11 @@ export function DocumentFormModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={initialData ? "資料編集" : "資料新規登録"}
+      title={initialData ? "動画編集" : "動画新規登録"}
       centered
     >
       <TextInput
-        label="資料名"
+        label="動画名"
         value={form.name}
         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
         required
@@ -169,10 +158,42 @@ export function DocumentFormModal({
         mb="sm"
       />
       <TextInput
-        label="資料URL"
+        label="動画URL"
         value={form.url}
         onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
         required
+        mb="sm"
+      />
+      <TextInput
+        label="サムネイル画像パス"
+        value={form.thumbnail_path}
+        onChange={e => setForm(f => ({ ...f, thumbnail_path: e.target.value }))}
+        mb="sm"
+      />
+      <NumberInput
+        label="サムネイルタイミング（秒）"
+        value={form.thumbnail_time}
+        onChange={value => setForm(f => ({ ...f, thumbnail_time: Number(value) }))}
+        min={0}
+        mb="sm"
+      />
+      <NumberInput
+        label="動画の再生時間（秒）"
+        value={form.length}
+        onChange={value => setForm(f => ({ ...f, length: Number(value) }))}
+        min={0}
+        mb="sm"
+      />
+      <Select
+        label="担当者"
+        data={
+          users.map(user => ({
+            value: String(user.id),
+            label: user.display_name
+          })) ?? []
+        }
+        value={form.assignee_id ? String(form.assignee_id) : ""}
+        onChange={(value) => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
         mb="sm"
       />
       <Select

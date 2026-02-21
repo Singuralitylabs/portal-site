@@ -18,8 +18,16 @@ export async function getItemsByCategory(
   excludeId?: number
 ): Promise<CategoryItemType[]> {
   const supabase = createClientSupabaseClient();
+
+  const needsAssignee = table === "videos" || table === "documents";
+  const selectColumns = needsAssignee
+    ? `id, name, display_order, assignee_id,
+      assignee:users!${table}_assignee_fk ( display_name )`
+    : `id, name, display_order `;
+
   let query = supabase
     .from(table)
+    .select(selectColumns)
     .select("id, name, display_order")
     .eq("category_id", categoryId)
     .eq("is_deleted", false)
@@ -37,19 +45,7 @@ export async function getItemsByCategory(
     return [];
   }
 
-  // display_order が 0 または null のアイテムを末尾に移動し、連番を振り直す
-  const sorted = (data || []).sort((a, b) => {
-    const aIsUnset = !a.display_order;
-    const bIsUnset = !b.display_order;
-    if (aIsUnset && !bIsUnset) return 1;
-    if (!aIsUnset && bIsUnset) return -1;
-    return a.display_order - b.display_order;
-  });
-
-  return sorted.map((item, index) => ({
-    ...item,
-    display_order: index + 1,
-  }));
+  return (data ?? []) as CategoryItemType[];
 }
 
 /**

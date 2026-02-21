@@ -74,7 +74,8 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `display_order` | `INTEGER`      | DEFAULT 0, NOT NULL                  | 表示順                             |
 | `created_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を作成したユーザー             |
 | `updated_by`    | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 資料を最後に更新したユーザー       |
-| `assignee`      | `VARCHAR(100)` |                                      | 資料の担当者名                     |
+| `assignee`      | `VARCHAR(100)` |                                      | （廃止）資料の担当者名             |
+| `assignee_id`   | `INTEGER`      | FOREIGN KEY(users.id)                | 資料の責任者ユーザー               |
 | `is_deleted`    | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                     |
 | `created_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                           |
 | `updated_at`    | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                           |
@@ -83,23 +84,24 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.3. videos テーブル
 
-| カラム名         | データ型       | 制約                                 | 説明                             |
-| ---------------- | -------------- | ------------------------------------ | -------------------------------- |
-| `id`             | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）   |
-| `name`           | `VARCHAR(255)` | NOT NULL                             | 動画名                           |
-| `description`    | `TEXT`         |                                      | 動画の説明文                     |
-| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類                       |
-| `url`            | `TEXT`         | NOT NULL                             | 動画へのリンク（Youtube等）      |
-| `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス               |
-| `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算） |
-| `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）         |
-| `display_order`  | `INTEGER`      | DEFAULT 0, NOT NULL                  | 表示順                           |
-| `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー           |
-| `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー     |
-| `assignee`       | `VARCHAR(100)` |                                      | 動画の担当者名（講師など）       |
-| `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                   |
-| `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                         |
-| `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                         |
+| カラム名         | データ型       | 制約                                 | 説明                                 |
+| ---------------- | -------------- | ------------------------------------ | ------------------------------------ |
+| `id`             | `SERIAL`       | PRIMARY KEY                          | レコードの一意な識別子（連番）       |
+| `name`           | `VARCHAR(255)` | NOT NULL                             | 動画名                               |
+| `description`    | `TEXT`         |                                      | 動画の説明文                         |
+| `category_id`    | `INTEGER`      | FOREIGN KEY(categories.id), NOT NULL | 動画の分類                           |
+| `url`            | `TEXT`         | NOT NULL                             | 動画へのリンク（Youtube等）          |
+| `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス                   |
+| `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算）     |
+| `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）             |
+| `display_order`  | `INTEGER`      | DEFAULT 0, NOT NULL                  | 表示順                               |
+| `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー               |
+| `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー         |
+| `assignee`       | `VARCHAR(100)` |                                      | （廃止）動画の担当者名（講師など）   |
+| `assignee_id`    | `INTEGER`      | FOREIGN KEY(users.id)                | 動画の責任者ユーザー（あるいは窓口） |
+| `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                       |
+| `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                             |
+| `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                             |
 
 ### 2.4. categories テーブル
 
@@ -187,7 +189,8 @@ erDiagram
         INTEGER display_order "表示順"
         INTEGER created_by FK "資料を作成したユーザー (users.id)"
         INTEGER updated_by FK "資料を最後に更新したユーザー (users.id)"
-        VARCHAR assignee "資料の担当者名 (最大100文字)"
+        VARCHAR assignee "（廃止）資料の担当者名 (最大100文字)"
+        INTEGER assignee_id FK "資料の責任者ユーザー（users.id）"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
@@ -205,7 +208,8 @@ erDiagram
         INTEGER display_order "表示順"
         INTEGER created_by FK "動画を作成したユーザー (users.id)"
         INTEGER updated_by FK "動画を最後に更新したユーザー (users.id)"
-        VARCHAR assignee "動画の担当者名（講師など）"
+        VARCHAR assignee "（廃止）動画の担当者名（講師など）"
+        INTEGER assignee_id FK "動画の責任者ユーザー、あるいは窓口（users.id）"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
