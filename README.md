@@ -46,31 +46,26 @@
 
 ## プロジェクト構成
 
-```text
+```
 portal-site/
-├── app/                     # Next.js App Router
-│   ├── (auth)/              # 認証関連ページ（ログイン、コールバックなど）
-│   ├── (authenticated)/     # 認証済みユーザー向けページ
-│   ├── api/                 # 外部サービスとのAPI連携
-│   ├── constants/           # 定数定義
-│   ├── components/          # 共通・機能別UIコンポーネントを配置
-│   ├── hooks/               # カスタムフック
-│   ├── providers/           # コンテキストプロバイダー
-│   ├── services/            # APIクライアント（Supabase連携）
-│   └── types/               # TypeScript型定義
-├── docs/                    # プロジェクトドキュメント
-│   ├── api-specification.md # API仕様書（GoogleカレンダーAPI / Slack通知API）
-│   ├── claude-code-guide.md # Claude Code初心者向けガイド（導入・運用ルール）
-│   ├── setup.md             # 環境構築手順
-│   ├── database.md          # データベース設計書
-│   ├── specification.md     # 機能仕様書
-│   └── testing.md           # テスト設計書
-├── supabase/                # Supabaseマイグレーション
-│   ├── migrations/          # DBマイグレーションファイル
-│   └── README.md            # Supabase設定ガイド
-├── tests/                   # テストコード
-│   └── *.test.ts            # 各種テストコード
-└── public/                  # 静的ファイル
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # 認証関連ページ（ログイン、コールバックなど）
+│   ├── (authenticated)/   # 認証済みユーザー向けページ
+│   ├── services/          # APIクライアント（Supabase連携）
+│   ├── types/             # TypeScript型定義
+│   ├── api/               # 外部サービスとのAPI連携
+│   └── constants/         # 定数定義
+├── docs/                  # プロジェクトドキュメント
+│   ├── setup.md           # 環境構築手順
+│   ├── database.md        # データベース設計書
+│   ├── specification.md   # 機能仕様書
+│   └── testing.md         # テスト設計書
+├── supabase/              # Supabaseマイグレーション
+│   ├── migrations/        # DBマイグレーションファイル
+│   └── README.md          # Supabase設定ガイド
+├── tests/                 # テストコード
+│   └── *.test.ts          # 各種テストコード
+└── public/                # 静的ファイル
 ```
 
 ## 開発環境の構築
