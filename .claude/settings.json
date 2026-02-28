@@ -39,6 +39,10 @@
       "mcp__supabase__get_table",
       "mcp__supabase__execute_sql"
     ],
-    "deny": []
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)"
+    ]
   }
 }
