@@ -36,10 +36,11 @@ Singularity Labメンバー向けの会員制ポータルサイト。Google認�
 ## 開発コマンド
 
 ```bash
-npm run dev      # 開発サーバー（Turbopack）
-npm run build    # 本番ビルド
-npm run lint     # ESLint
-npm run db:types # Supabase型生成
+npm run dev        # 開発サーバー（Turbopack）
+npm run build      # 本番ビルド
+npm run lint       # ESLint
+npm run type-check # 型チェック（tsc --noEmit）
+npm run db:types   # Supabase型生成
 ```
 
 ## ディレクトリ構造
@@ -89,15 +90,15 @@ npm run db:types # Supabase型生成
 
 ### データアクセス
 
-- サーバーサイド: `createServerSupabaseClient()`（`services/api/supabase-server.ts`）
-- クライアントサイド: `createClientSupabaseClient()`（`services/api/supabase-client.ts`）
+- サーバーサイド: `createServerSupabaseClient()`（`app/services/api/supabase-server.ts`）
+- クライアントサイド: `createClientSupabaseClient()`（`app/services/api/supabase-client.ts`）
 
 ## 実装後の確認
 
 コード変更を行った後、以下のチェックを順番に実行し、すべて通ることを確認する。エラーがあれば修正してから完了とする。
 
 1. `npm run lint` - ESLintチェック
-2. `npx tsc --noEmit` - 型チェック
+2. `npm run type-check` - 型チェック
 3. `npm run build` - ビルドチェック
 
 ## 禁止事項
