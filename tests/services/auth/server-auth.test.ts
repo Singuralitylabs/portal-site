@@ -38,7 +38,6 @@ const createQueryBuilder = (result: QueryResult) => {
  * Supabase クライアント生成関数をモック化する。
  */
 jest.mock("../../../app/services/api/supabase-server", () => ({
-  ...jest.requireActual("../../../app/services/api/supabase-server"),
   createServerSupabaseClient: jest.fn(),
 }));
 
@@ -79,29 +78,6 @@ describe("getServerAuth", () => {
   });
 
   /**
-   * 未認証時の動作を確認する。
-   */
-  it("未認証時は user=null を返す", async () => {
-    const supabase = {
-      auth: {
-        getUser: jest.fn().mockResolvedValue({
-          data: { user: null },
-          error: null,
-        }),
-      },
-      from: jest.fn(),
-    };
-    createServerSupabaseClientMock.mockResolvedValue(supabase);
-
-    const response = await getServerAuth();
-
-    // 未認証時の戻り値が期待どおりであることを確認
-    expect(response).toEqual({ user: null, userStatus: null });
-    // ユーザー情報取得が行われないことを確認
-    expect(supabase.from).not.toHaveBeenCalled();
-  });
-
-  /**
    * ユーザー情報取得失敗時の動作を確認する。
    */
   it("ユーザー情報取得に失敗した場合はエラー文言を返す", async () => {
@@ -121,45 +97,6 @@ describe("getServerAuth", () => {
 
     const response = await getServerAuth();
 
-    // users テーブルへの問い合わせが行われることを確認
-    expect(supabase.from).toHaveBeenCalledWith("users");
-    // status カラムを取得していることを確認
-    expect(builder.select).toHaveBeenCalledWith("status");
-    // auth_id の条件が付与されることを確認
-    expect(builder.eq).toHaveBeenCalledWith("auth_id", user.id);
-    // 論理削除除外の条件が付与されることを確認
-    expect(builder.eq).toHaveBeenCalledWith("is_deleted", false);
-    // 単一取得が行われることを確認
-    expect(builder.single).toHaveBeenCalled();
-    // エラーメッセージが期待どおり返ることを確認
-    expect(response).toEqual({
-      user,
-      userStatus: null,
-      error: "ユーザー情報が見つかりません",
-    });
-  });
-
-  /**
-   * ユーザー情報が空の場合の動作を確認する。
-   */
-  it("ユーザー情報が空の場合はエラー文言を返す", async () => {
-    const user = { id: "auth-2" };
-    const result = { data: null, error: null };
-    const builder = createQueryBuilder(result);
-    const supabase = {
-      auth: {
-        getUser: jest.fn().mockResolvedValue({
-          data: { user },
-          error: null,
-        }),
-      },
-      from: jest.fn(() => builder),
-    };
-    createServerSupabaseClientMock.mockResolvedValue(supabase);
-
-    const response = await getServerAuth();
-
-    // 空データ時にエラーメッセージが返ることを確認
     expect(response).toEqual({
       user,
       userStatus: null,

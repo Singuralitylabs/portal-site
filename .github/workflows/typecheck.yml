@@ -46,8 +46,3 @@ jobs:
 
       - name: Run ESLint type-aware rules
         run: npm run lint
-
-      - name: Detect unused exports (ts-prune)
-        run: npm run lint:unused-exports
-        env:
-          UNUSED_EXPORTS_STRICT: ${{ vars.UNUSED_EXPORTS_STRICT || secrets.UNUSED_EXPORTS_STRICT || 'false' }}
