@@ -7,12 +7,14 @@ on:
       - "tests/**"
       - "jest.config.js"
       - "package.json"
+      - "package-lock.json"
   pull_request:
     paths:
       - "app/**"
       - "tests/**"
       - "jest.config.js"
       - "package.json"
+      - "package-lock.json"
   workflow_dispatch:
 
 jobs:

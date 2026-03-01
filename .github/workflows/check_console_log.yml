@@ -4,9 +4,15 @@ on:
   push:
     paths:
       - "app/**"
+      - "scripts/lint-logs.cjs"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
     paths:
       - "app/**"
+      - "scripts/lint-logs.cjs"
+      - "package.json"
+      - "package-lock.json"
   workflow_dispatch:
 
 jobs:
