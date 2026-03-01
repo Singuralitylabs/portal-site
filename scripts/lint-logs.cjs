@@ -26,7 +26,8 @@ function walk(dir, collector) {
 }
 
 function isAllowed(filePath, line) {
-  return ALLOW_LIST.some(({ file, includes }) => filePath.endsWith(file) && line.includes(includes));
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  return ALLOW_LIST.some(({ file, includes }) => normalizedPath.endsWith(file) && line.includes(includes));
 }
 
 function main() {
