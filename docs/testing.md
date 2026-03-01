@@ -153,8 +153,8 @@ GitHub Actions は CI/CD の実行基盤として利用する。詳細は各ワ�
 | --- | --- | --- | --- |
 | Build Test ([.github/workflows/build.yml](../.github/workflows/build.yml)) | 本番相当のビルド成立性を検証 | 依存関係インストール + ビルド | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
 | TypeScript Type Check ([.github/workflows/typecheck.yml](../.github/workflows/typecheck.yml)) | 型安全性と静的品質の早期検出 | 型チェック + ESLint | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
-| Jest Unit Tests ([.github/workflows/test.yml](../.github/workflows/test.yml)) | ユニットテスト実行 | ユニットテスト | `push` / `pull_request`（`app/**`, `tests/**`, `jest.config.js`, `package.json`）、`workflow_dispatch` |
-| Check console.log and debugger ([.github/workflows/check_console_log.yml](../.github/workflows/check_console_log.yml)) | デバッグ用出力の混入を防止 | console/debugger 検査 | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| Jest Unit Tests ([.github/workflows/test.yml](../.github/workflows/test.yml)) | ユニットテスト実行 | ユニットテスト | `push` / `pull_request`（`app/**`, `tests/**`, `jest.config.js`, `package.json`, `package-lock.json`）、`workflow_dispatch` |
+| Check console.log and debugger ([.github/workflows/check_console_log.yml](../.github/workflows/check_console_log.yml)) | デバッグ用出力の混入を防止 | console/debugger 検査 | `push` / `pull_request`（`app/**`, `scripts/lint-logs.cjs`, `package.json`, `package-lock.json`）、`workflow_dispatch` |
 | Supabase DB Types Consistency ([.github/workflows/db-types.yml](../.github/workflows/db-types.yml)) | DB 型定義の整合性監視（準備中） | 依存関係インストール（型生成/差分チェックは保留） | `push` / `pull_request`（`supabase/**`, `app/types/lib/database.types.ts` 等）、`workflow_dispatch` |
 
 ### 4.2 導入済みツール
