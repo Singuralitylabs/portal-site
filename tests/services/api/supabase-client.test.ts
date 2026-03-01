@@ -34,6 +34,8 @@ const supabaseClientActual = jest.requireActual(
 
 type QueryResult = { data: unknown; error: unknown };
 
+const ORIGINAL_ENV = process.env;
+
 jest.mock("@supabase/ssr", () => ({
   createBrowserClient: jest.fn(),
 }));
@@ -103,6 +105,11 @@ describe("supabase-client", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env = { ...ORIGINAL_ENV };
+  });
+
+  afterAll(() => {
+    process.env = ORIGINAL_ENV;
   });
 
   it("環境変数を利用して Supabase クライアントを生成する", () => {
