@@ -9,7 +9,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:types": "source .env.local && npx supabase gen types --lang=typescript --project-id ${SUPABASE_PROJECT_ID} --schema public > app/types/lib/database.types.ts",
-    "test": "jest --coverage"
+    "lint:logs": "node scripts/lint-logs.cjs",
+    "test": "jest --verbose --coverage"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
