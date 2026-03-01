@@ -84,6 +84,7 @@ describe("getItemsByCategory", () => {
 
     const result = await getItemsByCategory("documents", 9, 3);
 
+    // 対象カテゴリかつ excludeId 除外後の取得結果が返ることを確認
     expect(result).toEqual(mockData);
   });
 
@@ -101,7 +102,9 @@ describe("getItemsByCategory", () => {
 
     const result = await getItemsByCategory("documents", 1);
 
+    // 取得失敗時に空配列へフォールバックすることを確認
     expect(result).toEqual([]);
+    // 取得失敗時に対象テーブル名付きでエラーログが出ることを確認
     expect(consoleSpy).toHaveBeenCalledWith("documents一覧取得エラー:", "fetch failed");
 
     consoleSpy.mockRestore();
@@ -134,6 +137,7 @@ describe("calculateDisplayOrder", () => {
 
     const result = await calculateDisplayOrder("videos", 4, { type: "last" });
 
+    // 末尾配置では最大 display_order + 1 が返ることを確認
     expect(result).toBe(6);
   });
 
@@ -164,6 +168,7 @@ describe("calculateDisplayOrder", () => {
       afterId: 25,
     });
 
+    // after 指定では基準レコードの次順位が返ることを確認
     expect(result).toBe(11);
   });
 
@@ -209,9 +214,13 @@ describe("shiftDisplayOrder", () => {
 
     await shiftDisplayOrder("documents", 7, 3, 99);
 
+    // 1件目の対象が display_order=5 へ更新されることを確認
     expect(firstUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 5 });
+    // 1件目の更新対象IDが正しいことを確認
     expect(firstUpdateBuilder.eq).toHaveBeenCalledWith("id", 2);
+    // 2件目の対象が display_order=4 へ更新されることを確認
     expect(secondUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 4 });
+    // 2件目の更新対象IDが正しいことを確認
     expect(secondUpdateBuilder.eq).toHaveBeenCalledWith("id", 1);
   });
 });
@@ -237,7 +246,9 @@ describe("reorderItemsInCategory", () => {
     await reorderItemsInCategory("videos", 5);
 
     updateBuilders.forEach((builder, index) => {
+      // 先頭から連番(1始まり)で display_order が再設定されることを確認
       expect(builder.update).toHaveBeenCalledWith({ display_order: index + 1 });
+      // 各 update が対応する item.id を対象にしていることを確認
       expect(builder.eq).toHaveBeenCalledWith("id", items[index].id);
     });
   });

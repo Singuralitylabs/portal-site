@@ -14,10 +14,16 @@ import { fetchVideoById, fetchVideos } from "../../../app/services/api/videos-se
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+/**
+ * サーバー側 Supabase サービス群のテスト。
+ * - 対象関数: 各 fetch 系関数 / createServerSupabaseClient / getServerCurrentUser
+ * - 検証観点: 正常系データ返却、異常系エラー返却、環境変数を使ったクライアント生成
+ */
 const supabaseServerActual = jest.requireActual(
   "../../../app/services/api/supabase-server"
 ) as typeof import("../../../app/services/api/supabase-server");
 
+// Supabase クエリ戻り値の共通型
 type QueryResult = { data: unknown; error: unknown };
 
 jest.mock("../../../app/services/api/supabase-server", () => ({
@@ -33,6 +39,7 @@ jest.mock("next/headers", () => ({
   cookies: jest.fn(),
 }));
 
+// select(...).eq(...).order(...) で終端する一覧取得クエリ用モック
 const createOrderBuilder = (result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock; order?: jest.Mock } = {};
   builder.select = jest.fn(() => builder);
@@ -41,6 +48,7 @@ const createOrderBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// select(...).eq(...).maybeSingle() で終端する単体取得クエリ用モック
 const createMaybeSingleBuilder = (result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock; maybeSingle?: jest.Mock } = {};
   builder.select = jest.fn(() => builder);
@@ -49,6 +57,7 @@ const createMaybeSingleBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// eq の呼び出し回数に応じて終端結果を返すモック（複数 eq 条件の検証用）
 const createEqTerminatingBuilder = (eqCallCount: number, result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock } = {};
   let calls = 0;
@@ -63,6 +72,7 @@ const createEqTerminatingBuilder = (eqCallCount: number, result: QueryResult) =>
   return builder as Required<typeof builder>;
 };
 
+// update(...).eq(...).select().single() で終端する更新系クエリ用モック
 const createUpdateSelectSingleBuilder = (result: QueryResult) => {
   const builder: { update?: jest.Mock; eq?: jest.Mock; select?: jest.Mock; single?: jest.Mock } = {};
   builder.update = jest.fn(() => builder);
@@ -72,6 +82,7 @@ const createUpdateSelectSingleBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// サーバー API サービス（documents/applications/categories/videos/users）のテスト
 describe("server API services", () => {
   const createServerSupabaseClientMock = createServerSupabaseClient as jest.Mock;
 
@@ -85,6 +96,7 @@ describe("server API services", () => {
     { label: "fetchCategoriesByType", run: () => fetchCategoriesByType("document") },
     { label: "fetchVideos", run: () => fetchVideos() },
   ])("$label", ({ run }) => {
+    // 呼び出し関数: fetchDocuments/fetchApplications/fetchCategoriesByType/fetchVideos
     it("正常系: 一覧を返す", async () => {
       const result = { data: [{ id: 1 }], error: null };
       const builder = createOrderBuilder(result);
@@ -93,6 +105,7 @@ describe("server API services", () => {
 
       const response = await run();
 
+      // 一覧取得成功時に data が返り error は null になることを確認
       expect(response).toEqual({ data: result.data, error: null });
     });
 
@@ -105,12 +118,15 @@ describe("server API services", () => {
 
       const response = await run();
 
+      // 一覧取得失敗時に data=null とエラーが返ることを確認
       expect(response).toEqual({ data: null, error: result.error });
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
   });
 
+  // 単体取得 API の代表ケース
   describe("fetchVideoById", () => {
     it("正常系: 単一動画を返す", async () => {
       const result = { data: { id: 1 }, error: null };
@@ -120,6 +136,7 @@ describe("server API services", () => {
 
       const response = await fetchVideoById(1);
 
+      // 単体取得成功時に動画データが返ることを確認
       expect(response).toEqual({ data: result.data, error: null });
     });
 
@@ -132,18 +149,22 @@ describe("server API services", () => {
 
       const response = await fetchVideoById(1);
 
+      // 単体取得失敗時に data=null とエラーが返ることを確認
       expect(response).toEqual({ data: null, error: result.error });
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
   });
 
+  // users-server 関連関数の代表ケース（正常系/異常系）
   describe("users-server", () => {
     it("fetchUserStatusByIdInServer: 正常系/異常系", async () => {
       const successBuilder = createMaybeSingleBuilder({ data: { status: "active" }, error: null });
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserStatusByIdInServer({ authId: "auth-1" });
+      // 正常系では status が返り error は null になることを確認
       expect(success).toEqual({ status: "active", error: null });
 
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -152,7 +173,9 @@ describe("server API services", () => {
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => failBuilder) });
 
       const failed = await fetchUserStatusByIdInServer({ authId: "auth-2" });
+      // 異常系では status=null とエラーが返ることを確認
       expect(failed).toEqual({ status: null, error });
+      // 異常系でエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -162,6 +185,7 @@ describe("server API services", () => {
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserInfoByAuthId({ authId: "auth-3" });
+      // 正常系ではユーザー情報(id/role)が返ることを確認
       expect(success).toEqual({ id: 1, role: "admin", error: null });
 
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -170,7 +194,9 @@ describe("server API services", () => {
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => failBuilder) });
 
       const failed = await fetchUserInfoByAuthId({ authId: "auth-4" });
+      // 異常系では既定値(id:0, role:"" )とエラーが返ることを確認
       expect(failed).toEqual({ id: 0, role: "", error });
+      // 異常系でエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -201,6 +227,7 @@ describe("server API services", () => {
 
       const response = await fetchActiveUsers();
 
+      // 非削除の position_tags のみを含む整形結果が返ることを確認
       expect(response).toEqual({
         data: [
           expect.objectContaining({
@@ -220,6 +247,7 @@ describe("server API services", () => {
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchApprovalUsers();
+      // 承認待ちユーザー一覧の取得成功時の戻り値を確認
       expect(success).toEqual({
         data: [{ id: 1, display_name: "pending", email: "p@example.com" }],
         error: null,
@@ -231,7 +259,9 @@ describe("server API services", () => {
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => failBuilder) });
 
       const failed = await fetchApprovalUsers();
+      // 一覧取得失敗時に data=null とエラーを返すことを確認
       expect(failed).toEqual({ data: null, error });
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -241,6 +271,7 @@ describe("server API services", () => {
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserByAuthIdInServer({ authId: "auth-9" });
+      // 正常系では auth_id 指定ユーザーを返すことを確認
       expect(success).toEqual({ data: { id: 9, auth_id: "auth-9" }, error: null });
 
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -249,7 +280,9 @@ describe("server API services", () => {
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => failBuilder) });
 
       const failed = await fetchUserByAuthIdInServer({ authId: "auth-10" });
+      // 異常系では data=null とエラーを返すことを確認
       expect(failed).toEqual({ data: null, error });
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -268,6 +301,7 @@ describe("server API services", () => {
         github_url: null,
         portfolio_url: null,
       });
+      // 更新成功時はエラーなし(null)が返ることを確認
       expect(success).toBeNull();
 
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -285,13 +319,16 @@ describe("server API services", () => {
         github_url: null,
         portfolio_url: null,
       });
+      // 更新失敗時はエラーオブジェクトが返ることを確認
       expect(failed).toEqual(error);
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
   });
 });
 
+// supabase-server モジュール本体のテスト
 describe("supabase-server module", () => {
   const createServerClientMock = createServerClient as jest.Mock;
   const cookiesMock = cookies as jest.Mock;
@@ -318,11 +355,13 @@ describe("supabase-server module", () => {
 
     const response = await supabaseServerActual.createServerSupabaseClient();
 
+    // createServerClient が URL/ANON KEY と cookie ハンドラで呼ばれることを確認
     expect(createServerClientMock).toHaveBeenCalledWith(
       "https://example.supabase.co",
       "anon-key",
       expect.objectContaining({ cookies: expect.any(Object) })
     );
+    // 生成したクライアントがそのまま返ることを確認
     expect(response).toBe(mockClient);
   });
 
@@ -344,11 +383,14 @@ describe("supabase-server module", () => {
     createServerClientMock.mockReturnValue(authClient);
 
     const success = await supabaseServerActual.getServerCurrentUser();
+    // 正常系で authId が抽出されることを確認
     expect(success).toEqual({ authId: "auth-ok", error: null });
 
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const failed = await supabaseServerActual.getServerCurrentUser();
+    // 異常系で authId 空文字とエラーが返ることを確認
     expect(failed).toEqual({ authId: "", error: { message: "failed" } });
+    // 異常系でエラーログが出力されることを確認
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });

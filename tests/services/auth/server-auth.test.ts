@@ -97,6 +97,7 @@ describe("getServerAuth", () => {
 
     const response = await getServerAuth();
 
+    // ユーザー情報未取得時に想定メッセージ付きで返ることを確認
     expect(response).toEqual({
       user,
       userStatus: null,

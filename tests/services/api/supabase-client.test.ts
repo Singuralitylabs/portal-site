@@ -28,10 +28,16 @@ import {
   shiftDisplayOrder,
 } from "../../../app/services/api/utils/display-order";
 
+/**
+ * クライアント側 Supabase サービス群のテスト。
+ * - 対象関数: createClientSupabaseClient / 各 content CRUD / users-client 系関数
+ * - 検証観点: 正常系戻り値、異常系エラーハンドリング、副作用(再採番)の呼び出し
+ */
 const supabaseClientActual = jest.requireActual(
   "../../../app/services/api/supabase-client"
 ) as typeof import("../../../app/services/api/supabase-client");
 
+// Supabase クエリ戻り値の共通型
 type QueryResult = { data: unknown; error: unknown };
 
 const ORIGINAL_ENV = process.env;
@@ -52,6 +58,7 @@ jest.mock("../../../app/services/api/utils/display-order", () => ({
   reorderItemsInCategory: jest.fn(),
 }));
 
+// update(...).eq(...) で完結するクエリ用モック
 const createUpdateBuilder = (result: QueryResult) => {
   const builder: { update?: jest.Mock; eq?: jest.Mock } = {};
   builder.update = jest.fn(() => builder);
@@ -59,12 +66,14 @@ const createUpdateBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// insert(...) で完結するクエリ用モック
 const createInsertBuilder = (result: QueryResult) => {
   const builder: { insert?: jest.Mock } = {};
   builder.insert = jest.fn(() => Promise.resolve(result));
   return builder as Required<typeof builder>;
 };
 
+// insert(...).select(...) で完結するクエリ用モック
 const createInsertSelectBuilder = (result: QueryResult) => {
   const builder: { insert?: jest.Mock; select?: jest.Mock } = {};
   builder.insert = jest.fn(() => builder);
@@ -72,6 +81,7 @@ const createInsertSelectBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// select(...).eq(...).single() で完結するクエリ用モック
 const createSelectSingleBuilder = (result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock; single?: jest.Mock } = {};
   builder.select = jest.fn(() => builder);
@@ -80,6 +90,7 @@ const createSelectSingleBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// select(...).eq(...).maybeSingle() で完結するクエリ用モック
 const createMaybeSingleBuilder = (result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock; maybeSingle?: jest.Mock } = {};
   builder.select = jest.fn(() => builder);
@@ -88,6 +99,7 @@ const createMaybeSingleBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// await 可能な update builder（approve/reject で利用）
 const createAwaitableUpdateBuilder = (result: QueryResult) => {
   const builder: {
     update?: jest.Mock;
@@ -100,6 +112,7 @@ const createAwaitableUpdateBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// createClientSupabaseClient 単体の確認
 describe("supabase-client", () => {
   const createBrowserClientMock = createBrowserClient as jest.Mock;
 
@@ -120,14 +133,17 @@ describe("supabase-client", () => {
 
     const response = supabaseClientActual.createClientSupabaseClient();
 
+    // createBrowserClient が環境変数の URL / ANON KEY で呼ばれることを確認
     expect(createBrowserClientMock).toHaveBeenCalledWith(
       "https://example.supabase.co",
       "anon-key"
     );
+    // ラッパー関数の戻り値として生成クライアントが返ることを確認
     expect(response).toBe(mockClient);
   });
 });
 
+// application/document/video の共通 CRUD テスト
 describe("content client services", () => {
   const createClientSupabaseClientMock = createClientSupabaseClient as jest.Mock;
   const getItemsByCategoryMock = getItemsByCategory as jest.Mock;
@@ -144,13 +160,16 @@ describe("content client services", () => {
     { label: "document", getByCategory: getDocumentsByCategory },
     { label: "video", getByCategory: getVideosByCategory },
   ])("getByCategory: $label", ({ getByCategory }) => {
+    // 呼び出し関数: getApplicationsByCategory/getDocumentsByCategory/getVideosByCategory
     it("正常系: カテゴリー内アイテム一覧を取得できる", async () => {
       const items = [{ id: 1, name: "item", display_order: 1 }];
       getItemsByCategoryMock.mockResolvedValue(items);
 
       const response = await getByCategory(10, 2);
 
+      // カテゴリ取得関数が取得結果をそのまま返すことを確認
       expect(response).toEqual(items);
+      // 共通ユーティリティ getItemsByCategory が1回呼ばれることを確認
       expect(getItemsByCategoryMock).toHaveBeenCalledTimes(1);
     });
   });
@@ -160,6 +179,7 @@ describe("content client services", () => {
     { label: "document", deleteFn: deleteDocument },
     { label: "video", deleteFn: deleteVideo },
   ])("delete: $label", ({ deleteFn }) => {
+    // 呼び出し関数: deleteApplication/deleteDocument/deleteVideo
     it("正常系: 論理削除に成功する", async () => {
       const builder = createUpdateBuilder({ data: null, error: null });
       const supabase = { from: jest.fn(() => builder) };
@@ -167,6 +187,7 @@ describe("content client services", () => {
 
       const response = await deleteFn(1, 10);
 
+      // 論理削除成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
     });
 
@@ -179,7 +200,9 @@ describe("content client services", () => {
 
       const response = await deleteFn(2, 11);
 
+      // 論理削除失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -265,6 +288,7 @@ describe("content client services", () => {
       },
     },
   ])("register/update: $label", ({ registerFn, updateFn, registerPayload, updatePayload }) => {
+    // 主要変数: registerPayload/updatePayload（入力データ）, registerFn/updateFn（対象関数）
     it("register 正常系: 成功時に success=true を返す", async () => {
       calculateDisplayOrderMock.mockResolvedValue(3);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
@@ -278,7 +302,9 @@ describe("content client services", () => {
         registerPayload
       );
 
+      // 登録成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
+      // 登録後にカテゴリ内 display_order の再採番が実行されることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
     });
 
@@ -297,8 +323,11 @@ describe("content client services", () => {
         registerPayload
       );
 
+      // 登録失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
+      // 失敗時は再採番を行わないことを確認
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -321,7 +350,9 @@ describe("content client services", () => {
         updatePayload
       );
 
+      // 更新成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
+      // カテゴリ移動時に移動元/移動先で再採番が2回行われることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(2);
     });
 
@@ -345,14 +376,18 @@ describe("content client services", () => {
         updatePayload
       );
 
+      // 更新失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
+      // 失敗時は再採番を実行しないことを確認
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
   });
 });
 
+// users-client 系関数のテスト
 describe("users-client", () => {
   const createClientSupabaseClientMock = createClientSupabaseClient as jest.Mock;
 
@@ -373,6 +408,7 @@ describe("users-client", () => {
       avatarUrl: "https://example.com/avatar.png",
     });
 
+    // 追加成功時に挿入結果(data)が返ることを確認
     expect(response).toEqual({ data: resultData, error: null });
   });
 
@@ -390,7 +426,9 @@ describe("users-client", () => {
       avatarUrl: "https://example.com/avatar2.png",
     });
 
+    // 追加失敗時に data=null とエラーが返ることを確認
     expect(response).toEqual({ data: null, error });
+    // 失敗時にエラーログが出力されることを確認
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
@@ -401,6 +439,7 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseSuccess);
 
     const success = await fetchUserRoleById({ authId: "auth-3" });
+    // 正常系では role を返し error は null になることを確認
     expect(success).toEqual({ role: "admin", error: null });
 
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -410,7 +449,9 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseFailed);
 
     const failed = await fetchUserRoleById({ authId: "auth-4" });
+    // 異常系では role=null とエラーを返すことを確認
     expect(failed).toEqual({ role: null, error });
+    // 異常系でエラーログが出力されることを確認
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
@@ -421,6 +462,7 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseSuccess);
 
     const success = await fetchUserStatusById({ authId: "auth-5" });
+    // 正常系では status を返し error は null になることを確認
     expect(success).toEqual({ status: "active", error: null });
 
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -430,7 +472,9 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseFailed);
 
     const failed = await fetchUserStatusById({ authId: "auth-6" });
+    // 異常系では status=null とエラーを返すことを確認
     expect(failed).toEqual({ status: null, error });
+    // 異常系でエラーログが出力されることを確認
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
@@ -441,6 +485,7 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseSuccess);
 
     const success = await fetchUserIdByAuthId({ authId: "auth-7" });
+    // 正常系では userId を返し error は null になることを確認
     expect(success).toEqual({ userId: 42, error: null });
 
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -450,7 +495,9 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseFailed);
 
     const failed = await fetchUserIdByAuthId({ authId: "auth-8" });
+    // 異常系では userId=null とエラーを返すことを確認
     expect(failed).toEqual({ userId: null, error });
+    // 異常系でエラーログが出力されることを確認
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
@@ -459,6 +506,7 @@ describe("users-client", () => {
     { label: "approve", fn: approveUser },
     { label: "reject", fn: rejectUser },
   ])("$label user", ({ fn }) => {
+    // 呼び出し関数: approveUser/rejectUser
     it("正常系: エラーなしを返す", async () => {
       const builder = createAwaitableUpdateBuilder({ data: null, error: null });
       const supabase = { from: jest.fn(() => builder) };
@@ -466,6 +514,7 @@ describe("users-client", () => {
 
       const response = await fn({ userId: 1 });
 
+      // 承認/却下処理が成功した場合は error=null を返すことを確認
       expect(response).toEqual({ error: null });
     });
 
@@ -478,7 +527,9 @@ describe("users-client", () => {
 
       const response = await fn({ userId: 1 });
 
+      // 承認/却下処理失敗時はエラーを返すことを確認
       expect(response).toEqual({ error });
+      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });

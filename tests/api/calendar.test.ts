@@ -1,9 +1,15 @@
 import type { NextRequest } from "next/server";
 import * as path from "path";
 
+/**
+ * Google Calendar 連携のテスト。
+ * - 対象関数: `fetchCalendarEvents`, `GET`
+ * - 検証観点: 認証情報の組み立て、イベント取得、エラー時レスポンス
+ */
 const READONLY_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
 const KEY_FILE_PATH = path.join(process.cwd(), "google-service-account.json");
 
+// Google API クライアント呼び出しを差し替えるモック
 const googleAuthMock: jest.Mock = jest.fn();
 const calendarMock: jest.Mock = jest.fn();
 let calendarEventsListMock: jest.Mock;
@@ -30,6 +36,9 @@ const ORIGINAL_ENV = { ...process.env };
 
 type RouteModule = typeof import("../../app/api/calendar/events/route");
 
+/**
+ * route handler 用の `NextRequest` 互換オブジェクトを生成する。
+ */
 const createRequest = (params: Record<string, string> = {}): NextRequest =>
   ({
     nextUrl: {
@@ -37,6 +46,10 @@ const createRequest = (params: Record<string, string> = {}): NextRequest =>
     },
   } as unknown as NextRequest);
 
+/**
+ * calendar-server モジュールを分離読み込みする。
+ * 呼び出し関数: `fetchCalendarEvents`
+ */
 const importCalendarServerModule = async () => {
   let module: typeof import("../../app/api/calendar/calendar-server");
   await jest.isolateModulesAsync(async () => {
@@ -50,6 +63,9 @@ const importCalendarServerModule = async () => {
   return module!;
 };
 
+/**
+ * route モジュールを分離読み込みし、`GET` の検証関数を実行する。
+ */
 const runWithCalendarRouteModule = async (
   handler: (module: RouteModule, responseMock: jest.Mock) => Promise<void>
 ) => {
@@ -83,6 +99,7 @@ afterAll(() => {
   process.env = ORIGINAL_ENV;
 });
 
+// サーバー側カレンダー取得関数のユニットテスト
 describe("calendar-server fetchCalendarEvents", () => {
   it("正常系: イベントを取得できる", async () => {
     process.env.GOOGLE_CALENDAR_IDS = "main:main%40example.com,sub:team%23calendar";
@@ -111,11 +128,14 @@ describe("calendar-server fetchCalendarEvents", () => {
       endDate: new Date("2024-02-01T00:00:00Z"),
     });
 
+    // GoogleAuth がサービスアカウント認証情報と readonly scope で初期化されることを確認
     expect(googleAuthMock).toHaveBeenCalledWith({
       credentials: { client_email: "svc@example.com", private_key: "key" },
       scopes: [READONLY_SCOPE],
     });
+    // Google Calendar クライアントが v3 + 認証インスタンスで生成されることを確認
     expect(calendarMock).toHaveBeenCalledWith({ version: "v3", auth: authInstance });
+    // 複数カレンダーの取得結果が統合され、期待するイベント情報が返ることを確認
     expect(result).toEqual({
       data: [
         expect.objectContaining({ id: "early", calendarId: "sub" }),
@@ -135,13 +155,17 @@ describe("calendar-server fetchCalendarEvents", () => {
     const { fetchCalendarEvents } = await importCalendarServerModule();
     const result = await fetchCalendarEvents();
 
+    // 認証失敗時に data=null とエラーメッセージを返すことを確認
     expect(result).toEqual({ data: null, error: "auth failed" });
+    // 認証段階で失敗した場合、イベント取得 API が呼ばれないことを確認
     expect(calendarEventsListMock).not.toHaveBeenCalled();
+    // 失敗時にエラーログが出力されることを確認
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
 });
 
+// API Route(GET) のレスポンス整形・エラーハンドリングのテスト
 describe("calendar events route GET", () => {
   it("正常系: イベントを返す", async () => {
     process.env.GOOGLE_CALENDAR_IDS = "primary:primary%40example.com";
@@ -160,16 +184,19 @@ describe("calendar events route GET", () => {
 
       const response = await GET(request);
 
+      // ルート側では keyFile ベースの認証設定で GoogleAuth を初期化することを確認
       expect(googleAuthMock).toHaveBeenCalledWith({
         keyFile: KEY_FILE_PATH,
         scopes: [READONLY_SCOPE],
       });
+      // Route のレスポンスが success=true とイベント配列を含むことを確認
       expect(responseMock).toHaveBeenCalledWith(
         expect.objectContaining({
           success: true,
           events: [expect.objectContaining({ id: "ok", calendarId: "primary" })],
         })
       );
+      // GET の戻り値が NextResponse.json の返却値と一致することを確認
       expect(response).toBe(payload);
     });
   });
@@ -187,6 +214,7 @@ describe("calendar events route GET", () => {
 
       const response = await GET(request);
 
+      // 例外発生時に 500 ステータスでエラー詳細を返すことを確認
       expect(responseMock).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
@@ -195,6 +223,7 @@ describe("calendar events route GET", () => {
         }),
         { status: 500 }
       );
+      // GET の戻り値がエラーレスポンスの payload と一致することを確認
       expect(response).toBe(payload);
     });
   });
