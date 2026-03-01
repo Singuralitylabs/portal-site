@@ -267,7 +267,9 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await registerFn(registerPayload);
+      const response = await (registerFn as (payload: typeof registerPayload) => Promise<unknown>)(
+        registerPayload
+      );
 
       expect(response).toEqual({ success: true, error: null });
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
@@ -284,7 +286,9 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await registerFn(registerPayload);
+      const response = await (registerFn as (payload: typeof registerPayload) => Promise<unknown>)(
+        registerPayload
+      );
 
       expect(response).toEqual({ success: false, error });
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
@@ -306,7 +310,9 @@ describe("content client services", () => {
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await updateFn(updatePayload);
+      const response = await (updateFn as (payload: typeof updatePayload) => Promise<unknown>)(
+        updatePayload
+      );
 
       expect(response).toEqual({ success: true, error: null });
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(2);
@@ -328,7 +334,9 @@ describe("content client services", () => {
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await updateFn(updatePayload);
+      const response = await (updateFn as (payload: typeof updatePayload) => Promise<unknown>)(
+        updatePayload
+      );
 
       expect(response).toEqual({ success: false, error });
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();

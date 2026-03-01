@@ -4,9 +4,15 @@ on:
   push:
     paths:
       - "app/**"
+      - "tests/**"
+      - "jest.config.js"
+      - "package.json"
   pull_request:
     paths:
       - "app/**"
+      - "tests/**"
+      - "jest.config.js"
+      - "package.json"
   workflow_dispatch:
 
 jobs:

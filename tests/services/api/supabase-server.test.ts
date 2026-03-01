@@ -80,18 +80,18 @@ describe("server API services", () => {
   });
 
   describe.each([
-    { label: "fetchDocuments", fn: fetchDocuments, args: [] as unknown[] },
-    { label: "fetchApplications", fn: fetchApplications, args: [] as unknown[] },
-    { label: "fetchCategoriesByType", fn: fetchCategoriesByType, args: ["document"] as unknown[] },
-    { label: "fetchVideos", fn: fetchVideos, args: [] as unknown[] },
-  ])("$label", ({ fn, args }) => {
+    { label: "fetchDocuments", run: () => fetchDocuments() },
+    { label: "fetchApplications", run: () => fetchApplications() },
+    { label: "fetchCategoriesByType", run: () => fetchCategoriesByType("document") },
+    { label: "fetchVideos", run: () => fetchVideos() },
+  ])("$label", ({ run }) => {
     it("正常系: 一覧を返す", async () => {
       const result = { data: [{ id: 1 }], error: null };
       const builder = createOrderBuilder(result);
       const supabase = { from: jest.fn(() => builder) };
       createServerSupabaseClientMock.mockResolvedValue(supabase);
 
-      const response = await fn(...args);
+      const response = await run();
 
       expect(response).toEqual({ data: result.data, error: null });
     });
@@ -103,7 +103,7 @@ describe("server API services", () => {
       const supabase = { from: jest.fn(() => builder) };
       createServerSupabaseClientMock.mockResolvedValue(supabase);
 
-      const response = await fn(...args);
+      const response = await run();
 
       expect(response).toEqual({ data: null, error: result.error });
       expect(consoleError).toHaveBeenCalled();
