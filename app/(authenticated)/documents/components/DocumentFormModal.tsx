@@ -176,7 +176,7 @@ export function DocumentFormModal({
         mb="sm"
       />
       <Select
-        label="担当者"
+        label="責任者"
         data={
           users.map(user => ({
             value: String(user.id),

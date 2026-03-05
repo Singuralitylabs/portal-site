@@ -12,23 +12,30 @@ import type { CategoryItemType, ContentTableType, PlacementPositionType } from "
  * @param excludeId 除外するアイテムID（編集時に自分自身を除外するため）
  * @returns アイテム一覧（id, name, display_order）
  */
+
 export async function getItemsByCategory(
   table: ContentTableType,
   categoryId: number,
   excludeId?: number
 ): Promise<CategoryItemType[]> {
   const supabase = createClientSupabaseClient();
+  let query;
 
-  const needsAssignee = table === "videos" || table === "documents";
-  const selectColumns = needsAssignee
-    ? `id, name, display_order, assignee_id,
-      assignee:users!${table}_assignee_fk ( display_name )`
-    : `id, name, display_order `;
+  if (table === "documents") {
+    query = supabase
+      .from("documents")
+      .select(
+        "id,name,display_order,assignee_id,assignee:users!documents_assignee_fk(display_name)"
+      );
+  } else if (table === "videos") {
+    query = supabase
+      .from("videos")
+      .select("id,name,display_order,assignee_id,assignee:users!videos_assignee_fk(display_name)");
+  } else {
+    query = supabase.from("applications").select("id,name,display_order");
+  }
 
-  let query = supabase
-    .from(table)
-    .select(selectColumns)
-    .select("id, name, display_order")
+  query = query
     .eq("category_id", categoryId)
     .eq("is_deleted", false)
     .order("display_order", { ascending: true, nullsFirst: false });
