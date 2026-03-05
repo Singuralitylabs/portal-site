@@ -107,3 +107,10 @@ npm run db:types   # Supabase型生成
 - `debugger` の使用禁止
 - `database.types.ts` の手動編集禁止
 - `.env.local` の内容をコードにハードコードしない
+
+## 追記: GitHub Copilot / Agent 運用
+
+既存の記載内容は維持しつつ、GitHub Copilot 向けの運用資料を追加。
+
+- `.github/copilot-instructions.md` - Copilot 共通指示・レビュー優先度（P0〜P3）
+- `.github/agents.md` - AI Agent を使った開発フローと役割分担
