@@ -6,6 +6,7 @@ import { registerDocument, updateDocument } from "@/app/services/api/documents-c
 import type { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 import { z } from "zod";
+import { isValidUrl } from "@/app/services/api/validation";
 
 interface DocumentFormModalProps {
   opened: boolean;
@@ -66,20 +67,28 @@ export function DocumentFormModal({
       });
       return;
     }
-    // URLの形式チェック
-    const httpUrl = z.url({
-      protocol: /^https?$/,
-      hostname: z.regexes.domain,
-    });
-    const urlValidation = httpUrl.safeParse(form.url);
-    if (!urlValidation.success) {
+    // URLの形式チェック_共通関数に再修正
+    if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
-        message: urlValidation.error?.message || "正しいURLを入力してください",
+        message: "URLの形式を確認してください",
         color: "red",
       });
       return;
     }
+    // const httpUrl = z.url({
+    //   protocol: /^https?$/,
+    //   hostname: z.regexes.domain,
+    // });
+    // const urlValidation = httpUrl.safeParse(form.url);
+    // if (!urlValidation.success) {
+    //   notifications.show({
+    //     title: "入力エラー",
+    //     message: urlValidation.error?.message || "正しいURLを入力してください",
+    //     color: "red",
+    //   });
+    //   return;
+    // }
 
     // positionをPlacementPositionに変換
     const parsedPosition = parsePosition(position);

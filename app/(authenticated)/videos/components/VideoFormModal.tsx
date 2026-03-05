@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
 import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
+import { isValidUrl } from "@/app/services/api/validation";
 
 interface VideoFormModalProps {
   opened: boolean;
@@ -71,16 +72,25 @@ export function VideoFormModal({
       });
       return;
     }
-    // URL形式チェック
-    const urlValidation = /^https?:\/\/.+/.test(form.url);
-    if (!urlValidation) {
+
+    // URL形式チェック_再修正（https://から始まるURLのみ許可）
+    if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
-        message: "正しいURLを入力してください",
+        message: "URLの形式を確認してください",
         color: "red",
       });
       return;
     }
+    // const urlValidation = /^https?:\/\/.+/.test(form.url);
+    // if (!urlValidation) {
+    //   notifications.show({
+    //     title: "入力エラー",
+    //     message: "正しいURLを入力してください",
+    //     color: "red",
+    //   });
+    //   return;
+    // }
 
     // positionをPlacementPositionに変換
     const parsedPosition = parsePosition(position);
