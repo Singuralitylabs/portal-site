@@ -206,6 +206,8 @@ describe("calendar events route GET", () => {
     googleAuthMock.mockImplementation(() => {
       throw new Error("route auth error");
     });
+    // 異常系テストで意図的にエラーを発生させるため、console.error の出力を抑制
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
     await runWithCalendarRouteModule(async ({ GET }, responseMock) => {
       const request = createRequest();
@@ -226,5 +228,7 @@ describe("calendar events route GET", () => {
       // GET の戻り値がエラーレスポンスの payload と一致することを確認
       expect(response).toBe(payload);
     });
+
+    consoleSpy.mockRestore();
   });
 });
