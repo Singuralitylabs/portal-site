@@ -4,9 +4,15 @@ on:
   push:
     paths:
       - "app/**"
+      - "scripts/lint-logs.cjs"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
     paths:
       - "app/**"
+      - "scripts/lint-logs.cjs"
+      - "package.json"
+      - "package-lock.json"
   workflow_dispatch:
 
 jobs:
@@ -17,26 +23,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Search for console.log or debugger
-        run: |
-          set -o pipefail
-          OUTPUT=$(find app -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) \
-            ! -path "*/node_modules/*" \
-            ! -path "*/dist/*" \
-            ! -path "*/.next/*" \
-            -print0 | xargs -0 grep -nE "console\.(log|info)|debugger" \
-            | grep -v "app/(auth)/callback/route\.ts.*\"認証成功:\", data.session.user.email" \
-            | grep -v "app/(auth)/callback/route\.ts.*\"認証セッション確立完了\"" \
-            | grep -v "app/(auth)/callback/route\.ts.*\"認証コードなしまたはエラー\")" \
-            | grep -v "app/providers/supabase-auth-provider\.tsx.*\"新規ユーザーをusersテーブルに追加:\", user.id" || true)
-          if [ -n "$OUTPUT" ]; then
-            echo "NG! console.log または console.info または debugger が見つかりました。削除してください。"
-            echo "## console.log または console.info または debugger が見つかりました" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          else
-            echo "OK! console.log または console.info または debugger は見つかりませんでした。"
-            echo "console.log または console.info または debugger は見つかりませんでした。" >> $GITHUB_STEP_SUMMARY
-          fi
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for console.log and debugger
+        run: npm run lint:logs
