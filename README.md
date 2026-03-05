@@ -59,7 +59,6 @@ portal-site/
 │   └── types/                   # TypeScript型定義
 ├── docs/                        # プロジェクトドキュメント
 │   ├── api-specification.md     # API仕様書（GoogleカレンダーAPI / Slack通知API）
-│   ├── claude-code-guide.md     # Claude Code初心者向けガイド（導入・運用ルール）
 │   ├── database.md              # データベース設計書
 │   ├── setup.md                 # 環境構築手順
 │   ├── specification.md         # 機能仕様書
