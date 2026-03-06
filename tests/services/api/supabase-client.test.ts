@@ -12,7 +12,12 @@ import {
   registerDocument,
   updateDocument,
 } from "../../../app/services/api/documents-client";
-import { deleteVideo, getVideosByCategory, registerVideo, updateVideo } from "../../../app/services/api/videos-client";
+import {
+  deleteVideo,
+  getVideosByCategory,
+  registerVideo,
+  updateVideo,
+} from "../../../app/services/api/videos-client";
 import {
   addNewUser,
   approveUser,
@@ -108,7 +113,7 @@ const createAwaitableUpdateBuilder = (result: QueryResult) => {
   } = {};
   builder.update = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
-  builder.then = (resolve) => Promise.resolve(result).then(resolve);
+  builder.then = resolve => Promise.resolve(result).then(resolve);
   return builder as Required<typeof builder>;
 };
 
@@ -134,10 +139,7 @@ describe("supabase-client", () => {
     const response = supabaseClientActual.createClientSupabaseClient();
 
     // createBrowserClient が環境変数の URL / ANON KEY で呼ばれることを確認
-    expect(createBrowserClientMock).toHaveBeenCalledWith(
-      "https://example.supabase.co",
-      "anon-key"
-    );
+    expect(createBrowserClientMock).toHaveBeenCalledWith("https://example.supabase.co", "anon-key");
     // ラッパー関数の戻り値として生成クライアントが返ることを確認
     expect(response).toBe(mockClient);
   });
@@ -298,9 +300,9 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (registerFn as (payload: typeof registerPayload) => Promise<unknown>)(
-        registerPayload
-      );
+      const response = await (
+        registerFn as unknown as (payload: typeof registerPayload) => Promise<unknown>
+      )(registerPayload);
 
       // 登録成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
@@ -319,9 +321,9 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (registerFn as (payload: typeof registerPayload) => Promise<unknown>)(
-        registerPayload
-      );
+      const response = await (
+        registerFn as unknown as (payload: typeof registerPayload) => Promise<any>
+      )(registerPayload);
 
       // 登録失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
