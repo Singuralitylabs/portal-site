@@ -1,16 +1,19 @@
 "use client";
 
 import { PageTitle } from "@/app/components/PageTitle";
-import { Button, TextInput, Textarea } from "@mantine/core";
+import { Button, MultiSelect, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect, useTransition } from "react";
-import { ProfileUserType } from "@/app/types";
+import { PositionType, ProfileUserType } from "@/app/types";
 
 interface ProfilePageTemplateProps {
   initialUser: ProfileUserType;
+  allPositions: PositionType[];
+  initialPositionIds: number[];
   updateProfile: (
     displayName: string,
     bio: string,
+    positionIds: number[],
     x_url: string | null,
     facebook_url: string | null,
     instagram_url: string | null,
@@ -19,10 +22,16 @@ interface ProfilePageTemplateProps {
   ) => Promise<{ success: boolean; message?: string }>;
 }
 
-export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageTemplateProps) {
+export function ProfilePageTemplate({
+  initialUser,
+  allPositions,
+  initialPositionIds,
+  updateProfile,
+}: ProfilePageTemplateProps) {
   const [user, setUser] = useState<ProfileUserType>(initialUser);
   const [name, setName] = useState(initialUser.display_name);
   const [bio, setBio] = useState(initialUser.bio || "");
+  const [selectedPositionIds, setSelectedPositionIds] = useState<number[]>(initialPositionIds);
   const [x_url, setXUrl] = useState(initialUser.x_url || "");
   const [facebook_url, setFacebookUrl] = useState(initialUser.facebook_url || "");
   const [instagram_url, setInstagramUrl] = useState(initialUser.instagram_url || "");
@@ -37,13 +46,14 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
     setUser(initialUser);
     setName(initialUser.display_name);
     setBio(initialUser.bio || "");
+    setSelectedPositionIds(initialPositionIds);
     setXUrl(initialUser.x_url || "");
     setFacebookUrl(initialUser.facebook_url || "");
     setInstagramUrl(initialUser.instagram_url || "");
     setGithubUrl(initialUser.github_url || "");
     setPortfolioUrl(initialUser.portfolio_url || "");
     setErrors({}); // エラーもリセット
-  }, [initialUser]);
+  }, [initialUser, initialPositionIds]);
 
   // URL形式チェック関数
   const validateUrl = (url: string | null) => {
@@ -92,6 +102,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
       const { success, message } = await updateProfile(
         name,
         bio,
+        selectedPositionIds,
         x_url || null,
         facebook_url || null,
         instagram_url || null,
@@ -160,6 +171,17 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 名前
               </label>
               <TextInput id="name" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+
+            <div>
+              <MultiSelect
+                label="活動チーム、役割など"
+                data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
+                value={selectedPositionIds.map(String)}
+                onChange={values => setSelectedPositionIds(values.map(Number))}
+                placeholder="選択してください"
+                clearable
+              />
             </div>
 
             <div>
