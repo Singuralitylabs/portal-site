@@ -1,4 +1,4 @@
-import { MemberType, PendingUserType, UserStatusType, UserType } from "@/app/types";
+import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
@@ -211,6 +211,121 @@ export async function updateUserProfileServerInServer({
   if (error) {
     console.error("Supabase プロフィール更新エラー:", error.message);
     return error;
+  }
+
+  return null;
+}
+
+/**
+ * アクティブな positions 一覧を取得する
+ * @returns { data: PositionType[] | null, error: PostgrestError | null }
+ */
+export async function fetchActivePositions(): Promise<{
+  data: PositionType[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("positions")
+    .select("*")
+    .eq("is_deleted", false)
+    .order("display_order", { ascending: true });
+
+  if (error) {
+    console.error("Supabase positions取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+/**
+ * ユーザーの position_tag IDs を取得する
+ * @param userId - ユーザーID
+ * @returns { data: number[] | null, error: PostgrestError | null }
+ */
+export async function fetchUserPositionTagsByUserId(userId: number): Promise<{
+  data: number[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("position_tags")
+    .select("position_id")
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Supabase position_tags取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data: data.map(tag => tag.position_id), error: null };
+}
+
+/**
+ * ユーザーの position_tags を更新する（既存削除 → 新規挿入）
+ * @param userId - ユーザーID
+ * @param positionIds - 設定する position ID の配列
+ * @returns PostgrestError | null
+ */
+export async function updateUserPositionTagsInServer(
+  userId: number,
+  positionIds: number[]
+): Promise<PostgrestError | null> {
+  const supabase = await createServerSupabaseClient();
+
+  const { error: deleteError } = await supabase
+    .from("position_tags")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    console.error("Supabase position_tags削除エラー:", deleteError.message);
+    return deleteError;
+  }
+
+  const uniquePositionIds = [...new Set(positionIds)];
+
+  if (uniquePositionIds.length === 0) {
+    return null;
+  }
+
+  // 既存の全IDを昇順で取得し、空きIDを小さい順に埋める
+  const { data: allIds, error: allIdsError } = await supabase
+    .from("position_tags")
+    .select("id")
+    .order("id", { ascending: true });
+
+  if (allIdsError) {
+    console.error("Supabase position_tags ID取得エラー:", allIdsError.message);
+    return allIdsError;
+  }
+
+  const existingIds = new Set((allIds ?? []).map(row => row.id));
+  const availableIds: number[] = [];
+  let candidate = 1;
+  while (availableIds.length < uniquePositionIds.length) {
+    if (!existingIds.has(candidate)) {
+      availableIds.push(candidate);
+    }
+    candidate++;
+  }
+
+  const { error: insertError } = await supabase
+    .from("position_tags")
+    .insert(
+      uniquePositionIds.map((positionId, index) => ({
+        id: availableIds[index],
+        user_id: userId,
+        position_id: positionId,
+      }))
+    );
+
+  if (insertError) {
+    console.error("Supabase position_tags挿入エラー:", insertError.message);
+    return insertError;
   }
 
   return null;

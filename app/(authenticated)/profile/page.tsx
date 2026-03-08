@@ -1,6 +1,9 @@
 import { getServerCurrentUser } from "@/app/services/api/supabase-server";
 import {
+  fetchActivePositions,
   fetchUserByAuthIdInServer,
+  fetchUserPositionTagsByUserId,
+  updateUserPositionTagsInServer,
   updateUserProfileServerInServer,
 } from "@/app/services/api/users-server";
 import { ProfilePageTemplate } from "./components/Template";
@@ -17,8 +20,11 @@ export default async function ProfilePage() {
     return <div>ユーザー情報を読み込み中...</div>;
   }
 
-  // Supabaseからユーザー情報を取得
-  const { data: user, error } = await fetchUserByAuthIdInServer({ authId });
+  // Supabaseからユーザー情報・positions を並列取得
+  const [{ data: user, error }, { data: allPositions }] = await Promise.all([
+    fetchUserByAuthIdInServer({ authId }),
+    fetchActivePositions(),
+  ]);
 
   if (error) {
     return <div>ユーザー情報の取得に失敗しました</div>;
@@ -28,10 +34,14 @@ export default async function ProfilePage() {
     return <div>ユーザー情報が存在しません。管理者にお問い合わせください。</div>;
   }
 
+  // ユーザーの position_tags を取得
+  const { data: positionIds } = await fetchUserPositionTagsByUserId(user.id);
+
   // プロフィール更新用のサーバーアクション
   const updateProfile = async (
     displayName: string,
     bio: string,
+    positionIds: number[],
     x_url: string | null,
     facebook_url: string | null,
     instagram_url: string | null,
@@ -65,8 +75,23 @@ export default async function ProfilePage() {
       return { success: false, message: "プロフィールの更新に失敗しました" };
     }
 
+    // position_tags を更新
+    const positionTagsError = await updateUserPositionTagsInServer(user.id, positionIds);
+
+    if (positionTagsError) {
+      console.error("position_tags更新エラー:", positionTagsError);
+      return { success: false, message: "活動チーム・役割の更新に失敗しました" };
+    }
+
     return { success: true };
   };
 
-  return <ProfilePageTemplate initialUser={user} updateProfile={updateProfile} />;
+  return (
+    <ProfilePageTemplate
+      initialUser={user}
+      allPositions={allPositions ?? []}
+      initialPositionIds={positionIds ?? []}
+      updateProfile={updateProfile}
+    />
+  );
 }
