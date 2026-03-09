@@ -6,6 +6,7 @@ import {
   shiftDisplayOrder,
   reorderItemsInCategory,
 } from "./utils/display-order";
+import { isValidUrl } from "@/app/services/api/validation";
 
 /**
  * 指定されたカテゴリー内の動画一覧を取得する
@@ -52,10 +53,18 @@ export async function registerVideo({
   thumbnail_path,
   thumbnail_time,
   length,
-  assignee_id,
+  assignee,
   created_by,
   position,
 }: VideoInsertFormType) {
+  // URLの形式チェック_validation.tsの共通関数に再修正_https://のみ許容
+  if (!isValidUrl(url)) {
+    return {
+      success: false,
+      error: "URLは https:// から始まる正しい形式で入力してください",
+    };
+  }
+
   // 配置位置から display_order を計算
   const display_order = await calculateDisplayOrder("videos", category_id, position);
 
@@ -74,7 +83,7 @@ export async function registerVideo({
       thumbnail_path,
       thumbnail_time,
       length,
-      assignee_id,
+      assignee,
       display_order,
       is_deleted: false,
       created_by,
@@ -107,10 +116,18 @@ export async function updateVideo({
   thumbnail_path,
   thumbnail_time,
   length,
-  assignee_id,
+  assignee,
   updated_by,
   position,
 }: VideoUpdateFormType) {
+  // URLの形式チェック_validation.tsの共通関数_https://のみ許容
+  if (!isValidUrl(url)) {
+    return {
+      success: false,
+      error: "URLは https:// から始まる正しい形式で入力してください",
+    };
+  }
+
   const supabase = createClientSupabaseClient();
 
   // 現在の動画情報を取得（現在のdisplay_orderとcategory_idを知るため）
@@ -146,7 +163,7 @@ export async function updateVideo({
       thumbnail_path,
       thumbnail_time,
       length,
-      assignee_id,
+      assignee,
       display_order,
       updated_by,
     })

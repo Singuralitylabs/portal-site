@@ -121,7 +121,6 @@ export type Database = {
       documents: {
         Row: {
           assignee: string | null;
-          assignee_id: number | null;
           category_id: number;
           created_at: string;
           created_by: number;
@@ -136,7 +135,6 @@ export type Database = {
         };
         Insert: {
           assignee?: string | null;
-          assignee_id?: number | null;
           category_id: number;
           created_at?: string;
           created_by: number;
@@ -151,7 +149,6 @@ export type Database = {
         };
         Update: {
           assignee?: string | null;
-          assignee_id?: number | null;
           category_id?: number;
           created_at?: string;
           created_by?: number;
@@ -165,13 +162,6 @@ export type Database = {
           url?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: "documents_assignee_fk";
-            columns: ["assignee_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "documents_category_id_fkey";
             columns: ["category_id"];
@@ -324,7 +314,6 @@ export type Database = {
       videos: {
         Row: {
           assignee: string | null;
-          assignee_id: number | null;
           category_id: number;
           created_at: string;
           created_by: number;
@@ -342,7 +331,6 @@ export type Database = {
         };
         Insert: {
           assignee?: string | null;
-          assignee_id?: number | null;
           category_id: number;
           created_at?: string;
           created_by: number;
@@ -360,7 +348,6 @@ export type Database = {
         };
         Update: {
           assignee?: string | null;
-          assignee_id?: number | null;
           category_id?: number;
           created_at?: string;
           created_by?: number;
@@ -377,13 +364,6 @@ export type Database = {
           url?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: "videos_assignee_fk";
-            columns: ["assignee_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "videos_category_id_fkey";
             columns: ["category_id"];

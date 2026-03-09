@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { registerDocument, updateDocument } from "@/app/services/api/documents-client";
 import type { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
-import { z } from "zod";
+import { isValidUrl } from "@/app/services/api/validation";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 
 interface DocumentFormModalProps {
@@ -31,18 +31,27 @@ export function DocumentFormModal({
     url: "",
     assignee_id: null as number | null,
   });
-  const [users, setUsers] = useState<{
-    id: number; display_name: string
-  }[]>([]);
+  const [users, setUsers] = useState<{ id: number; display_name: string }[]>([]);
   const router = useRouter();
 
   // 表示順操作フック
   const { position, setPosition, positionOptions, parsePosition, handleCategoryChange } =
     useDisplayOrderForm("documents", form.category_id, initialData?.id, !!initialData);
 
+  // 責任者リストを取得するエフェクト
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from("users")
+        .select("id, display_name")
+        .order("display_name");
+      if (data) setUsers(data);
+    };
+    fetchUsers();
+  }, []);
+
   // モーダルが開かれたときの初期化処理
   useEffect(() => {
-    // フォームを初期化
     setForm({
       name: initialData?.name ?? "",
       category_id: initialData?.category_id ?? 0,
@@ -50,25 +59,9 @@ export function DocumentFormModal({
       url: initialData?.url ?? "",
       assignee_id: initialData?.assignee_id ?? null,
     });
-
-    // 表示順の初期化
     setPosition(initialData ? "current" : "last");
   }, [opened, initialData, setPosition]);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const { data } = await supabase
-        .from("users")
-        .select("id, display_name")
-        .order("display_name");
-
-      if (data) setUsers(data);
-    };
-
-    fetchUsers();
-  }, []);
-
-  // カテゴリー変更時の処理
   const handleCategoryChangeWrapper = async (value: string | null) => {
     const categoryId = Number(value);
     setForm(f => ({ ...f, category_id: categoryId }));
@@ -84,35 +77,28 @@ export function DocumentFormModal({
       });
       return;
     }
-    // URLの形式チェック
-    const httpUrl = z.url({
-      protocol: /^https?$/,
-      hostname: z.regexes.domain,
-    });
-    const urlValidation = httpUrl.safeParse(form.url);
-    if (!urlValidation.success) {
+
+    // URLの形式チェック_validation.tsの共通関数に再修正_https://のみ許容
+    if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
-        message: urlValidation.error?.message || "正しいURLを入力してください",
+        message: "URLは https:// から始まる正しい形式で入力してください",
         color: "red",
       });
       return;
     }
 
-    // positionをPlacementPositionに変換
     const parsedPosition = parsePosition(position);
 
-    // 共通のフィールドをまとめる
     const commonData = {
       name: form.name,
       category_id: form.category_id,
       description: form.description,
       url: form.url,
-      assignee_id: form.assignee_id,
+      assignee_id: form.assignee_id, // ← assigneeからassignee_idへ
       position: parsedPosition,
     };
 
-    // API呼び出し(編集時は更新、新規時は登録)
     const result = initialData
       ? await updateDocument({ id: initialData.id, updated_by: userId, ...commonData })
       : await registerDocument({ created_by: userId, ...commonData });
@@ -124,15 +110,14 @@ export function DocumentFormModal({
         color: "green",
       });
       router.refresh();
+      onClose();
     } else {
       notifications.show({
         title: initialData ? "更新失敗" : "登録失敗",
         message: String(result?.error) || "不明なエラー",
         color: "red",
       });
-      return;
     }
-    onClose();
   };
 
   return (
@@ -175,16 +160,16 @@ export function DocumentFormModal({
         required
         mb="sm"
       />
+      {/* TextInputからSelectに変更 */}
       <Select
         label="責任者"
-        data={
-          users.map(user => ({
-            value: String(user.id),
-            label: user.display_name
-          })) ?? []
-        }
+        placeholder="責任者を選択してください"
+        data={users.map(user => ({
+          value: String(user.id),
+          label: user.display_name,
+        }))}
         value={form.assignee_id ? String(form.assignee_id) : ""}
-        onChange={(value) => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
+        onChange={value => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
         mb="sm"
       />
       <Select
