@@ -6,6 +6,7 @@ import {
   shiftDisplayOrder,
   reorderItemsInCategory,
 } from "./utils/display-order";
+import { isValidUrl } from "@/app/services/api/validation";
 
 /**
  * 指定されたカテゴリー内の資料一覧を取得する
@@ -56,10 +57,18 @@ export async function registerDocument({
   category_id,
   description,
   url,
-  assignee_id,
+  assignee,
   created_by,
   position,
 }: DocumentInsertFormType) {
+  // URLの形式チェック_validation.tsの共通関数_https://のみ許容バリデーションの追加
+  if (!isValidUrl(url)) {
+    return {
+      success: false,
+      error: "URLは https:// から始まる正しい形式で入力してください",
+    };
+  }
+
   // 配置位置から display_order を計算
   const display_order = await calculateDisplayOrder("documents", category_id, position);
 
@@ -75,7 +84,7 @@ export async function registerDocument({
       category_id,
       description,
       url,
-      assignee_id,
+      assignee,
       display_order,
       is_deleted: false,
       created_by,
@@ -108,10 +117,18 @@ export async function updateDocument({
   category_id,
   description,
   url,
-  assignee_id,
+  assignee,
   updated_by,
   position,
 }: DocumentUpdateFormType) {
+  // URLの形式チェック_validation.tsの共通関数_https://のみ許容
+  if (!isValidUrl(url)) {
+    return {
+      success: false,
+      error: "URLは https:// から始まる正しい形式で入力してください",
+    };
+  }
+
   const supabase = createClientSupabaseClient();
 
   // 現在の資料情報を取得（現在のdisplay_orderとcategory_idを知るため）
@@ -144,7 +161,7 @@ export async function updateDocument({
       category_id,
       description,
       url,
-      assignee_id,
+      assignee,
       display_order,
       updated_by,
     })

@@ -12,12 +12,7 @@ import {
   registerDocument,
   updateDocument,
 } from "../../../app/services/api/documents-client";
-import {
-  deleteVideo,
-  getVideosByCategory,
-  registerVideo,
-  updateVideo,
-} from "../../../app/services/api/videos-client";
+import { deleteVideo, getVideosByCategory, registerVideo, updateVideo } from "../../../app/services/api/videos-client";
 import {
   addNewUser,
   approveUser,
@@ -113,7 +108,7 @@ const createAwaitableUpdateBuilder = (result: QueryResult) => {
   } = {};
   builder.update = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
-  builder.then = resolve => Promise.resolve(result).then(resolve);
+  builder.then = (resolve) => Promise.resolve(result).then(resolve);
   return builder as Required<typeof builder>;
 };
 
@@ -139,7 +134,10 @@ describe("supabase-client", () => {
     const response = supabaseClientActual.createClientSupabaseClient();
 
     // createBrowserClient が環境変数の URL / ANON KEY で呼ばれることを確認
-    expect(createBrowserClientMock).toHaveBeenCalledWith("https://example.supabase.co", "anon-key");
+    expect(createBrowserClientMock).toHaveBeenCalledWith(
+      "https://example.supabase.co",
+      "anon-key"
+    );
     // ラッパー関数の戻り値として生成クライアントが返ることを確認
     expect(response).toBe(mockClient);
   });
@@ -244,7 +242,7 @@ describe("content client services", () => {
         category_id: 1,
         description: "desc",
         url: "https://doc.example.com",
-        assignee_id: 1,
+        assignee: "owner",
         created_by: 10,
         position: { type: "first" as const },
       },
@@ -254,7 +252,7 @@ describe("content client services", () => {
         category_id: 2,
         description: "desc2",
         url: "https://doc.example.com/2",
-        assignee_id: 2,
+        assignee: "owner2",
         updated_by: 11,
         position: { type: "after" as const, afterId: 3 },
       },
@@ -271,7 +269,7 @@ describe("content client services", () => {
         thumbnail_path: "/thumb.png",
         thumbnail_time: 12,
         length: 100,
-        assignee_id: 1,
+        assignee: "owner",
         created_by: 10,
         position: { type: "first" as const },
       },
@@ -284,7 +282,7 @@ describe("content client services", () => {
         thumbnail_path: "/thumb2.png",
         thumbnail_time: 20,
         length: 120,
-        assignee_id: 2,
+        assignee: "owner2",
         updated_by: 11,
         position: { type: "after" as const, afterId: 3 },
       },
@@ -300,9 +298,9 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        registerFn as unknown as (payload: typeof registerPayload) => Promise<unknown>
-      )(registerPayload);
+      const response = await (registerFn as (payload: typeof registerPayload) => Promise<unknown>)(
+        registerPayload
+      );
 
       // 登録成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
@@ -321,9 +319,9 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        registerFn as unknown as (payload: typeof registerPayload) => Promise<any>
-      )(registerPayload);
+      const response = await (registerFn as (payload: typeof registerPayload) => Promise<unknown>)(
+        registerPayload
+      );
 
       // 登録失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
@@ -348,9 +346,9 @@ describe("content client services", () => {
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        updateFn as unknown as (payload: typeof updatePayload) => Promise<unknown>
-      )(updatePayload);
+      const response = await (updateFn as (payload: typeof updatePayload) => Promise<unknown>)(
+        updatePayload
+      );
 
       // 更新成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
@@ -374,9 +372,9 @@ describe("content client services", () => {
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        updateFn as unknown as (payload: typeof updatePayload) => Promise<unknown>
-      )(updatePayload);
+      const response = await (updateFn as (payload: typeof updatePayload) => Promise<unknown>)(
+        updatePayload
+      );
 
       // 更新失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });

@@ -9,10 +9,7 @@ export async function fetchDocuments(): Promise<{
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("documents")
-    .select(
-      `*, category:categories (name),
-      assignee:users!documents_assignee_fk  (display_name)`
-    )
+    .select(`*, category:categories (name)`)
     .eq("is_deleted", false)
     .order("display_order");
 
