@@ -1,84 +1,26 @@
-# AI Agents 運用ガイド
+# AI Agents 補助ガイド
 
-GitHub Copilot Agent を使った開発効率化のための運用を定義します。
+このファイルは **AI向け** の補助エントリです。
 
-## 目的
+## 位置づけ
 
-- 変更要求の解釈ミスを減らす
-- 実装・検証・レビューのリードタイムを短縮する
-- 指摘の重要度を揃え、レビュー品質を安定化する
+- Agent 実行時の実質的な運用ルールは `.github/copilot-instructions.md` に統合する
+- 本ファイルは「Agent向けであること」の明示と、参照先案内のみに限定する
 
-## 基本フロー
+## 参照先
 
-1. **要件整理**
-   - Issue / PR / 関連ドキュメント（Wiki / docs）から、目的・完了条件・非対象を明文化する
-2. **実装**
-   - 最小差分で実装し、既存アーキテクチャ（App Router / Supabase 層）に合わせる
-3. **自己検証**
-   - 変更箇所中心に確認し、必要に応じて関連範囲を追加確認する
-4. **レビュー**
-   - `.github/copilot-instructions.md` の優先度（P0〜P3）で指摘を整理する
-5. **最終確認**
-   - `npm run lint` → `npm run type-check` → `npm run build`
+1. `.github/copilot-instructions.md`
+   - Copilot / Agent 共通の運用ルール
+   - レビュー優先度（P0〜P3）
+   - Agent の役割分担（Planner / Builder / Reviewer）
+   - 実装後チェック（`npm run lint` / `npm run type-check` / `npm run build`）
+2. GitHub Wiki（正本）
+   - コーディング規約・開発フローの詳細
+3. `docs/` 配下
+   - 機能仕様・DB設計・API仕様
 
-## Agent の役割分担
-
-### 1) Planner Agent（要件分解）
-
-- 入力: Issue本文、関連ドキュメント、既存実装
-- 出力: 作業項目、変更対象ファイル、受け入れ条件
-- ルール: 仕様外の提案は「別提案」として分離する
-
-### 2) Builder Agent（実装）
-
-- 入力: Planner Agent の作業項目
-- 出力: 最小差分のコード変更
-- ルール:
-  - 不要なファイル移動・命名変更を行わない
-  - 自動生成物（`database.types.ts`）を手編集しない
-
-### 3) Reviewer Agent（検証・指摘）
-
-- 入力: 差分、受け入れ条件、実行結果
-- 出力: P0〜P3で分類したレビュー
-- ルール:
-  - P0/P1 を先に記載する
-  - 指摘は根拠・影響・修正案をセットで示す
-  - 軽微な提案は non-blocking として分離する
-
-## 実務での運用ポイント
-
-- 1タスク1目的で Agent に依頼し、指示を曖昧にしない
-- 先に「やらないこと」を定義して過剰実装を防ぐ
-- レビューコメントは優先度付きで返し、手戻りを減らす
-- 共通ルール変更時は GitHub Wiki を更新し、Agent実行に必須な範囲は本ファイルにも同期反映する
-
-## Wiki参照と二重管理の運用
+## Wikiとの二重管理方針
 
 - GitHub Copilot / Agent は Wiki を常に自動参照できるとは限らない
-- Agentの実行品質に直結するルール（レビュー観点・必須チェック・実装制約）は `.github` 配下にも要約を保持する
-- 二重管理を許容し、差分が出た場合は Wiki を正本として `.github` 側を同期更新する
-
-## Agentで利用する必須ルール（要約）
-
-- 設計・実装・レビューでは `docs/specification.md` / `docs/database.md` / `docs/api-specification.md` との整合性を確認する
-- P0/P1（セキュリティ・重大障害リスク）を優先して指摘する
-- 変更は最小差分を原則とし、無関係なリファクタリングを避ける
-- 実装後は `npm run lint` / `npm run type-check` / `npm run build` の成功を完了条件とする
-
----
-
-## 参照ドキュメント
-
-- コーディング規約・開発フローの正本は GitHub Wiki を参照する
-- 機能仕様・DB設計・API仕様は `docs/` 配下の設計ドキュメントを参照する
-
-## Agent 実行時の完了条件（Definition of Done）
-
-- Issue / PR の目的・非対象が明文化されている
-- ブランチ名・PR 設定が運用ルールに準拠している
-- 設計レビューが必要な変更はレビュー履歴がある
-- 設計書と実装の整合性確認結果がレビューコメントまたはPR本文で確認できる
-- 既存コードとの整合性（責務分離・命名・データアクセス）が確認できる
-- 実装後に `npm run lint` / `npm run type-check` / `npm run build` が成功している
-- Copilot レビューと人手レビューの指摘に対応済みである
+- そのため、Agent実行に必須な最小ルールは `.github/copilot-instructions.md` に要約転記して保持する
+- 差分が出た場合は Wiki を正本として、`.github/copilot-instructions.md` を同期更新する

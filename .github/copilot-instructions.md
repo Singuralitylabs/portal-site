@@ -1,6 +1,6 @@
 # GitHub Copilot Instructions
 
-このファイルは、Singularity Lab Portal（`portal-site`）で GitHub Copilot を利用する際の共通指示です。
+このファイルは、Singularity Lab Portal（`portal-site`）で GitHub Copilot / Agent を利用する際の共通指示です。
 
 ## プロジェクト前提
 
@@ -18,8 +18,7 @@
 ## 運用方針
 
 - GitHub Wiki を正本（single source of truth）として扱う
-- 本ファイルは Copilot 固有の指示（レビュー観点・出力形式）のみに限定する
-- Wiki と重複する規約は本ファイルに転記しない
+- 本ファイルは Copilot / Agent の実行品質に直結する指示を定義する
 
 ## Wiki参照と二重管理の方針
 
@@ -27,12 +26,37 @@
 - コードレビュー・コード編集で必須となるルールは、本ファイルに要約して転記する
 - Wiki と本ファイルで差分が出た場合は Wiki を優先し、差分解消として本ファイルを更新する
 
+## Agent の役割分担
+
+### 1) Planner Agent（要件分解）
+
+- 入力: Issue本文、関連ドキュメント、既存実装
+- 出力: 作業項目、変更対象ファイル、受け入れ条件
+- ルール: 仕様外の提案は「別提案」として分離する
+
+### 2) Builder Agent（実装）
+
+- 入力: Planner Agent の作業項目
+- 出力: 最小差分のコード変更
+- ルール:
+  - 不要なファイル移動・命名変更を行わない
+  - 自動生成物（`database.types.ts`）を手編集しない
+
+### 3) Reviewer Agent（検証・指摘）
+
+- 入力: 差分、受け入れ条件、実行結果
+- 出力: P0〜P3で分類したレビュー
+- ルール:
+  - P0/P1 を先に記載する
+  - 指摘は根拠・影響・修正案をセットで示す
+  - 軽微な提案はノンブロッカーとして分離する
+
 ## Agent実行で必須のコーディング規約（要約）
 
 - Server Component をデフォルトとし、Client Component は `"use client"` を明示する
 - `page.tsx` はデータ取得中心、表示ロジックは同階層 `components/Template.tsx` に分離する
 - Supabase 自動生成型 `app/types/lib/database.types.ts` は手動編集しない
-- データアクセスは `app/services/api/supabase-server.ts` / `app/services/api/supabase-client.ts` を使う
+- Supabase クライアント生成は `app/services/api/supabase-server.ts` / `app/services/api/supabase-client.ts` に統一し、ページ/コンポーネントからのデータ取得・更新は `app/services/api` 配下の各 `xxx-server.ts` / `xxx-client.ts` の関数経由で行う
 - 命名規約はコンポーネント `PascalCase.tsx`、その他は `kebab-case.ts(x)` を守る
 - `console.log` / `console.info` / `debugger` を最終成果物に残さない
 
