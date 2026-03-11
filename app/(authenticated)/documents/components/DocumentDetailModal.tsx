@@ -54,6 +54,15 @@ export function DocumentDetailModal({
             </div>
           )}
         </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          {document.assignee?.display_name && (
+            <div>
+              <Text size="sm" c="dimmed" component="span" mr="xs">
+                責任者:  {document.assignee?.display_name}
+              </Text>
+            </div>
+          )}
+        </div>
 
         <Button
           color="#000"
