@@ -41,7 +41,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
                   <div>
                     {video.assignee?.display_name ? (
                       <Flex w="100%" justify="flex-end">
-                        <Text>担当：{video.assignee.display_name}</Text>
+                        <Text>責任者：{video.assignee.display_name}</Text>
                       </Flex>
                     ) : (
                       ""
