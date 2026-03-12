@@ -297,19 +297,6 @@ sequenceDiagram
 
 ### 3.4 技術仕様
 
-<<<<<<< HEAD
-=======
-- データ取得: 既存の `app/api/calendar/calendar-server.ts` の `fetchCalendarEvents()` をServer Componentから直接呼び出す
-  - `timeMin`: 当日の 00:00:00 (ISO 8601)
-  - `timeMax`: 翌日の 00:00:00 (ISO 8601,Google Calendar APIにおける'timeMax'は排他的であるため)
-- 新規APIルートの追加なし（既存の `calendar-server.ts` を再利用）
-- 使用する `CalendarEvent` 型のフィールド:
-  - `summary` - イベントタイトル
-  - `start.dateTime` / `start.date` - 開始日時（終日イベントは `start.date` を使用）
-  - `end.dateTime` / `end.date` - 終了日時（終日イベントでは `end.date` が翌日を返す排他的な終了日である点に注意）
-  - `location` - 場所（未設定の場合は非表示）
-  - `htmlLink` - Googleカレンダーへのリンク
->>>>>>> 237bb32ef1a181d1c82937ede85c8b8844d7a264
 - カレンダーAPIの詳細は [API設計書](./api-specification.md#2-googleカレンダーapi) を参照
 
 ## 4. 資料
