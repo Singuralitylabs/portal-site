@@ -29,7 +29,7 @@ export function DocumentFormModal({
     category_id: 0,
     description: "",
     url: "",
-    assignee_id: null as number | null,
+    assignee: null as string | null,
   });
   const [users, setUsers] = useState<{ id: number; display_name: string }[]>([]);
   const router = useRouter();
@@ -48,7 +48,7 @@ export function DocumentFormModal({
       if (data) setUsers(data);
     };
     fetchUsers();
-  }, []);
+  }, [supabase]);
 
   // モーダルが開かれたときの初期化処理
   useEffect(() => {
@@ -57,7 +57,7 @@ export function DocumentFormModal({
       category_id: initialData?.category_id ?? 0,
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
-      assignee_id: initialData?.assignee_id ?? null,
+      assignee: initialData?.assignee ?? null,
     });
     setPosition(initialData ? "current" : "last");
   }, [opened, initialData, setPosition]);
@@ -95,7 +95,7 @@ export function DocumentFormModal({
       category_id: form.category_id,
       description: form.description,
       url: form.url,
-      assignee_id: form.assignee_id, // ← assigneeからassignee_idへ
+      assignee: form.assignee,
       position: parsedPosition,
     };
 
@@ -168,8 +168,8 @@ export function DocumentFormModal({
           value: String(user.id),
           label: user.display_name,
         }))}
-        value={form.assignee_id ? String(form.assignee_id) : ""}
-        onChange={value => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
+        value={form.assignee ? String(form.assignee) : ""}
+        onChange={value => setForm(f => ({ ...f, assignee: value }))}
         mb="sm"
       />
       <Select
