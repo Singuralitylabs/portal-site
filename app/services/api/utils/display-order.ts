@@ -12,30 +12,15 @@ import type { CategoryItemType, ContentTableType, PlacementPositionType } from "
  * @param excludeId 除外するアイテムID（編集時に自分自身を除外するため）
  * @returns アイテム一覧（id, name, display_order）
  */
-
 export async function getItemsByCategory(
   table: ContentTableType,
   categoryId: number,
   excludeId?: number
 ): Promise<CategoryItemType[]> {
   const supabase = createClientSupabaseClient();
-  let query;
-
-  if (table === "documents") {
-    query = supabase
-      .from("documents")
-      .select(
-        "id,name,display_order,assignee_id,assignee:users!documents_assignee_fk(display_name)"
-      );
-  } else if (table === "videos") {
-    query = supabase
-      .from("videos")
-      .select("id,name,display_order,assignee_id,assignee:users!videos_assignee_fk(display_name)");
-  } else {
-    query = supabase.from("applications").select("id,name,display_order");
-  }
-
-  query = query
+  let query = supabase
+    .from(table)
+    .select("id, name, display_order")
     .eq("category_id", categoryId)
     .eq("is_deleted", false)
     .order("display_order", { ascending: true, nullsFirst: false });
@@ -52,7 +37,19 @@ export async function getItemsByCategory(
     return [];
   }
 
-  return (data ?? []) as CategoryItemType[];
+  // display_order が 0 または null のアイテムを末尾に移動し、連番を振り直す
+  const sorted = (data || []).sort((a, b) => {
+    const aIsUnset = !a.display_order;
+    const bIsUnset = !b.display_order;
+    if (aIsUnset && !bIsUnset) return 1;
+    if (!aIsUnset && bIsUnset) return -1;
+    return a.display_order - b.display_order;
+  });
+
+  return sorted.map((item, index) => ({
+    ...item,
+    display_order: index + 1,
+  }));
 }
 
 /**

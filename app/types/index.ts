@@ -4,30 +4,28 @@ import { Database } from "./lib/database.types";
 type DocumentsTable = Database["public"]["Tables"]["documents"];
 export type DocumentWithCategoryType = DocumentsTable["Row"] & {
   category: { name: string } | null;
-  assignee?: { id: number; display_name: string } | null;
 };
 export type DocumentInsertFormType = Omit<
   DocumentsTable["Row"],
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order" | "assignee"
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
 > & { position: PlacementPositionType };
 export type DocumentUpdateFormType = Omit<
   DocumentsTable["Row"],
-  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order" | "assignee"
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
 > & { position: PlacementPositionType };
 
 // Videos types
 type VideosTable = Database["public"]["Tables"]["videos"];
 export type VideoWithCategoryType = VideosTable["Row"] & {
   category: { name: string } | null;
-  assignee?: { id: number; display_name: string } | null;
 };
 export type VideoInsertFormType = Omit<
   VideosTable["Row"],
-  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order" | "assignee"
+  "id" | "created_at" | "updated_at" | "updated_by" | "is_deleted" | "display_order"
 > & { position: PlacementPositionType };
 export type VideoUpdateFormType = Omit<
   VideosTable["Row"],
-  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order" | "assignee"
+  "created_at" | "updated_at" | "created_by" | "is_deleted" | "display_order"
 > & { position: PlacementPositionType };
 
 // Applications types
@@ -108,12 +106,7 @@ export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
 // Categories types
 type CategoriesTable = Database["public"]["Tables"]["categories"];
 export type CategoryType = CategoriesTable["Row"];
-type BaseCategoryItem = Pick<CategoryType, "id" | "name" | "display_order">;
-type WithAssignee = {
-  assignee_id?: number | null;
-  assignee?: { id: number; display_name: string } | null;
-};
-export type CategoryItemType = BaseCategoryItem & Partial<WithAssignee>;
+export type CategoryItemType = Pick<CategoryType, "id" | "name" | "display_order">;
 
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
 
