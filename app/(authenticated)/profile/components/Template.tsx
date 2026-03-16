@@ -5,6 +5,7 @@ import { Button, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect, useTransition } from "react";
 import { ProfileUserType } from "@/app/types";
+import { validateUrls } from "@/app/services/api/validation_url";
 
 interface ProfilePageTemplateProps {
   initialUser: ProfileUserType;
@@ -45,40 +46,44 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
     setErrors({}); // エラーもリセット
   }, [initialUser]);
 
-  // URL形式チェック関数
-  const validateUrl = (url: string | null) => {
-    if (!url) return true;
-    return /^https?:\/\//.test(url);
-  };
-
   // プロフィール更新処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // URLのバリデーションチェック
-    const newErrors: Record<string, string> = {};
-    if (!validateUrl(x_url))
-      newErrors.x_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(facebook_url))
-      newErrors.facebook_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(instagram_url))
-      newErrors.instagram_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(github_url))
-      newErrors.github_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(portfolio_url))
-      newErrors.portfolio_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
+    // URLの形式チェック_validation_url.tsの共通関数に再修正_httpsのみ許容
+    const urlData = {
+      x_url,
+      facebook_url,
+      instagram_url,
+      github_url,
+      portfolio_url,
+    };
 
-    // URL入力にエラーがあれば表示して中断
-    if (Object.keys(newErrors).length > 0) {
+    const invalidFields = validateUrls(urlData);
+
+    if (invalidFields.length > 0) {
+      const newErrors: Record<string, string> = {};
+      const urlErrorMessage =
+        "URLは https:// から始まる正しい形式で入力してください。無ければ空欄にしてください。";
+
+      invalidFields.forEach(field => {
+        newErrors[field] = urlErrorMessage;
+      });
+
       setErrors(newErrors);
+
+      const fieldLabels: Record<string, string> = {
+        x_url: "X_URL",
+        facebook_url: "Facebook_URL",
+        instagram_url: "Instagram_URL",
+        github_url: "GitHub URL",
+        portfolio_url: "ポートフォリオのURL",
+      };
+      const invalidLabels = invalidFields.map(field => fieldLabels[field] || field);
+      const errorMessage = `次のフィールドに無効なURLが含まれています:\n${invalidLabels.join(", ")}`;
       notifications.show({
         title: "入力エラー",
-        message: "URLの形式を確認してください",
+        message: errorMessage,
         color: "red",
       });
       return;
