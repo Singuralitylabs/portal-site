@@ -13,6 +13,7 @@ import {
   User,
   Users,
   Calendar,
+  FolderTree,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -69,20 +70,31 @@ const ADMIN_NAV_ITEM: NavItem = {
   icon: <Settings className="h-5 w-5" />,
 };
 
+const CATEGORY_ADMIN_NAV_ITEM: NavItem = {
+  title: "カテゴリー管理",
+  href: "/categories",
+  icon: <FolderTree className="h-5 w-5" />,
+};
+
 const LOGOUT_NAV_ITEM: NavItem = {
   title: "ログアウト",
   href: "/login",
   icon: <LogOut className="h-5 w-5" />,
 };
 
-export function SideNav({ isAdmin }: { isAdmin: boolean }) {
+export function SideNav({ isAdmin, isContentMgr }: { isAdmin: boolean; isContentMgr: boolean }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
   // isAdminに応じて動的にnavItemsを構築
   const navItems = useMemo<NavItem[]>(
-    () => [...DEFAULT_NAV_ITEMS, ...(isAdmin ? [ADMIN_NAV_ITEM] : []), LOGOUT_NAV_ITEM],
-    [isAdmin]
+    () => [
+      ...DEFAULT_NAV_ITEMS,
+      ...(isContentMgr ? [CATEGORY_ADMIN_NAV_ITEM] : []),
+      ...(isAdmin ? [ADMIN_NAV_ITEM] : []),
+      LOGOUT_NAV_ITEM,
+    ],
+    [isAdmin, isContentMgr]
   );
 
   const handleSignOut = async () => {

@@ -51,6 +51,7 @@ export type ApplicationUpdateFormType = Omit<
 
 export type ContentType = "document" | "video" | "application";
 export type ContentTableType = "documents" | "videos" | "applications";
+export type CategoryTypeValue = "documents" | "videos" | "applications";
 
 // Display order placement position types
 export type PlacementPositionType =
@@ -116,6 +117,25 @@ type WithAssignee = {
 export type CategoryItemType = BaseCategoryItem & Partial<WithAssignee>;
 
 export type SelectCategoryType = Pick<CategoryType, "id" | "name">;
+export type CategoryManagementItemType = Pick<
+  CategoryType,
+  "id" | "category_type" | "name" | "description" | "display_order"
+>;
+
+export type CategoryInsertFormType = {
+  category_type: CategoryTypeValue;
+  name: string;
+  description: string | null;
+  position: PlacementPositionType;
+};
+
+export type CategoryUpdateFormType = {
+  id: number;
+  category_type: CategoryTypeValue;
+  name: string;
+  description: string | null;
+  position: PlacementPositionType;
+};
 
 // Positions types
 type PositionsTable = Database["public"]["Tables"]["positions"];
