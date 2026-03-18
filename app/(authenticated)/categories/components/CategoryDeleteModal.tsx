@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Group, Modal, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";

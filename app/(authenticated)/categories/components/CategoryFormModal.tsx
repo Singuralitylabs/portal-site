@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { Button, Group, Modal, Select, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";

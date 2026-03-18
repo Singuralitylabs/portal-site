@@ -51,7 +51,7 @@ export type ApplicationUpdateFormType = Omit<
 
 export type ContentType = "document" | "video" | "application";
 export type ContentTableType = "documents" | "videos" | "applications";
-export type CategoryTypeValue = "documents" | "videos" | "applications";
+export type CategoryTypeValue = ContentTableType;
 
 // Display order placement position types
 export type PlacementPositionType =

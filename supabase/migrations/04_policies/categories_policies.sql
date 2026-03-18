@@ -31,6 +31,8 @@ CREATE POLICY "content_managers_can_insert_categories" ON "categories"
   FOR INSERT
   TO authenticated
   WITH CHECK (
+    is_deleted = FALSE
+    AND
     EXISTS (
       SELECT 1 FROM users
       WHERE

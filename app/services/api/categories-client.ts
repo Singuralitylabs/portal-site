@@ -56,7 +56,7 @@ async function calculateCategoryDisplayOrder(
   const supabase = createClientSupabaseClient();
 
   if (position.type === "last") {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("categories")
       .select("display_order")
       .eq("category_type", categoryType)
@@ -64,18 +64,30 @@ async function calculateCategoryDisplayOrder(
       .order("display_order", { ascending: false })
       .limit(1);
 
+    if (error) {
+      throw new Error(`表示順の取得に失敗しました: ${error.message}`);
+    }
+
     const maxDisplayOrder = data?.[0]?.display_order ?? 0;
     return maxDisplayOrder + 1;
   }
 
   if (position.type === "after") {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("categories")
       .select("display_order")
       .eq("id", position.afterId)
+      .eq("category_type", categoryType)
+      .eq("is_deleted", false)
       .single();
 
-    const afterDisplayOrder = data?.display_order ?? 0;
+    if (error || !data) {
+      throw new Error(error?.message ?? "挿入位置のカテゴリーが見つかりません。", {
+        cause: error,
+      });
+    }
+
+    const afterDisplayOrder = data.display_order;
     return afterDisplayOrder + 1;
   }
 
@@ -101,40 +113,60 @@ async function shiftCategoryDisplayOrder(
     query = query.neq("id", excludeId);
   }
 
-  const { data: affectedCategories } = await query;
+  const { data: affectedCategories, error: selectError } = await query;
+
+  if (selectError) {
+    throw new Error(`表示順更新対象の取得に失敗しました: ${selectError.message}`);
+  }
 
   if (!affectedCategories || affectedCategories.length === 0) {
     return;
   }
 
-  for (const category of affectedCategories) {
-    await supabase
-      .from("categories")
-      .update({ display_order: category.display_order + 1 })
-      .eq("id", category.id);
-  }
+  await Promise.all(
+    affectedCategories.map(async category => {
+      const { error } = await supabase
+        .from("categories")
+        .update({ display_order: category.display_order + 1 })
+        .eq("id", category.id);
+
+      if (error) {
+        throw new Error(`表示順更新に失敗しました(id: ${category.id}): ${error.message}`);
+      }
+    })
+  );
 }
 
 async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise<void> {
   const supabase = createClientSupabaseClient();
 
-  const { data: categories } = await supabase
+  const { data: categories, error: selectError } = await supabase
     .from("categories")
     .select("id")
     .eq("category_type", categoryType)
     .eq("is_deleted", false)
     .order("display_order", { ascending: true });
 
+  if (selectError) {
+    throw new Error(`並び順再採番対象の取得に失敗しました: ${selectError.message}`);
+  }
+
   if (!categories || categories.length === 0) {
     return;
   }
 
-  for (const [index, category] of categories.entries()) {
-    await supabase
-      .from("categories")
-      .update({ display_order: index + 1 })
-      .eq("id", category.id);
-  }
+  await Promise.all(
+    categories.map(async (category, index) => {
+      const { error } = await supabase
+        .from("categories")
+        .update({ display_order: index + 1 })
+        .eq("id", category.id);
+
+      if (error) {
+        throw new Error(`並び順再採番に失敗しました(id: ${category.id}): ${error.message}`);
+      }
+    })
+  );
 }
 
 export async function registerCategory({
@@ -143,31 +175,37 @@ export async function registerCategory({
   description,
   position,
 }: CategoryInsertFormType) {
-  const display_order = await calculateCategoryDisplayOrder(category_type, position);
+  try {
+    const display_order = await calculateCategoryDisplayOrder(category_type, position);
 
-  if (position.type === "first" || position.type === "after") {
-    await shiftCategoryDisplayOrder(category_type, display_order);
+    if (position.type === "first" || position.type === "after") {
+      await shiftCategoryDisplayOrder(category_type, display_order);
+    }
+
+    const supabase = createClientSupabaseClient();
+    const { error } = await supabase.from("categories").insert([
+      {
+        category_type,
+        name,
+        description,
+        display_order,
+        is_deleted: false,
+      },
+    ]);
+
+    if (error) {
+      return { success: false, error };
+    }
+
+    await reorderCategoriesByType(category_type);
+
+    return { success: true, error: null };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("カテゴリー登録に失敗しました。"),
+    };
   }
-
-  const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("categories").insert([
-    {
-      category_type,
-      name,
-      description,
-      display_order,
-      is_deleted: false,
-    },
-  ]);
-
-  if (error) {
-    console.error("カテゴリー登録エラー:", error.message);
-    return { success: false, error };
-  }
-
-  await reorderCategoriesByType(category_type);
-
-  return { success: true, error: null };
 }
 
 export async function updateCategory({
@@ -177,50 +215,62 @@ export async function updateCategory({
   description,
   position,
 }: CategoryUpdateFormType) {
-  const supabase = createClientSupabaseClient();
+  try {
+    const supabase = createClientSupabaseClient();
 
-  const { data: currentCategory } = await supabase
-    .from("categories")
-    .select("display_order, category_type")
-    .eq("id", id)
-    .single();
+    const { data: currentCategory, error: currentCategoryError } = await supabase
+      .from("categories")
+      .select("display_order, category_type")
+      .eq("id", id)
+      .single();
 
-  const currentDisplayOrder = currentCategory?.display_order;
-  const currentCategoryType = (currentCategory?.category_type ??
-    category_type) as CategoryTypeValue;
+    if (currentCategoryError || !currentCategory) {
+      return {
+        success: false,
+        error: currentCategoryError ?? new Error("更新対象のカテゴリーが見つかりません。"),
+      };
+    }
 
-  const display_order = await calculateCategoryDisplayOrder(
-    category_type,
-    position,
-    currentDisplayOrder
-  );
+    const currentDisplayOrder = currentCategory.display_order;
+    const currentCategoryType = currentCategory.category_type as CategoryTypeValue;
 
-  if (position.type === "first" || position.type === "after") {
-    await shiftCategoryDisplayOrder(category_type, display_order, id);
-  }
-
-  const { error } = await supabase
-    .from("categories")
-    .update({
+    const display_order = await calculateCategoryDisplayOrder(
       category_type,
-      name,
-      description,
-      display_order,
-    })
-    .eq("id", id);
+      position,
+      currentDisplayOrder
+    );
 
-  if (error) {
-    console.error("カテゴリー更新エラー:", error.message);
-    return { success: false, error };
+    if (position.type === "first" || position.type === "after") {
+      await shiftCategoryDisplayOrder(category_type, display_order, id);
+    }
+
+    const { error } = await supabase
+      .from("categories")
+      .update({
+        category_type,
+        name,
+        description,
+        display_order,
+      })
+      .eq("id", id);
+
+    if (error) {
+      return { success: false, error };
+    }
+
+    await reorderCategoriesByType(category_type);
+
+    if (currentCategoryType !== category_type) {
+      await reorderCategoriesByType(currentCategoryType);
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("カテゴリー更新に失敗しました。"),
+    };
   }
-
-  await reorderCategoriesByType(category_type);
-
-  if (currentCategoryType !== category_type) {
-    await reorderCategoriesByType(currentCategoryType);
-  }
-
-  return { success: true, error: null };
 }
 
 function getTableNameByType(
@@ -238,59 +288,73 @@ function getTableNameByType(
 }
 
 export async function deleteCategory(id: number, categoryType: CategoryTypeValue) {
-  const supabase = createClientSupabaseClient();
+  try {
+    const supabase = createClientSupabaseClient();
 
-  const { data: deletingCategory, error: categoryError } = await supabase
-    .from("categories")
-    .select("id, name")
-    .eq("id", id)
-    .eq("is_deleted", false)
-    .single();
+    const { data: deletingCategory, error: categoryError } = await supabase
+      .from("categories")
+      .select("id, name, category_type")
+      .eq("id", id)
+      .eq("is_deleted", false)
+      .single();
 
-  if (categoryError || !deletingCategory) {
-    return { success: false, error: categoryError ?? new Error("削除対象が見つかりません。") };
-  }
+    if (categoryError || !deletingCategory) {
+      return { success: false, error: categoryError ?? new Error("削除対象が見つかりません。") };
+    }
 
-  if (deletingCategory.name === UNCLASSIFIED_CATEGORY_NAME) {
-    return { success: false, error: new Error("未分類カテゴリーは削除できません。") };
-  }
+    if (deletingCategory.category_type !== categoryType) {
+      return {
+        success: false,
+        error: new Error("削除対象のカテゴリー種別が一致しません。"),
+      };
+    }
 
-  const { data: uncategorized, error: uncategorizedError } = await supabase
-    .from("categories")
-    .select("id")
-    .eq("category_type", categoryType)
-    .eq("name", UNCLASSIFIED_CATEGORY_NAME)
-    .eq("is_deleted", false)
-    .single();
+    if (deletingCategory.name === UNCLASSIFIED_CATEGORY_NAME) {
+      return { success: false, error: new Error("未分類カテゴリーは削除できません。") };
+    }
 
-  if (uncategorizedError || !uncategorized) {
+    const { data: uncategorized, error: uncategorizedError } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("category_type", categoryType)
+      .eq("name", UNCLASSIFIED_CATEGORY_NAME)
+      .eq("is_deleted", false)
+      .single();
+
+    if (uncategorizedError || !uncategorized) {
+      return {
+        success: false,
+        error: uncategorizedError ?? new Error("未分類カテゴリーが見つかりません。"),
+      };
+    }
+
+    const tableName = getTableNameByType(categoryType);
+    const { error: moveError } = await supabase
+      .from(tableName)
+      .update({ category_id: uncategorized.id })
+      .eq("category_id", id)
+      .eq("is_deleted", false);
+
+    if (moveError) {
+      return { success: false, error: moveError };
+    }
+
+    const { error: deleteError } = await supabase
+      .from("categories")
+      .update({ is_deleted: true })
+      .eq("id", id);
+
+    if (deleteError) {
+      return { success: false, error: deleteError };
+    }
+
+    await reorderCategoriesByType(categoryType);
+
+    return { success: true, error: null };
+  } catch (error) {
     return {
       success: false,
-      error: uncategorizedError ?? new Error("未分類カテゴリーが見つかりません。"),
+      error: error instanceof Error ? error : new Error("カテゴリー削除に失敗しました。"),
     };
   }
-
-  const tableName = getTableNameByType(categoryType);
-  const { error: moveError } = await supabase
-    .from(tableName)
-    .update({ category_id: uncategorized.id })
-    .eq("category_id", id)
-    .eq("is_deleted", false);
-
-  if (moveError) {
-    return { success: false, error: moveError };
-  }
-
-  const { error: deleteError } = await supabase
-    .from("categories")
-    .update({ is_deleted: true })
-    .eq("id", id);
-
-  if (deleteError) {
-    return { success: false, error: deleteError };
-  }
-
-  await reorderCategoriesByType(categoryType);
-
-  return { success: true, error: null };
 }

@@ -94,7 +94,7 @@ export function CategoriesPageTemplate({ initialCategories }: CategoriesPageTemp
 
               <Menu>
                 <Menu.Target>
-                  <ActionIcon variant="subtle" color="gray">
+                  <ActionIcon variant="subtle" color="gray" aria-label="カテゴリー管理メニュー">
                     <EllipsisVertical size={16} />
                   </ActionIcon>
                 </Menu.Target>
