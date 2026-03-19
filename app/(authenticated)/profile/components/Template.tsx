@@ -5,7 +5,7 @@ import { Button, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect, useTransition } from "react";
 import { ProfileUserType } from "@/app/types";
-import { validateUrls } from "@/app/services/api/validation_url";
+import { validateUrls } from "@/app/services/api/utils/url-validation";
 
 interface ProfilePageTemplateProps {
   initialUser: ProfileUserType;
@@ -50,7 +50,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // URLの形式チェック_validation_url.tsの共通関数に再修正_httpsのみ許容
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
     const urlData = {
       x_url,
       facebook_url,
@@ -76,7 +76,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
         x_url: "X_URL",
         facebook_url: "Facebook_URL",
         instagram_url: "Instagram_URL",
-        github_url: "GitHub URL",
+        github_url: "GitHub_URL",
         portfolio_url: "ポートフォリオのURL",
       };
       const invalidLabels = invalidFields.map(field => fieldLabels[field] || field);

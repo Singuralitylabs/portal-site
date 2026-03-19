@@ -6,7 +6,7 @@ import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
-import { isValidUrl } from "@/app/services/api/validation_url";
+import { isValidUrl } from "@/app/services/api/utils/url-validation";
 
 interface VideoFormModalProps {
   opened: boolean;
@@ -93,7 +93,7 @@ export function VideoFormModal({
       });
       return;
     }
-    // URLの形式チェック_validation_url.tsの共通関数に再修正_httpsのみ許容
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
     if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",

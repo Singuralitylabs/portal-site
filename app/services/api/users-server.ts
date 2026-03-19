@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
-import { validateUrls } from "@/app/services/api/validation_url";
+import { validateUrls } from "@/app/services/api/utils/url-validation";
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -191,7 +191,7 @@ export async function updateUserProfileServerInServer({
   github_url: string | null;
   portfolio_url: string | null;
 }): Promise<PostgrestError | null> {
-  // URLの形式チェック_validation_url.tsの共通関数追加_https://のみ許容
+  // URLの形式チェック_url-validation.tsの共通関数追加_https://のみ許容
   const invalidFields = validateUrls({
     x_url,
     facebook_url,

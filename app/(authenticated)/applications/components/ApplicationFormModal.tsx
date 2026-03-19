@@ -7,7 +7,7 @@ import type {
   SelectCategoryType,
   SelectDeveloperType,
 } from "@/app/types";
-import { isValidUrl } from "@/app/services/api/validation_url";
+import { isValidUrl } from "@/app/services/api/utils/url-validation";
 import { registerApplication, updateApplication } from "@/app/services/api/applications-client";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 
@@ -74,7 +74,7 @@ export function ApplicationFormModal({
       });
       return;
     }
-    // URLの形式チェック_validation_url.tsの共通関数に再修正_httpsのみ許容
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
     if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
