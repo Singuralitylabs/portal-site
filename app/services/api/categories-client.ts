@@ -1,3 +1,34 @@
+/**
+ * カテゴリー管理 - クライアント側データアクセス層
+ *
+ * 処理概要:
+ * - Supabaseのカテゴリーテーブルに対するCRUD操作を提供
+ * - 表示順序（display_order）の自動計算・シフト処理により、カテゴリーの並び順を保証
+ * - カテゴリー削除時は、該当コンテンツを「未分類」に自動移動
+ * - コンテンツ種別（documents/videos/applications）ごとの操作に対応
+ *
+ * 主要な責務:
+ * 1. カテゴリー情報の取得（getCategoriesByType）
+ * 2. カテゴリーの登録・更新・削除（registerCategory / updateCategory / deleteCategory）
+ * 3. 表示順序の計算と自動シフト（calculateCategoryDisplayOrder / shiftCategoryDisplayOrder）
+ * 4. 並び順の再採番（reorderCategoriesByType / reorderContentItemsInCategory）
+ *
+ * 依存関係:
+ * - supabase-client: Supabaseクライアント生成
+ * - @/app/types: CategoryInsertFormType, CategoryUpdateFormType, CategoryItemType, CategoryTypeValue
+ *
+ * 関数一覧:
+ * ├─ [内部] getCategoriesByType() - 指定タイプのカテゴリー一覧取得
+ * ├─ [公開] getCategoriesForPosition() - 位置指定フォーム用のカテゴリー一覧取得
+ * ├─ [内部] calculateCategoryDisplayOrder() - 挿入位置から表示順序を計算
+ * ├─ [内部] shiftCategoryDisplayOrder() - 指定順序以上のカテゴリーの順序をシフト
+ * ├─ [内部] reorderCategoriesByType() - カテゴリーの並び順を1からリセット
+ * ├─ [内部] reorderContentItemsInCategory() - 特定カテゴリー内のコンテンツ並び順をリセット
+ * ├─ [公開] registerCategory() - カテゴリー登録
+ * ├─ [公開] updateCategory() - カテゴリー更新
+ * ├─ [内部] getTableNameByType() - カテゴリータイプからテーブル名に変換
+ * └─ [公開] deleteCategory() - カテゴリー削除（コンテンツは未分類に移動）
+ */
 import { createClientSupabaseClient } from "./supabase-client";
 import type {
   CategoryInsertFormType,
@@ -123,18 +154,16 @@ async function shiftCategoryDisplayOrder(
     return;
   }
 
-  await Promise.all(
-    affectedCategories.map(async category => {
-      const { error } = await supabase
-        .from("categories")
-        .update({ display_order: category.display_order + 1 })
-        .eq("id", category.id);
+  for (const category of affectedCategories) {
+    const { error } = await supabase
+      .from("categories")
+      .update({ display_order: category.display_order + 1 })
+      .eq("id", category.id);
 
-      if (error) {
-        throw new Error(`表示順更新に失敗しました(id: ${category.id}): ${error.message}`);
-      }
-    })
-  );
+    if (error) {
+      throw new Error(`表示順更新に失敗しました(id: ${category.id}): ${error.message}`);
+    }
+  }
 }
 
 async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise<void> {
@@ -155,18 +184,50 @@ async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise
     return;
   }
 
-  await Promise.all(
-    categories.map(async (category, index) => {
-      const { error } = await supabase
-        .from("categories")
-        .update({ display_order: index + 1 })
-        .eq("id", category.id);
+  for (const [index, category] of categories.entries()) {
+    const { error } = await supabase
+      .from("categories")
+      .update({ display_order: index + 1 })
+      .eq("id", category.id);
 
-      if (error) {
-        throw new Error(`並び順再採番に失敗しました(id: ${category.id}): ${error.message}`);
-      }
-    })
-  );
+    if (error) {
+      throw new Error(`並び順再採番に失敗しました(id: ${category.id}): ${error.message}`);
+    }
+  }
+}
+
+async function reorderContentItemsInCategory(
+  categoryType: CategoryTypeValue,
+  categoryId: number
+): Promise<void> {
+  const supabase = createClientSupabaseClient();
+  const tableName = getTableNameByType(categoryType);
+
+  const { data: items, error: selectError } = await supabase
+    .from(tableName)
+    .select("id")
+    .eq("category_id", categoryId)
+    .eq("is_deleted", false)
+    .order("display_order", { ascending: true });
+
+  if (selectError) {
+    throw new Error(`コンテンツ再採番対象の取得に失敗しました: ${selectError.message}`);
+  }
+
+  if (!items || items.length === 0) {
+    return;
+  }
+
+  for (const [index, item] of items.entries()) {
+    const { error } = await supabase
+      .from(tableName)
+      .update({ display_order: index + 1 })
+      .eq("id", item.id);
+
+    if (error) {
+      throw new Error(`コンテンツ再採番に失敗しました(id: ${item.id}): ${error.message}`);
+    }
+  }
 }
 
 export async function registerCategory({
@@ -338,6 +399,8 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
     if (moveError) {
       return { success: false, error: moveError };
     }
+
+    await reorderContentItemsInCategory(categoryType, uncategorized.id);
 
     const { error: deleteError } = await supabase
       .from("categories")
