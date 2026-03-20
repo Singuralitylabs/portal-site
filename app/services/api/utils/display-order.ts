@@ -152,19 +152,24 @@ export async function shiftDisplayOrder(
  * カテゴリー内のアイテムの display_order を 1 から振り直す
  * @param table テーブル名
  * @param categoryId カテゴリーID
+ * @param options includeDeleted=true の場合は削除済みも含めて再採番する
  */
 export async function reorderItemsInCategory(
   table: ContentTableType,
-  categoryId: number
+  categoryId: number,
+  options?: { includeDeleted?: boolean }
 ): Promise<void> {
+  const includeDeleted = options?.includeDeleted ?? true;
   const supabase = createClientSupabaseClient();
 
-  // カテゴリー内のアイテムを display_order の昇順で取得（削除済みも含む）
-  const { data: items } = await supabase
-    .from(table)
-    .select("id")
-    .eq("category_id", categoryId)
-    .order("display_order", { ascending: true });
+  // カテゴリー内のアイテムを display_order の昇順で取得
+  let query = supabase.from(table).select("id").eq("category_id", categoryId);
+
+  if (!includeDeleted) {
+    query = query.eq("is_deleted", false);
+  }
+
+  const { data: items } = await query.order("display_order", { ascending: true });
 
   if (!items || items.length === 0) {
     return;
