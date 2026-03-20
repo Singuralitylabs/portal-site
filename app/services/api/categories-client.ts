@@ -11,7 +11,7 @@
  * 1. カテゴリー情報の取得（getCategoriesByType）
  * 2. カテゴリーの登録・更新・削除（registerCategory / updateCategory / deleteCategory）
  * 3. 表示順序の計算と自動シフト（calculateCategoryDisplayOrder / shiftCategoryDisplayOrder）
- * 4. 並び順の再採番（reorderCategoriesByType / reorderContentItemsInCategory）
+ * 4. 並び順の再採番（reorderCategoriesByType / reorderItemsInCategory）
  *
  * 依存関係:
  * - supabase-client: Supabaseクライアント生成
@@ -23,7 +23,7 @@
  * ├─ [内部] calculateCategoryDisplayOrder() - 挿入位置から表示順序を計算
  * ├─ [内部] shiftCategoryDisplayOrder() - 指定順序以上のカテゴリーの順序をシフト
  * ├─ [内部] reorderCategoriesByType() - カテゴリーの並び順を1からリセット
- * ├─ [内部] reorderContentItemsInCategory() - 特定カテゴリー内のコンテンツ並び順をリセット
+ * ├─ [共通] reorderItemsInCategory() - 特定カテゴリー内のコンテンツ並び順をリセット
  * ├─ [公開] registerCategory() - カテゴリー登録
  * ├─ [公開] updateCategory() - カテゴリー更新
  * ├─ [内部] getTableNameByType() - カテゴリータイプからテーブル名に変換
@@ -36,6 +36,7 @@ import type {
   CategoryTypeValue,
   CategoryUpdateFormType,
 } from "@/app/types";
+import { reorderItemsInCategory } from "./utils/display-order";
 
 const UNCLASSIFIED_CATEGORY_NAME = "未分類";
 
@@ -192,40 +193,6 @@ async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise
 
     if (error) {
       throw new Error(`並び順再採番に失敗しました(id: ${category.id}): ${error.message}`);
-    }
-  }
-}
-
-async function reorderContentItemsInCategory(
-  categoryType: CategoryTypeValue,
-  categoryId: number
-): Promise<void> {
-  const supabase = createClientSupabaseClient();
-  const tableName = getTableNameByType(categoryType);
-
-  const { data: items, error: selectError } = await supabase
-    .from(tableName)
-    .select("id")
-    .eq("category_id", categoryId)
-    .eq("is_deleted", false)
-    .order("display_order", { ascending: true });
-
-  if (selectError) {
-    throw new Error(`コンテンツ再採番対象の取得に失敗しました: ${selectError.message}`);
-  }
-
-  if (!items || items.length === 0) {
-    return;
-  }
-
-  for (const [index, item] of items.entries()) {
-    const { error } = await supabase
-      .from(tableName)
-      .update({ display_order: index + 1 })
-      .eq("id", item.id);
-
-    if (error) {
-      throw new Error(`コンテンツ再採番に失敗しました(id: ${item.id}): ${error.message}`);
     }
   }
 }
@@ -400,7 +367,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       return { success: false, error: moveError };
     }
 
-    await reorderContentItemsInCategory(categoryType, uncategorized.id);
+    await reorderItemsInCategory(tableName, uncategorized.id, { includeDeleted: false });
 
     const { error: deleteError } = await supabase
       .from("categories")

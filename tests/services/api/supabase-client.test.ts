@@ -1,5 +1,5 @@
 /**
- * Supabase クライアント関連サービスの統合テストスイート
+ * Supabase クライアント関連サービスのユニットテストスイート（モック）
  *
  * @description
  * クライアント側で使用される Supabase API ラッパー関数群の動作を検証。
@@ -612,6 +612,7 @@ describe("users-client", () => {
 // categories-client のテスト
 describe("categories-client", () => {
   const createClientSupabaseClientMock = createClientSupabaseClient as jest.Mock;
+  const reorderItemsInCategoryMock = reorderItemsInCategory as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -707,18 +708,14 @@ describe("categories-client", () => {
   });
 
   it("deleteCategory 正常系: 未分類へ移動後にコンテンツ再採番とカテゴリ再採番を実行する", async () => {
+    reorderItemsInCategoryMock.mockResolvedValue(undefined);
+
     const deletingCategoryBuilder = createSelectSingleBuilder({
       data: { id: 10, name: "一般", category_type: "documents" },
       error: null,
     });
     const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
     const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
-    const reorderContentSelectBuilder = createOrderBuilder({
-      data: [{ id: 101 }, { id: 102 }],
-      error: null,
-    });
-    const reorderContentUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
-    const reorderContentUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
     const deleteCategoryBuilder = createUpdateBuilder({ data: null, error: null });
     const reorderCategorySelectBuilder = createOrderBuilder({
       data: [{ id: 1 }, { id: 2 }],
@@ -732,9 +729,6 @@ describe("categories-client", () => {
       .mockReturnValueOnce(deletingCategoryBuilder)
       .mockReturnValueOnce(uncategorizedBuilder)
       .mockReturnValueOnce(moveBuilder)
-      .mockReturnValueOnce(reorderContentSelectBuilder)
-      .mockReturnValueOnce(reorderContentUpdateBuilder1)
-      .mockReturnValueOnce(reorderContentUpdateBuilder2)
       .mockReturnValueOnce(deleteCategoryBuilder)
       .mockReturnValueOnce(reorderCategorySelectBuilder)
       .mockReturnValueOnce(reorderCategoryUpdateBuilder1)
@@ -744,8 +738,9 @@ describe("categories-client", () => {
     const response = await deleteCategory(10, "documents");
 
     expect(response).toEqual({ success: true, error: null });
-    expect(reorderContentUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 1 });
-    expect(reorderContentUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 2 });
+    expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("documents", 1, {
+      includeDeleted: false,
+    });
   });
 
   it("deleteCategory 異常系: 種別不一致は失敗を返す", async () => {
