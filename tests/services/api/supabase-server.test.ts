@@ -1,5 +1,68 @@
+/**
+ * ================================================================================
+ * サーバー側 Supabase サービス群の統合テストスイート
+ * ================================================================================
+ *
+ * 【処理概要】
+ * - Supabase のサーバーサイドデータアクセス層（services/api/xxx-server.ts）の動作確認
+ * - 各API関数の正常系（データ返却）・異常系（エラー処理）をテスト
+ * - Supabase クライアント生成・認証情報取得の検証
+ * - モックビルダー（QueryChain）を用いた DBクエリチェーンの再現
+ *
+ * 【テスト対象関数一覧】
+ *
+ * ▼ 一覧取得系（select/order チェーン）
+ *   - fetchDocuments()
+ *   - fetchApplications()
+ *   - fetchCategoriesByType(type: string)
+ *   - fetchCategoriesForManagement(type: CategoryTypeValue)
+ *   - fetchVideos()
+ *   - fetchActiveUsers()
+ *   - fetchApprovalUsers()
+ *
+ * ▼ 単体取得系（select/maybeSingle チェーン）
+ *   - fetchVideoById(id: number)
+ *   - fetchUserStatusByIdInServer(params: { authId: string })
+ *   - fetchUserInfoByAuthId(params: { authId: string })
+ *   - fetchUserByAuthIdInServer(params: { authId: string })
+ *
+ * ▼ 更新系（update/select/single チェーン）
+ *   - updateUserProfileServerInServer(params: UserProfileUpdate)
+ *
+ * ▼ クライアント・認証系
+ *   - createServerSupabaseClient(): Supabase サーバークライアント生成
+ *   - getServerCurrentUser(): 現在のログインユーザー認証ID取得
+ *
+ * 【依存関係概要】
+ *
+ * ▼ 外部モック対象
+ *   - @supabase/ssr.createServerClient    : Supabaseクライアント初期化
+ *   - next/headers.cookies                : Cookie ストア アクセス
+ *   - app/services/api/supabase-server.ts : Supabase クライアント管理
+ *
+ * ▼ テスト対象モジュール
+ *   - app/services/api/applications-server.ts
+ *   - app/services/api/categories-server.ts
+ *   - app/services/api/documents-server.ts
+ *   - app/services/api/videos-server.ts
+ *   - app/services/api/users-server.ts
+ *
+ * ▼ ヘルパー関数（モックビルダー）
+ *   - createOrderBuilder()          : select().eq().order() チェーン用
+ *   - createMaybeSingleBuilder()    : select().eq().maybeSingle() チェーン用
+ *   - createEqTerminatingBuilder()  : 複数eq条件→終端の条件付き チェーン用
+ *   - createUpdateSelectSingleBuilder() : update().eq().select().single() チェーン用
+ *
+ * 【テスト構成】
+ *   describe "server API services"        : 各データアクセス関数のテスト
+ *   describe "supabase-server module"     : クライアント生成・認証関数のテスト
+ *
+ */
 import { fetchApplications } from "../../../app/services/api/applications-server";
-import { fetchCategoriesByType } from "../../../app/services/api/categories-server";
+import {
+  fetchCategoriesByType,
+  fetchCategoriesForManagement,
+} from "../../../app/services/api/categories-server";
 import { fetchDocuments } from "../../../app/services/api/documents-server";
 import { createServerSupabaseClient } from "../../../app/services/api/supabase-server";
 import {
@@ -74,7 +137,8 @@ const createEqTerminatingBuilder = (eqCallCount: number, result: QueryResult) =>
 
 // update(...).eq(...).select().single() で終端する更新系クエリ用モック
 const createUpdateSelectSingleBuilder = (result: QueryResult) => {
-  const builder: { update?: jest.Mock; eq?: jest.Mock; select?: jest.Mock; single?: jest.Mock } = {};
+  const builder: { update?: jest.Mock; eq?: jest.Mock; select?: jest.Mock; single?: jest.Mock } =
+    {};
   builder.update = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.select = jest.fn(() => builder);
@@ -121,6 +185,45 @@ describe("server API services", () => {
       // 一覧取得失敗時に data=null とエラーが返ることを確認
       expect(response).toEqual({ data: null, error: result.error });
       // 失敗時にエラーログが出力されることを確認
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+  });
+
+  // カテゴリー管理向け一覧取得 API の代表ケース（正常系/異常系）
+  describe("fetchCategoriesForManagement", () => {
+    it("正常系: 管理画面向けカテゴリー一覧を返す", async () => {
+      const result = {
+        data: [
+          {
+            id: 1,
+            category_type: "documents",
+            name: "資料",
+            description: "desc",
+            display_order: 1,
+          },
+        ],
+        error: null,
+      };
+      const builder = createOrderBuilder(result);
+      const supabase = { from: jest.fn(() => builder) };
+      createServerSupabaseClientMock.mockResolvedValue(supabase);
+
+      const response = await fetchCategoriesForManagement("documents");
+
+      expect(response).toEqual({ data: result.data, error: null });
+    });
+
+    it("異常系: エラー時は data=null を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      const result = { data: null, error: { message: "failed" } };
+      const builder = createOrderBuilder(result);
+      const supabase = { from: jest.fn(() => builder) };
+      createServerSupabaseClientMock.mockResolvedValue(supabase);
+
+      const response = await fetchCategoriesForManagement("videos");
+
+      expect(response).toEqual({ data: null, error: result.error });
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -181,7 +284,10 @@ describe("server API services", () => {
     });
 
     it("fetchUserInfoByAuthId: 正常系/異常系", async () => {
-      const successBuilder = createMaybeSingleBuilder({ data: { id: 1, role: "admin" }, error: null });
+      const successBuilder = createMaybeSingleBuilder({
+        data: { id: 1, role: "admin" },
+        error: null,
+      });
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserInfoByAuthId({ authId: "auth-3" });
@@ -267,7 +373,10 @@ describe("server API services", () => {
     });
 
     it("fetchUserByAuthIdInServer: 正常系/異常系", async () => {
-      const successBuilder = createMaybeSingleBuilder({ data: { id: 9, auth_id: "auth-9" }, error: null });
+      const successBuilder = createMaybeSingleBuilder({
+        data: { id: 9, auth_id: "auth-9" },
+        error: null,
+      });
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserByAuthIdInServer({ authId: "auth-9" });

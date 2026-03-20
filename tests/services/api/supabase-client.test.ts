@@ -1,3 +1,30 @@
+/**
+ * Supabase クライアント関連サービスの統合テストスイート
+ *
+ * @description
+ * クライアント側で使用される Supabase API ラッパー関数群の動作を検証。
+ * 以下の機能モジュールをカバー：
+ * - createClientSupabaseClient: Supabase ブラウザクライアントの生成
+ * - Content CRUD (Application/Document/Video): カテゴリ別アイテム管理
+ * - Users-client: ユーザー情報取得・ステータス管理
+ * - Categories-client: カテゴリ基本情報管理
+ * - Applications: 登録・更新・削除・一覧取得
+ * - Documents: 登録・更新・削除・一覧取得
+ * - Videos: 登録・更新・削除・一覧取得
+ * - Users: 新規追加、役割取得、ステータス取得、ID取得、承認、却下
+ * - Categories: 登録・更新・削除
+ * @test_strategy
+ * 各テストケースでは以下の観点を検証：
+ * 1. 正常系: 期待される戻り値の型・内容が返ること
+ * 2. 異常系: エラーハンドリングと error フィールドの適切な設定
+ * 3. 副作用: display_order の再採番など、DB操作後の連鎖処理の実行確認
+ * 4. Supabase クエリビルダパターン: 複数の .eq() や .order() メソッド連鎖に対応
+ *
+ * @note
+ * - 複数のクエリビルダーモック関数で様々なクエリパターンに対応
+ * - jest.mock() でモジュール全体をモック化し、副作用関数の呼び出しを追跡
+ * - console.error の出力を確認し、エラーログ機能を検証
+ */
 import { createBrowserClient } from "@supabase/ssr";
 import { createClientSupabaseClient } from "../../../app/services/api/supabase-client";
 import {
@@ -18,6 +45,11 @@ import {
   registerVideo,
   updateVideo,
 } from "../../../app/services/api/videos-client";
+import {
+  deleteCategory,
+  registerCategory,
+  updateCategory,
+} from "../../../app/services/api/categories-client";
 import {
   addNewUser,
   approveUser,
@@ -71,6 +103,21 @@ const createUpdateBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// update(...).eq(...).eq(...) で終端するクエリ用モック
+const createUpdateDoubleEqBuilder = (result: QueryResult) => {
+  const builder: { update?: jest.Mock; eq?: jest.Mock } = {};
+  let calls = 0;
+  builder.update = jest.fn(() => builder);
+  builder.eq = jest.fn(() => {
+    calls += 1;
+    if (calls >= 2) {
+      return Promise.resolve(result);
+    }
+    return builder;
+  });
+  return builder as Required<typeof builder>;
+};
+
 // insert(...) で完結するクエリ用モック
 const createInsertBuilder = (result: QueryResult) => {
   const builder: { insert?: jest.Mock } = {};
@@ -86,12 +133,36 @@ const createInsertSelectBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// select(...).eq(...).order(...) で終端する一覧取得クエリ用モック
+const createOrderBuilder = (result: QueryResult) => {
+  const builder: { select?: jest.Mock; eq?: jest.Mock; order?: jest.Mock } = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.order = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
 // select(...).eq(...).single() で完結するクエリ用モック
 const createSelectSingleBuilder = (result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock; single?: jest.Mock } = {};
   builder.select = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.single = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
+// select(...).eq(...).eq(...).order(...).limit(...) で終端するクエリ用モック
+const createOrderLimitBuilder = (result: QueryResult) => {
+  const builder: {
+    select?: jest.Mock;
+    eq?: jest.Mock;
+    order?: jest.Mock;
+    limit?: jest.Mock;
+  } = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.order = jest.fn(() => builder);
+  builder.limit = jest.fn(() => Promise.resolve(result));
   return builder as Required<typeof builder>;
 };
 
@@ -535,5 +606,179 @@ describe("users-client", () => {
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
+  });
+});
+
+// categories-client のテスト
+describe("categories-client", () => {
+  const createClientSupabaseClientMock = createClientSupabaseClient as jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("registerCategory 正常系: 登録成功時に success=true を返す", async () => {
+    const maxOrderBuilder = createOrderLimitBuilder({ data: [{ display_order: 3 }], error: null });
+    const insertBuilder = createInsertBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({ data: [], error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(maxOrderBuilder)
+      .mockReturnValueOnce(insertBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "last" },
+    });
+
+    expect(response).toEqual({ success: true, error: null });
+  });
+
+  it("registerCategory 異常系: insert 失敗時に success=false を返す", async () => {
+    const maxOrderBuilder = createOrderLimitBuilder({ data: [{ display_order: 3 }], error: null });
+    const insertError = { message: "insert failed" };
+    const insertBuilder = createInsertBuilder({ data: null, error: insertError });
+
+    const supabase = { from: jest.fn() };
+    supabase.from.mockReturnValueOnce(maxOrderBuilder).mockReturnValueOnce(insertBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "last" },
+    });
+
+    expect(response).toEqual({ success: false, error: insertError });
+  });
+
+  it("updateCategory 正常系: 更新成功時に success=true を返す", async () => {
+    const currentBuilder = createSelectSingleBuilder({
+      data: { display_order: 2, category_type: "documents" },
+      error: null,
+    });
+    const updateBuilder = createUpdateBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({ data: [{ id: 1 }, { id: 2 }], error: null });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(currentBuilder)
+      .mockReturnValueOnce(updateBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリB",
+      description: null,
+      position: { type: "current" },
+    });
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(reorderUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 1 });
+    expect(reorderUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 2 });
+  });
+
+  it("updateCategory 異常系: 現在値取得に失敗したら success=false を返す", async () => {
+    const currentBuilder = createSelectSingleBuilder({ data: null, error: { message: "failed" } });
+    const supabase = { from: jest.fn(() => currentBuilder) };
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリB",
+      description: null,
+      position: { type: "current" },
+    });
+
+    expect(response.success).toBe(false);
+  });
+
+  it("deleteCategory 正常系: 未分類へ移動後にコンテンツ再採番とカテゴリ再採番を実行する", async () => {
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
+    const reorderContentSelectBuilder = createOrderBuilder({
+      data: [{ id: 101 }, { id: 102 }],
+      error: null,
+    });
+    const reorderContentUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderContentUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+    const deleteCategoryBuilder = createUpdateBuilder({ data: null, error: null });
+    const reorderCategorySelectBuilder = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const reorderCategoryUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderCategoryUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(deletingCategoryBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(reorderContentSelectBuilder)
+      .mockReturnValueOnce(reorderContentUpdateBuilder1)
+      .mockReturnValueOnce(reorderContentUpdateBuilder2)
+      .mockReturnValueOnce(deleteCategoryBuilder)
+      .mockReturnValueOnce(reorderCategorySelectBuilder)
+      .mockReturnValueOnce(reorderCategoryUpdateBuilder1)
+      .mockReturnValueOnce(reorderCategoryUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(reorderContentUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 1 });
+    expect(reorderContentUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 2 });
+  });
+
+  it("deleteCategory 異常系: 種別不一致は失敗を返す", async () => {
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "videos" },
+      error: null,
+    });
+    const supabase = { from: jest.fn(() => deletingCategoryBuilder) };
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response.success).toBe(false);
+  });
+
+  it("deleteCategory 異常系: コンテンツ移動失敗時に success=false を返す", async () => {
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const moveError = { message: "move failed" };
+    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: moveError });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(deletingCategoryBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(moveBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response).toEqual({ success: false, error: moveError });
   });
 });
