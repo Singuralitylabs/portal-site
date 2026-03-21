@@ -366,7 +366,8 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
         .from(tableName)
         .update({ category_id: uncategorized.id })
         .in("id", movedContentIds)
-        .eq("is_deleted", false);
+        .eq("is_deleted", false)
+        .eq("category_id", id);
 
       if (moveError) {
         return { success: false, error: moveError };
@@ -383,7 +384,8 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
           .from(tableName)
           .update({ category_id: id })
           .in("id", movedContentIds)
-          .eq("is_deleted", false);
+          .eq("is_deleted", false)
+          .eq("category_id", uncategorized.id);
 
         if (rollbackError) {
           return { success: false, error: rollbackError };
