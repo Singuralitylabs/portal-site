@@ -474,6 +474,61 @@ describe("supabase-server module", () => {
     expect(response).toBe(mockClient);
   });
 
+    it("createServerSupabaseClient: cookies.getAll/setAll ハンドラが動作する", async () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+
+      const cookieStore = {
+        getAll: jest.fn(() => [{ name: "sb", value: "token" }]),
+        set: jest.fn(),
+      };
+      cookiesMock.mockResolvedValue(cookieStore);
+      createServerClientMock.mockReturnValue({ auth: { getUser: jest.fn() } });
+
+      await supabaseServerActual.createServerSupabaseClient();
+
+      const createOptions = createServerClientMock.mock.calls[0][2];
+      const responseCookies = createOptions.cookies.getAll();
+      createOptions.cookies.setAll([
+        {
+          name: "sb-access-token",
+          value: "new-token",
+          options: { path: "/" },
+        },
+      ]);
+
+      expect(responseCookies).toEqual([{ name: "sb", value: "token" }]);
+      expect(cookieStore.set).toHaveBeenCalledWith("sb-access-token", "new-token", { path: "/" });
+    });
+
+    it("createServerSupabaseClient: cookies.setAll で例外が発生しても処理継続する", async () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+
+      const cookieStore = {
+        getAll: jest.fn(() => []),
+        set: jest.fn(() => {
+          throw new Error("set failed");
+        }),
+      };
+      cookiesMock.mockResolvedValue(cookieStore);
+      createServerClientMock.mockReturnValue({ auth: { getUser: jest.fn() } });
+
+      await supabaseServerActual.createServerSupabaseClient();
+
+      const createOptions = createServerClientMock.mock.calls[0][2];
+
+      expect(() => {
+        createOptions.cookies.setAll([
+          {
+            name: "sb-access-token",
+            value: "new-token",
+            options: { path: "/" },
+          },
+        ]);
+      }).not.toThrow();
+    });
+
   it("getServerCurrentUser: 正常系/異常系", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";

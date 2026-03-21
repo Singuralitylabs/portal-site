@@ -60,39 +60,47 @@ export async function registerDocument({
   created_by,
   position,
 }: DocumentInsertFormType) {
-  // 配置位置から display_order を計算
-  const display_order = await calculateDisplayOrder("documents", category_id, position);
+  try {
+    // 配置位置から display_order を計算
+    const display_order = await calculateDisplayOrder("documents", category_id, position);
 
-  // 新規資料を挿入する前に、指定位置以降の資料の display_order を +1 する
-  if (position.type === "first" || position.type === "after") {
-    await shiftDisplayOrder("documents", category_id, display_order);
+    // 新規資料を挿入する前に、指定位置以降の資料の display_order を +1 する
+    if (position.type === "first" || position.type === "after") {
+      await shiftDisplayOrder("documents", category_id, display_order);
+    }
+
+    const supabase = createClientSupabaseClient();
+    const { error } = await supabase.from("documents").insert([
+      {
+        name,
+        category_id,
+        description,
+        url,
+        assignee_id,
+        display_order,
+        is_deleted: false,
+        created_by,
+        updated_by: created_by,
+      },
+    ]);
+
+    // エラーが発生した場合はコンソールにエラーメッセージを出力
+    if (error) {
+      console.error("Supabase 資料登録エラー:", error.message);
+      return { success: false, error };
+    }
+
+    // 登録後、カテゴリー内の display_order を振り直す
+    await reorderItemsInCategory("documents", category_id);
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Supabase 資料登録エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("資料登録に失敗しました。"),
+    };
   }
-
-  const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("documents").insert([
-    {
-      name,
-      category_id,
-      description,
-      url,
-      assignee_id,
-      display_order,
-      is_deleted: false,
-      created_by,
-      updated_by: created_by,
-    },
-  ]);
-
-  // エラーが発生した場合はコンソールにエラーメッセージを出力
-  if (error) {
-    console.error("Supabase 資料登録エラー:", error.message);
-    return { success: false, error };
-  }
-
-  // 登録後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("documents", category_id);
-
-  return { success: true, error: null };
 }
 
 /**
@@ -112,57 +120,65 @@ export async function updateDocument({
   updated_by,
   position,
 }: DocumentUpdateFormType) {
-  const supabase = createClientSupabaseClient();
+  try {
+    const supabase = createClientSupabaseClient();
 
-  // 現在の資料情報を取得（現在のdisplay_orderとcategory_idを知るため）
-  const { data: currentDoc } = await supabase
-    .from("documents")
-    .select("display_order, category_id")
-    .eq("id", id)
-    .single();
+    // 現在の資料情報を取得（現在のdisplay_orderとcategory_idを知るため）
+    const { data: currentDoc } = await supabase
+      .from("documents")
+      .select("display_order, category_id")
+      .eq("id", id)
+      .single();
 
-  const currentDisplayOrder = currentDoc?.display_order;
-  const currentCategoryId = currentDoc?.category_id;
+    const currentDisplayOrder = currentDoc?.display_order;
+    const currentCategoryId = currentDoc?.category_id;
 
-  // 新しい display_order を計算（編集時は自分自身を除外して計算）
-  const display_order = await calculateDisplayOrder(
-    "documents",
-    category_id,
-    position,
-    currentDisplayOrder
-  );
-
-  // 資料を更新する前に、指定位置以降の資料の display_order を +1 する
-  if (position.type === "first" || position.type === "after") {
-    await shiftDisplayOrder("documents", category_id, display_order, id);
-  }
-
-  const { error } = await supabase
-    .from("documents")
-    .update({
-      name,
+    // 新しい display_order を計算（編集時は自分自身を除外して計算）
+    const display_order = await calculateDisplayOrder(
+      "documents",
       category_id,
-      description,
-      url,
-      assignee_id,
-      display_order,
-      updated_by,
-    })
-    .eq("id", id);
+      position,
+      currentDisplayOrder
+    );
 
-  // エラーが発生した場合はコンソールにエラーメッセージを出力
-  if (error) {
-    console.error("Supabase 資料更新エラー:", error.message);
-    return { success: false, error };
+    // 資料を更新する前に、指定位置以降の資料の display_order を +1 する
+    if (position.type === "first" || position.type === "after") {
+      await shiftDisplayOrder("documents", category_id, display_order, id);
+    }
+
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        name,
+        category_id,
+        description,
+        url,
+        assignee_id,
+        display_order,
+        updated_by,
+      })
+      .eq("id", id);
+
+    // エラーが発生した場合はコンソールにエラーメッセージを出力
+    if (error) {
+      console.error("Supabase 資料更新エラー:", error.message);
+      return { success: false, error };
+    }
+
+    // 更新後、カテゴリー内の display_order を振り直す
+    await reorderItemsInCategory("documents", category_id);
+
+    // カテゴリーが変更された場合、元のカテゴリーも振り直す
+    if (currentCategoryId && currentCategoryId !== category_id) {
+      await reorderItemsInCategory("documents", currentCategoryId);
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Supabase 資料更新エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("資料更新に失敗しました。"),
+    };
   }
-
-  // 更新後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("documents", category_id);
-
-  // カテゴリーが変更された場合、元のカテゴリーも振り直す
-  if (currentCategoryId && currentCategoryId !== category_id) {
-    await reorderItemsInCategory("documents", currentCategoryId);
-  }
-
-  return { success: true, error: null };
 }
