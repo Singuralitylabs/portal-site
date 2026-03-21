@@ -142,6 +142,25 @@ const createOrderBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// select(...).eq(...).eq(...).gte(...).order(...) で終端するクエリ用モック
+const createGteOrderBuilder = (result: QueryResult) => {
+  const builder: {
+    select?: jest.Mock;
+    eq?: jest.Mock;
+    neq?: jest.Mock;
+    gte?: jest.Mock;
+    order?: jest.Mock;
+    then?: (resolve: (value: QueryResult) => void) => Promise<void>;
+  } = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.neq = jest.fn(() => builder);
+  builder.gte = jest.fn(() => builder);
+  builder.order = jest.fn(() => builder);
+  builder.then = resolve => Promise.resolve(result).then(resolve);
+  return builder as Required<typeof builder>;
+};
+
 // select(...).eq(...).single() で完結するクエリ用モック
 const createSelectSingleBuilder = (result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock; single?: jest.Mock } = {};
@@ -659,6 +678,44 @@ describe("categories-client", () => {
     expect(response).toEqual({ success: false, error: insertError });
   });
 
+  it("registerCategory 正常系: position=first で既存カテゴリーをシフトする", async () => {
+    const shiftSelectBuilder = createGteOrderBuilder({
+      data: [
+        { id: 2, display_order: 2 },
+        { id: 1, display_order: 1 },
+      ],
+      error: null,
+    });
+    const shiftUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+    const insertBuilder = createInsertBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({ data: [{ id: 1 }, { id: 2 }], error: null });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(shiftSelectBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder1)
+      .mockReturnValueOnce(shiftUpdateBuilder2)
+      .mockReturnValueOnce(insertBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリ先頭",
+      description: null,
+      position: { type: "first" },
+    });
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(shiftUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 3 });
+    expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 2 });
+  });
+
   it("updateCategory 正常系: 更新成功時に success=true を返す", async () => {
     const currentBuilder = createSelectSingleBuilder({
       data: { display_order: 2, category_type: "documents" },
@@ -705,6 +762,55 @@ describe("categories-client", () => {
     });
 
     expect(response.success).toBe(false);
+  });
+
+  it("updateCategory 正常系: position=after で対象カテゴリー群をシフトする", async () => {
+    const currentBuilder = createSelectSingleBuilder({
+      data: { display_order: 3, category_type: "documents" },
+      error: null,
+    });
+    const afterTargetBuilder = createSelectSingleBuilder({
+      data: { display_order: 1 },
+      error: null,
+    });
+    const shiftSelectBuilder = createGteOrderBuilder({
+      data: [
+        { id: 20, display_order: 3 },
+        { id: 30, display_order: 2 },
+      ],
+      error: null,
+    });
+    const shiftUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+    const updateBuilder = createUpdateBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({ data: [{ id: 1 }, { id: 2 }], error: null });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(currentBuilder)
+      .mockReturnValueOnce(afterTargetBuilder)
+      .mockReturnValueOnce(shiftSelectBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder1)
+      .mockReturnValueOnce(shiftUpdateBuilder2)
+      .mockReturnValueOnce(updateBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリAfter",
+      description: null,
+      position: { type: "after", afterId: 5 },
+    });
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(shiftUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 4 });
+    expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 3 });
   });
 
   it("deleteCategory 正常系: 未分類へ移動後にコンテンツ再採番とカテゴリ再採番を実行する", async () => {
