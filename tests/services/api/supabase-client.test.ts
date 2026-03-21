@@ -97,27 +97,19 @@ const createUpdateBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
-// update(...).eq(...).eq(...) で終端するクエリ用モック
-const createUpdateDoubleEqBuilder = (result: QueryResult) => {
-  const builder: { update?: jest.Mock; eq?: jest.Mock } = {};
-  let calls = 0;
+// update(...).in(...).eq(...).eq(...) で終端するクエリ用モック
+const createUpdateInEqBuilder = (result: QueryResult) => {
+  const builder: { update?: jest.Mock; in?: jest.Mock; eq?: jest.Mock } = {};
+  let eqCalls = 0;
   builder.update = jest.fn(() => builder);
+  builder.in = jest.fn(() => builder);
   builder.eq = jest.fn(() => {
-    calls += 1;
-    if (calls >= 2) {
+    eqCalls += 1;
+    if (eqCalls >= 2) {
       return Promise.resolve(result);
     }
     return builder;
   });
-  return builder as Required<typeof builder>;
-};
-
-// update(...).in(...).eq(...) で終端するクエリ用モック
-const createUpdateInEqBuilder = (result: QueryResult) => {
-  const builder: { update?: jest.Mock; in?: jest.Mock; eq?: jest.Mock } = {};
-  builder.update = jest.fn(() => builder);
-  builder.in = jest.fn(() => builder);
-  builder.eq = jest.fn(() => Promise.resolve(result));
   return builder as Required<typeof builder>;
 };
 
@@ -1029,6 +1021,8 @@ describe("categories-client", () => {
     expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("documents", 1, {
       includeDeletedInSelection: false,
     });
+    expect(moveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
+    expect(moveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 10);
   });
 
   it("deleteCategory 異常系: 種別不一致は失敗を返す", async () => {
@@ -1098,6 +1092,10 @@ describe("categories-client", () => {
     const response = await deleteCategory(10, "documents");
 
     expect(response).toEqual({ success: false, error: reorderError });
+    expect(moveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
+    expect(moveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 10);
+    expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
+    expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
   });
 
   it("deleteCategory 異常系: 未分類カテゴリーの削除は失敗を返す", async () => {

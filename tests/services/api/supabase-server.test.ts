@@ -117,7 +117,7 @@ describe("server API services", () => {
   describe.each([
     { label: "fetchDocuments", run: () => fetchDocuments() },
     { label: "fetchApplications", run: () => fetchApplications() },
-    { label: "fetchCategoriesByType", run: () => fetchCategoriesByType("document") },
+    { label: "fetchCategoriesByType", run: () => fetchCategoriesByType("documents") },
     { label: "fetchVideos", run: () => fetchVideos() },
   ])("$label", ({ run }) => {
     // 呼び出し関数: fetchDocuments/fetchApplications/fetchCategoriesByType/fetchVideos
