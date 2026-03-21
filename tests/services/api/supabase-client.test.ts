@@ -472,6 +472,7 @@ describe("content client services", () => {
     });
 
     it("register 異常系: 再採番で例外発生時は success=false を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
       calculateDisplayOrderMock.mockResolvedValue(3);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
       reorderItemsInCategoryMock.mockRejectedValue(new Error("reorder failed"));
@@ -485,9 +486,12 @@ describe("content client services", () => {
       )(registerPayload);
 
       expect(response.success).toBe(false);
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
     });
 
     it("update 異常系: 再採番で例外発生時は success=false を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
       calculateDisplayOrderMock.mockResolvedValue(4);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
       reorderItemsInCategoryMock
@@ -511,6 +515,8 @@ describe("content client services", () => {
       });
 
       expect(response.success).toBe(false);
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
     });
   });
 });
@@ -688,6 +694,7 @@ describe("categories-client", () => {
   });
 
   it("getCategoriesForPosition 異常系: 取得エラー時は空配列を返す", async () => {
+    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const listBuilder = createGteOrderBuilder({
       data: null,
       error: { message: "failed" },
@@ -698,6 +705,8 @@ describe("categories-client", () => {
     const response = await getCategoriesForPosition("documents");
 
     expect(response).toEqual([]);
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("registerCategory 正常系: 登録成功時に success=true を返す", async () => {
