@@ -714,6 +714,8 @@ describe("categories-client", () => {
     expect(response).toEqual({ success: true, error: null });
     expect(shiftUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 3 });
     expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 2 });
+    expect(shiftUpdateBuilder1.eq).toHaveBeenCalledWith("id", 2);
+    expect(shiftUpdateBuilder2.eq).toHaveBeenCalledWith("id", 1);
   });
 
   it("updateCategory 正常系: 更新成功時に success=true を返す", async () => {
@@ -811,6 +813,36 @@ describe("categories-client", () => {
     expect(response).toEqual({ success: true, error: null });
     expect(shiftUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 4 });
     expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 3 });
+    expect(shiftUpdateBuilder1.eq).toHaveBeenCalledWith("id", 20);
+    expect(shiftUpdateBuilder2.eq).toHaveBeenCalledWith("id", 30);
+    expect(shiftUpdateBuilder1.update.mock.invocationCallOrder[0]).toBeLessThan(
+      shiftUpdateBuilder2.update.mock.invocationCallOrder[0]
+    );
+  });
+
+  it("updateCategory 異常系: position=after で挿入先取得失敗時に success=false を返す", async () => {
+    const currentBuilder = createSelectSingleBuilder({
+      data: { display_order: 3, category_type: "documents" },
+      error: null,
+    });
+    const afterTargetBuilder = createSelectSingleBuilder({
+      data: null,
+      error: { message: "after target not found" },
+    });
+
+    const supabase = { from: jest.fn() };
+    supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(afterTargetBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリAfter",
+      description: null,
+      position: { type: "after", afterId: 999 },
+    });
+
+    expect(response.success).toBe(false);
   });
 
   it("deleteCategory 正常系: 未分類へ移動後にコンテンツ再採番とカテゴリ再採番を実行する", async () => {
@@ -881,5 +913,18 @@ describe("categories-client", () => {
     const response = await deleteCategory(10, "documents");
 
     expect(response).toEqual({ success: false, error: moveError });
+  });
+
+  it("deleteCategory 異常系: 未分類カテゴリーの削除は失敗を返す", async () => {
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 1, name: "未分類", category_type: "documents" },
+      error: null,
+    });
+    const supabase = { from: jest.fn(() => deletingCategoryBuilder) };
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(1, "documents");
+
+    expect(response.success).toBe(false);
   });
 });

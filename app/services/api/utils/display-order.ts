@@ -152,34 +152,55 @@ export async function shiftDisplayOrder(
  * カテゴリー内のアイテムの display_order を 1 から振り直す
  * @param table テーブル名
  * @param categoryId カテゴリーID
- * @param options includeDeleted=true の場合は削除済みも含めて再採番する
+ * @param options includeDeleted=true の場合でも削除済みは更新対象から除外し、未削除のみ再採番する
  */
 export async function reorderItemsInCategory(
   table: ContentTableType,
   categoryId: number,
   options?: { includeDeleted?: boolean }
 ): Promise<void> {
-  const includeDeleted = options?.includeDeleted ?? true;
+  const includeDeleted = options?.includeDeleted ?? false;
   const supabase = createClientSupabaseClient();
 
   // カテゴリー内のアイテムを display_order の昇順で取得
-  let query = supabase.from(table).select("id").eq("category_id", categoryId);
+  let query = supabase
+    .from(table)
+    .select("id, is_deleted")
+    .eq("category_id", categoryId);
 
   if (!includeDeleted) {
     query = query.eq("is_deleted", false);
   }
 
-  const { data: items } = await query.order("display_order", { ascending: true });
+  const { data: items, error: selectError } = await query.order("display_order", {
+    ascending: true,
+  });
+
+  if (selectError) {
+    throw new Error(`並び順再採番対象の取得に失敗しました: ${selectError.message}`);
+  }
 
   if (!items || items.length === 0) {
     return;
   }
 
+  const itemsToReorder = includeDeleted
+    ? items.filter(item => !item.is_deleted)
+    : items;
+
+  if (itemsToReorder.length === 0) {
+    return;
+  }
+
   // 1 から順に振り直す（衝突を避けるため順次更新）
-  for (const [index, item] of items.entries()) {
-    await supabase
+  for (const [index, item] of itemsToReorder.entries()) {
+    const { error: updateError } = await supabase
       .from(table)
       .update({ display_order: index + 1 })
       .eq("id", item.id);
+
+    if (updateError) {
+      throw new Error(`並び順再採番に失敗しました(id: ${item.id}): ${updateError.message}`);
+    }
   }
 }
