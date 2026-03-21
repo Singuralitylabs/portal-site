@@ -167,23 +167,20 @@ export async function shiftDisplayOrder(
  * カテゴリー内のアイテムの display_order を 1 から振り直す
  * @param table テーブル名
  * @param categoryId カテゴリーID
- * @param options includeDeleted=true の場合でも削除済みは更新対象から除外し、未削除のみ再採番する
+ * @param options includeDeletedInSelection=true の場合、取得時は削除済みを含める（再採番対象は未削除のみ）
  */
 export async function reorderItemsInCategory(
   table: ContentTableType,
   categoryId: number,
-  options?: { includeDeleted?: boolean }
+  options?: { includeDeletedInSelection?: boolean }
 ): Promise<void> {
-  const includeDeleted = options?.includeDeleted ?? false;
+  const includeDeletedInSelection = options?.includeDeletedInSelection ?? false;
   const supabase = createClientSupabaseClient();
 
   // カテゴリー内のアイテムを display_order の昇順で取得
-  let query = supabase
-    .from(table)
-    .select("id, is_deleted")
-    .eq("category_id", categoryId);
+  let query = supabase.from(table).select("id, is_deleted").eq("category_id", categoryId);
 
-  if (!includeDeleted) {
+  if (!includeDeletedInSelection) {
     query = query.eq("is_deleted", false);
   }
 
@@ -199,7 +196,7 @@ export async function reorderItemsInCategory(
     return;
   }
 
-  const itemsToReorder = includeDeleted
+  const itemsToReorder = includeDeletedInSelection
     ? items.filter(item => !item.is_deleted)
     : items;
 

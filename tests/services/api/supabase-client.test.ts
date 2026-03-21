@@ -112,6 +112,15 @@ const createUpdateDoubleEqBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// update(...).in(...).eq(...) で終端するクエリ用モック
+const createUpdateInEqBuilder = (result: QueryResult) => {
+  const builder: { update?: jest.Mock; in?: jest.Mock; eq?: jest.Mock } = {};
+  builder.update = jest.fn(() => builder);
+  builder.in = jest.fn(() => builder);
+  builder.eq = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
 // insert(...) で完結するクエリ用モック
 const createInsertBuilder = (result: QueryResult) => {
   const builder: { insert?: jest.Mock } = {};
@@ -161,6 +170,19 @@ const createSelectSingleBuilder = (result: QueryResult) => {
   builder.select = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.single = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
+// select(...).eq(...).eq(...) を await で終端するクエリ用モック
+const createAwaitableSelectDoubleEqBuilder = (result: QueryResult) => {
+  const builder: {
+    select?: jest.Mock;
+    eq?: jest.Mock;
+    then?: (resolve: (value: QueryResult) => void) => Promise<void>;
+  } = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.then = resolve => Promise.resolve(result).then(resolve);
   return builder as Required<typeof builder>;
 };
 
@@ -976,7 +998,11 @@ describe("categories-client", () => {
       error: null,
     });
     const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
-    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const moveBuilder = createUpdateInEqBuilder({ data: null, error: null });
     const deleteCategoryBuilder = createUpdateBuilder({ data: null, error: null });
     const reorderCategorySelectBuilder = createOrderBuilder({
       data: [{ id: 1 }, { id: 2 }],
@@ -989,6 +1015,7 @@ describe("categories-client", () => {
     supabase.from
       .mockReturnValueOnce(deletingCategoryBuilder)
       .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
       .mockReturnValueOnce(deleteCategoryBuilder)
       .mockReturnValueOnce(reorderCategorySelectBuilder)
@@ -1000,7 +1027,7 @@ describe("categories-client", () => {
 
     expect(response).toEqual({ success: true, error: null });
     expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("documents", 1, {
-      includeDeleted: false,
+      includeDeletedInSelection: false,
     });
   });
 
@@ -1023,13 +1050,18 @@ describe("categories-client", () => {
       error: null,
     });
     const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [{ id: 100 }],
+      error: null,
+    });
     const moveError = { message: "move failed" };
-    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: moveError });
+    const moveBuilder = createUpdateInEqBuilder({ data: null, error: moveError });
 
     const supabase = { from: jest.fn() };
     supabase.from
       .mockReturnValueOnce(deletingCategoryBuilder)
       .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
@@ -1047,13 +1079,20 @@ describe("categories-client", () => {
       error: null,
     });
     const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
-    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [{ id: 100 }],
+      error: null,
+    });
+    const moveBuilder = createUpdateInEqBuilder({ data: null, error: null });
+    const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
     const supabase = { from: jest.fn() };
     supabase.from
       .mockReturnValueOnce(deletingCategoryBuilder)
       .mockReturnValueOnce(uncategorizedBuilder)
-      .mockReturnValueOnce(moveBuilder);
+      .mockReturnValueOnce(contentsToMoveBuilder)
+      .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(rollbackBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
     const response = await deleteCategory(10, "documents");
@@ -1103,13 +1142,18 @@ describe("categories-client", () => {
       error: null,
     });
     const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
-    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const moveBuilder = createUpdateInEqBuilder({ data: null, error: null });
     const deleteBuilder = createUpdateBuilder({ data: null, error: { message: "delete failed" } });
 
     const supabase = { from: jest.fn() };
     supabase.from
       .mockReturnValueOnce(deletingCategoryBuilder)
       .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
       .mockReturnValueOnce(deleteBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);

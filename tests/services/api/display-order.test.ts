@@ -3,7 +3,7 @@
  *
  * 処理内容:
  * - `reorderItemsInCategory` の再採番挙動を正常系/異常系で検証する
- * - `includeDeleted` オプションの既定値と挙動（削除済み除外）を検証する
+ * - `includeDeletedInSelection` オプションの既定値と挙動（削除済み除外）を検証する
  * - select/update エラー時に例外が送出されることを回帰検知する
  *
  * 主なテスト対象関数:
@@ -70,7 +70,7 @@ describe("display-order reorderItemsInCategory", () => {
     expect(updateBuilder2.update).toHaveBeenCalledWith({ display_order: 2 });
   });
 
-  it("includeDeleted=true でも削除済み行は更新対象に含めない", async () => {
+  it("includeDeletedInSelection=true でも削除済み行は更新対象に含めない", async () => {
     const selectBuilder = createSelectOrderBuilder({
       data: [
         { id: 10, is_deleted: false },
@@ -89,7 +89,7 @@ describe("display-order reorderItemsInCategory", () => {
       .mockReturnValueOnce(updateBuilder2);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
-    await reorderItemsInCategory("documents", 2, { includeDeleted: true });
+    await reorderItemsInCategory("documents", 2, { includeDeletedInSelection: true });
 
     expect(selectBuilder.eq).toHaveBeenCalledTimes(1);
     expect(updateBuilder1.eq).toHaveBeenCalledWith("id", 10);
