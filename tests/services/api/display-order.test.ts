@@ -1,3 +1,18 @@
+/**
+ * ファイル概要: `display-order` ユーティリティのユニットテスト（モック）
+ *
+ * 処理内容:
+ * - `reorderItemsInCategory` の再採番挙動を正常系/異常系で検証する
+ * - `includeDeleted` オプションの既定値と挙動（削除済み除外）を検証する
+ * - select/update エラー時に例外が送出されることを回帰検知する
+ *
+ * 主なテスト対象関数:
+ * - `reorderItemsInCategory(table, categoryId, options?)`
+ *
+ * 依存関係:
+ * - `app/services/api/utils/display-order`
+ * - `app/services/api/supabase-client`（モック化）
+ */
 import { reorderItemsInCategory } from "../../../app/services/api/utils/display-order";
 import { createClientSupabaseClient } from "../../../app/services/api/supabase-client";
 

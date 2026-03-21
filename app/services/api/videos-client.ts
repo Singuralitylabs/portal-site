@@ -1,3 +1,22 @@
+/**
+ * ファイル概要: 動画（videos）管理 API（クライアント側）
+ *
+ * 処理内容:
+ * - カテゴリー内動画一覧取得、登録、更新、論理削除を提供する
+ * - 登録/更新時に `display_order` を計算し、必要に応じたシフトと再採番を実行する
+ * - 共通ユーティリティ由来の例外を捕捉し、`{ success: false, error }` 契約で返却する
+ *
+ * 公開関数:
+ * - `getVideosByCategory(categoryId, excludeId?)`
+ * - `registerVideo(payload)`
+ * - `updateVideo(payload)`
+ * - `deleteVideo(id, userId)`
+ *
+ * 依存関係:
+ * - `createClientSupabaseClient`（Supabase クライアント生成）
+ * - `utils/display-order`（一覧取得・表示順計算・シフト・再採番）
+ * - `@/app/types`（動画関連フォーム/型定義）
+ */
 import { createClientSupabaseClient } from "./supabase-client";
 import type { CategoryItemType, VideoInsertFormType, VideoUpdateFormType } from "@/app/types";
 import {

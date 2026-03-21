@@ -1,33 +1,25 @@
 /**
- * カテゴリー管理 - クライアント側データアクセス層
+ * ファイル概要: カテゴリー管理 API（クライアント側データアクセス層）
  *
- * 処理概要:
- * - Supabaseのカテゴリーテーブルに対するCRUD操作を提供
- * - 表示順序（display_order）の自動計算・シフト処理により、カテゴリーの並び順を保証
- * - カテゴリー削除時は、該当コンテンツを「未分類」に自動移動
- * - コンテンツ種別（documents/videos/applications）ごとの操作に対応
+ * 処理内容:
+ * - カテゴリー一覧取得・登録・更新・削除を提供する
+ * - `display_order` の計算/シフト/再採番を通じて表示順の整合性を維持する
+ * - カテゴリー削除時に関連コンテンツを未分類へ移動し、移動先コンテンツとカテゴリ双方を再採番する
  *
- * 主要な責務:
- * 1. カテゴリー情報の取得（getCategoriesByType）
- * 2. カテゴリーの登録・更新・削除（registerCategory / updateCategory / deleteCategory）
- * 3. 表示順序の計算と自動シフト（calculateCategoryDisplayOrder / shiftCategoryDisplayOrder）
- * 4. 並び順の再採番（reorderCategoriesByType / reorderItemsInCategory）
+ * 公開関数:
+ * - `getCategoriesForPosition(categoryType, excludeId?)`
+ * - `registerCategory(payload)`
+ * - `updateCategory(payload)`
+ * - `deleteCategory(id, categoryType)`
+ *
+ * 内部関数:
+ * - `getCategoriesByType`, `calculateCategoryDisplayOrder`, `shiftCategoryDisplayOrder`,
+ *   `reorderCategoriesByType`, `getTableNameByType`
  *
  * 依存関係:
- * - supabase-client: Supabaseクライアント生成
- * - @/app/types: CategoryInsertFormType, CategoryUpdateFormType, CategoryItemType, CategoryTypeValue
- *
- * 関数一覧:
- * ├─ [内部] getCategoriesByType() - 指定タイプのカテゴリー一覧取得
- * ├─ [公開] getCategoriesForPosition() - 位置指定フォーム用のカテゴリー一覧取得
- * ├─ [内部] calculateCategoryDisplayOrder() - 挿入位置から表示順序を計算
- * ├─ [内部] shiftCategoryDisplayOrder() - 指定順序以上のカテゴリーの順序をシフト
- * ├─ [内部] reorderCategoriesByType() - カテゴリーの並び順を1からリセット
- * ├─ [共通] reorderItemsInCategory() - 特定カテゴリー内のコンテンツ並び順をリセット
- * ├─ [公開] registerCategory() - カテゴリー登録
- * ├─ [公開] updateCategory() - カテゴリー更新
- * ├─ [内部] getTableNameByType() - カテゴリータイプからテーブル名に変換
- * └─ [公開] deleteCategory() - カテゴリー削除（コンテンツは未分類に移動）
+ * - `createClientSupabaseClient`（Supabase クライアント生成）
+ * - `reorderItemsInCategory`（共通再採番ユーティリティ）
+ * - `@/app/types`（カテゴリ関連フォーム/型定義）
  */
 import { createClientSupabaseClient } from "./supabase-client";
 import type {

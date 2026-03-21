@@ -1,3 +1,22 @@
+/**
+ * ファイル概要: 資料（documents）管理 API（クライアント側）
+ *
+ * 処理内容:
+ * - カテゴリー内資料一覧取得、登録、更新、論理削除を提供する
+ * - 登録/更新時に `display_order` を計算し、挿入位置に応じたシフトと再採番を行う
+ * - 共通ユーティリティ由来の例外を捕捉し、`{ success: false, error }` 契約で返却する
+ *
+ * 公開関数:
+ * - `getDocumentsByCategory(categoryId, excludeId?)`
+ * - `registerDocument(payload)`
+ * - `updateDocument(payload)`
+ * - `deleteDocument(id, userId)`
+ *
+ * 依存関係:
+ * - `createClientSupabaseClient`（Supabase クライアント生成）
+ * - `utils/display-order`（一覧取得・表示順計算・シフト・再採番）
+ * - `@/app/types`（資料関連フォーム/型定義）
+ */
 import { createClientSupabaseClient } from "./supabase-client";
 import type { CategoryItemType, DocumentInsertFormType, DocumentUpdateFormType } from "@/app/types";
 import {
