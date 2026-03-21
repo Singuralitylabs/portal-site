@@ -56,41 +56,49 @@ export async function registerVideo({
   created_by,
   position,
 }: VideoInsertFormType) {
-  // 配置位置から display_order を計算
-  const display_order = await calculateDisplayOrder("videos", category_id, position);
+  try {
+    // 配置位置から display_order を計算
+    const display_order = await calculateDisplayOrder("videos", category_id, position);
 
-  // 新規動画を挿入する前に、指定位置以降の動画の display_order を +1 する
-  if (position.type === "first" || position.type === "after") {
-    await shiftDisplayOrder("videos", category_id, display_order);
-  }
+    // 新規動画を挿入する前に、指定位置以降の動画の display_order を +1 する
+    if (position.type === "first" || position.type === "after") {
+      await shiftDisplayOrder("videos", category_id, display_order);
+    }
 
-  const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("videos").insert([
-    {
-      name,
-      category_id,
-      description,
-      url,
-      thumbnail_path,
-      thumbnail_time,
-      length,
-      assignee_id,
-      display_order,
-      is_deleted: false,
-      created_by,
-      updated_by: created_by,
-    },
-  ]);
+    const supabase = createClientSupabaseClient();
+    const { error } = await supabase.from("videos").insert([
+      {
+        name,
+        category_id,
+        description,
+        url,
+        thumbnail_path,
+        thumbnail_time,
+        length,
+        assignee_id,
+        display_order,
+        is_deleted: false,
+        created_by,
+        updated_by: created_by,
+      },
+    ]);
 
-  if (error) {
+    if (error) {
+      console.error("動画の登録に失敗:", error);
+      return { success: false, error };
+    }
+
+    // 登録後、カテゴリー内の display_order を振り直す
+    await reorderItemsInCategory("videos", category_id);
+
+    return { success: true, error: null };
+  } catch (error) {
     console.error("動画の登録に失敗:", error);
-    return { success: false, error };
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("動画登録に失敗しました。"),
+    };
   }
-
-  // 登録後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("videos", category_id);
-
-  return { success: true, error: null };
 }
 
 /**
@@ -111,59 +119,67 @@ export async function updateVideo({
   updated_by,
   position,
 }: VideoUpdateFormType) {
-  const supabase = createClientSupabaseClient();
+  try {
+    const supabase = createClientSupabaseClient();
 
-  // 現在の動画情報を取得（現在のdisplay_orderとcategory_idを知るため）
-  const { data: currentVideo } = await supabase
-    .from("videos")
-    .select("display_order, category_id")
-    .eq("id", id)
-    .single();
+    // 現在の動画情報を取得（現在のdisplay_orderとcategory_idを知るため）
+    const { data: currentVideo } = await supabase
+      .from("videos")
+      .select("display_order, category_id")
+      .eq("id", id)
+      .single();
 
-  const currentDisplayOrder = currentVideo?.display_order;
-  const currentCategoryId = currentVideo?.category_id;
+    const currentDisplayOrder = currentVideo?.display_order;
+    const currentCategoryId = currentVideo?.category_id;
 
-  // 新しい display_order を計算（編集時は自分自身を除外して計算）
-  const display_order = await calculateDisplayOrder(
-    "videos",
-    category_id,
-    position,
-    currentDisplayOrder
-  );
-
-  // 動画を更新する前に、指定位置以降の動画の display_order を +1 する
-  if (position.type === "first" || position.type === "after") {
-    await shiftDisplayOrder("videos", category_id, display_order, id);
-  }
-
-  const { error } = await supabase
-    .from("videos")
-    .update({
-      name,
+    // 新しい display_order を計算（編集時は自分自身を除外して計算）
+    const display_order = await calculateDisplayOrder(
+      "videos",
       category_id,
-      description,
-      url,
-      thumbnail_path,
-      thumbnail_time,
-      length,
-      assignee_id,
-      display_order,
-      updated_by,
-    })
-    .eq("id", id);
+      position,
+      currentDisplayOrder
+    );
 
-  if (error) {
+    // 動画を更新する前に、指定位置以降の動画の display_order を +1 する
+    if (position.type === "first" || position.type === "after") {
+      await shiftDisplayOrder("videos", category_id, display_order, id);
+    }
+
+    const { error } = await supabase
+      .from("videos")
+      .update({
+        name,
+        category_id,
+        description,
+        url,
+        thumbnail_path,
+        thumbnail_time,
+        length,
+        assignee_id,
+        display_order,
+        updated_by,
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("動画の更新に失敗:", error);
+      return { success: false, error };
+    }
+
+    // 更新後、カテゴリー内の display_order を振り直す
+    await reorderItemsInCategory("videos", category_id);
+
+    // カテゴリーが変更された場合、元のカテゴリーも振り直す
+    if (currentCategoryId && currentCategoryId !== category_id) {
+      await reorderItemsInCategory("videos", currentCategoryId);
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
     console.error("動画の更新に失敗:", error);
-    return { success: false, error };
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("動画更新に失敗しました。"),
+    };
   }
-
-  // 更新後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("videos", category_id);
-
-  // カテゴリーが変更された場合、元のカテゴリーも振り直す
-  if (currentCategoryId && currentCategoryId !== category_id) {
-    await reorderItemsInCategory("videos", currentCategoryId);
-  }
-
-  return { success: true, error: null };
 }
