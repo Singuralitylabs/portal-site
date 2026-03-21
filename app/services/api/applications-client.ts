@@ -10,7 +10,6 @@ import {
   shiftDisplayOrder,
   reorderItemsInCategory,
 } from "./utils/display-order";
-import { isValidUrl } from "./utils/url-validation";
 
 /**
  * 指定されたカテゴリー内のアプリ一覧を取得する
@@ -64,11 +63,6 @@ export async function registerApplication({
   created_by,
   position,
 }: ApplicationInsertFormType) {
-  // URLの形式チェック_url-validation.tsの共通関数を追加_httpsのみ許容
-  if (!isValidUrl(url)) {
-    return { success: false, error: "URLは https:// から始まる正しい形式で入力してください" };
-  }
-
   // 配置位置から display_order を計算
   const display_order = await calculateDisplayOrder("applications", category_id, position);
 
@@ -121,11 +115,6 @@ export async function updateApplication({
   updated_by,
   position,
 }: ApplicationUpdateFormType) {
-  // URLの形式チェック_url-validation.tsの共通関数を追加_httpsのみ許容
-  if (!isValidUrl(url)) {
-    return { success: false, error: "URLは https:// から始まる正しい形式で入力してください" };
-  }
-
   const supabase = createClientSupabaseClient();
 
   // 現在のアプリ情報を取得（現在のdisplay_orderとcategory_idを知るため）

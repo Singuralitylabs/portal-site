@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from "./supabase-server";
 import { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
-import { validateUrls } from "@/app/services/api/utils/url-validation";
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -191,27 +190,6 @@ export async function updateUserProfileServerInServer({
   github_url: string | null;
   portfolio_url: string | null;
 }): Promise<PostgrestError | null> {
-  // URLの形式チェック_url-validation.tsの共通関数追加_https://のみ許容
-  const invalidFields = validateUrls({
-    x_url,
-    facebook_url,
-    instagram_url,
-    github_url,
-    portfolio_url,
-  });
-
-  if (invalidFields.length > 0) {
-    const errorMessage = `次のフィールドに無効なURLが含まれています: ${invalidFields.join(", ")}`;
-    console.error(errorMessage);
-
-    return {
-      message: errorMessage,
-      details: "URLは https:// から始まる正しい形式で入力してください",
-      hint: "全てのSNSリンクが https:// で始まる正しい形式で入力されているか確認してください。",
-      code: "VALIDATION_ERROR",
-    } as PostgrestError;
-  }
-
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase
