@@ -1,9 +1,24 @@
+/**
+ * ファイル概要: コンテンツ表示順（display_order）操作の共通ユーティリティ
+ *
+ * 処理内容:
+ * - カテゴリー内アイテム一覧の取得（`getItemsByCategory`）
+ * - 配置位置（first/after/last/current）から表示順を算出（`calculateDisplayOrder`）
+ * - 指定位置以降の表示順シフト（`shiftDisplayOrder`）
+ * - カテゴリー内再採番（`reorderItemsInCategory`）
+ *
+ * 主な関数:
+ * - `getItemsByCategory(table, categoryId, excludeId?)`
+ * - `calculateDisplayOrder(table, categoryId, position, currentDisplayOrder?)`
+ * - `shiftDisplayOrder(table, categoryId, displayOrder, excludeId?)`
+ * - `reorderItemsInCategory(table, categoryId, options?)`
+ *
+ * 依存関係:
+ * - `createClientSupabaseClient`（Supabase クライアント生成）
+ * - `@/app/types`（`ContentTableType` などの共通型）
+ */
 import { createClientSupabaseClient } from "../supabase-client";
 import type { CategoryItemType, ContentTableType, PlacementPositionType } from "@/app/types";
-
-/**
- * 表示順操作の共通型定義と関数
- */
 
 /**
  * 指定されたカテゴリー内のアイテム一覧を取得する

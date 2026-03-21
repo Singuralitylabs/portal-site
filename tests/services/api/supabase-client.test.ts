@@ -1,29 +1,22 @@
 /**
- * Supabase クライアント関連サービスのユニットテストスイート（モック）
+ * ファイル概要: クライアント側 API サービスのユニットテスト（モック）
  *
- * @description
- * クライアント側で使用される Supabase API ラッパー関数群の動作を検証。
- * 以下の機能モジュールをカバー：
- * - createClientSupabaseClient: Supabase ブラウザクライアントの生成
- * - Content CRUD (Application/Document/Video): カテゴリ別アイテム管理
- * - Users-client: ユーザー情報取得・ステータス管理
- * - Categories-client: カテゴリ基本情報管理
- * - Applications: 登録・更新・削除・一覧取得
- * - Documents: 登録・更新・削除・一覧取得
- * - Videos: 登録・更新・削除・一覧取得
- * - Users: 新規追加、役割取得、ステータス取得、ID取得、承認、却下
- * - Categories: 登録・更新・削除
- * @test_strategy
- * 各テストケースでは以下の観点を検証：
- * 1. 正常系: 期待される戻り値の型・内容が返ること
- * 2. 異常系: エラーハンドリングと error フィールドの適切な設定
- * 3. 副作用: display_order の再採番など、DB操作後の連鎖処理の実行確認
- * 4. Supabase クエリビルダパターン: 複数の .eq() や .order() メソッド連鎖に対応
+ * 処理内容:
+ * - `applications-client` / `documents-client` / `videos-client` / `categories-client` /
+ *   `users-client` の正常系・異常系・副作用（再採番など）を検証する
+ * - Supabase クエリチェーンをモックビルダーで再現し、戻り値契約（`success/error`）を確認する
+ * - 例外発生時に呼び出し側で契約が崩れないこと（`success=false`）を回帰検知する
  *
- * @note
- * - 複数のクエリビルダーモック関数で様々なクエリパターンに対応
- * - jest.mock() でモジュール全体をモック化し、副作用関数の呼び出しを追跡
- * - console.error の出力を確認し、エラーログ機能を検証
+ * 主な対象関数:
+ * - `get*ByCategory` / `register*` / `update*` / `delete*`（applications/documents/videos）
+ * - `registerCategory` / `updateCategory` / `deleteCategory` / `getCategoriesForPosition`
+ * - `addNewUser` / `approveUser` / `rejectUser` / `fetchUser*`
+ * - `createClientSupabaseClient`
+ *
+ * 依存関係:
+ * - `@supabase/ssr`（`createBrowserClient`）
+ * - `app/services/api/*-client.ts` 各サービス実装
+ * - `app/services/api/utils/display-order`（モック化）
  */
 import { createBrowserClient } from "@supabase/ssr";
 import { createClientSupabaseClient } from "../../../app/services/api/supabase-client";
@@ -1034,6 +1027,29 @@ describe("categories-client", () => {
     const response = await deleteCategory(10, "documents");
 
     expect(response).toEqual({ success: false, error: moveError });
+  });
+
+  it("deleteCategory 異常系: コンテンツ再採番で例外発生時に success=false を返す", async () => {
+    const reorderError = new Error("reorder failed");
+    reorderItemsInCategoryMock.mockRejectedValue(reorderError);
+
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(deletingCategoryBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(moveBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response).toEqual({ success: false, error: reorderError });
   });
 
   it("deleteCategory 異常系: 未分類カテゴリーの削除は失敗を返す", async () => {

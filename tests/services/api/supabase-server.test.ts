@@ -1,62 +1,22 @@
 /**
- * ================================================================================
- * サーバー側 Supabase サービス群のユニットテストスイート（モック）
- * ================================================================================
+ * ファイル概要: サーバー側 API サービスのユニットテスト（モック）
  *
- * 【処理概要】
- * - Supabase のサーバーサイドデータアクセス層（services/api/xxx-server.ts）の動作確認
- * - 各API関数の正常系（データ返却）・異常系（エラー処理）をテスト
- * - Supabase クライアント生成・認証情報取得の検証
- * - モックビルダー（QueryChain）を用いた DBクエリチェーンの再現
+ * 処理内容:
+ * - `*-server.ts` 系 API の正常系/異常系を検証する
+ * - `createServerSupabaseClient` と `getServerCurrentUser` の環境変数・Cookie連携を検証する
+ * - Supabase の query chain（select/eq/order/maybeSingle/update）をモックで再現する
  *
- * 【テスト対象関数一覧】
+ * 主なテスト対象関数:
+ * - `fetchDocuments`, `fetchApplications`, `fetchCategoriesByType`, `fetchCategoriesForManagement`,
+ *   `fetchVideos`, `fetchVideoById`
+ * - `fetchActiveUsers`, `fetchApprovalUsers`, `fetchUserStatusByIdInServer`,
+ *   `fetchUserInfoByAuthId`, `fetchUserByAuthIdInServer`, `updateUserProfileServerInServer`
+ * - `createServerSupabaseClient`, `getServerCurrentUser`
  *
- * ▼ 一覧取得系（select/order チェーン）
- *   - fetchDocuments()
- *   - fetchApplications()
- *   - fetchCategoriesByType(type: string)
- *   - fetchCategoriesForManagement(type: CategoryTypeValue)
- *   - fetchVideos()
- *   - fetchActiveUsers()
- *   - fetchApprovalUsers()
- *
- * ▼ 単体取得系（select/maybeSingle チェーン）
- *   - fetchVideoById(id: number)
- *   - fetchUserStatusByIdInServer(params: { authId: string })
- *   - fetchUserInfoByAuthId(params: { authId: string })
- *   - fetchUserByAuthIdInServer(params: { authId: string })
- *
- * ▼ 更新系（update/select/single チェーン）
- *   - updateUserProfileServerInServer(params: UserProfileUpdate)
- *
- * ▼ クライアント・認証系
- *   - createServerSupabaseClient(): Supabase サーバークライアント生成
- *   - getServerCurrentUser(): 現在のログインユーザー認証ID取得
- *
- * 【依存関係概要】
- *
- * ▼ 外部モック対象
- *   - @supabase/ssr.createServerClient    : Supabaseクライアント初期化
- *   - next/headers.cookies                : Cookie ストア アクセス
- *   - app/services/api/supabase-server.ts : Supabase クライアント管理
- *
- * ▼ テスト対象モジュール
- *   - app/services/api/applications-server.ts
- *   - app/services/api/categories-server.ts
- *   - app/services/api/documents-server.ts
- *   - app/services/api/videos-server.ts
- *   - app/services/api/users-server.ts
- *
- * ▼ ヘルパー関数（モックビルダー）
- *   - createOrderBuilder()          : select().eq().order() チェーン用
- *   - createMaybeSingleBuilder()    : select().eq().maybeSingle() チェーン用
- *   - createEqTerminatingBuilder()  : 複数eq条件→終端の条件付き チェーン用
- *   - createUpdateSelectSingleBuilder() : update().eq().select().single() チェーン用
- *
- * 【テスト構成】
- *   describe "server API services"        : 各データアクセス関数のテスト
- *   describe "supabase-server module"     : クライアント生成・認証関数のテスト
- *
+ * 依存関係:
+ * - `@supabase/ssr`（`createServerClient`）
+ * - `next/headers`（`cookies`）
+ * - `app/services/api/*-server.ts` 各サーバーAPI
  */
 import { fetchApplications } from "../../../app/services/api/applications-server";
 import {
