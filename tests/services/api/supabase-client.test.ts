@@ -1018,9 +1018,7 @@ describe("categories-client", () => {
     const response = await deleteCategory(10, "documents");
 
     expect(response).toEqual({ success: true, error: null });
-    expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("documents", 1, {
-      includeDeletedInSelection: false,
-    });
+    expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("documents", 1);
     expect(moveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(moveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 10);
   });
@@ -1146,6 +1144,7 @@ describe("categories-client", () => {
     });
     const moveBuilder = createUpdateInEqBuilder({ data: null, error: null });
     const deleteBuilder = createUpdateBuilder({ data: null, error: { message: "delete failed" } });
+    const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
     const supabase = { from: jest.fn() };
     supabase.from
@@ -1153,11 +1152,14 @@ describe("categories-client", () => {
       .mockReturnValueOnce(uncategorizedBuilder)
       .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
-      .mockReturnValueOnce(deleteBuilder);
+      .mockReturnValueOnce(deleteBuilder)
+      .mockReturnValueOnce(rollbackBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
     const response = await deleteCategory(10, "documents");
 
     expect(response.success).toBe(false);
+    expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
+    expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
   });
 });
