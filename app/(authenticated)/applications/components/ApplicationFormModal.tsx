@@ -7,7 +7,7 @@ import type {
   SelectCategoryType,
   SelectDeveloperType,
 } from "@/app/types";
-import { z } from "zod";
+import { isValidUrl } from "@/app/services/api/utils/url-validation";
 import { registerApplication, updateApplication } from "@/app/services/api/applications-client";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 
@@ -74,16 +74,11 @@ export function ApplicationFormModal({
       });
       return;
     }
-    // URLの形式チェック
-    const httpUrl = z.url({
-      protocol: /^https?$/,
-      hostname: z.regexes.domain,
-    });
-    const urlValidation = httpUrl.safeParse(form.url);
-    if (!urlValidation.success) {
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
+    if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
-        message: urlValidation.error?.message || "正しいURLを入力してください",
+        message: "URLは https:// から始まる正しい形式で入力してください",
         color: "red",
       });
       return;
