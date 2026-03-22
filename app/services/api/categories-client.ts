@@ -32,6 +32,10 @@ import { reorderItemsInCategory } from "./utils/display-order";
 
 const UNCLASSIFIED_CATEGORY_NAME = "未分類";
 
+/**
+ * カテゴリー種別ごとの一覧を display_order 昇順で取得する。
+ * excludeId が指定された場合は対象IDを除外して返す。
+ */
 async function getCategoriesByType(
   categoryType: CategoryTypeValue,
   excludeId?: number
@@ -64,6 +68,9 @@ export async function getCategoriesForPosition(
   return getCategoriesByType(categoryType, excludeId);
 }
 
+/**
+ * 追加/更新フォームの position 指定から挿入先 display_order を算出する。
+ */
 async function calculateCategoryDisplayOrder(
   categoryType: CategoryTypeValue,
   position: CategoryInsertFormType["position"],
@@ -118,6 +125,10 @@ async function calculateCategoryDisplayOrder(
   return 1;
 }
 
+/**
+ * 指定 display_order 以降のカテゴリーを後ろへ1つずつシフトする。
+ * 順序衝突を避けるため降順取得して逐次更新する。
+ */
 async function shiftCategoryDisplayOrder(
   categoryType: CategoryTypeValue,
   displayOrder: number,
@@ -159,6 +170,9 @@ async function shiftCategoryDisplayOrder(
   }
 }
 
+/**
+ * 指定カテゴリー種別の display_order を 1 から連番に再採番する。
+ */
 async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise<void> {
   const supabase = createClientSupabaseClient();
 
@@ -189,6 +203,9 @@ async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise
   }
 }
 
+/**
+ * カテゴリーを新規登録し、必要に応じてシフト/再採番して整合性を保つ。
+ */
 export async function registerCategory({
   category_type,
   name,
@@ -228,6 +245,9 @@ export async function registerCategory({
   }
 }
 
+/**
+ * カテゴリー情報を更新し、表示順や種別変更に伴う再採番を実行する。
+ */
 export async function updateCategory({
   id,
   category_type,
@@ -293,6 +313,9 @@ export async function updateCategory({
   }
 }
 
+/**
+ * カテゴリー種別から対応するコンテンツテーブル名を解決する。
+ */
 function getTableNameByType(
   categoryType: CategoryTypeValue
 ): "documents" | "videos" | "applications" {
@@ -307,6 +330,13 @@ function getTableNameByType(
   return "applications";
 }
 
+/**
+ * カテゴリーを削除する。
+ * 1) 対象コンテンツを未分類へ移動
+ * 2) 未分類側の再採番
+ * 3) カテゴリー論理削除
+ * の順で実行し、失敗時は可能な範囲で移動をロールバックする。
+ */
 export async function deleteCategory(id: number, categoryType: CategoryTypeValue) {
   try {
     const supabase = createClientSupabaseClient();
@@ -375,9 +405,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
     }
 
     try {
-      await reorderItemsInCategory(tableName, uncategorized.id, {
-        includeDeletedInSelection: false,
-      });
+      await reorderItemsInCategory(tableName, uncategorized.id);
     } catch (error) {
       if (movedContentIds.length > 0) {
         const { error: rollbackError } = await supabase
@@ -407,6 +435,19 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       .eq("id", id);
 
     if (deleteError) {
+      if (movedContentIds.length > 0) {
+        const { error: rollbackError } = await supabase
+          .from(tableName)
+          .update({ category_id: id })
+          .in("id", movedContentIds)
+          .eq("is_deleted", false)
+          .eq("category_id", uncategorized.id);
+
+        if (rollbackError) {
+          return { success: false, error: rollbackError };
+        }
+      }
+
       return { success: false, error: deleteError };
     }
 
