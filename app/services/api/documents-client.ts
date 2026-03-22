@@ -79,6 +79,20 @@ export async function registerDocument({
   created_by,
   position,
 }: DocumentInsertFormType) {
+  let didShiftDisplayOrder = false;
+
+  const recoverDisplayOrderAfterFailure = async () => {
+    if (!didShiftDisplayOrder) {
+      return;
+    }
+
+    try {
+      await reorderItemsInCategory("documents", category_id);
+    } catch (recoveryError) {
+      console.error("資料登録失敗後の表示順復旧に失敗:", recoveryError);
+    }
+  };
+
   try {
     // 配置位置から display_order を計算
     const display_order = await calculateDisplayOrder("documents", category_id, position);
@@ -86,6 +100,7 @@ export async function registerDocument({
     // 新規資料を挿入する前に、指定位置以降の資料の display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("documents", category_id, display_order);
+      didShiftDisplayOrder = true;
     }
 
     const supabase = createClientSupabaseClient();
@@ -105,6 +120,7 @@ export async function registerDocument({
 
     // エラーが発生した場合はコンソールにエラーメッセージを出力
     if (error) {
+      await recoverDisplayOrderAfterFailure();
       console.error("Supabase 資料登録エラー:", error.message);
       return { success: false, error };
     }
@@ -114,6 +130,7 @@ export async function registerDocument({
 
     return { success: true, error: null };
   } catch (error) {
+    await recoverDisplayOrderAfterFailure();
     console.error("Supabase 資料登録エラー:", error);
     return {
       success: false,
@@ -139,6 +156,20 @@ export async function updateDocument({
   updated_by,
   position,
 }: DocumentUpdateFormType) {
+  let didShiftDisplayOrder = false;
+
+  const recoverDisplayOrderAfterFailure = async () => {
+    if (!didShiftDisplayOrder) {
+      return;
+    }
+
+    try {
+      await reorderItemsInCategory("documents", category_id);
+    } catch (recoveryError) {
+      console.error("資料更新失敗後の表示順復旧に失敗:", recoveryError);
+    }
+  };
+
   try {
     const supabase = createClientSupabaseClient();
 
@@ -163,6 +194,7 @@ export async function updateDocument({
     // 資料を更新する前に、指定位置以降の資料の display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("documents", category_id, display_order, id);
+      didShiftDisplayOrder = true;
     }
 
     const { error } = await supabase
@@ -180,6 +212,7 @@ export async function updateDocument({
 
     // エラーが発生した場合はコンソールにエラーメッセージを出力
     if (error) {
+      await recoverDisplayOrderAfterFailure();
       console.error("Supabase 資料更新エラー:", error.message);
       return { success: false, error };
     }
@@ -194,6 +227,7 @@ export async function updateDocument({
 
     return { success: true, error: null };
   } catch (error) {
+    await recoverDisplayOrderAfterFailure();
     console.error("Supabase 資料更新エラー:", error);
     return {
       success: false,
