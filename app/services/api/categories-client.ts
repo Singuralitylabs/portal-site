@@ -391,6 +391,37 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
 
     const movedContentIds = (contentsToMove ?? []).map(content => content.id);
 
+    const rollbackMovedContents = async () => {
+      if (movedContentIds.length === 0) {
+        return null;
+      }
+
+      const { error: rollbackError } = await supabase
+        .from(tableName)
+        .update({ category_id: id })
+        .in("id", movedContentIds)
+        .eq("is_deleted", false)
+        .eq("category_id", uncategorized.id);
+
+      return rollbackError;
+    };
+
+    const recoverDisplayOrdersAfterRollback = async () => {
+      try {
+        await reorderItemsInCategory(tableName, id);
+      } catch (reorderOriginalError) {
+        return reorderOriginalError;
+      }
+
+      try {
+        await reorderItemsInCategory(tableName, uncategorized.id);
+      } catch (reorderUncategorizedError) {
+        return reorderUncategorizedError;
+      }
+
+      return null;
+    };
+
     if (movedContentIds.length > 0) {
       const { error: moveError } = await supabase
         .from(tableName)
@@ -404,29 +435,34 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       }
     }
 
-    try {
-      await reorderItemsInCategory(tableName, uncategorized.id);
-    } catch (error) {
-      if (movedContentIds.length > 0) {
-        const { error: rollbackError } = await supabase
-          .from(tableName)
-          .update({ category_id: id })
-          .in("id", movedContentIds)
-          .eq("is_deleted", false)
-          .eq("category_id", uncategorized.id);
-
+    if (movedContentIds.length > 0) {
+      try {
+        await reorderItemsInCategory(tableName, uncategorized.id);
+      } catch (error) {
+        const rollbackError = await rollbackMovedContents();
         if (rollbackError) {
           return { success: false, error: rollbackError };
         }
-      }
 
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error
-            : new Error("コンテンツ再採番に失敗したため、移動をロールバックしました。"),
-      };
+        const recoverError = await recoverDisplayOrdersAfterRollback();
+        if (recoverError) {
+          return {
+            success: false,
+            error:
+              recoverError instanceof Error
+                ? recoverError
+                : new Error("表示順復旧に失敗しました。"),
+          };
+        }
+
+        return {
+          success: false,
+          error:
+            error instanceof Error
+              ? error
+              : new Error("コンテンツ再採番に失敗したため、移動をロールバックしました。"),
+        };
+      }
     }
 
     const { error: deleteError } = await supabase
@@ -435,17 +471,20 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       .eq("id", id);
 
     if (deleteError) {
-      if (movedContentIds.length > 0) {
-        const { error: rollbackError } = await supabase
-          .from(tableName)
-          .update({ category_id: id })
-          .in("id", movedContentIds)
-          .eq("is_deleted", false)
-          .eq("category_id", uncategorized.id);
+      const rollbackError = await rollbackMovedContents();
+      if (rollbackError) {
+        return { success: false, error: rollbackError };
+      }
 
-        if (rollbackError) {
-          return { success: false, error: rollbackError };
-        }
+      const recoverError = await recoverDisplayOrdersAfterRollback();
+      if (recoverError) {
+        return {
+          success: false,
+          error:
+            recoverError instanceof Error
+              ? recoverError
+              : new Error("表示順復旧に失敗しました。"),
+        };
       }
 
       return { success: false, error: deleteError };
