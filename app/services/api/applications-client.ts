@@ -82,6 +82,20 @@ export async function registerApplication({
   created_by,
   position,
 }: ApplicationInsertFormType) {
+  let didShiftDisplayOrder = false;
+
+  const recoverDisplayOrderAfterFailure = async () => {
+    if (!didShiftDisplayOrder) {
+      return;
+    }
+
+    try {
+      await reorderItemsInCategory("applications", category_id);
+    } catch (recoveryError) {
+      console.error("アプリ登録失敗後の表示順復旧に失敗:", recoveryError);
+    }
+  };
+
   try {
     // 配置位置から display_order を計算
     const display_order = await calculateDisplayOrder("applications", category_id, position);
@@ -89,6 +103,7 @@ export async function registerApplication({
     // 新規アプリを挿入する前に、指定位置以降のアプリの display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("applications", category_id, display_order);
+      didShiftDisplayOrder = true;
     }
 
     const supabase = createClientSupabaseClient();
@@ -108,6 +123,7 @@ export async function registerApplication({
 
     // エラーが発生した場合はコンソールにエラーメッセージを出力
     if (error) {
+      await recoverDisplayOrderAfterFailure();
       console.error("Supabase アプリ登録エラー:", error.message);
       return { success: false, error };
     }
@@ -117,6 +133,7 @@ export async function registerApplication({
 
     return { success: true, error: null };
   } catch (error) {
+    await recoverDisplayOrderAfterFailure();
     console.error("Supabase アプリ登録エラー:", error);
     return {
       success: false,
@@ -142,6 +159,20 @@ export async function updateApplication({
   updated_by,
   position,
 }: ApplicationUpdateFormType) {
+  let didShiftDisplayOrder = false;
+
+  const recoverDisplayOrderAfterFailure = async () => {
+    if (!didShiftDisplayOrder) {
+      return;
+    }
+
+    try {
+      await reorderItemsInCategory("applications", category_id);
+    } catch (recoveryError) {
+      console.error("アプリ更新失敗後の表示順復旧に失敗:", recoveryError);
+    }
+  };
+
   try {
     const supabase = createClientSupabaseClient();
 
@@ -166,6 +197,7 @@ export async function updateApplication({
     // アプリを更新する前に、指定位置以降のアプリの display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("applications", category_id, display_order, id);
+      didShiftDisplayOrder = true;
     }
 
     const { error } = await supabase
@@ -183,6 +215,7 @@ export async function updateApplication({
 
     // エラーが発生した場合はコンソールにエラーメッセージを出力
     if (error) {
+      await recoverDisplayOrderAfterFailure();
       console.error("Supabase アプリ更新エラー:", error.message);
       return { success: false, error };
     }
@@ -197,6 +230,7 @@ export async function updateApplication({
 
     return { success: true, error: null };
   } catch (error) {
+    await recoverDisplayOrderAfterFailure();
     console.error("Supabase アプリ更新エラー:", error);
     return {
       success: false,

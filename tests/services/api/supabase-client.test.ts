@@ -425,8 +425,12 @@ describe("content client services", () => {
 
       // 登録失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
-      // 失敗時は再採番を行わないことを確認
-      expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
+      // 失敗時は表示順復旧のため対象カテゴリを再採番することを確認
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith(
+        expect.any(String),
+        registerPayload.category_id
+      );
       // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
@@ -478,8 +482,12 @@ describe("content client services", () => {
 
       // 更新失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
-      // 失敗時は再採番を実行しないことを確認
-      expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
+      // 失敗時は表示順復旧のため対象カテゴリを再採番することを確認
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith(
+        expect.any(String),
+        updatePayload.category_id
+      );
       // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();

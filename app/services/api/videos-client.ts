@@ -75,6 +75,20 @@ export async function registerVideo({
   created_by,
   position,
 }: VideoInsertFormType) {
+  let didShiftDisplayOrder = false;
+
+  const recoverDisplayOrderAfterFailure = async () => {
+    if (!didShiftDisplayOrder) {
+      return;
+    }
+
+    try {
+      await reorderItemsInCategory("videos", category_id);
+    } catch (recoveryError) {
+      console.error("動画登録失敗後の表示順復旧に失敗:", recoveryError);
+    }
+  };
+
   try {
     // 配置位置から display_order を計算
     const display_order = await calculateDisplayOrder("videos", category_id, position);
@@ -82,6 +96,7 @@ export async function registerVideo({
     // 新規動画を挿入する前に、指定位置以降の動画の display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("videos", category_id, display_order);
+      didShiftDisplayOrder = true;
     }
 
     const supabase = createClientSupabaseClient();
@@ -103,6 +118,7 @@ export async function registerVideo({
     ]);
 
     if (error) {
+      await recoverDisplayOrderAfterFailure();
       console.error("動画の登録に失敗:", error);
       return { success: false, error };
     }
@@ -112,6 +128,7 @@ export async function registerVideo({
 
     return { success: true, error: null };
   } catch (error) {
+    await recoverDisplayOrderAfterFailure();
     console.error("動画の登録に失敗:", error);
     return {
       success: false,
@@ -138,6 +155,20 @@ export async function updateVideo({
   updated_by,
   position,
 }: VideoUpdateFormType) {
+  let didShiftDisplayOrder = false;
+
+  const recoverDisplayOrderAfterFailure = async () => {
+    if (!didShiftDisplayOrder) {
+      return;
+    }
+
+    try {
+      await reorderItemsInCategory("videos", category_id);
+    } catch (recoveryError) {
+      console.error("動画更新失敗後の表示順復旧に失敗:", recoveryError);
+    }
+  };
+
   try {
     const supabase = createClientSupabaseClient();
 
@@ -162,6 +193,7 @@ export async function updateVideo({
     // 動画を更新する前に、指定位置以降の動画の display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("videos", category_id, display_order, id);
+      didShiftDisplayOrder = true;
     }
 
     const { error } = await supabase
@@ -181,6 +213,7 @@ export async function updateVideo({
       .eq("id", id);
 
     if (error) {
+      await recoverDisplayOrderAfterFailure();
       console.error("動画の更新に失敗:", error);
       return { success: false, error };
     }
@@ -195,6 +228,7 @@ export async function updateVideo({
 
     return { success: true, error: null };
   } catch (error) {
+    await recoverDisplayOrderAfterFailure();
     console.error("動画の更新に失敗:", error);
     return {
       success: false,
