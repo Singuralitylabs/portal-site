@@ -292,32 +292,10 @@ export async function updateUserPositionTagsInServer(
     return null;
   }
 
-  // 既存の全IDを昇順で取得し、空きIDを小さい順に埋める
-  const { data: allIds, error: allIdsError } = await supabase
-    .from("position_tags")
-    .select("id")
-    .order("id", { ascending: true });
-
-  if (allIdsError) {
-    console.error("Supabase position_tags ID取得エラー:", allIdsError.message);
-    return allIdsError;
-  }
-
-  const existingIds = new Set((allIds ?? []).map(row => row.id));
-  const availableIds: number[] = [];
-  let candidate = 1;
-  while (availableIds.length < uniquePositionIds.length) {
-    if (!existingIds.has(candidate)) {
-      availableIds.push(candidate);
-    }
-    candidate++;
-  }
-
   const { error: insertError } = await supabase
     .from("position_tags")
     .insert(
-      uniquePositionIds.map((positionId, index) => ({
-        id: availableIds[index],
+      uniquePositionIds.map(positionId => ({
         user_id: userId,
         position_id: positionId,
       }))
