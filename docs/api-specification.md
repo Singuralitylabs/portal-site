@@ -236,9 +236,11 @@ GOOGLE_CALENDAR_IDS="singularity-mtg:calendar_id_1,holiday:ja.japanese%23holiday
 #### イベントの表示形式
 
 - **色分け**: カレンダーエイリアスごとに異なる色で表示（TailwindCSSカラーパレット使用）
-  - シンラボMTGカレンダー（`singularity-mtg`）: 紫色（`green-300` / `green-400`）
+  - シンラボMTGカレンダー（`singularity-mtg`）: 緑色（`green-300` / `green-400`）
+  - シンラボイベントカレンダー（`singularity-event`）: 青色（`blue-300` / `blue-400`）
   - 日本の祝日カレンダー（`holiday`）: 赤色（`red-300` / `red-400`）
-  - その他のカレンダー: 青色（`blue-300` / `blue-400`）
+  - テスト用カレンダー（`test-calendar`）: 紫色（`purple-300` / `purple-400`）
+  - 上記以外のカレンダー: グレー（`gray-500` / `gray-600`）
 - **日付フォーマット**: 日本のロケール形式
 
 ## 3. Slack通知API
