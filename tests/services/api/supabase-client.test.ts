@@ -1023,6 +1023,43 @@ describe("categories-client", () => {
     expect(moveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 10);
   });
 
+  it("deleteCategory 正常系: 移動対象がない場合は未分類側の再採番を実行しない", async () => {
+    reorderItemsInCategoryMock.mockResolvedValue(undefined);
+
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
+    const deleteCategoryBuilder = createUpdateBuilder({ data: null, error: null });
+    const reorderCategorySelectBuilder = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const reorderCategoryUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderCategoryUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(deletingCategoryBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(contentsToMoveBuilder)
+      .mockReturnValueOnce(deleteCategoryBuilder)
+      .mockReturnValueOnce(reorderCategorySelectBuilder)
+      .mockReturnValueOnce(reorderCategoryUpdateBuilder1)
+      .mockReturnValueOnce(reorderCategoryUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
+  });
+
   it("deleteCategory 異常系: 種別不一致は失敗を返す", async () => {
     const deletingCategoryBuilder = createSelectSingleBuilder({
       data: { id: 10, name: "一般", category_type: "videos" },
@@ -1064,7 +1101,10 @@ describe("categories-client", () => {
 
   it("deleteCategory 異常系: コンテンツ再採番で例外発生時に success=false を返す", async () => {
     const reorderError = new Error("reorder failed");
-    reorderItemsInCategoryMock.mockRejectedValue(reorderError);
+    reorderItemsInCategoryMock
+      .mockRejectedValueOnce(reorderError)
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
 
     const deletingCategoryBuilder = createSelectSingleBuilder({
       data: { id: 10, name: "一般", category_type: "documents" },
@@ -1094,6 +1134,9 @@ describe("categories-client", () => {
     expect(moveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 10);
     expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 10);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
   });
 
   it("deleteCategory 異常系: 未分類カテゴリーの削除は失敗を返す", async () => {
@@ -1161,5 +1204,8 @@ describe("categories-client", () => {
     expect(response.success).toBe(false);
     expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 10);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
   });
 });
