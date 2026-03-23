@@ -159,17 +159,20 @@ export async function updateApplication({
   updated_by,
   position,
 }: ApplicationUpdateFormType) {
-  let didShiftDisplayOrder = false;
+  let currentCategoryId: number | null = null;
 
   const recoverDisplayOrderAfterFailure = async () => {
-    if (!didShiftDisplayOrder) {
-      return;
-    }
+    const reorderTargets = [category_id, currentCategoryId].filter(
+      (targetId, index, ids): targetId is number =>
+        targetId !== null && targetId !== undefined && ids.indexOf(targetId) === index
+    );
 
-    try {
-      await reorderItemsInCategory("applications", category_id);
-    } catch (recoveryError) {
-      console.error("アプリ更新失敗後の表示順復旧に失敗:", recoveryError);
+    for (const targetCategoryId of reorderTargets) {
+      try {
+        await reorderItemsInCategory("applications", targetCategoryId);
+      } catch (recoveryError) {
+        console.error("アプリ更新失敗後の表示順復旧に失敗:", recoveryError);
+      }
     }
   };
 
@@ -177,14 +180,21 @@ export async function updateApplication({
     const supabase = createClientSupabaseClient();
 
     // 現在のアプリ情報を取得（現在のdisplay_orderとcategory_idを知るため）
-    const { data: currentApp } = await supabase
+    const { data: currentApp, error: currentAppError } = await supabase
       .from("applications")
       .select("display_order, category_id")
       .eq("id", id)
       .single();
 
-    const currentDisplayOrder = currentApp?.display_order;
-    const currentCategoryId = currentApp?.category_id;
+    if (currentAppError || !currentApp) {
+      const fetchError =
+        currentAppError ?? new Error("対象のアプリケーションの取得に失敗しました。");
+      console.error("Supabase アプリ現在値取得エラー:", fetchError);
+      return { success: false, error: fetchError };
+    }
+
+    const currentDisplayOrder = currentApp.display_order;
+    currentCategoryId = currentApp.category_id;
 
     // 新しい display_order を計算（編集時は自分自身を除外して計算）
     const display_order = await calculateDisplayOrder(
@@ -197,10 +207,9 @@ export async function updateApplication({
     // アプリを更新する前に、指定位置以降のアプリの display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("applications", category_id, display_order, id);
-      didShiftDisplayOrder = true;
     }
 
-    const { error } = await supabase
+    const { data: updatedApp, error } = await supabase
       .from("applications")
       .update({
         name,
@@ -211,7 +220,9 @@ export async function updateApplication({
         display_order,
         updated_by,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
 
     // エラーが発生した場合はコンソールにエラーメッセージを出力
     if (error) {
@@ -220,11 +231,18 @@ export async function updateApplication({
       return { success: false, error };
     }
 
+    if (!updatedApp) {
+      const noRowUpdatedError = new Error("更新対象のアプリが見つからないため、更新を中断しました。");
+      await recoverDisplayOrderAfterFailure();
+      console.error("Supabase アプリ更新エラー:", noRowUpdatedError.message);
+      return { success: false, error: noRowUpdatedError };
+    }
+
     // 更新後、カテゴリー内の display_order を振り直す
     await reorderItemsInCategory("applications", category_id);
 
     // カテゴリーが変更された場合、元のカテゴリーも振り直す
-    if (currentCategoryId && currentCategoryId !== category_id) {
+    if (currentCategoryId !== null && currentCategoryId !== category_id) {
       await reorderItemsInCategory("applications", currentCategoryId);
     }
 
