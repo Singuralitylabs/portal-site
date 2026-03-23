@@ -20,6 +20,11 @@ export const CALENDAR_COLORS: {
     backgroundColor: colors.red[300],
     borderColor: colors.red[400],
   },
+  // テスト用カレンダー
+  "test-calendar": {
+    backgroundColor: colors.purple[300],
+    borderColor: colors.purple[400],
+  },
 };
 
 // デフォルトの色（カレンダーIDが未設定または未定義の場合）
