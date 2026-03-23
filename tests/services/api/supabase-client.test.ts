@@ -97,6 +97,21 @@ const createUpdateBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// update(...).eq(...).select(...).maybeSingle() で完結するクエリ用モック
+const createUpdateSelectMaybeSingleBuilder = (result: QueryResult) => {
+  const builder: {
+    update?: jest.Mock;
+    eq?: jest.Mock;
+    select?: jest.Mock;
+    maybeSingle?: jest.Mock;
+  } = {};
+  builder.update = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.select = jest.fn(() => builder);
+  builder.maybeSingle = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
 // update(...).in(...).eq(...).eq(...) で終端するクエリ用モック
 const createUpdateInEqBuilder = (result: QueryResult) => {
   const builder: { update?: jest.Mock; in?: jest.Mock; eq?: jest.Mock } = {};
@@ -445,7 +460,10 @@ describe("content client services", () => {
         data: { display_order: 2, category_id: 1 },
         error: null,
       });
-      const updateBuilder = createUpdateBuilder({ data: null, error: null });
+      const updateBuilder = createUpdateSelectMaybeSingleBuilder({
+        data: { id: 1 },
+        error: null,
+      });
       const supabase = { from: jest.fn() };
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
@@ -471,7 +489,7 @@ describe("content client services", () => {
         error: null,
       });
       const error = { message: "update failed" };
-      const updateBuilder = createUpdateBuilder({ data: null, error });
+      const updateBuilder = createUpdateSelectMaybeSingleBuilder({ data: null, error });
       const supabase = { from: jest.fn() };
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
@@ -482,13 +500,62 @@ describe("content client services", () => {
 
       // 更新失敗時に success=false とエラーが返ることを確認
       expect(response).toEqual({ success: false, error });
-      // 失敗時は表示順復旧のため対象カテゴリを再採番することを確認
-      expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
+      // 失敗時は更新先/更新元カテゴリの表示順復旧をベストエフォートで行うことを確認
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(2);
       expect(reorderItemsInCategoryMock).toHaveBeenCalledWith(
         expect.any(String),
         updatePayload.category_id
       );
+      expect(reorderItemsInCategoryMock).toHaveBeenCalledWith(expect.any(String), 1);
       // 失敗時にエラーログが出力されることを確認
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it("update 異常系: 現在値取得失敗時は早期に success=false を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      const currentBuilder = createSelectSingleBuilder({
+        data: null,
+        error: { message: "fetch failed" },
+      });
+      const supabase = { from: jest.fn(() => currentBuilder) };
+      createClientSupabaseClientMock.mockReturnValue(supabase);
+
+      const response = await (
+        updateFn as unknown as (payload: typeof updatePayload) => Promise<any>
+      )(updatePayload);
+
+      expect(response.success).toBe(false);
+      expect(shiftDisplayOrderMock).not.toHaveBeenCalled();
+      expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it("update 異常系: 更新件数0件の場合は success=false を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      calculateDisplayOrderMock.mockResolvedValue(4);
+      shiftDisplayOrderMock.mockResolvedValue(undefined);
+      reorderItemsInCategoryMock.mockResolvedValue(undefined);
+
+      const currentBuilder = createSelectSingleBuilder({
+        data: { display_order: 2, category_id: 1 },
+        error: null,
+      });
+      const updateBuilder = createUpdateSelectMaybeSingleBuilder({
+        data: null,
+        error: null,
+      });
+      const supabase = { from: jest.fn() };
+      supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
+      createClientSupabaseClientMock.mockReturnValue(supabase);
+
+      const response = await (
+        updateFn as unknown as (payload: typeof updatePayload) => Promise<any>
+      )(updatePayload);
+
+      expect(response.success).toBe(false);
+      expect(reorderItemsInCategoryMock).toHaveBeenCalled();
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -524,7 +591,10 @@ describe("content client services", () => {
         data: { display_order: 2, category_id: 1 },
         error: null,
       });
-      const updateBuilder = createUpdateBuilder({ data: null, error: null });
+      const updateBuilder = createUpdateSelectMaybeSingleBuilder({
+        data: { id: 1 },
+        error: null,
+      });
       const supabase = { from: jest.fn() };
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);

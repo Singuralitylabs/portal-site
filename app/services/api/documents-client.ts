@@ -156,17 +156,20 @@ export async function updateDocument({
   updated_by,
   position,
 }: DocumentUpdateFormType) {
-  let didShiftDisplayOrder = false;
+  let currentCategoryId: number | null = null;
 
   const recoverDisplayOrderAfterFailure = async () => {
-    if (!didShiftDisplayOrder) {
-      return;
-    }
+    const reorderTargets = [category_id, currentCategoryId].filter(
+      (targetId, index, ids): targetId is number =>
+        targetId !== null && targetId !== undefined && ids.indexOf(targetId) === index
+    );
 
-    try {
-      await reorderItemsInCategory("documents", category_id);
-    } catch (recoveryError) {
-      console.error("資料更新失敗後の表示順復旧に失敗:", recoveryError);
+    for (const targetCategoryId of reorderTargets) {
+      try {
+        await reorderItemsInCategory("documents", targetCategoryId);
+      } catch (recoveryError) {
+        console.error("資料更新失敗後の表示順復旧に失敗:", recoveryError);
+      }
     }
   };
 
@@ -174,14 +177,20 @@ export async function updateDocument({
     const supabase = createClientSupabaseClient();
 
     // 現在の資料情報を取得（現在のdisplay_orderとcategory_idを知るため）
-    const { data: currentDoc } = await supabase
+    const { data: currentDoc, error: currentDocError } = await supabase
       .from("documents")
       .select("display_order, category_id")
       .eq("id", id)
       .single();
 
-    const currentDisplayOrder = currentDoc?.display_order;
-    const currentCategoryId = currentDoc?.category_id;
+    if (currentDocError || !currentDoc) {
+      const fetchError = currentDocError ?? new Error("資料が存在しないか、取得できませんでした。");
+      console.error("Supabase 資料現在値取得エラー:", fetchError);
+      return { success: false, error: fetchError };
+    }
+
+    const currentDisplayOrder = currentDoc.display_order;
+    currentCategoryId = currentDoc.category_id;
 
     // 新しい display_order を計算（編集時は自分自身を除外して計算）
     const display_order = await calculateDisplayOrder(
@@ -194,10 +203,9 @@ export async function updateDocument({
     // 資料を更新する前に、指定位置以降の資料の display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("documents", category_id, display_order, id);
-      didShiftDisplayOrder = true;
     }
 
-    const { error } = await supabase
+    const { data: updatedDoc, error } = await supabase
       .from("documents")
       .update({
         name,
@@ -208,7 +216,9 @@ export async function updateDocument({
         display_order,
         updated_by,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
 
     // エラーが発生した場合はコンソールにエラーメッセージを出力
     if (error) {
@@ -217,11 +227,18 @@ export async function updateDocument({
       return { success: false, error };
     }
 
+    if (!updatedDoc) {
+      const noRowUpdatedError = new Error("更新対象の資料が見つからないため、更新を中断しました。");
+      await recoverDisplayOrderAfterFailure();
+      console.error("Supabase 資料更新エラー:", noRowUpdatedError.message);
+      return { success: false, error: noRowUpdatedError };
+    }
+
     // 更新後、カテゴリー内の display_order を振り直す
     await reorderItemsInCategory("documents", category_id);
 
     // カテゴリーが変更された場合、元のカテゴリーも振り直す
-    if (currentCategoryId && currentCategoryId !== category_id) {
+    if (currentCategoryId !== null && currentCategoryId !== category_id) {
       await reorderItemsInCategory("documents", currentCategoryId);
     }
 

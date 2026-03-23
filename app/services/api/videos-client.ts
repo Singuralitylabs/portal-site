@@ -155,17 +155,20 @@ export async function updateVideo({
   updated_by,
   position,
 }: VideoUpdateFormType) {
-  let didShiftDisplayOrder = false;
+  let currentCategoryId: number | null = null;
 
   const recoverDisplayOrderAfterFailure = async () => {
-    if (!didShiftDisplayOrder) {
-      return;
-    }
+    const reorderTargets = [category_id, currentCategoryId].filter(
+      (targetId, index, ids): targetId is number =>
+        targetId !== null && targetId !== undefined && ids.indexOf(targetId) === index
+    );
 
-    try {
-      await reorderItemsInCategory("videos", category_id);
-    } catch (recoveryError) {
-      console.error("動画更新失敗後の表示順復旧に失敗:", recoveryError);
+    for (const targetCategoryId of reorderTargets) {
+      try {
+        await reorderItemsInCategory("videos", targetCategoryId);
+      } catch (recoveryError) {
+        console.error("動画更新失敗後の表示順復旧に失敗:", recoveryError);
+      }
     }
   };
 
@@ -173,14 +176,21 @@ export async function updateVideo({
     const supabase = createClientSupabaseClient();
 
     // 現在の動画情報を取得（現在のdisplay_orderとcategory_idを知るため）
-    const { data: currentVideo } = await supabase
+    const { data: currentVideo, error: currentVideoError } = await supabase
       .from("videos")
       .select("display_order, category_id")
       .eq("id", id)
       .single();
 
-    const currentDisplayOrder = currentVideo?.display_order;
-    const currentCategoryId = currentVideo?.category_id;
+    if (currentVideoError || !currentVideo) {
+      const fetchError =
+        currentVideoError ?? new Error("対象の動画が存在しないか、参照権限がありません。");
+      console.error("動画の現在値取得に失敗:", fetchError);
+      return { success: false, error: fetchError };
+    }
+
+    const currentDisplayOrder = currentVideo.display_order;
+    currentCategoryId = currentVideo.category_id;
 
     // 新しい display_order を計算（編集時は自分自身を除外して計算）
     const display_order = await calculateDisplayOrder(
@@ -193,10 +203,9 @@ export async function updateVideo({
     // 動画を更新する前に、指定位置以降の動画の display_order を +1 する
     if (position.type === "first" || position.type === "after") {
       await shiftDisplayOrder("videos", category_id, display_order, id);
-      didShiftDisplayOrder = true;
     }
 
-    const { error } = await supabase
+    const { data: updatedVideo, error } = await supabase
       .from("videos")
       .update({
         name,
@@ -210,7 +219,9 @@ export async function updateVideo({
         display_order,
         updated_by,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       await recoverDisplayOrderAfterFailure();
@@ -218,11 +229,18 @@ export async function updateVideo({
       return { success: false, error };
     }
 
+    if (!updatedVideo) {
+      const noRowUpdatedError = new Error("更新対象の動画が見つからないため、更新を中断しました。");
+      await recoverDisplayOrderAfterFailure();
+      console.error("動画の更新に失敗:", noRowUpdatedError.message);
+      return { success: false, error: noRowUpdatedError };
+    }
+
     // 更新後、カテゴリー内の display_order を振り直す
     await reorderItemsInCategory("videos", category_id);
 
     // カテゴリーが変更された場合、元のカテゴリーも振り直す
-    if (currentCategoryId && currentCategoryId !== category_id) {
+    if (currentCategoryId !== null && currentCategoryId !== category_id) {
       await reorderItemsInCategory("videos", currentCategoryId);
     }
 
