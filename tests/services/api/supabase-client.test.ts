@@ -933,6 +933,67 @@ describe("categories-client", () => {
     );
   });
 
+  it("updateCategory 正常系: position=first で先頭挿入のため既存カテゴリー群をシフトする", async () => {
+    const currentBuilder = createSelectSingleBuilder({
+      data: { display_order: 2, category_type: "documents" },
+      error: null,
+    });
+    const shiftSelectBuilder = createGteOrderBuilder({
+      data: [
+        { id: 20, display_order: 3 },
+        { id: 30, display_order: 2 },
+      ],
+      error: null,
+    });
+    const shiftUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+    const updateBuilder = createUpdateBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({
+      data: [{ id: 10 }, { id: 30 }, { id: 20 }],
+      error: null,
+    });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder3 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(currentBuilder)
+      .mockReturnValueOnce(shiftSelectBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder1)
+      .mockReturnValueOnce(shiftUpdateBuilder2)
+      .mockReturnValueOnce(updateBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2)
+      .mockReturnValueOnce(reorderUpdateBuilder3);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリ先頭更新",
+      description: null,
+      position: { type: "first" },
+    });
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(shiftUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 4 });
+    expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 3 });
+    expect(shiftUpdateBuilder1.eq).toHaveBeenCalledWith("id", 20);
+    expect(shiftUpdateBuilder2.eq).toHaveBeenCalledWith("id", 30);
+    expect(updateBuilder.update).toHaveBeenCalledWith({
+      category_type: "documents",
+      name: "カテゴリ先頭更新",
+      description: null,
+      display_order: 1,
+    });
+    expect(updateBuilder.eq).toHaveBeenCalledWith("id", 10);
+    expect(reorderUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 1 });
+    expect(reorderUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 2 });
+    expect(reorderUpdateBuilder3.update).toHaveBeenCalledWith({ display_order: 3 });
+  });
+
   it("updateCategory 正常系: 種別変更時に元カテゴリーも再採番する", async () => {
     const currentBuilder = createSelectSingleBuilder({
       data: { display_order: 2, category_type: "documents" },
