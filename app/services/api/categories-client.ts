@@ -423,15 +423,106 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
     };
 
     if (movedContentIds.length > 0) {
-      const { error: moveError } = await supabase
+      const { data: movedContents, error: moveError } = await supabase
         .from(tableName)
         .update({ category_id: uncategorized.id })
         .in("id", movedContentIds)
         .eq("is_deleted", false)
-        .eq("category_id", id);
+        .eq("category_id", id)
+        .select("id");
 
       if (moveError) {
         return { success: false, error: moveError };
+      }
+
+      const movedCount = movedContents?.length ?? 0;
+      const expectedMoveCount = movedContentIds.length;
+
+      const { data: movedToUncategorizedContents, error: movedToUncategorizedCheckError } =
+        await supabase
+          .from(tableName)
+          .select("id")
+          .in("id", movedContentIds)
+          .eq("is_deleted", false)
+          .eq("category_id", uncategorized.id);
+
+      if (movedToUncategorizedCheckError) {
+        const rollbackError = await rollbackMovedContents();
+        if (rollbackError) {
+          return { success: false, error: rollbackError };
+        }
+
+        const recoverError = await recoverDisplayOrdersAfterRollback();
+        if (recoverError) {
+          return {
+            success: false,
+            error:
+              recoverError instanceof Error
+                ? recoverError
+                : new Error("表示順復旧に失敗しました。"),
+          };
+        }
+
+        return { success: false, error: movedToUncategorizedCheckError };
+      }
+
+      const movedToUncategorizedCount = movedToUncategorizedContents?.length ?? 0;
+
+      const { data: remainingOriginalContents, error: remainingOriginalCheckError } = await supabase
+        .from(tableName)
+        .select("id")
+        .eq("category_id", id)
+        .eq("is_deleted", false);
+
+      if (remainingOriginalCheckError) {
+        const rollbackError = await rollbackMovedContents();
+        if (rollbackError) {
+          return { success: false, error: rollbackError };
+        }
+
+        const recoverError = await recoverDisplayOrdersAfterRollback();
+        if (recoverError) {
+          return {
+            success: false,
+            error:
+              recoverError instanceof Error
+                ? recoverError
+                : new Error("表示順復旧に失敗しました。"),
+          };
+        }
+
+        return { success: false, error: remainingOriginalCheckError };
+      }
+
+      const remainingOriginalCount = remainingOriginalContents?.length ?? 0;
+
+      if (
+        movedCount !== expectedMoveCount ||
+        movedToUncategorizedCount !== expectedMoveCount ||
+        remainingOriginalCount !== 0
+      ) {
+        const rollbackError = await rollbackMovedContents();
+        if (rollbackError) {
+          return { success: false, error: rollbackError };
+        }
+
+        const recoverError = await recoverDisplayOrdersAfterRollback();
+        if (recoverError) {
+          return {
+            success: false,
+            error:
+              recoverError instanceof Error
+                ? recoverError
+                : new Error("表示順復旧に失敗しました。"),
+          };
+        }
+
+        return {
+          success: false,
+          error: new Error(
+            "コンテンツ移動件数の整合性チェックに失敗したため、移動をロールバックしました。"
+          ),
+        };
       }
     }
 

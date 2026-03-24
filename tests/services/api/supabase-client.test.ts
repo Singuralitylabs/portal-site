@@ -128,6 +128,38 @@ const createUpdateInEqBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// update(...).in(...).eq(...).eq(...).select(...) で終端するクエリ用モック
+const createUpdateInEqSelectBuilder = (result: QueryResult) => {
+  const builder: { update?: jest.Mock; in?: jest.Mock; eq?: jest.Mock; select?: jest.Mock } = {};
+  let eqCalls = 0;
+  builder.update = jest.fn(() => builder);
+  builder.in = jest.fn(() => builder);
+  builder.eq = jest.fn(() => {
+    eqCalls += 1;
+    if (eqCalls >= 2) {
+      return builder;
+    }
+    return builder;
+  });
+  builder.select = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
+// select(...).in(...).eq(...).eq(...) を await で終端するクエリ用モック
+const createAwaitableSelectInDoubleEqBuilder = (result: QueryResult) => {
+  const builder: {
+    select?: jest.Mock;
+    in?: jest.Mock;
+    eq?: jest.Mock;
+    then?: (resolve: (value: QueryResult) => void) => Promise<void>;
+  } = {};
+  builder.select = jest.fn(() => builder);
+  builder.in = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.then = resolve => Promise.resolve(result).then(resolve);
+  return builder as Required<typeof builder>;
+};
+
 // insert(...) で完結するクエリ用モック
 const createInsertBuilder = (result: QueryResult) => {
   const builder: { insert?: jest.Mock } = {};
@@ -1133,7 +1165,12 @@ describe("categories-client", () => {
       data: [{ id: 100 }, { id: 101 }],
       error: null,
     });
-    const moveBuilder = createUpdateInEqBuilder({ data: null, error: null });
+    const moveBuilder = createUpdateInEqSelectBuilder({ data: [{ id: 100 }, { id: 101 }], error: null });
+    const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({ data: [], error: null });
     const deleteCategoryBuilder = createUpdateBuilder({ data: null, error: null });
     const reorderCategorySelectBuilder = createOrderBuilder({
       data: [{ id: 1 }, { id: 2 }],
@@ -1148,6 +1185,8 @@ describe("categories-client", () => {
       .mockReturnValueOnce(uncategorizedBuilder)
       .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
+      .mockReturnValueOnce(remainingOriginalCheckBuilder)
       .mockReturnValueOnce(deleteCategoryBuilder)
       .mockReturnValueOnce(reorderCategorySelectBuilder)
       .mockReturnValueOnce(reorderCategoryUpdateBuilder1)
@@ -1160,6 +1199,7 @@ describe("categories-client", () => {
     expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("documents", 1);
     expect(moveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(moveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 10);
+    expect(moveBuilder.select).toHaveBeenCalledWith("id");
   });
 
   it("deleteCategory 正常系: 移動対象がない場合は未分類側の再採番を実行しない", async () => {
@@ -1223,7 +1263,7 @@ describe("categories-client", () => {
       error: null,
     });
     const moveError = { message: "move failed" };
-    const moveBuilder = createUpdateInEqBuilder({ data: null, error: moveError });
+    const moveBuilder = createUpdateInEqSelectBuilder({ data: null, error: moveError });
 
     const supabase = { from: jest.fn() };
     supabase.from
@@ -1254,7 +1294,12 @@ describe("categories-client", () => {
       data: [{ id: 100 }],
       error: null,
     });
-    const moveBuilder = createUpdateInEqBuilder({ data: null, error: null });
+    const moveBuilder = createUpdateInEqSelectBuilder({ data: [{ id: 100 }], error: null });
+    const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
+      data: [{ id: 100 }],
+      error: null,
+    });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({ data: [], error: null });
     const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
     const supabase = { from: jest.fn() };
@@ -1263,6 +1308,8 @@ describe("categories-client", () => {
       .mockReturnValueOnce(uncategorizedBuilder)
       .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
+      .mockReturnValueOnce(remainingOriginalCheckBuilder)
       .mockReturnValueOnce(rollbackBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
@@ -1324,7 +1371,12 @@ describe("categories-client", () => {
       data: [{ id: 100 }, { id: 101 }],
       error: null,
     });
-    const moveBuilder = createUpdateInEqBuilder({ data: null, error: null });
+    const moveBuilder = createUpdateInEqSelectBuilder({ data: [{ id: 100 }, { id: 101 }], error: null });
+    const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({ data: [], error: null });
     const deleteBuilder = createUpdateBuilder({ data: null, error: { message: "delete failed" } });
     const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
@@ -1334,6 +1386,8 @@ describe("categories-client", () => {
       .mockReturnValueOnce(uncategorizedBuilder)
       .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
+      .mockReturnValueOnce(remainingOriginalCheckBuilder)
       .mockReturnValueOnce(deleteBuilder)
       .mockReturnValueOnce(rollbackBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
@@ -1346,5 +1400,48 @@ describe("categories-client", () => {
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 1);
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 10);
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
+  });
+
+  it("deleteCategory 異常系: 移動後件数不一致時はロールバックして success=false を返す", async () => {
+    reorderItemsInCategoryMock.mockResolvedValue(undefined);
+
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const moveBuilder = createUpdateInEqSelectBuilder({ data: [{ id: 100 }], error: null });
+    const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
+      data: [{ id: 100 }],
+      error: null,
+    });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [{ id: 101 }],
+      error: null,
+    });
+    const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(deletingCategoryBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(contentsToMoveBuilder)
+      .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
+      .mockReturnValueOnce(remainingOriginalCheckBuilder)
+      .mockReturnValueOnce(rollbackBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response.success).toBe(false);
+    expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
+    expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 10);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 1);
   });
 });
