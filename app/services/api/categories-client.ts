@@ -631,9 +631,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
         return {
           success: false,
           error:
-            recoverError instanceof Error
-              ? recoverError
-              : new Error("表示順復旧に失敗しました。"),
+            recoverError instanceof Error ? recoverError : new Error("表示順復旧に失敗しました。"),
         };
       }
 

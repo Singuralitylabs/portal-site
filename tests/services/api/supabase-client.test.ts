@@ -1165,12 +1165,18 @@ describe("categories-client", () => {
       data: [{ id: 100 }, { id: 101 }],
       error: null,
     });
-    const moveBuilder = createUpdateInEqSelectBuilder({ data: [{ id: 100 }, { id: 101 }], error: null });
+    const moveBuilder = createUpdateInEqSelectBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
     const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
       data: [{ id: 100 }, { id: 101 }],
       error: null,
     });
-    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({ data: [], error: null });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
     const deleteCategoryBuilder = createUpdateBuilder({ data: null, error: null });
     const reorderCategorySelectBuilder = createOrderBuilder({
       data: [{ id: 1 }, { id: 2 }],
@@ -1299,7 +1305,10 @@ describe("categories-client", () => {
       data: [{ id: 100 }],
       error: null,
     });
-    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({ data: [], error: null });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
     const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
     const supabase = { from: jest.fn() };
@@ -1371,12 +1380,18 @@ describe("categories-client", () => {
       data: [{ id: 100 }, { id: 101 }],
       error: null,
     });
-    const moveBuilder = createUpdateInEqSelectBuilder({ data: [{ id: 100 }, { id: 101 }], error: null });
+    const moveBuilder = createUpdateInEqSelectBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
     const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
       data: [{ id: 100 }, { id: 101 }],
       error: null,
     });
-    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({ data: [], error: null });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
     const deleteBuilder = createUpdateBuilder({ data: null, error: { message: "delete failed" } });
     const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
@@ -1466,7 +1481,10 @@ describe("categories-client", () => {
       data: [{ id: 100 }],
       error: null,
     });
-    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({ data: [], error: null });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
     const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
     const fallbackSelectOriginalBuilder = createOrderBuilder({ data: [{ id: 100 }], error: null });
