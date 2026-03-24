@@ -331,6 +331,43 @@ function getTableNameByType(
 }
 
 /**
+ * display_order 復旧が困難な場合のフォールバック再採番。
+ * 未削除コンテンツを id 昇順で取得し、display_order を連番で再設定する。
+ */
+async function reorderItemsInCategoryByIdFallback(
+  tableName: "documents" | "videos" | "applications",
+  categoryId: number
+): Promise<void> {
+  const supabase = createClientSupabaseClient();
+
+  const { data: items, error: selectError } = await supabase
+    .from(tableName)
+    .select("id")
+    .eq("category_id", categoryId)
+    .eq("is_deleted", false)
+    .order("id", { ascending: true });
+
+  if (selectError) {
+    throw new Error(`フォールバック再採番対象の取得に失敗しました: ${selectError.message}`);
+  }
+
+  if (!items || items.length === 0) {
+    return;
+  }
+
+  for (const [index, item] of items.entries()) {
+    const { error } = await supabase
+      .from(tableName)
+      .update({ display_order: index + 1 })
+      .eq("id", item.id);
+
+    if (error) {
+      throw new Error(`フォールバック再採番に失敗しました(id: ${item.id}): ${error.message}`);
+    }
+  }
+}
+
+/**
  * カテゴリーを削除する。
  * 1) 対象コンテンツを未分類へ移動
  * 2) 未分類側の再採番
@@ -407,16 +444,38 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
     };
 
     const recoverDisplayOrdersAfterRollback = async () => {
+      const recoverCategoryDisplayOrder = async (categoryId: number) => {
+        try {
+          await reorderItemsInCategory(tableName, categoryId);
+          return null;
+        } catch (reorderError) {
+          try {
+            // 通常再採番で復旧できない場合のみ、id昇順でフォールバック再採番する。
+            await reorderItemsInCategoryByIdFallback(tableName, categoryId);
+            return null;
+          } catch (fallbackReorderError) {
+            return fallbackReorderError ?? reorderError;
+          }
+        }
+      };
+
+      let originalReorderError: unknown = null;
+      let uncategorizedReorderError: unknown = null;
+
       try {
-        await reorderItemsInCategory(tableName, id);
-      } catch (reorderOriginalError) {
-        return reorderOriginalError;
+        originalReorderError = await recoverCategoryDisplayOrder(id);
+      } catch (error) {
+        originalReorderError = error;
       }
 
       try {
-        await reorderItemsInCategory(tableName, uncategorized.id);
-      } catch (reorderUncategorizedError) {
-        return reorderUncategorizedError;
+        uncategorizedReorderError = await recoverCategoryDisplayOrder(uncategorized.id);
+      } catch (error) {
+        uncategorizedReorderError = error;
+      }
+
+      if (originalReorderError || uncategorizedReorderError) {
+        return originalReorderError ?? uncategorizedReorderError;
       }
 
       return null;
