@@ -490,6 +490,47 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       return null;
     };
 
+    const optimizeCategoryDisplayOrdersBestEffort = async () => {
+      try {
+        await reorderCategoriesByType(categoryType);
+        return;
+      } catch (error) {
+        console.error("カテゴリ表示順の通常再採番に失敗:", error);
+      }
+
+      try {
+        const { data: categories, error: selectError } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("category_type", categoryType)
+          .eq("is_deleted", false)
+          .order("id", { ascending: true });
+
+        if (selectError) {
+          console.error("カテゴリ表示順最適化対象の取得に失敗:", selectError);
+          return;
+        }
+
+        if (!categories || categories.length === 0) {
+          return;
+        }
+
+        for (const [index, category] of categories.entries()) {
+          const { error: updateError } = await supabase
+            .from("categories")
+            .update({ display_order: index + 1 })
+            .eq("id", category.id);
+
+          if (updateError) {
+            console.error("カテゴリ表示順のID順最適化に失敗:", updateError);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("カテゴリ表示順最適化処理で予期せぬエラー:", error);
+      }
+    };
+
     if (movedContentIds.length > 0) {
       const { data: movedContents, error: moveError } = await supabase
         .from(tableName)
@@ -652,17 +693,20 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
     } catch (reorderCategoriesError) {
       const rollbackDeleteError = await rollbackCategoryDeletion();
       if (rollbackDeleteError) {
+        await optimizeCategoryDisplayOrdersBestEffort();
         return { success: false, error: rollbackDeleteError };
       }
 
       const rollbackError = await rollbackMovedContents();
       if (rollbackError) {
+        await optimizeCategoryDisplayOrdersBestEffort();
         return { success: false, error: rollbackError };
       }
 
       if (movedContentIds.length > 0) {
         const recoverError = await recoverDisplayOrdersAfterRollback();
         if (recoverError) {
+          await optimizeCategoryDisplayOrdersBestEffort();
           return {
             success: false,
             error:
@@ -672,6 +716,8 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
           };
         }
       }
+
+      await optimizeCategoryDisplayOrdersBestEffort();
 
       return {
         success: false,
