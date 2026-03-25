@@ -1535,6 +1535,12 @@ describe("categories-client", () => {
     });
     const rollbackDeleteBuilder = createUpdateBuilder({ data: null, error: null });
     const rollbackMoveBuilder = createUpdateInEqBuilder({ data: null, error: null });
+    const optimizeCategoriesBuilder = createOrderBuilder({
+      data: [{ id: 1 }, { id: 10 }],
+      error: null,
+    });
+    const optimizeUpdateFirstBuilder = createUpdateBuilder({ data: null, error: null });
+    const optimizeUpdateSecondBuilder = createUpdateBuilder({ data: null, error: null });
 
     const supabase = { from: jest.fn() };
     supabase.from
@@ -1547,7 +1553,10 @@ describe("categories-client", () => {
       .mockReturnValueOnce(deleteBuilder)
       .mockReturnValueOnce(reorderCategoriesBuilder)
       .mockReturnValueOnce(rollbackDeleteBuilder)
-      .mockReturnValueOnce(rollbackMoveBuilder);
+      .mockReturnValueOnce(rollbackMoveBuilder)
+      .mockReturnValueOnce(optimizeCategoriesBuilder)
+      .mockReturnValueOnce(optimizeUpdateFirstBuilder)
+      .mockReturnValueOnce(optimizeUpdateSecondBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
     const response = await deleteCategory(10, "documents");
@@ -1558,6 +1567,11 @@ describe("categories-client", () => {
     expect(rollbackDeleteBuilder.eq).toHaveBeenCalledWith("id", 10);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
+    expect(optimizeCategoriesBuilder.order).toHaveBeenCalledWith("display_order", {
+      ascending: true,
+    });
+    expect(optimizeUpdateFirstBuilder.update).toHaveBeenCalledWith({ display_order: 1 });
+    expect(optimizeUpdateSecondBuilder.update).toHaveBeenCalledWith({ display_order: 2 });
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 1);
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 10);
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
