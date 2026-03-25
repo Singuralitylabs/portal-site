@@ -131,16 +131,9 @@ const createUpdateInEqBuilder = (result: QueryResult) => {
 // update(...).in(...).eq(...).eq(...).select(...) で終端するクエリ用モック
 const createUpdateInEqSelectBuilder = (result: QueryResult) => {
   const builder: { update?: jest.Mock; in?: jest.Mock; eq?: jest.Mock; select?: jest.Mock } = {};
-  let eqCalls = 0;
   builder.update = jest.fn(() => builder);
   builder.in = jest.fn(() => builder);
-  builder.eq = jest.fn(() => {
-    eqCalls += 1;
-    if (eqCalls >= 2) {
-      return builder;
-    }
-    return builder;
-  });
+  builder.eq = jest.fn(() => builder);
   builder.select = jest.fn(() => Promise.resolve(result));
   return builder as Required<typeof builder>;
 };
