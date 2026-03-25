@@ -443,6 +443,15 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       return rollbackError;
     };
 
+    const rollbackCategoryDeletion = async () => {
+      const { error: rollbackDeleteError } = await supabase
+        .from("categories")
+        .update({ is_deleted: false })
+        .eq("id", id);
+
+      return rollbackDeleteError;
+    };
+
     const recoverDisplayOrdersAfterRollback = async () => {
       const recoverCategoryDisplayOrder = async (categoryId: number) => {
         try {
@@ -638,7 +647,40 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       return { success: false, error: deleteError };
     }
 
-    await reorderCategoriesByType(categoryType);
+    try {
+      await reorderCategoriesByType(categoryType);
+    } catch (reorderCategoriesError) {
+      const rollbackDeleteError = await rollbackCategoryDeletion();
+      if (rollbackDeleteError) {
+        return { success: false, error: rollbackDeleteError };
+      }
+
+      const rollbackError = await rollbackMovedContents();
+      if (rollbackError) {
+        return { success: false, error: rollbackError };
+      }
+
+      if (movedContentIds.length > 0) {
+        const recoverError = await recoverDisplayOrdersAfterRollback();
+        if (recoverError) {
+          return {
+            success: false,
+            error:
+              recoverError instanceof Error
+                ? recoverError
+                : new Error("表示順復旧に失敗しました。"),
+          };
+        }
+      }
+
+      return {
+        success: false,
+        error:
+          reorderCategoriesError instanceof Error
+            ? reorderCategoriesError
+            : new Error("カテゴリー再採番に失敗したため、削除処理をロールバックしました。"),
+      };
+    }
 
     return { success: true, error: null };
   } catch (error) {
