@@ -1410,6 +1410,36 @@ describe("categories-client", () => {
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
   });
 
+  it("deleteCategory 異常系: 移動0件かつ削除失敗時は再採番復旧をスキップして元エラーを返す", async () => {
+    reorderItemsInCategoryMock.mockResolvedValue(undefined);
+
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
+    const deleteError = { message: "delete failed" };
+    const deleteBuilder = createUpdateBuilder({ data: null, error: deleteError });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(deletingCategoryBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(contentsToMoveBuilder)
+      .mockReturnValueOnce(deleteBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response.success).toBe(false);
+    expect((response.error as Error).message).toBe("delete failed");
+    expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
+  });
+
   it("deleteCategory 異常系: 移動後件数不一致時はロールバックして success=false を返す", async () => {
     reorderItemsInCategoryMock.mockResolvedValue(undefined);
 

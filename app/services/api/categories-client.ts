@@ -459,6 +459,21 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
         return { success: false, error: rollbackError };
       }
 
+      if (movedContentIds.length === 0) {
+        return {
+          success: false,
+          error:
+            originalError instanceof Error
+              ? originalError
+              : typeof originalError === "object" &&
+                  originalError !== null &&
+                  "message" in originalError &&
+                  typeof originalError.message === "string"
+                ? new Error(originalError.message)
+                : new Error("カテゴリー削除に失敗しました。"),
+        };
+      }
+
       const recoverError = await recoverDisplayOrdersAfterRollback();
       if (recoverError) {
         return {
