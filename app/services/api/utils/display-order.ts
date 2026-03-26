@@ -172,9 +172,10 @@ export async function shiftDisplayOrder(
 export async function reorderItemsInCategory(
   table: ContentTableType,
   categoryId: number,
-  options?: { includeDeletedInSelection?: boolean }
+  options?: { includeDeletedInSelection?: boolean; orderBy?: "display_order" | "id" }
 ): Promise<void> {
   const includeDeletedInSelection = options?.includeDeletedInSelection ?? false;
+  const orderBy = options?.orderBy ?? "display_order";
   const supabase = createClientSupabaseClient();
 
   // カテゴリー内のアイテムを display_order の昇順で取得
@@ -184,7 +185,7 @@ export async function reorderItemsInCategory(
     query = query.eq("is_deleted", false);
   }
 
-  const { data: items, error: selectError } = await query.order("display_order", {
+  const { data: items, error: selectError } = await query.order(orderBy, {
     ascending: true,
   });
 
