@@ -1,4 +1,4 @@
-import { CalendarEvent } from "@/app/api/calendar/calendar-server";
+import type { CalendarEvent } from "@/app/api/calendar/calendar-server";
 
 type TodayEventsWidgetProps = {
   events: CalendarEvent[];
@@ -24,7 +24,7 @@ function formatEventTime(event: CalendarEvent, todayStart: Date, todayEnd: Date)
   const end = new Date(event.end?.dateTime ?? event.start.dateTime);
 
   const startIsToday = start >= todayStart && start < todayEnd;
-  const endIsToday = end > todayStart && end <= todayEnd;
+  const endIsToday = end > todayStart && end < todayEnd;
 
   if (startIsToday && endIsToday) {
     return `${toHHmm(start)}〜${toHHmm(end)}`;
@@ -37,13 +37,21 @@ function formatEventTime(event: CalendarEvent, todayStart: Date, todayEnd: Date)
   }
 }
 
-export default function TodayEventsWidget({ events, error, todayLabel, todayStart, todayEnd }: TodayEventsWidgetProps) {
+export default function TodayEventsWidget({
+  events,
+  error,
+  todayLabel,
+  todayStart,
+  todayEnd,
+}: TodayEventsWidgetProps) {
   const start = new Date(todayStart);
   const end = new Date(todayEnd);
 
   return (
     <div className="bg-card rounded-lg shadow p-4">
-      <span className="text-2xl font-semibold text-green-600 block mb-3">{todayLabel}のイベント</span>
+      <span className="text-2xl font-semibold text-green-600 block mb-3">
+        {todayLabel}のイベント
+      </span>
 
       {error !== null ? (
         <p className="text-sm text-muted-foreground">カレンダーイベントの取得に失敗しました。</p>
@@ -64,10 +72,10 @@ export default function TodayEventsWidget({ events, error, todayLabel, todayStar
                     rel="noopener noreferrer"
                     className="text-primary hover:underline break-words"
                   >
-                    {event.summary}
+                    {event.summary || "(タイトルなし)"}
                   </a>
                 ) : (
-                  <span className="break-words">{event.summary}</span>
+                  <span className="break-words">{event.summary || "(タイトルなし)"}</span>
                 )}
                 {event.location && (
                   <p className="text-muted-foreground text-xs mt-0.5">場所: {event.location}</p>

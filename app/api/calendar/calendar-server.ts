@@ -101,32 +101,39 @@ export async function fetchCalendarEvents(
       })();
 
     // 全カレンダーからイベントを取得
-    const allEventsPromises = CALENDAR_CONFIGS.map(async config => {
-      try {
-        const response = await calendar.events.list({
-          calendarId: config.id,
-          timeMin: startDate.toISOString(),
-          timeMax: endDate.toISOString(),
-          maxResults: 1000,
-          singleEvents: true,
-          orderBy: "startTime",
-        });
+    const results = await Promise.all(
+      CALENDAR_CONFIGS.map(async config => {
+        try {
+          const response = await calendar.events.list({
+            calendarId: config.id,
+            timeMin: startDate.toISOString(),
+            timeMax: endDate.toISOString(),
+            maxResults: 1000,
+            singleEvents: true,
+            orderBy: "startTime",
+          });
 
-        // 各イベントにカレンダーエイリアスを付与（IDは付与しない）
-        const events = (response.data.items || []).map((event: calendar_v3.Schema$Event) => ({
-          ...event,
-          calendarId: config.alias, // エイリアスを使用
-        }));
+          // 各イベントにカレンダーエイリアスを付与（IDは付与しない）
+          const events = (response.data.items || []).map((event: calendar_v3.Schema$Event) => ({
+            ...event,
+            calendarId: config.alias, // エイリアスを使用
+          }));
 
-        return events;
-      } catch (error) {
-        console.error(`カレンダー ${config.alias} (${config.id}) の取得エラー:`, error);
-        return [];
-      }
-    });
+          return { events, failed: false };
+        } catch (error) {
+          console.error(`カレンダー ${config.alias} (${config.id}) の取得エラー:`, error);
+          return { events: [], failed: true };
+        }
+      })
+    );
 
-    const eventsArrays = await Promise.all(allEventsPromises);
-    const allEvents = eventsArrays.flat();
+    // 全カレンダーが失敗した場合はエラーを返す
+    const allFailed = results.every(r => r.failed);
+    if (allFailed) {
+      return { data: null, error: "カレンダーイベントの取得に失敗しました" };
+    }
+
+    const allEvents = results.flatMap(r => r.events);
 
     // 開始時刻でソート
     allEvents.sort((a: calendar_v3.Schema$Event, b: calendar_v3.Schema$Event) => {

@@ -4,16 +4,21 @@ import TodayEventsWidget from "@/app/(authenticated)/components/TodayEventsWidge
 
 export default async function Home() {
   // Asia/Tokyo 基準で当日の開始・終了を算出
-  const tokyoNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-  const y = tokyoNow.getFullYear();
-  const m = String(tokyoNow.getMonth() + 1).padStart(2, "0");
-  const d = String(tokyoNow.getDate()).padStart(2, "0");
+  const parts = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = parts.find(p => p.type === "year")!.value;
+  const m = parts.find(p => p.type === "month")!.value;
+  const d = parts.find(p => p.type === "day")!.value;
 
   const timeMin = new Date(`${y}-${m}-${d}T00:00:00+09:00`);
   const timeMax = new Date(`${y}-${m}-${d}T00:00:00+09:00`);
   timeMax.setDate(timeMax.getDate() + 1);
 
-  const todayLabel = `${y}/${tokyoNow.getMonth() + 1}/${tokyoNow.getDate()}`;
+  const todayLabel = `${y}/${Number(m)}/${Number(d)}`;
 
   const { data: events, error } = await fetchCalendarEvents({ startDate: timeMin, endDate: timeMax });
 
