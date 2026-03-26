@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { CalendarEvent } from "@/app/api/calendar/calendar-server";
 
-type Props = {
+type TodayEventsWidgetProps = {
   events: CalendarEvent[];
   error: string | null;
   todayLabel: string;
@@ -38,21 +37,13 @@ function formatEventTime(event: CalendarEvent, todayStart: Date, todayEnd: Date)
   }
 }
 
-export default function TodayEventsWidget({ events, error, todayLabel, todayStart, todayEnd }: Props) {
+export default function TodayEventsWidget({ events, error, todayLabel, todayStart, todayEnd }: TodayEventsWidgetProps) {
   const start = new Date(todayStart);
   const end = new Date(todayEnd);
 
   return (
     <div className="bg-card rounded-lg shadow p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl text-muted-foreground">{todayLabel}</span>
-          <span className="text-2xl font-semibold text-green-600 underline">本日のイベント</span>
-        </div>
-        <Link href="/calendar" className="text-sm text-primary hover:underline">
-          カレンダーへ →
-        </Link>
-      </div>
+      <span className="text-2xl font-semibold text-green-600 block mb-3">{todayLabel}のイベント</span>
 
       {error !== null ? (
         <p className="text-sm text-muted-foreground">カレンダーイベントの取得に失敗しました。</p>
