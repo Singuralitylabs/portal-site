@@ -60,7 +60,7 @@ export async function deleteVideo(id: number, userId: number) {
 
 /**
  * 動画を新規登録する
- * @param params VideoInsertFormType型の動画データ
+ * @param param0 VideoInsertFormType型の動画データ
  * @returns 登録結果
  */
 export async function registerVideo({
@@ -139,7 +139,7 @@ export async function registerVideo({
 
 /**
  * 動画を更新する
- * @param params VideoUpdateFormType型の更新データ
+ * @param param0 VideoUpdateFormType型の更新データ
  * @returns 更新結果
  */
 export async function updateVideo({

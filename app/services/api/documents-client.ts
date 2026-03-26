@@ -65,8 +65,8 @@ export async function deleteDocument(id: number, userId: number) {
 
 /**
  * サーバーサイドで資料を登録する
- * @param DocumentInsertFormType 資料のデータ
- * @return 登録結果
+ * @param param0 資料の登録データ
+ * @returns 登録結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
@@ -141,8 +141,8 @@ export async function registerDocument({
 
 /**
  * サーバーサイドで資料を更新する
- * @param DocumentUpdateFormType 資料の更新データ
- * @return 更新結果
+ * @param param0 資料の更新データ
+ * @returns 更新結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
