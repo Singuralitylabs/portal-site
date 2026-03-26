@@ -78,7 +78,22 @@ export default function TodayEventsWidget({
                   <span className="break-words">{event.summary || "(タイトルなし)"}</span>
                 )}
                 {event.location && (
-                  <p className="text-muted-foreground text-xs mt-0.5">場所: {event.location}</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    場所:{" "}
+                    {event.location.startsWith("http://") ||
+                    event.location.startsWith("https://") ? (
+                      <a
+                        href={event.location}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline break-all"
+                      >
+                        {event.location}
+                      </a>
+                    ) : (
+                      event.location
+                    )}
+                  </p>
                 )}
               </div>
             </li>
