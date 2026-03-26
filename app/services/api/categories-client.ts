@@ -453,6 +453,30 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       return null;
     };
 
+    const rollbackAndRecoverAndReturn = async (originalError: unknown) => {
+      const rollbackError = await rollbackMovedContents();
+      if (rollbackError) {
+        return { success: false, error: rollbackError };
+      }
+
+      const recoverError = await recoverDisplayOrdersAfterRollback();
+      if (recoverError) {
+        return {
+          success: false,
+          error:
+            recoverError instanceof Error ? recoverError : new Error("表示順復旧に失敗しました。"),
+        };
+      }
+
+      return {
+        success: false,
+        error:
+          originalError instanceof Error
+            ? originalError
+            : new Error("カテゴリー削除に失敗しました。"),
+      };
+    };
+
     const optimizeCategoryDisplayOrdersBestEffort = async () => {
       try {
         await reorderCategoriesByType(categoryType);
@@ -519,23 +543,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
           .eq("category_id", uncategorized.id);
 
       if (movedToUncategorizedCheckError) {
-        const rollbackError = await rollbackMovedContents();
-        if (rollbackError) {
-          return { success: false, error: rollbackError };
-        }
-
-        const recoverError = await recoverDisplayOrdersAfterRollback();
-        if (recoverError) {
-          return {
-            success: false,
-            error:
-              recoverError instanceof Error
-                ? recoverError
-                : new Error("表示順復旧に失敗しました。"),
-          };
-        }
-
-        return { success: false, error: movedToUncategorizedCheckError };
+        return rollbackAndRecoverAndReturn(movedToUncategorizedCheckError);
       }
 
       const movedToUncategorizedCount = movedToUncategorizedContents?.length ?? 0;
@@ -547,23 +555,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
         .eq("is_deleted", false);
 
       if (remainingOriginalCheckError) {
-        const rollbackError = await rollbackMovedContents();
-        if (rollbackError) {
-          return { success: false, error: rollbackError };
-        }
-
-        const recoverError = await recoverDisplayOrdersAfterRollback();
-        if (recoverError) {
-          return {
-            success: false,
-            error:
-              recoverError instanceof Error
-                ? recoverError
-                : new Error("表示順復旧に失敗しました。"),
-          };
-        }
-
-        return { success: false, error: remainingOriginalCheckError };
+        return rollbackAndRecoverAndReturn(remainingOriginalCheckError);
       }
 
       const remainingOriginalCount = remainingOriginalContents?.length ?? 0;
@@ -573,28 +565,11 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
         movedToUncategorizedCount !== expectedMoveCount ||
         remainingOriginalCount !== 0
       ) {
-        const rollbackError = await rollbackMovedContents();
-        if (rollbackError) {
-          return { success: false, error: rollbackError };
-        }
-
-        const recoverError = await recoverDisplayOrdersAfterRollback();
-        if (recoverError) {
-          return {
-            success: false,
-            error:
-              recoverError instanceof Error
-                ? recoverError
-                : new Error("表示順復旧に失敗しました。"),
-          };
-        }
-
-        return {
-          success: false,
-          error: new Error(
+        return rollbackAndRecoverAndReturn(
+          new Error(
             "コンテンツ移動件数の整合性チェックに失敗したため、移動をロールバックしました。"
-          ),
-        };
+          )
+        );
       }
     }
 
@@ -602,29 +577,11 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       try {
         await reorderItemsInCategory(tableName, uncategorized.id);
       } catch (error) {
-        const rollbackError = await rollbackMovedContents();
-        if (rollbackError) {
-          return { success: false, error: rollbackError };
-        }
-
-        const recoverError = await recoverDisplayOrdersAfterRollback();
-        if (recoverError) {
-          return {
-            success: false,
-            error:
-              recoverError instanceof Error
-                ? recoverError
-                : new Error("表示順復旧に失敗しました。"),
-          };
-        }
-
-        return {
-          success: false,
-          error:
-            error instanceof Error
-              ? error
-              : new Error("コンテンツ再採番に失敗したため、移動をロールバックしました。"),
-        };
+        return rollbackAndRecoverAndReturn(
+          error instanceof Error
+            ? error
+            : new Error("コンテンツ再採番に失敗したため、移動をロールバックしました。")
+        );
       }
     }
 
@@ -634,21 +591,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       .eq("id", id);
 
     if (deleteError) {
-      const rollbackError = await rollbackMovedContents();
-      if (rollbackError) {
-        return { success: false, error: rollbackError };
-      }
-
-      const recoverError = await recoverDisplayOrdersAfterRollback();
-      if (recoverError) {
-        return {
-          success: false,
-          error:
-            recoverError instanceof Error ? recoverError : new Error("表示順復旧に失敗しました。"),
-        };
-      }
-
-      return { success: false, error: deleteError };
+      return rollbackAndRecoverAndReturn(deleteError);
     }
 
     try {
