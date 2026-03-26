@@ -6,6 +6,7 @@ import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
+import { isValidUrl } from "@/app/services/api/utils/url-validation";
 
 interface VideoFormModalProps {
   opened: boolean;
@@ -33,9 +34,12 @@ export function VideoFormModal({
     length: 0,
     assignee_id: null as number | null,
   });
-  const [users, setUsers] = useState<{
-    id: number; display_name: string
-  }[]>([]);
+  const [users, setUsers] = useState<
+    {
+      id: number;
+      display_name: string;
+    }[]
+  >([]);
   const router = useRouter();
 
   // 表示順操作フック
@@ -73,7 +77,6 @@ export function VideoFormModal({
     fetchUsers();
   }, []);
 
-
   // カテゴリー変更時の処理
   const handleCategoryChangeWrapper = async (value: string | null) => {
     const categoryId = Number(value);
@@ -90,12 +93,11 @@ export function VideoFormModal({
       });
       return;
     }
-    // URL形式チェック
-    const urlValidation = /^https?:\/\/.+/.test(form.url);
-    if (!urlValidation) {
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
+    if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
-        message: "正しいURLを入力してください",
+        message: "URLは https:// から始まる正しい形式で入力してください",
         color: "red",
       });
       return;
@@ -205,11 +207,11 @@ export function VideoFormModal({
         data={
           users.map(user => ({
             value: String(user.id),
-            label: user.display_name
+            label: user.display_name,
           })) ?? []
         }
         value={form.assignee_id ? String(form.assignee_id) : ""}
-        onChange={(value) => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
+        onChange={value => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
         mb="sm"
       />
       <Select
