@@ -253,4 +253,28 @@ describe("reorderItemsInCategory", () => {
       expect(builder.eq).toHaveBeenCalledWith("id", items[index].id);
     });
   });
+
+  /**
+   * @description orderBy=id 指定時の再採番を検証する。
+   */
+  it("正常系：orderBy=id 指定時は id 昇順で display_order を振り直す", async () => {
+    const items = [{ id: 42 }, { id: 99 }];
+    const selectBuilder = createMockQueryBuilder({ data: items, error: null });
+    const firstUpdateBuilder = createMockQueryBuilder();
+    const secondUpdateBuilder = createMockQueryBuilder();
+    const supabaseStub = { from: jest.fn() };
+    supabaseStub.from
+      .mockReturnValueOnce(selectBuilder)
+      .mockReturnValueOnce(firstUpdateBuilder)
+      .mockReturnValueOnce(secondUpdateBuilder);
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await reorderItemsInCategory("documents", 7, { orderBy: "id" });
+
+    expect(selectBuilder.order).toHaveBeenCalledWith("id", { ascending: true });
+    expect(firstUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 1 });
+    expect(firstUpdateBuilder.eq).toHaveBeenCalledWith("id", 42);
+    expect(secondUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 2 });
+    expect(secondUpdateBuilder.eq).toHaveBeenCalledWith("id", 99);
+  });
 });

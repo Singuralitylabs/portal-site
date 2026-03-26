@@ -1480,9 +1480,6 @@ describe("categories-client", () => {
     });
     const rollbackBuilder = createUpdateInEqBuilder({ data: null, error: null });
 
-    const fallbackSelectOriginalBuilder = createOrderBuilder({ data: [{ id: 100 }], error: null });
-    const fallbackUpdateOriginalBuilder = createUpdateBuilder({ data: null, error: null });
-
     const supabase = { from: jest.fn() };
     supabase.from
       .mockReturnValueOnce(deletingCategoryBuilder)
@@ -1491,20 +1488,18 @@ describe("categories-client", () => {
       .mockReturnValueOnce(moveBuilder)
       .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
       .mockReturnValueOnce(remainingOriginalCheckBuilder)
-      .mockReturnValueOnce(rollbackBuilder)
-      .mockReturnValueOnce(fallbackSelectOriginalBuilder)
-      .mockReturnValueOnce(fallbackUpdateOriginalBuilder);
+      .mockReturnValueOnce(rollbackBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
     const response = await deleteCategory(10, "documents");
 
     expect(response).toEqual({ success: false, error: reorderError });
-    expect(fallbackSelectOriginalBuilder.order).toHaveBeenCalledWith("id", { ascending: true });
-    expect(fallbackUpdateOriginalBuilder.update).toHaveBeenCalledWith({ display_order: 1 });
-    expect(fallbackUpdateOriginalBuilder.eq).toHaveBeenCalledWith("id", 100);
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 1);
     expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 10);
-    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 10, {
+      orderBy: "id",
+    });
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(4, "documents", 1);
   });
 
   it("deleteCategory 異常系: カテゴリー再採番失敗時は削除と移動をロールバックして success=false を返す", async () => {
