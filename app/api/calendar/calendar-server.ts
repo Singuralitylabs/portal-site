@@ -128,7 +128,7 @@ export async function fetchCalendarEvents(
     );
 
     // 全カレンダーが失敗した場合はエラーを返す
-    const allFailed = results.every(r => r.failed);
+    const allFailed = results.length > 0 && results.every(r => r.failed);
     if (allFailed) {
       return { data: null, error: "カレンダーイベントの取得に失敗しました" };
     }
