@@ -52,15 +52,16 @@ const createMockQueryBuilder = <T>(
     "update",
   ];
 
-  chainableMethods.forEach((method) => {
+  chainableMethods.forEach(method => {
     builder[method].mockReturnValue(builder);
   });
 
   return builder;
 };
 
-const mockCreateClientSupabaseClient =
-  createClientSupabaseClient as jest.MockedFunction<typeof createClientSupabaseClient>;
+const mockCreateClientSupabaseClient = createClientSupabaseClient as jest.MockedFunction<
+  typeof createClientSupabaseClient
+>;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -109,6 +110,49 @@ describe("getItemsByCategory", () => {
 
     consoleSpy.mockRestore();
   });
+
+  /**
+   * @description 取得結果が undefined の場合に空配列へフォールバックすることを検証する。
+   */
+  it("正常系：取得データが undefined の場合は空配列を返す", async () => {
+    const selectBuilder = createMockQueryBuilder({ data: undefined, error: null });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    const result = await getItemsByCategory("documents", 1);
+
+    expect(result).toEqual([]);
+  });
+
+  /**
+   * @description videos テーブル経路の取得を検証する。
+   */
+  it("正常系：videos テーブルでも一覧を取得できる", async () => {
+    const mockData = [{ id: 2, name: "Video A", display_order: 1 }];
+    const selectBuilder = createMockQueryBuilder({ data: mockData, error: null });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    const result = await getItemsByCategory("videos", 3);
+
+    expect(result).toEqual(mockData);
+    expect(supabaseStub.from).toHaveBeenCalledWith("videos");
+  });
+
+  /**
+   * @description applications テーブル経路の取得を検証する。
+   */
+  it("正常系：applications テーブルでも一覧を取得できる", async () => {
+    const mockData = [{ id: 4, name: "App A", display_order: 1 }];
+    const selectBuilder = createMockQueryBuilder({ data: mockData, error: null });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    const result = await getItemsByCategory("applications", 8);
+
+    expect(result).toEqual(mockData);
+    expect(supabaseStub.from).toHaveBeenCalledWith("applications");
+  });
 });
 
 /**
@@ -156,6 +200,19 @@ describe("calculateDisplayOrder", () => {
   });
 
   /**
+   * @description last 指定時に取得結果が undefined の場合のフォールバックを検証する。
+   */
+  it("異常系：last 指定で取得結果が undefined の場合は 1 を返す", async () => {
+    const lastOrderBuilder = createMockQueryBuilder({ data: undefined, error: null });
+    const supabaseStub = { from: jest.fn().mockReturnValue(lastOrderBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    const result = await calculateDisplayOrder("videos", 4, { type: "last" });
+
+    expect(result).toBe(1);
+  });
+
+  /**
    * @description 指定 ID の直後に配置するケースを検証する。
    */
   it("正常系：after 指定時は基準 ID の直後に配置する", async () => {
@@ -186,6 +243,32 @@ describe("calculateDisplayOrder", () => {
     });
 
     // expect: 参照データが無い場合は 1 を返す
+    expect(result).toBe(1);
+  });
+
+  /**
+   * @description first 指定時の固定値返却を検証する。
+   */
+  it("正常系：first 指定時は 1 を返す", async () => {
+    const supabaseStub = { from: jest.fn() };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    const result = await calculateDisplayOrder("documents", 2, { type: "first" });
+
+    expect(result).toBe(1);
+  });
+
+  /**
+   * @description 想定外positionが渡された場合のフォールバックを検証する。
+   */
+  it("異常系：想定外positionは 1 を返す", async () => {
+    const supabaseStub = { from: jest.fn() };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    const result = await calculateDisplayOrder("documents", 2, {
+      type: "unknown",
+    } as unknown as Parameters<typeof calculateDisplayOrder>[2]);
+
     expect(result).toBe(1);
   });
 });
@@ -223,6 +306,19 @@ describe("shiftDisplayOrder", () => {
     // 2件目の更新対象IDが正しいことを確認
     expect(secondUpdateBuilder.eq).toHaveBeenCalledWith("id", 1);
   });
+
+  /**
+   * @description 対象アイテムがない場合は更新クエリを発行しないことを検証する。
+   */
+  it("正常系：対象が0件なら更新しない", async () => {
+    const selectBuilder = createMockQueryBuilder({ data: [], error: null });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await shiftDisplayOrder("documents", 7, 3);
+
+    expect(supabaseStub.from).toHaveBeenCalledTimes(1);
+  });
 });
 
 /**
@@ -238,7 +334,7 @@ describe("reorderItemsInCategory", () => {
     const updateBuilders = items.map(() => createMockQueryBuilder());
     const supabaseStub = { from: jest.fn() };
     supabaseStub.from.mockReturnValueOnce(selectBuilder);
-    updateBuilders.forEach((builder) => {
+    updateBuilders.forEach(builder => {
       supabaseStub.from.mockReturnValueOnce(builder);
     });
     mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
@@ -275,5 +371,79 @@ describe("reorderItemsInCategory", () => {
     expect(firstUpdateBuilder.eq).toHaveBeenCalledWith("id", 42);
     expect(secondUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 2 });
     expect(secondUpdateBuilder.eq).toHaveBeenCalledWith("id", 99);
+  });
+
+  /**
+   * @description 取得結果0件の場合は更新しないことを検証する。
+   */
+  it("正常系：取得結果が空なら更新しない", async () => {
+    const selectBuilder = createMockQueryBuilder({ data: [], error: null });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await reorderItemsInCategory("documents", 1);
+
+    expect(supabaseStub.from).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * @description includeDeletedInSelection=true かつ全件削除済みの場合は更新しないことを検証する。
+   */
+  it("正常系：全件削除済みなら更新しない", async () => {
+    const selectBuilder = createMockQueryBuilder({
+      data: [
+        { id: 10, is_deleted: true },
+        { id: 20, is_deleted: true },
+      ],
+      error: null,
+    });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await reorderItemsInCategory("documents", 1, { includeDeletedInSelection: true });
+
+    expect(supabaseStub.from).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * @description 再採番対象の取得失敗時は例外を送出することを検証する。
+   */
+  it("異常系：再採番対象の取得に失敗した場合は例外を投げる", async () => {
+    const selectBuilder = createMockQueryBuilder({
+      data: undefined,
+      error: { message: "select failed" },
+    });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await expect(reorderItemsInCategory("documents", 1)).rejects.toThrow(
+      "並び順再採番対象の取得に失敗しました: select failed"
+    );
+  });
+
+  /**
+   * @description 再採番更新に失敗した場合は例外を送出することを検証する。
+   */
+  it("異常系：更新失敗時は対象IDを含む例外を投げる", async () => {
+    const selectBuilder = createMockQueryBuilder({
+      data: [{ id: 77, is_deleted: false }],
+      error: null,
+    });
+    const updateBuilder = createMockQueryBuilder({
+      data: undefined,
+      error: { message: "update failed" },
+    });
+    updateBuilder.eq.mockResolvedValueOnce({
+      data: undefined,
+      error: { message: "update failed" },
+    });
+
+    const supabaseStub = { from: jest.fn() };
+    supabaseStub.from.mockReturnValueOnce(selectBuilder).mockReturnValueOnce(updateBuilder);
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await expect(reorderItemsInCategory("documents", 1)).rejects.toThrow(
+      "並び順再採番に失敗しました(id: 77): update failed"
+    );
   });
 });
