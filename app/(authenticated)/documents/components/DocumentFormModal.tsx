@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { registerDocument, updateDocument } from "@/app/services/api/documents-client";
 import type { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
-import { isValidUrl } from "@/app/services/api/utils/url-validation";
+import { isValidUrl } from "@/app/utils/url-validation";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 
 interface DocumentFormModalProps {

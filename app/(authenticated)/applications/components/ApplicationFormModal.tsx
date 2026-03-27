@@ -7,7 +7,7 @@ import type {
   SelectCategoryType,
   SelectDeveloperType,
 } from "@/app/types";
-import { isValidUrl } from "@/app/services/api/utils/url-validation";
+import { isValidUrl } from "@/app/utils/url-validation";
 import { registerApplication, updateApplication } from "@/app/services/api/applications-client";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 

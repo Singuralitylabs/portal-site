@@ -6,7 +6,7 @@ import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
-import { isValidUrl } from "@/app/services/api/utils/url-validation";
+import { isValidUrl } from "@/app/utils/url-validation";
 
 interface VideoFormModalProps {
   opened: boolean;
