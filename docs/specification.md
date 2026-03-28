@@ -1104,7 +1104,6 @@ sequenceDiagram
    |  [S] Sinlab Portal    |
    |                       |
    |  icon ホーム           |
-   |  icon プロフィール      |
    |  icon 動画             |
    |  icon 資料             |
    |  icon アプリ           |
@@ -1112,8 +1111,6 @@ sequenceDiagram
    |  icon カレンダー      |
    |  icon カテゴリー管理   |
    |  icon 管理画面         |
-   |                       |
-   |  icon ログアウト       |
    |                       |
    +-----------------------+
    ```
