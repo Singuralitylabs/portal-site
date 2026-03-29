@@ -1,6 +1,27 @@
 import Link from "next/link";
+import { fetchCalendarEvents } from "@/app/api/calendar/calendar-server";
+import TodayEventsWidget from "@/app/(authenticated)/components/TodayEventsWidget";
 
-export default function Home() {
+export default async function Home() {
+  // Asia/Tokyo 基準で当日の開始・終了を算出
+  const parts = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = parts.find(p => p.type === "year")!.value;
+  const m = parts.find(p => p.type === "month")!.value;
+  const d = parts.find(p => p.type === "day")!.value;
+
+  const timeMin = new Date(`${y}-${m}-${d}T00:00:00+09:00`);
+  const timeMax = new Date(`${y}-${m}-${d}T00:00:00+09:00`);
+  timeMax.setDate(timeMax.getDate() + 1);
+
+  const todayLabel = `${y}/${Number(m)}/${Number(d)}`;
+
+  const { data: events, error } = await fetchCalendarEvents({ startDate: timeMin, endDate: timeMax });
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -13,16 +34,26 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="mb-8">
+          <TodayEventsWidget
+            events={events ?? []}
+            error={error}
+            todayLabel={todayLabel}
+            todayStart={timeMin.toISOString()}
+            todayEnd={timeMax.toISOString()}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
-              <Link href="/documents">資料一覧</Link>
+              <Link href="/documents">資料</Link>
             </h3>
             <p className="text-muted-foreground">各種申請フォームや資料のリンク集です。</p>
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
-              <Link href="/videos">動画一覧</Link>
+              <Link href="/videos">動画</Link>
             </h3>
             <p className="text-muted-foreground">
               シンラボ活動やスキルアップなど、
@@ -32,7 +63,7 @@ export default function Home() {
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
-              <Link href="/applications">アプリ紹介</Link>
+              <Link href="/applications">アプリ</Link>
             </h3>
             <p className="text-muted-foreground">
               シンラボメンバーが開発したアプリケーションを紹介しています。
@@ -40,7 +71,7 @@ export default function Home() {
           </div>
           <div className="bg-card p-6 rounded-lg shadow-lg">
             <h3 className="text-xl font-semibold mb-4">
-              <Link href="/members">会員一覧</Link>
+              <Link href="/members">会員</Link>
             </h3>
             <p className="text-muted-foreground">
               シンラボ会員の紹介ページです。
