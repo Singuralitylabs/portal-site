@@ -13,7 +13,7 @@ export function TopHeader({ onMenuOpen }: TopHeaderProps) {
     <>
       {/* モバイル: フルヘッダーバー */}
       <header className="sm:hidden fixed top-0 left-0 right-0 z-20 h-14 px-4 flex items-center justify-between bg-card border-b">
-        <Button variant="subtle" onClick={onMenuOpen} p={4}>
+        <Button variant="subtle" onClick={onMenuOpen} p={4} aria-label="メニューを開く">
           <Menu size={24} />
         </Button>
         <UserProfileMenu />
