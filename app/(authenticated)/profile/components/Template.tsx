@@ -84,7 +84,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
         <>
           次のフィールドに無効なURLが含まれています:
           <br />
-          {invalidLabels.join(", ")}`
+          {invalidLabels.join(", ")}
         </>
       );
       notifications.show({
