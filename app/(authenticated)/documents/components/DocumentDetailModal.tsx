@@ -11,11 +11,7 @@ interface DocumentDetailModalProps {
   onClose: () => void;
 }
 
-export function DocumentDetailModal({
-  document,
-  opened,
-  onClose,
-}: DocumentDetailModalProps) {
+export function DocumentDetailModal({ document, opened, onClose }: DocumentDetailModalProps) {
   if (!document) return null;
 
   return (
@@ -58,7 +54,7 @@ export function DocumentDetailModal({
           {document.assignee?.display_name && (
             <div>
               <Text size="sm" c="dimmed" component="span" mr="xs">
-                責任者: {document.assignee?.display_name}
+                責任者: {document.assignee.display_name}
               </Text>
             </div>
           )}

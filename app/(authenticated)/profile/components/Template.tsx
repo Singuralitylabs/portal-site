@@ -5,7 +5,7 @@ import { Button, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect, useTransition } from "react";
 import { ProfileUserType } from "@/app/types";
-import { validateUrls } from "@/app/services/api/utils/url-validation";
+import { validateUrls } from "@/app/utils/url-validation";
 
 interface ProfilePageTemplateProps {
   initialUser: ProfileUserType;
@@ -80,7 +80,13 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
         portfolio_url: "ポートフォリオのURL",
       };
       const invalidLabels = invalidFields.map(field => fieldLabels[field] || field);
-      const errorMessage = `次のフィールドに無効なURLが含まれています:\n${invalidLabels.join(", ")}`;
+      const errorMessage = (
+        <>
+          次のフィールドに無効なURLが含まれています:
+          <br />
+          {invalidLabels.join(", ")}
+        </>
+      );
       notifications.show({
         title: "入力エラー",
         message: errorMessage,
