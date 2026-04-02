@@ -196,9 +196,7 @@ export function CalendarView({
 
         // 23:00-0:00問題の修正: 終了時刻が翌日0:00の場合、当日23:59:59に調整
         const isMidnight =
-          endDate.getHours() === 0 &&
-          endDate.getMinutes() === 0 &&
-          endDate.getSeconds() === 0;
+          endDate.getHours() === 0 && endDate.getMinutes() === 0 && endDate.getSeconds() === 0;
 
         if (isMidnight && endDate > startDate) {
           // 翌日0:00の場合、1ミリ秒前（前日の23:59:59.999）に変更

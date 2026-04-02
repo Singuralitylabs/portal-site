@@ -52,15 +52,16 @@ const createMockQueryBuilder = <T>(
     "update",
   ];
 
-  chainableMethods.forEach((method) => {
+  chainableMethods.forEach(method => {
     builder[method].mockReturnValue(builder);
   });
 
   return builder;
 };
 
-const mockCreateClientSupabaseClient =
-  createClientSupabaseClient as jest.MockedFunction<typeof createClientSupabaseClient>;
+const mockCreateClientSupabaseClient = createClientSupabaseClient as jest.MockedFunction<
+  typeof createClientSupabaseClient
+>;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -238,7 +239,7 @@ describe("reorderItemsInCategory", () => {
     const updateBuilders = items.map(() => createMockQueryBuilder());
     const supabaseStub = { from: jest.fn() };
     supabaseStub.from.mockReturnValueOnce(selectBuilder);
-    updateBuilders.forEach((builder) => {
+    updateBuilders.forEach(builder => {
       supabaseStub.from.mockReturnValueOnce(builder);
     });
     mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
