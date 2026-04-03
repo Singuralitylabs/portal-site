@@ -352,7 +352,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 | 公開/非公開      | 公開（Public）                  |
 | ファイルパス形式 | `{auth_id}/{ファイル名}`         |
 | 許可する拡張子   | `.jpg`, `.jpeg`, `.png`, `.gif` |
-| ファイルサイズ上限 | 5MB                           |
+| ファイルサイズ上限 | 1MB                           |
 
 #### RLS ポリシー
 
