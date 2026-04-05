@@ -1,22 +1,3 @@
-/**
- * ファイル概要: アプリケーション管理 API（クライアント側）
- *
- * 処理内容:
- * - カテゴリー内アプリ一覧取得、登録、更新、論理削除を提供する
- * - 登録/更新時に `display_order` を計算し、必要に応じてシフトと再採番を実行する
- * - 共通ユーティリティ由来の例外を捕捉し、`{ success: false, error }` 契約で返却する
- *
- * 公開関数:
- * - `getApplicationsByCategory(categoryId, excludeId?)`
- * - `registerApplication(payload)`
- * - `updateApplication(payload)`
- * - `deleteApplication(id, userId)`
- *
- * 依存関係:
- * - `createClientSupabaseClient`（Supabase クライアント生成）
- * - `utils/display-order`（一覧取得・表示順計算・シフト・再採番）
- * - `@/app/types`（アプリ関連フォーム/型定義）
- */
 import { createClientSupabaseClient } from "./supabase-client";
 import type {
   ApplicationInsertFormType,
@@ -68,8 +49,8 @@ export async function deleteApplication(id: number, userId: number) {
 
 /**
  * サーバーサイドでアプリを登録する
- * @param param0 アプリの登録データ
- * @returns 登録結果
+ * @param ApplicationInsertFormType アプリのデータ
+ * @return 登録結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
@@ -82,70 +63,45 @@ export async function registerApplication({
   created_by,
   position,
 }: ApplicationInsertFormType) {
-  let didShiftDisplayOrder = false;
+  // 配置位置から display_order を計算
+  const display_order = await calculateDisplayOrder("applications", category_id, position);
 
-  const recoverDisplayOrderAfterFailure = async () => {
-    if (!didShiftDisplayOrder) {
-      return;
-    }
-
-    try {
-      await reorderItemsInCategory("applications", category_id);
-    } catch (recoveryError) {
-      console.error("アプリ登録失敗後の表示順復旧に失敗:", recoveryError);
-    }
-  };
-
-  try {
-    // 配置位置から display_order を計算
-    const display_order = await calculateDisplayOrder("applications", category_id, position);
-
-    // 新規アプリを挿入する前に、指定位置以降のアプリの display_order を +1 する
-    if (position.type === "first" || position.type === "after") {
-      await shiftDisplayOrder("applications", category_id, display_order);
-      didShiftDisplayOrder = true;
-    }
-
-    const supabase = createClientSupabaseClient();
-    const { error } = await supabase.from("applications").insert([
-      {
-        name,
-        category_id,
-        description,
-        url,
-        developer_id,
-        display_order,
-        is_deleted: false,
-        created_by,
-        updated_by: created_by,
-      },
-    ]);
-
-    // エラーが発生した場合はコンソールにエラーメッセージを出力
-    if (error) {
-      await recoverDisplayOrderAfterFailure();
-      console.error("Supabase アプリ登録エラー:", error.message);
-      return { success: false, error };
-    }
-
-    // 登録後、カテゴリー内の display_order を振り直す
-    await reorderItemsInCategory("applications", category_id);
-
-    return { success: true, error: null };
-  } catch (error) {
-    await recoverDisplayOrderAfterFailure();
-    console.error("Supabase アプリ登録エラー:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error : new Error("アプリ登録に失敗しました。"),
-    };
+  // 新規アプリを挿入する前に、指定位置以降のアプリの display_order を +1 する
+  if (position.type === "first" || position.type === "after") {
+    await shiftDisplayOrder("applications", category_id, display_order);
   }
+
+  const supabase = createClientSupabaseClient();
+  const { error } = await supabase.from("applications").insert([
+    {
+      name,
+      category_id,
+      description,
+      url,
+      developer_id,
+      display_order,
+      is_deleted: false,
+      created_by,
+      updated_by: created_by,
+    },
+  ]);
+
+  // エラーが発生した場合はコンソールにエラーメッセージを出力
+  if (error) {
+    console.error("Supabase アプリ登録エラー:", error.message);
+    return { success: false, error };
+  }
+
+  // 登録後、カテゴリー内の display_order を振り直す
+  await reorderItemsInCategory("applications", category_id);
+
+  return { success: true, error: null };
 }
 
 /**
  * サーバーサイドでアプリを更新する
- * @param param0 アプリの更新データ
- * @returns 更新結果
+ * @param ApplicationUpdateFormType アプリの更新データ
+ * @return 更新結果
  * - success: 成功した場合はtrue
  * - error: エラーが発生した場合はPostgrestErrorオブジェクト
  */
@@ -159,100 +115,57 @@ export async function updateApplication({
   updated_by,
   position,
 }: ApplicationUpdateFormType) {
-  let currentCategoryId: number | null = null;
+  const supabase = createClientSupabaseClient();
 
-  const recoverDisplayOrderAfterFailure = async () => {
-    const reorderTargets = [category_id, currentCategoryId].filter(
-      (targetId, index, ids): targetId is number =>
-        targetId !== null && targetId !== undefined && ids.indexOf(targetId) === index
-    );
+  // 現在のアプリ情報を取得（現在のdisplay_orderとcategory_idを知るため）
+  const { data: currentApp } = await supabase
+    .from("applications")
+    .select("display_order, category_id")
+    .eq("id", id)
+    .single();
 
-    for (const targetCategoryId of reorderTargets) {
-      try {
-        await reorderItemsInCategory("applications", targetCategoryId);
-      } catch (recoveryError) {
-        console.error("アプリ更新失敗後の表示順復旧に失敗:", recoveryError);
-      }
-    }
-  };
+  const currentDisplayOrder = currentApp?.display_order;
+  const currentCategoryId = currentApp?.category_id;
 
-  try {
-    const supabase = createClientSupabaseClient();
+  // 新しい display_order を計算（編集時は自分自身を除外して計算）
+  const display_order = await calculateDisplayOrder(
+    "applications",
+    category_id,
+    position,
+    currentDisplayOrder
+  );
 
-    // 現在のアプリ情報を取得（現在のdisplay_orderとcategory_idを知るため）
-    const { data: currentApp, error: currentAppError } = await supabase
-      .from("applications")
-      .select("display_order, category_id")
-      .eq("id", id)
-      .single();
-
-    if (currentAppError || !currentApp) {
-      const fetchError =
-        currentAppError ?? new Error("対象のアプリケーションの取得に失敗しました。");
-      console.error("Supabase アプリ現在値取得エラー:", fetchError);
-      return { success: false, error: fetchError };
-    }
-
-    const currentDisplayOrder = currentApp.display_order;
-    currentCategoryId = currentApp.category_id;
-
-    // 新しい display_order を計算（編集時は自分自身を除外して計算）
-    const display_order = await calculateDisplayOrder(
-      "applications",
-      category_id,
-      position,
-      currentDisplayOrder
-    );
-
-    // アプリを更新する前に、指定位置以降のアプリの display_order を +1 する
-    if (position.type === "first" || position.type === "after") {
-      await shiftDisplayOrder("applications", category_id, display_order, id);
-    }
-
-    const { data: updatedApp, error } = await supabase
-      .from("applications")
-      .update({
-        name,
-        category_id,
-        description,
-        url,
-        developer_id,
-        display_order,
-        updated_by,
-      })
-      .eq("id", id)
-      .select("id")
-      .maybeSingle();
-
-    // エラーが発生した場合はコンソールにエラーメッセージを出力
-    if (error) {
-      await recoverDisplayOrderAfterFailure();
-      console.error("Supabase アプリ更新エラー:", error.message);
-      return { success: false, error };
-    }
-
-    if (!updatedApp) {
-      const noRowUpdatedError = new Error("更新対象のアプリが見つからないため、更新を中断しました。");
-      await recoverDisplayOrderAfterFailure();
-      console.error("Supabase アプリ更新エラー:", noRowUpdatedError.message);
-      return { success: false, error: noRowUpdatedError };
-    }
-
-    // 更新後、カテゴリー内の display_order を振り直す
-    await reorderItemsInCategory("applications", category_id);
-
-    // カテゴリーが変更された場合、元のカテゴリーも振り直す
-    if (currentCategoryId !== null && currentCategoryId !== category_id) {
-      await reorderItemsInCategory("applications", currentCategoryId);
-    }
-
-    return { success: true, error: null };
-  } catch (error) {
-    await recoverDisplayOrderAfterFailure();
-    console.error("Supabase アプリ更新エラー:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error : new Error("アプリ更新に失敗しました。"),
-    };
+  // アプリを更新する前に、指定位置以降のアプリの display_order を +1 する
+  if (position.type === "first" || position.type === "after") {
+    await shiftDisplayOrder("applications", category_id, display_order, id);
   }
+
+  const { error } = await supabase
+    .from("applications")
+    .update({
+      name,
+      category_id,
+      description,
+      url,
+      developer_id,
+      display_order,
+      updated_by,
+    })
+    .eq("id", id);
+
+  // エラーが発生した場合はコンソールにエラーメッセージを出力
+  if (error) {
+    console.error("Supabase アプリ更新エラー:", error.message);
+    return { success: false, error };
+  }
+
+  // 更新後、カテゴリー内の display_order を振り直す
+  await reorderItemsInCategory("applications", category_id);
+
+  // カテゴリーが変更された場合、元のカテゴリーも振り直す
+  if (currentCategoryId && currentCategoryId !== category_id) {
+    await reorderItemsInCategory("applications", currentCategoryId);
+  }
+
+  return { success: true, error: null };
 }

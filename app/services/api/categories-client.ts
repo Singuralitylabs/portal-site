@@ -28,7 +28,6 @@ import type {
   CategoryTypeValue,
   CategoryUpdateFormType,
 } from "@/app/types";
-import { reorderItemsInCategory } from "./utils/display-order";
 
 const UNCLASSIFIED_CATEGORY_NAME = "未分類";
 
@@ -330,12 +329,56 @@ function getTableNameByType(
   return "applications";
 }
 
+function toError(error: unknown, fallbackMessage: string): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.length > 0) {
+      return new Error(message);
+    }
+  }
+
+  return new Error(fallbackMessage);
+}
+
+async function rollbackContentMove(
+  supabase: ReturnType<typeof createClientSupabaseClient>,
+  tableName: "documents" | "videos" | "applications",
+  movedContentIds: number[],
+  originalCategoryId: number,
+  uncategorizedId: number
+) {
+  if (movedContentIds.length === 0) {
+    return null;
+  }
+
+  const { error } = await supabase
+    .from(tableName)
+    .update({ category_id: originalCategoryId })
+    .in("id", movedContentIds)
+    .eq("is_deleted", false)
+    .eq("category_id", uncategorizedId);
+
+  return error;
+}
+
+async function rollbackCategoryDeletion(
+  supabase: ReturnType<typeof createClientSupabaseClient>,
+  id: number
+) {
+  const { error } = await supabase.from("categories").update({ is_deleted: false }).eq("id", id);
+  return error;
+}
+
 /**
  * カテゴリーを削除する。
  * 1) 対象コンテンツを未分類へ移動
- * 2) 未分類側の再採番
- * 3) カテゴリー論理削除
- * の順で実行し、失敗時は可能な範囲で移動をロールバックする。
+ * 2) カテゴリー論理削除
+ * 3) カテゴリー一覧再採番
+ * の順で実行し、失敗時は可能な範囲でロールバックする。
  */
 export async function deleteCategory(id: number, categoryType: CategoryTypeValue) {
   try {
@@ -391,153 +434,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
 
     const movedContentIds = (contentsToMove ?? []).map(content => content.id);
 
-    const rollbackMovedContents = async () => {
-      if (movedContentIds.length === 0) {
-        return null;
-      }
-
-      const { error: rollbackError } = await supabase
-        .from(tableName)
-        .update({ category_id: id })
-        .in("id", movedContentIds)
-        .eq("is_deleted", false)
-        .eq("category_id", uncategorized.id);
-
-      return rollbackError;
-    };
-
-    const rollbackCategoryDeletion = async () => {
-      const { error: rollbackDeleteError } = await supabase
-        .from("categories")
-        .update({ is_deleted: false })
-        .eq("id", id);
-
-      return rollbackDeleteError;
-    };
-
-    const recoverDisplayOrdersAfterRollback = async () => {
-      const recoverCategoryDisplayOrder = async (categoryId: number) => {
-        try {
-          await reorderItemsInCategory(tableName, categoryId);
-          return null;
-        } catch (reorderError) {
-          try {
-            // 通常再採番で復旧できない場合のみ、id昇順でフォールバック再採番する。
-            await reorderItemsInCategory(tableName, categoryId, { orderBy: "id" });
-            return null;
-          } catch (fallbackReorderError) {
-            return fallbackReorderError ?? reorderError;
-          }
-        }
-      };
-
-      let originalReorderError: unknown = null;
-      let uncategorizedReorderError: unknown = null;
-
-      try {
-        originalReorderError = await recoverCategoryDisplayOrder(id);
-      } catch (error) {
-        originalReorderError = error;
-      }
-
-      try {
-        uncategorizedReorderError = await recoverCategoryDisplayOrder(uncategorized.id);
-      } catch (error) {
-        uncategorizedReorderError = error;
-      }
-
-      if (originalReorderError || uncategorizedReorderError) {
-        return originalReorderError ?? uncategorizedReorderError;
-      }
-
-      return null;
-    };
-
-    const rollbackAndRecoverAndReturn = async (originalError: unknown) => {
-      const rollbackError = await rollbackMovedContents();
-      if (rollbackError) {
-        return { success: false, error: rollbackError };
-      }
-
-      if (movedContentIds.length === 0) {
-        return {
-          success: false,
-          error:
-            originalError instanceof Error
-              ? originalError
-              : typeof originalError === "object" &&
-                  originalError !== null &&
-                  "message" in originalError &&
-                  typeof originalError.message === "string"
-                ? new Error(originalError.message)
-                : new Error("カテゴリー削除に失敗しました。"),
-        };
-      }
-
-      const recoverError = await recoverDisplayOrdersAfterRollback();
-      if (recoverError) {
-        return {
-          success: false,
-          error:
-            recoverError instanceof Error ? recoverError : new Error("表示順復旧に失敗しました。"),
-        };
-      }
-
-      return {
-        success: false,
-        error:
-          originalError instanceof Error
-            ? originalError
-            : typeof originalError === "object" &&
-                originalError !== null &&
-                "message" in originalError &&
-                typeof originalError.message === "string"
-              ? new Error(originalError.message)
-            : new Error("カテゴリー削除に失敗しました。"),
-      };
-    };
-
-    const optimizeCategoryDisplayOrdersBestEffort = async () => {
-      try {
-        await reorderCategoriesByType(categoryType);
-        return;
-      } catch (error) {
-        console.error("カテゴリ表示順の通常再採番に失敗:", error);
-      }
-
-      try {
-        const { data: categories, error: selectError } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("category_type", categoryType)
-          .eq("is_deleted", false)
-          .order("id", { ascending: true });
-
-        if (selectError) {
-          console.error("カテゴリ表示順最適化対象の取得に失敗:", selectError);
-          return;
-        }
-
-        if (!categories || categories.length === 0) {
-          return;
-        }
-
-        for (const [index, category] of categories.entries()) {
-          const { error: updateError } = await supabase
-            .from("categories")
-            .update({ display_order: index + 1 })
-            .eq("id", category.id);
-
-          if (updateError) {
-            console.error("カテゴリ表示順のID順最適化に失敗:", updateError);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("カテゴリ表示順最適化処理で予期せぬエラー:", error);
-      }
-    };
-
+    // Step 1: 紐づくコンテンツを未分類へ移動する。
     if (movedContentIds.length > 0) {
       const { data: movedContents, error: moveError } = await supabase
         .from(tableName)
@@ -554,103 +451,73 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       const movedCount = movedContents?.length ?? 0;
       const expectedMoveCount = movedContentIds.length;
 
-      const { data: movedToUncategorizedContents, error: movedToUncategorizedCheckError } =
-        await supabase
-          .from(tableName)
-          .select("id")
-          .in("id", movedContentIds)
-          .eq("is_deleted", false)
-          .eq("category_id", uncategorized.id);
-
-      if (movedToUncategorizedCheckError) {
-        return rollbackAndRecoverAndReturn(movedToUncategorizedCheckError);
-      }
-
-      const movedToUncategorizedCount = movedToUncategorizedContents?.length ?? 0;
-
-      const { data: remainingOriginalContents, error: remainingOriginalCheckError } = await supabase
-        .from(tableName)
-        .select("id")
-        .eq("category_id", id)
-        .eq("is_deleted", false);
-
-      if (remainingOriginalCheckError) {
-        return rollbackAndRecoverAndReturn(remainingOriginalCheckError);
-      }
-
-      const remainingOriginalCount = remainingOriginalContents?.length ?? 0;
-
-      if (
-        movedCount !== expectedMoveCount ||
-        movedToUncategorizedCount !== expectedMoveCount ||
-        remainingOriginalCount !== 0
-      ) {
-        return rollbackAndRecoverAndReturn(
-          new Error(
-            "コンテンツ移動件数の整合性チェックに失敗したため、移動をロールバックしました。"
-          )
+      if (movedCount !== expectedMoveCount) {
+        const rollbackError = await rollbackContentMove(
+          supabase,
+          tableName,
+          movedContentIds,
+          id,
+          uncategorized.id
         );
+
+        if (rollbackError) {
+          return { success: false, error: rollbackError };
+        }
+
+        return {
+          success: false,
+          error: new Error("コンテンツ移動件数の整合性チェックに失敗しました。"),
+        };
       }
     }
 
-    if (movedContentIds.length > 0) {
-      try {
-        await reorderItemsInCategory(tableName, uncategorized.id);
-      } catch (error) {
-        return rollbackAndRecoverAndReturn(
-          error instanceof Error
-            ? error
-            : new Error("コンテンツ再採番に失敗したため、移動をロールバックしました。")
-        );
-      }
-    }
-
+    // Step 2: カテゴリーを論理削除する。失敗時は移動済みコンテンツを戻す。
     const { error: deleteError } = await supabase
       .from("categories")
       .update({ is_deleted: true })
       .eq("id", id);
 
     if (deleteError) {
-      return rollbackAndRecoverAndReturn(deleteError);
-    }
-
-    try {
-      await reorderCategoriesByType(categoryType);
-    } catch (reorderCategoriesError) {
-      const rollbackDeleteError = await rollbackCategoryDeletion();
-      if (rollbackDeleteError) {
-        await optimizeCategoryDisplayOrdersBestEffort();
-        return { success: false, error: rollbackDeleteError };
-      }
-
-      const rollbackError = await rollbackMovedContents();
+      const rollbackError = await rollbackContentMove(
+        supabase,
+        tableName,
+        movedContentIds,
+        id,
+        uncategorized.id
+      );
       if (rollbackError) {
-        await optimizeCategoryDisplayOrdersBestEffort();
         return { success: false, error: rollbackError };
       }
 
-      if (movedContentIds.length > 0) {
-        const recoverError = await recoverDisplayOrdersAfterRollback();
-        if (recoverError) {
-          await optimizeCategoryDisplayOrdersBestEffort();
-          return {
-            success: false,
-            error:
-              recoverError instanceof Error
-                ? recoverError
-                : new Error("表示順復旧に失敗しました。"),
-          };
-        }
+      return { success: false, error: deleteError };
+    }
+
+    // Step 3: カテゴリー一覧を再採番する。失敗時は削除と移動を戻す。
+    try {
+      await reorderCategoriesByType(categoryType);
+    } catch (reorderCategoriesError) {
+      const rollbackDeleteError = await rollbackCategoryDeletion(supabase, id);
+      if (rollbackDeleteError) {
+        return { success: false, error: rollbackDeleteError };
       }
 
-      await optimizeCategoryDisplayOrdersBestEffort();
+      const rollbackError = await rollbackContentMove(
+        supabase,
+        tableName,
+        movedContentIds,
+        id,
+        uncategorized.id
+      );
+      if (rollbackError) {
+        return { success: false, error: rollbackError };
+      }
 
       return {
         success: false,
-        error:
-          reorderCategoriesError instanceof Error
-            ? reorderCategoriesError
-            : new Error("カテゴリー再採番に失敗したため、削除処理をロールバックしました。"),
+        error: toError(
+          reorderCategoriesError,
+          "カテゴリー再採番に失敗したため、削除処理をロールバックしました。"
+        ),
       };
     }
 

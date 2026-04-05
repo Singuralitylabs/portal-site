@@ -1,24 +1,9 @@
-/**
- * ファイル概要: コンテンツ表示順（display_order）操作の共通ユーティリティ
- *
- * 処理内容:
- * - カテゴリー内アイテム一覧の取得（`getItemsByCategory`）
- * - 配置位置（first/after/last/current）から表示順を算出（`calculateDisplayOrder`）
- * - 指定位置以降の表示順シフト（`shiftDisplayOrder`）
- * - カテゴリー内再採番（`reorderItemsInCategory`）
- *
- * 主な関数:
- * - `getItemsByCategory(table, categoryId, excludeId?)`
- * - `calculateDisplayOrder(table, categoryId, position, currentDisplayOrder?)`
- * - `shiftDisplayOrder(table, categoryId, displayOrder, excludeId?)`
- * - `reorderItemsInCategory(table, categoryId, options?)`
- *
- * 依存関係:
- * - `createClientSupabaseClient`（Supabase クライアント生成）
- * - `@/app/types`（`ContentTableType` などの共通型）
- */
 import { createClientSupabaseClient } from "../supabase-client";
 import type { CategoryItemType, ContentTableType, PlacementPositionType } from "@/app/types";
+
+/**
+ * 表示順操作の共通型定義と関数
+ */
 
 /**
  * 指定されたカテゴリー内のアイテム一覧を取得する
@@ -167,55 +152,29 @@ export async function shiftDisplayOrder(
  * カテゴリー内のアイテムの display_order を 1 から振り直す
  * @param table テーブル名
  * @param categoryId カテゴリーID
- * @param options 再採番時の取得オプション
- * @param options.includeDeletedInSelection true の場合は取得時に削除済みを含める（再採番対象は未削除のみ）
- * @param options.orderBy 取得時の並び順キー（`display_order` または `id`）
  */
 export async function reorderItemsInCategory(
   table: ContentTableType,
-  categoryId: number,
-  options?: { includeDeletedInSelection?: boolean; orderBy?: "display_order" | "id" }
+  categoryId: number
 ): Promise<void> {
-  const includeDeletedInSelection = options?.includeDeletedInSelection ?? false;
-  const orderBy = options?.orderBy ?? "display_order";
   const supabase = createClientSupabaseClient();
 
-  // カテゴリー内のアイテムを orderBy 指定の昇順で取得（既定は display_order）
-  let query = supabase.from(table).select("id, is_deleted").eq("category_id", categoryId);
-
-  if (!includeDeletedInSelection) {
-    query = query.eq("is_deleted", false);
-  }
-
-  const { data: items, error: selectError } = await query.order(orderBy, {
-    ascending: true,
-  });
-
-  if (selectError) {
-    throw new Error(`並び順再採番対象の取得に失敗しました: ${selectError.message}`);
-  }
+  // カテゴリー内のアイテムを display_order の昇順で取得（削除済みも含む）
+  const { data: items } = await supabase
+    .from(table)
+    .select("id")
+    .eq("category_id", categoryId)
+    .order("display_order", { ascending: true });
 
   if (!items || items.length === 0) {
     return;
   }
 
-  const itemsToReorder = includeDeletedInSelection
-    ? items.filter(item => !item.is_deleted)
-    : items;
-
-  if (itemsToReorder.length === 0) {
-    return;
-  }
-
   // 1 から順に振り直す（衝突を避けるため順次更新）
-  for (const [index, item] of itemsToReorder.entries()) {
-    const { error: updateError } = await supabase
+  for (const [index, item] of items.entries()) {
+    await supabase
       .from(table)
       .update({ display_order: index + 1 })
       .eq("id", item.id);
-
-    if (updateError) {
-      throw new Error(`並び順再採番に失敗しました(id: ${item.id}): ${updateError.message}`);
-    }
   }
 }
