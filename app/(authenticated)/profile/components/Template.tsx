@@ -5,7 +5,6 @@ import { Button, MultiSelect, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect, useTransition } from "react";
 import { PositionType, ProfileUserType } from "@/app/types";
-import { ProfileUserType } from "@/app/types";
 import { validateUrls } from "@/app/utils/url-validation";
 
 interface ProfilePageTemplateProps {
