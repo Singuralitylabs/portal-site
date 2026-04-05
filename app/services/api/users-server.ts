@@ -292,14 +292,12 @@ export async function updateUserPositionTagsInServer(
     return null;
   }
 
-  const { error: insertError } = await supabase
-    .from("position_tags")
-    .insert(
-      uniquePositionIds.map(positionId => ({
-        user_id: userId,
-        position_id: positionId,
-      }))
-    );
+  const { error: insertError } = await supabase.from("position_tags").insert(
+    uniquePositionIds.map(positionId => ({
+      user_id: userId,
+      position_id: positionId,
+    }))
+  );
 
   if (insertError) {
     console.error("Supabase position_tags挿入エラー:", insertError.message);

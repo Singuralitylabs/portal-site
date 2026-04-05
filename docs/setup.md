@@ -90,24 +90,24 @@ npm install
 
 1. `.env.local`ファイルをプロジェクトルートに作成する
 
-```bash
-touch .env.local
-```
+   ```bash
+   touch .env.local
+   ```
 
-1. 以下の環境変数を設定する **（各値は参画時に個別共有）**。
+2. 以下の環境変数を設定する **（各値は参画時に個別共有）**。
 
-```bash
-# Supabase関連（認証・データベース）
-NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
-SUPABASE_PROJECT_ID=************
+   ```bash
+   # Supabase関連（認証・データベース）
+   NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
+   SUPABASE_PROJECT_ID=************
 
-# 問い合わせ用メールアドレス
-NEXT_PUBLIC_ADMIN_EMAIL=info@future-tech-association.org
+   # 問い合わせ用メールアドレス
+   NEXT_PUBLIC_ADMIN_EMAIL=info@future-tech-association.org
 
-# Slack通知先Webhook URL
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
-```
+   # Slack通知先Webhook URL
+   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
+   ```
 
 #### 重要な注意事項
 
@@ -131,16 +131,22 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
 
 #### ワークスペース設定の反映方法
 
-- 本リポジトリには VS Code 用のワークスペース設定が [.vscode/settings.json](../.vscode/settings.json) として含まれています。
+- 本リポジトリには VS Code 用のワークスペース設定が
+  [.vscode/settings.json](../.vscode/settings.json) として含まれています。
 - リポジトリを VS Code で開くと、自動的にこの設定が適用されます。
-- 設定内容を確認したい場合は、コマンドパレットから `Preferences: Open Workspace Settings (JSON)` を開くか、`.vscode/settings.json` を直接確認してください。
+- 設定内容を確認したい場合は、コマンドパレットから
+  `Preferences: Open Workspace Settings (JSON)` を開くか、
+  `.vscode/settings.json` を直接確認してください。
 
 #### Markdown 整形に関する補足
 
 - Markdown の整形基準は Prettier の出力に統一します。
-- 通常のネスト箇条書きは 2 スペース、番号付きリスト配下の箇条書きは 3 スペースになることがあります。
+- 通常のネスト箇条書きは 2 スペース、
+  番号付きリスト配下の箇条書きは 3 スペースになることがあります。
 - これは Prettier の Markdown 整形仕様によるもので、VS Code 側の不具合ではありません。
-- `.vscode/settings.json` では Markdown 編集時の入力補助として 2 スペース設定を入れていますが、Prettier 実行時の 3 スペース出力自体は変わりません。
+- `.vscode/settings.json` では Markdown 編集時の入力補助として
+  2 スペース設定を入れていますが、
+  Prettier 実行時の 3 スペース出力自体は変わりません。
 
 ## 3. 開発環境の起動確認
 
@@ -162,7 +168,7 @@ npm run dev
 
 ### 3.2 ブラウザでの動作確認
 
-1. ブラウザで http://localhost:3000 にアクセス
+1. ブラウザで `http://localhost:3000` にアクセス
 2. ログイン画面が表示されることを確認
 3. 「Googleでログイン」ボタンが表示されることを確認
 
