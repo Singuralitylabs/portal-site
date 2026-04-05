@@ -14,7 +14,13 @@ interface DocumentCardProps {
   onDetailClick: (document: DocumentWithCategoryType) => void;
 }
 
-export function DocumentCard({ document, isContentMgr, categories, userId, onDetailClick }: DocumentCardProps) {
+export function DocumentCard({
+  document,
+  isContentMgr,
+  categories,
+  userId,
+  onDetailClick,
+}: DocumentCardProps) {
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
       case "pdf":

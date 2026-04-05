@@ -108,32 +108,29 @@ describe("getServerAuth", () => {
   /**
    * ステータス別の戻り値を確認する。
    */
-  it.each(["pending", "active", "rejected"])(
-    "userStatus=%s を返す",
-    async (status) => {
-      const user = { id: "auth-3" };
-      const result = { data: { status }, error: null };
-      const builder = createQueryBuilder(result);
-      const supabase = {
-        auth: {
-          getUser: jest.fn().mockResolvedValue({
-            data: { user },
-            error: null,
-          }),
-        },
-        from: jest.fn(() => builder),
-      };
-      createServerSupabaseClientMock.mockResolvedValue(supabase);
+  it.each(["pending", "active", "rejected"])("userStatus=%s を返す", async status => {
+    const user = { id: "auth-3" };
+    const result = { data: { status }, error: null };
+    const builder = createQueryBuilder(result);
+    const supabase = {
+      auth: {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user },
+          error: null,
+        }),
+      },
+      from: jest.fn(() => builder),
+    };
+    createServerSupabaseClientMock.mockResolvedValue(supabase);
 
-      const response = await getServerAuth();
+    const response = await getServerAuth();
 
-      // ステータスがそのまま返ることを確認
-      expect(response).toEqual({
-        user,
-        userStatus: status,
-      });
-    }
-  );
+    // ステータスがそのまま返ることを確認
+    expect(response).toEqual({
+      user,
+      userStatus: status,
+    });
+  });
 
   /**
    * 例外発生時の動作を確認する。

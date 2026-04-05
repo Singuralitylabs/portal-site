@@ -77,13 +77,7 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
       </div>
       <Divider color="#999" m="0 1rem" />
       <div>
-        <Flex
-          gap="0.5rem"
-          justify="flex-start"
-          align="flex-start"
-          direction="column"
-          p="1rem 1rem"
-        >
+        <Flex gap="0.5rem" justify="flex-start" align="flex-start" direction="column" p="1rem 1rem">
           <Text component="div" className="prose prose-sm max-w-none">
             <MarkdownText>{video.description}</MarkdownText>
           </Text>
