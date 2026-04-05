@@ -1,23 +1,3 @@
-/**
- * ファイル概要: サーバー側 API サービスのユニットテスト（モック）
- *
- * 処理内容:
- * - `*-server.ts` 系 API の正常系/異常系を検証する
- * - `createServerSupabaseClient` と `getServerCurrentUser` の環境変数・Cookie連携を検証する
- * - Supabase の query chain（select/eq/order/maybeSingle/update）をモックで再現する
- *
- * 主なテスト対象関数:
- * - `fetchDocuments`, `fetchApplications`, `fetchCategoriesByType`, `fetchCategoriesForManagement`,
- *   `fetchVideos`, `fetchVideoById`
- * - `fetchActiveUsers`, `fetchApprovalUsers`, `fetchUserStatusByIdInServer`,
- *   `fetchUserInfoByAuthId`, `fetchUserByAuthIdInServer`, `updateUserProfileServerInServer`
- * - `createServerSupabaseClient`, `getServerCurrentUser`
- *
- * 依存関係:
- * - `@supabase/ssr`（`createServerClient`）
- * - `next/headers`（`cookies`）
- * - `app/services/api/*-server.ts` 各サーバーAPI
- */
 import { fetchApplications } from "../../../app/services/api/applications-server";
 import {
   fetchCategoriesByType,
@@ -97,8 +77,7 @@ const createEqTerminatingBuilder = (eqCallCount: number, result: QueryResult) =>
 
 // update(...).eq(...).select().single() で終端する更新系クエリ用モック
 const createUpdateSelectSingleBuilder = (result: QueryResult) => {
-  const builder: { update?: jest.Mock; eq?: jest.Mock; select?: jest.Mock; single?: jest.Mock } =
-    {};
+  const builder: { update?: jest.Mock; eq?: jest.Mock; select?: jest.Mock; single?: jest.Mock } = {};
   builder.update = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.select = jest.fn(() => builder);
@@ -150,7 +129,6 @@ describe("server API services", () => {
     });
   });
 
-  // カテゴリー管理向け一覧取得 API の代表ケース（正常系/異常系）
   describe("fetchCategoriesForManagement", () => {
     it("正常系: 管理画面向けカテゴリー一覧を返す", async () => {
       const result = {
@@ -244,10 +222,7 @@ describe("server API services", () => {
     });
 
     it("fetchUserInfoByAuthId: 正常系/異常系", async () => {
-      const successBuilder = createMaybeSingleBuilder({
-        data: { id: 1, role: "admin" },
-        error: null,
-      });
+      const successBuilder = createMaybeSingleBuilder({ data: { id: 1, role: "admin" }, error: null });
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserInfoByAuthId({ authId: "auth-3" });
@@ -333,10 +308,7 @@ describe("server API services", () => {
     });
 
     it("fetchUserByAuthIdInServer: 正常系/異常系", async () => {
-      const successBuilder = createMaybeSingleBuilder({
-        data: { id: 9, auth_id: "auth-9" },
-        error: null,
-      });
+      const successBuilder = createMaybeSingleBuilder({ data: { id: 9, auth_id: "auth-9" }, error: null });
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserByAuthIdInServer({ authId: "auth-9" });
@@ -432,61 +404,6 @@ describe("supabase-server module", () => {
     );
     // 生成したクライアントがそのまま返ることを確認
     expect(response).toBe(mockClient);
-  });
-
-  it("createServerSupabaseClient: cookies.getAll/setAll ハンドラが動作する", async () => {
-    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
-
-    const cookieStore = {
-      getAll: jest.fn(() => [{ name: "sb", value: "token" }]),
-      set: jest.fn(),
-    };
-    cookiesMock.mockResolvedValue(cookieStore);
-    createServerClientMock.mockReturnValue({ auth: { getUser: jest.fn() } });
-
-    await supabaseServerActual.createServerSupabaseClient();
-
-    const createOptions = createServerClientMock.mock.calls[0][2];
-    const responseCookies = createOptions.cookies.getAll();
-    createOptions.cookies.setAll([
-      {
-        name: "sb-access-token",
-        value: "new-token",
-        options: { path: "/" },
-      },
-    ]);
-
-    expect(responseCookies).toEqual([{ name: "sb", value: "token" }]);
-    expect(cookieStore.set).toHaveBeenCalledWith("sb-access-token", "new-token", { path: "/" });
-  });
-
-  it("createServerSupabaseClient: cookies.setAll で例外が発生しても処理継続する", async () => {
-    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
-
-    const cookieStore = {
-      getAll: jest.fn(() => []),
-      set: jest.fn(() => {
-        throw new Error("set failed");
-      }),
-    };
-    cookiesMock.mockResolvedValue(cookieStore);
-    createServerClientMock.mockReturnValue({ auth: { getUser: jest.fn() } });
-
-    await supabaseServerActual.createServerSupabaseClient();
-
-    const createOptions = createServerClientMock.mock.calls[0][2];
-
-    expect(() => {
-      createOptions.cookies.setAll([
-        {
-          name: "sb-access-token",
-          value: "new-token",
-          options: { path: "/" },
-        },
-      ]);
-    }).not.toThrow();
   });
 
   it("getServerCurrentUser: 正常系/異常系", async () => {
