@@ -1,4 +1,4 @@
-import { SideNav } from "./components/SideNav";
+import { NavigationWrapper } from "./components/NavigationWrapper";
 import { AuthLayout as AuthGuard } from "./auth-layout";
 import { getServerCurrentUser } from "@/app/services/api/supabase-server";
 import { fetchUserInfoByAuthId } from "@/app/services/api/users-server";
@@ -36,10 +36,9 @@ export default async function AuthLayout({
 
   return (
     <AuthGuard>
-      <div className="sm:flex min-h-screen">
-        <SideNav isAdmin={isAdmin} isContentMgr={isContentMgr} />
-        <div className="flex-1 sm:ml-64 p-4">{children}</div>
-      </div>
+      <NavigationWrapper isAdmin={isAdmin} isContentMgr={isContentMgr}>
+        {children}
+      </NavigationWrapper>
     </AuthGuard>
   );
 }
