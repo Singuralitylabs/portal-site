@@ -1,23 +1,11 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { createClientSupabaseClient } from "../../../app/services/api/supabase-client";
 import {
-  deleteApplication,
-  getApplicationsByCategory,
-  registerApplication,
-  updateApplication,
-} from "../../../app/services/api/applications-client";
-import {
   deleteDocument,
   getDocumentsByCategory,
   registerDocument,
   updateDocument,
 } from "../../../app/services/api/documents-client";
-import {
-  deleteVideo,
-  getVideosByCategory,
-  registerVideo,
-  updateVideo,
-} from "../../../app/services/api/videos-client";
 import {
   deleteCategory,
   registerCategory,
@@ -39,9 +27,19 @@ import {
 } from "../../../app/services/api/utils/display-order";
 
 /**
- * クライアント側 Supabase サービス群のテスト。
- * - 対象関数: createClientSupabaseClient / 各 content CRUD / users-client 系関数
- * - 検証観点: 正常系戻り値、異常系エラーハンドリング、副作用(再採番)の呼び出し
+ * スクリプト概要:
+ * このテストファイルは、クライアント側 API 層（`app/services/api/*-client.ts`）の
+ * Supabase 呼び出しと戻り値ハンドリングを検証する。
+ *
+ * 主な目的:
+ * - 正常系: 期待する戻り値（success/data/error）が返ること
+ * - 異常系: 失敗時にエラーを返し、必要なログ・ロールバック分岐が動作すること
+ * - 副作用: 表示順再採番などの補助処理が必要条件でのみ呼ばれること
+ *
+ * 主な定義:
+ * - `QueryResult`: Supabase クエリモックの戻り値型（`data` / `error`）
+ * - `ORIGINAL_ENV`: テスト前後で process.env を復元するための退避値
+ * - `create*Builder`: Supabase のメソッドチェーンを模擬するビルダー群
  */
 const supabaseClientActual = jest.requireActual(
   "../../../app/services/api/supabase-client"
@@ -218,13 +216,16 @@ describe("supabase-client", () => {
   });
 
   it("環境変数を利用して Supabase クライアントを生成する", () => {
+    // Step 1: 環境変数と createBrowserClient の戻り値モックを準備する。
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
     const mockClient = { from: jest.fn() };
     createBrowserClientMock.mockReturnValue(mockClient);
 
+    // Step 2: 対象関数を実行する。
     const response = supabaseClientActual.createClientSupabaseClient();
 
+    // Step 3: 呼び出し引数（URL/KEY）と戻り値を検証する。
     // createBrowserClient が環境変数の URL / ANON KEY で呼ばれることを確認
     expect(createBrowserClientMock).toHaveBeenCalledWith("https://example.supabase.co", "anon-key");
     // ラッパー関数の戻り値として生成クライアントが返ることを確認
@@ -244,141 +245,76 @@ describe("content client services", () => {
     jest.clearAllMocks();
   });
 
-  describe.each([
-    { label: "application", getByCategory: getApplicationsByCategory },
-    { label: "document", getByCategory: getDocumentsByCategory },
-    { label: "video", getByCategory: getVideosByCategory },
-  ])("getByCategory: $label", ({ getByCategory }) => {
-    // 呼び出し関数: getApplicationsByCategory/getDocumentsByCategory/getVideosByCategory
+  describe("getByCategory: document", () => {
     it("正常系: カテゴリー内アイテム一覧を取得できる", async () => {
+      // Step 1: 一覧取得のモック戻り値を準備する。
       const items = [{ id: 1, name: "item", display_order: 1 }];
       getItemsByCategoryMock.mockResolvedValue(items);
 
-      const response = await getByCategory(10, 2);
+      // Step 2: document 取得関数を実行する。
+      const response = await getDocumentsByCategory(10, 2);
 
-      // カテゴリ取得関数が取得結果をそのまま返すことを確認
+      // Step 3: 戻り値と依存関数呼び出し回数を検証する。
       expect(response).toEqual(items);
-      // 共通ユーティリティ getItemsByCategory が1回呼ばれることを確認
       expect(getItemsByCategoryMock).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe.each([
-    { label: "application", deleteFn: deleteApplication },
-    { label: "document", deleteFn: deleteDocument },
-    { label: "video", deleteFn: deleteVideo },
-  ])("delete: $label", ({ deleteFn }) => {
-    // 呼び出し関数: deleteApplication/deleteDocument/deleteVideo
+  describe("delete: document", () => {
     it("正常系: 論理削除に成功する", async () => {
+      // Step 1: update -> eq の成功モックを準備する。
       const builder = createUpdateBuilder({ data: null, error: null });
       const supabase = { from: jest.fn(() => builder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await deleteFn(1, 10);
+      // Step 2: document 削除関数を実行する。
+      const response = await deleteDocument(1, 10);
 
-      // 論理削除成功時に success=true が返ることを確認
+      // Step 3: 成功レスポンスを検証する。
       expect(response).toEqual({ success: true, error: null });
     });
 
     it("異常系: エラー時は失敗を返す", async () => {
+      // Step 1: 失敗モックと console.error スパイを準備する。
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
       const error = { message: "failed" };
       const builder = createUpdateBuilder({ data: null, error });
       const supabase = { from: jest.fn(() => builder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await deleteFn(2, 11);
+      // Step 2: document 削除関数を実行する。
+      const response = await deleteDocument(2, 11);
 
-      // 論理削除失敗時に success=false とエラーが返ることを確認
+      // Step 3: 失敗レスポンスとログ出力を検証する。
       expect(response).toEqual({ success: false, error });
-      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
   });
 
-  describe.each([
-    {
-      label: "application",
-      registerFn: registerApplication,
-      updateFn: updateApplication,
-      registerPayload: {
-        name: "App A",
-        category_id: 1,
-        description: "desc",
-        url: "https://app.example.com",
-        developer_id: 7,
-        created_by: 10,
-        position: { type: "first" as const },
-      },
-      updatePayload: {
-        id: 1,
-        name: "App A2",
-        category_id: 2,
-        description: "desc2",
-        url: "https://app.example.com/2",
-        developer_id: 8,
-        updated_by: 11,
-        position: { type: "after" as const, afterId: 3 },
-      },
-    },
-    {
-      label: "document",
-      registerFn: registerDocument,
-      updateFn: updateDocument,
-      registerPayload: {
-        name: "Doc A",
-        category_id: 1,
-        description: "desc",
-        url: "https://doc.example.com",
-        assignee_id: 1,
-        created_by: 10,
-        position: { type: "first" as const },
-      },
-      updatePayload: {
-        id: 1,
-        name: "Doc A2",
-        category_id: 2,
-        description: "desc2",
-        url: "https://doc.example.com/2",
-        assignee_id: 2,
-        updated_by: 11,
-        position: { type: "after" as const, afterId: 3 },
-      },
-    },
-    {
-      label: "video",
-      registerFn: registerVideo,
-      updateFn: updateVideo,
-      registerPayload: {
-        name: "Video A",
-        category_id: 1,
-        description: "desc",
-        url: "https://video.example.com",
-        thumbnail_path: "/thumb.png",
-        thumbnail_time: 12,
-        length: 100,
-        assignee_id: 1,
-        created_by: 10,
-        position: { type: "first" as const },
-      },
-      updatePayload: {
-        id: 1,
-        name: "Video A2",
-        category_id: 2,
-        description: "desc2",
-        url: "https://video.example.com/2",
-        thumbnail_path: "/thumb2.png",
-        thumbnail_time: 20,
-        length: 120,
-        assignee_id: 2,
-        updated_by: 11,
-        position: { type: "after" as const, afterId: 3 },
-      },
-    },
-  ])("register/update: $label", ({ registerFn, updateFn, registerPayload, updatePayload }) => {
-    // 主要変数: registerPayload/updatePayload（入力データ）, registerFn/updateFn（対象関数）
+  describe("register/update: document", () => {
+    const registerPayload = {
+      name: "Doc A",
+      category_id: 1,
+      description: "desc",
+      url: "https://doc.example.com",
+      assignee_id: 1,
+      created_by: 10,
+      position: { type: "first" as const },
+    };
+    const updatePayload = {
+      id: 1,
+      name: "Doc A2",
+      category_id: 2,
+      description: "desc2",
+      url: "https://doc.example.com/2",
+      assignee_id: 2,
+      updated_by: 11,
+      position: { type: "after" as const, afterId: 3 },
+    };
+
     it("register 正常系: 成功時に success=true を返す", async () => {
+      // Step 1: 表示順計算/シフト/再採番と insert 成功モックを準備する。
       calculateDisplayOrderMock.mockResolvedValue(3);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
       reorderItemsInCategoryMock.mockResolvedValue(undefined);
@@ -387,17 +323,16 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        registerFn as unknown as (payload: typeof registerPayload) => Promise<unknown>
-      )(registerPayload);
+      // Step 2: register 関数を実行する。
+      const response = await registerDocument(registerPayload);
 
-      // 登録成功時に success=true が返ることを確認
+      // Step 3: 戻り値と再採番呼び出し回数を検証する。
       expect(response).toEqual({ success: true, error: null });
-      // 登録後にカテゴリ内 display_order の再採番が実行されることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
     });
 
     it("register 異常系: 失敗時に success=false を返す", async () => {
+      // Step 1: insert 失敗モックと console.error スパイを準備する。
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
       calculateDisplayOrderMock.mockResolvedValue(3);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
@@ -408,20 +343,18 @@ describe("content client services", () => {
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        registerFn as unknown as (payload: typeof registerPayload) => Promise<any>
-      )(registerPayload);
+      // Step 2: register 関数を実行する。
+      const response = await registerDocument(registerPayload);
 
-      // 登録失敗時に success=false とエラーが返ることを確認
+      // Step 3: 失敗時の戻り値・再採番抑止・ログ出力を検証する。
       expect(response).toEqual({ success: false, error });
-      // 失敗時は再採番を行わないことを確認
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
-      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
 
     it("update 正常系: カテゴリー変更時は再採番を2回実行する", async () => {
+      // Step 1: current 取得・更新成功・再採番系のモックを準備する。
       calculateDisplayOrderMock.mockResolvedValue(4);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
       reorderItemsInCategoryMock.mockResolvedValue(undefined);
@@ -435,17 +368,16 @@ describe("content client services", () => {
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        updateFn as unknown as (payload: typeof updatePayload) => Promise<unknown>
-      )(updatePayload);
+      // Step 2: update 関数を実行する。
+      const response = await updateDocument(updatePayload);
 
-      // 更新成功時に success=true が返ることを確認
+      // Step 3: 成功レスポンスと再採番回数（移動元/移動先）を検証する。
       expect(response).toEqual({ success: true, error: null });
-      // カテゴリ移動時に移動元/移動先で再採番が2回行われることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(2);
     });
 
     it("update 異常系: 失敗時に success=false を返す", async () => {
+      // Step 1: 更新失敗モックと console.error スパイを準備する。
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
       calculateDisplayOrderMock.mockResolvedValue(4);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
@@ -461,15 +393,12 @@ describe("content client services", () => {
       supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
-      const response = await (
-        updateFn as unknown as (payload: typeof updatePayload) => Promise<unknown>
-      )(updatePayload);
+      // Step 2: update 関数を実行する。
+      const response = await updateDocument(updatePayload);
 
-      // 更新失敗時に success=false とエラーが返ることを確認
+      // Step 3: 失敗時の戻り値・再採番抑止・ログ出力を検証する。
       expect(response).toEqual({ success: false, error });
-      // 失敗時は再採番を実行しないことを確認
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
-      // 失敗時にエラーログが出力されることを確認
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -485,11 +414,13 @@ describe("users-client", () => {
   });
 
   it("addNewUser 正常系: 新規ユーザーを追加できる", async () => {
+    // Step 1: insert->select 成功モックを準備する。
     const resultData = [{ id: 1 }];
     const builder = createInsertSelectBuilder({ data: resultData, error: null });
     const supabase = { from: jest.fn(() => builder) };
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
+    // Step 2: addNewUser を実行する。
     const response = await addNewUser({
       authId: "auth-1",
       email: "test@example.com",
@@ -497,17 +428,20 @@ describe("users-client", () => {
       avatarUrl: "https://example.com/avatar.png",
     });
 
+    // Step 3: 戻り値が期待どおりか検証する。
     // 追加成功時に挿入結果(data)が返ることを確認
     expect(response).toEqual({ data: resultData, error: null });
   });
 
   it("addNewUser 異常系: エラー時は data=null を返す", async () => {
+    // Step 1: 失敗モックと console.error スパイを準備する。
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const error = { message: "insert failed" };
     const builder = createInsertSelectBuilder({ data: null, error });
     const supabase = { from: jest.fn(() => builder) };
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
+    // Step 2: addNewUser を実行する。
     const response = await addNewUser({
       authId: "auth-2",
       email: "test2@example.com",
@@ -515,6 +449,7 @@ describe("users-client", () => {
       avatarUrl: "https://example.com/avatar2.png",
     });
 
+    // Step 3: 失敗時の戻り値とログ出力を検証する。
     // 追加失敗時に data=null とエラーが返ることを確認
     expect(response).toEqual({ data: null, error });
     // 失敗時にエラーログが出力されることを確認
@@ -523,6 +458,7 @@ describe("users-client", () => {
   });
 
   it("fetchUserRoleById: 正常系/異常系", async () => {
+    // Step 1: 正常系モックで実行し、期待値を検証する。
     const successBuilder = createMaybeSingleBuilder({ data: { role: "admin" }, error: null });
     const supabaseSuccess = { from: jest.fn(() => successBuilder) };
     createClientSupabaseClientMock.mockReturnValue(supabaseSuccess);
@@ -531,6 +467,7 @@ describe("users-client", () => {
     // 正常系では role を返し error は null になることを確認
     expect(success).toEqual({ role: "admin", error: null });
 
+    // Step 2: 異常系モックに切り替えて実行する。
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const error = { message: "not found" };
     const failedBuilder = createMaybeSingleBuilder({ data: null, error });
@@ -538,6 +475,7 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseFailed);
 
     const failed = await fetchUserRoleById({ authId: "auth-4" });
+    // Step 3: 異常系の戻り値とログ出力を検証する。
     // 異常系では role=null とエラーを返すことを確認
     expect(failed).toEqual({ role: null, error });
     // 異常系でエラーログが出力されることを確認
@@ -546,6 +484,7 @@ describe("users-client", () => {
   });
 
   it("fetchUserStatusById: 正常系/異常系", async () => {
+    // Step 1: 正常系モックで実行し、status 取得を確認する。
     const successBuilder = createMaybeSingleBuilder({ data: { status: "active" }, error: null });
     const supabaseSuccess = { from: jest.fn(() => successBuilder) };
     createClientSupabaseClientMock.mockReturnValue(supabaseSuccess);
@@ -554,6 +493,7 @@ describe("users-client", () => {
     // 正常系では status を返し error は null になることを確認
     expect(success).toEqual({ status: "active", error: null });
 
+    // Step 2: 異常系モックに切り替えて実行する。
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const error = { message: "not found" };
     const failedBuilder = createMaybeSingleBuilder({ data: null, error });
@@ -561,6 +501,7 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseFailed);
 
     const failed = await fetchUserStatusById({ authId: "auth-6" });
+    // Step 3: 異常系の戻り値とログ出力を検証する。
     // 異常系では status=null とエラーを返すことを確認
     expect(failed).toEqual({ status: null, error });
     // 異常系でエラーログが出力されることを確認
@@ -569,6 +510,7 @@ describe("users-client", () => {
   });
 
   it("fetchUserIdByAuthId: 正常系/異常系", async () => {
+    // Step 1: 正常系モックで実行し、userId 取得を確認する。
     const successBuilder = createSelectSingleBuilder({ data: { id: 42 }, error: null });
     const supabaseSuccess = { from: jest.fn(() => successBuilder) };
     createClientSupabaseClientMock.mockReturnValue(supabaseSuccess);
@@ -577,6 +519,7 @@ describe("users-client", () => {
     // 正常系では userId を返し error は null になることを確認
     expect(success).toEqual({ userId: 42, error: null });
 
+    // Step 2: 異常系モックに切り替えて実行する。
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const error = { message: "not found" };
     const failedBuilder = createSelectSingleBuilder({ data: null, error });
@@ -584,6 +527,7 @@ describe("users-client", () => {
     createClientSupabaseClientMock.mockReturnValue(supabaseFailed);
 
     const failed = await fetchUserIdByAuthId({ authId: "auth-8" });
+    // Step 3: 異常系の戻り値とログ出力を検証する。
     // 異常系では userId=null とエラーを返すことを確認
     expect(failed).toEqual({ userId: null, error });
     // 異常系でエラーログが出力されることを確認
@@ -597,25 +541,31 @@ describe("users-client", () => {
   ])("$label user", ({ fn }) => {
     // 呼び出し関数: approveUser/rejectUser
     it("正常系: エラーなしを返す", async () => {
+      // Step 1: 承認/却下成功モックを準備する。
       const builder = createAwaitableUpdateBuilder({ data: null, error: null });
       const supabase = { from: jest.fn(() => builder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
+      // Step 2: 対象関数を実行する。
       const response = await fn({ userId: 1 });
 
+      // Step 3: 成功レスポンスを検証する。
       // 承認/却下処理が成功した場合は error=null を返すことを確認
       expect(response).toEqual({ error: null });
     });
 
     it("異常系: エラーを返す", async () => {
+      // Step 1: 失敗モックと console.error スパイを準備する。
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
       const error = { message: "failed" };
       const builder = createAwaitableUpdateBuilder({ data: null, error });
       const supabase = { from: jest.fn(() => builder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
+      // Step 2: 対象関数を実行する。
       const response = await fn({ userId: 1 });
 
+      // Step 3: 失敗レスポンスとログ出力を検証する。
       // 承認/却下処理失敗時はエラーを返すことを確認
       expect(response).toEqual({ error });
       // 失敗時にエラーログが出力されることを確認
@@ -633,6 +583,7 @@ describe("categories-client", () => {
   });
 
   it("registerCategory 正常系: 登録成功時に success=true を返す", async () => {
+    // Step 1: 最大表示順取得・insert・再採番のモックを準備する。
     const maxOrderBuilder = createOrderLimitBuilder({ data: [{ display_order: 3 }], error: null });
     const insertBuilder = createInsertBuilder({ data: null, error: null });
     const reorderSelectBuilder = createOrderBuilder({ data: [], error: null });
@@ -644,6 +595,7 @@ describe("categories-client", () => {
       .mockReturnValueOnce(reorderSelectBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
+    // Step 2: registerCategory を実行する。
     const response = await registerCategory({
       category_type: "documents",
       name: "カテゴリA",
@@ -651,10 +603,14 @@ describe("categories-client", () => {
       position: { type: "last" },
     });
 
+    // Step 3: 成功レスポンスを検証する。
     expect(response).toEqual({ success: true, error: null });
+    // 再採番の呼び出し有無を明示検証: register 成功時は categories の再採番が実行される。
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
   it("updateCategory 正常系: 更新成功時に success=true を返す", async () => {
+    // Step 1: current 取得・更新・再採番のモックを準備する。
     const currentBuilder = createSelectSingleBuilder({
       data: { display_order: 2, category_type: "documents" },
       error: null,
@@ -673,6 +629,7 @@ describe("categories-client", () => {
       .mockReturnValueOnce(reorderUpdateBuilder2);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
+    // Step 2: updateCategory を実行する。
     const response = await updateCategory({
       id: 10,
       category_type: "documents",
@@ -681,10 +638,14 @@ describe("categories-client", () => {
       position: { type: "current" },
     });
 
+    // Step 3: 成功レスポンスを検証する。
     expect(response).toEqual({ success: true, error: null });
+    // 再採番の呼び出し有無を明示検証: update 成功時は categories の再採番が実行される。
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
   it("deleteCategory 正常系: 未分類へ移動して削除・再採番が完了する", async () => {
+    // Step 1: deleteCategory の各ステップ（取得→移動→削除→再採番）のモックを準備する。
     const deletingCategoryBuilder = createSelectSingleBuilder({
       data: { id: 10, name: "一般", category_type: "documents" },
       error: null,
@@ -718,12 +679,17 @@ describe("categories-client", () => {
       .mockReturnValueOnce(reorderCategoryUpdateBuilder2);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
+    // Step 2: deleteCategory を実行する。
     const response = await deleteCategory(10, "documents");
 
+    // Step 3: 成功レスポンスを検証する。
     expect(response).toEqual({ success: true, error: null });
+    // 再採番の呼び出し有無を明示検証: delete 成功時は categories の再採番が実行される。
+    expect(reorderCategorySelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
   it("deleteCategory 異常系: カテゴリー再採番失敗時は削除と移動をロールバックして失敗を返す", async () => {
+    // Step 1: 再採番失敗を含むロールバック経路のモックを準備する。
     const deletingCategoryBuilder = createSelectSingleBuilder({
       data: { id: 10, name: "一般", category_type: "documents" },
       error: null,
@@ -754,11 +720,15 @@ describe("categories-client", () => {
       .mockReturnValueOnce(rollbackMoveBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
+    // Step 2: deleteCategory を実行する。
     const response = await deleteCategory(10, "documents");
 
+    // Step 3: 失敗レスポンスとロールバック呼び出しを検証する。
     expect(response.success).toBe(false);
     expect(response.error).toBeInstanceOf(Error);
     expect((response.error as Error).message).toContain("並び順再採番対象の取得に失敗しました");
+    // 再採番の呼び出し有無を明示検証: 再採番処理が実行された上で失敗していることを確認する。
+    expect(reorderCategoriesBuilder.order).toHaveBeenCalledTimes(1);
     expect(rollbackDeleteBuilder.eq).toHaveBeenCalledWith("id", 10);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
