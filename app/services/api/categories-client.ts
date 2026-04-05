@@ -18,7 +18,6 @@
  *
  * 依存関係:
  * - `createClientSupabaseClient`（Supabase クライアント生成）
- * - `reorderItemsInCategory`（共通再採番ユーティリティ）
  * - `@/app/types`（カテゴリ関連フォーム/型定義）
  */
 import { createClientSupabaseClient } from "./supabase-client";
@@ -39,6 +38,8 @@ async function getCategoriesByType(
   categoryType: CategoryTypeValue,
   excludeId?: number
 ): Promise<CategoryItemType[]> {
+  // categoryType: documents/videos/applications の対象種別を示す。
+  // excludeId: 編集時などに対象IDを一覧候補から除外したい場合に指定する。
   const supabase = createClientSupabaseClient();
   let query = supabase
     .from("categories")
@@ -48,9 +49,11 @@ async function getCategoriesByType(
     .order("display_order", { ascending: true });
 
   if (excludeId !== undefined) {
+    // 除外IDが渡された場合のみ、候補一覧から除外する。
     query = query.neq("id", excludeId);
   }
 
+  // 構築したクエリを実行して、エラー時は空配列を返す。
   const { data, error } = await query;
   if (error) {
     console.error("カテゴリー一覧取得エラー:", error.message);
@@ -64,6 +67,8 @@ export async function getCategoriesForPosition(
   categoryType: CategoryTypeValue,
   excludeId?: number
 ): Promise<CategoryItemType[]> {
+  // UI の表示位置選択候補を返すための薄いラッパー。
+  // 実際の取得処理は getCategoriesByType に委譲する。
   return getCategoriesByType(categoryType, excludeId);
 }
 
@@ -75,16 +80,19 @@ async function calculateCategoryDisplayOrder(
   position: CategoryInsertFormType["position"],
   currentDisplayOrder?: number
 ): Promise<number> {
+  // current 指定時は、更新前の表示順を維持する。
   if (position.type === "current" && currentDisplayOrder !== undefined) {
     return currentDisplayOrder;
   }
 
+  // first 指定時は最上位の 1 を返す。
   if (position.type === "first") {
     return 1;
   }
 
   const supabase = createClientSupabaseClient();
 
+  // last 指定時は、現在の最大表示順 + 1 を採用する。
   if (position.type === "last") {
     const { data, error } = await supabase
       .from("categories")
@@ -102,6 +110,7 @@ async function calculateCategoryDisplayOrder(
     return maxDisplayOrder + 1;
   }
 
+  // after 指定時は、基準カテゴリーの直後（+1）に配置する。
   if (position.type === "after") {
     const { data, error } = await supabase
       .from("categories")
@@ -133,6 +142,8 @@ async function shiftCategoryDisplayOrder(
   displayOrder: number,
   excludeId?: number
 ): Promise<void> {
+  // displayOrder 以上の既存カテゴリーを後ろにずらして挿入余地を作る。
+  // excludeId は更新対象自身をシフト対象から外すために利用する。
   const supabase = createClientSupabaseClient();
 
   let query = supabase
@@ -144,9 +155,11 @@ async function shiftCategoryDisplayOrder(
     .order("display_order", { ascending: false });
 
   if (excludeId !== undefined) {
+    // 更新対象自身はシフト不要のため除外する。
     query = query.neq("id", excludeId);
   }
 
+  // 影響対象を取得し、0件なら何もせず終了する。
   const { data: affectedCategories, error: selectError } = await query;
 
   if (selectError) {
@@ -158,6 +171,7 @@ async function shiftCategoryDisplayOrder(
   }
 
   for (const category of affectedCategories) {
+    // 1件ずつ display_order を +1 して衝突を回避する。
     const { error } = await supabase
       .from("categories")
       .update({ display_order: category.display_order + 1 })
@@ -173,6 +187,7 @@ async function shiftCategoryDisplayOrder(
  * 指定カテゴリー種別の display_order を 1 から連番に再採番する。
  */
 async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise<void> {
+  // 論理削除を除いたカテゴリーを表示順で取り出し、1 始まりの連番へ正規化する。
   const supabase = createClientSupabaseClient();
 
   const { data: categories, error: selectError } = await supabase
@@ -191,6 +206,7 @@ async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise
   }
 
   for (const [index, category] of categories.entries()) {
+    // index は 0 始まりのため、DB の display_order は index + 1 を書き込む。
     const { error } = await supabase
       .from("categories")
       .update({ display_order: index + 1 })
@@ -212,13 +228,16 @@ export async function registerCategory({
   position,
 }: CategoryInsertFormType) {
   try {
+    // display_order: 画面入力 position から計算された最終挿入位置。
     const display_order = await calculateCategoryDisplayOrder(category_type, position);
 
+    // first / after の場合は既存順序を後ろへずらす必要がある。
     if (position.type === "first" || position.type === "after") {
       await shiftCategoryDisplayOrder(category_type, display_order);
     }
 
     const supabase = createClientSupabaseClient();
+    // 実データを挿入する。is_deleted は論理削除フラグのため false で初期化する。
     const { error } = await supabase.from("categories").insert([
       {
         category_type,
@@ -233,6 +252,7 @@ export async function registerCategory({
       return { success: false, error };
     }
 
+    // 挿入後に並びを正規化してギャップや重複を解消する。
     await reorderCategoriesByType(category_type);
 
     return { success: true, error: null };
@@ -257,6 +277,7 @@ export async function updateCategory({
   try {
     const supabase = createClientSupabaseClient();
 
+    // currentCategory: 更新対象の現状（表示順・種別）を保持する。
     const { data: currentCategory, error: currentCategoryError } = await supabase
       .from("categories")
       .select("display_order, category_type")
@@ -270,19 +291,23 @@ export async function updateCategory({
       };
     }
 
+    // 現在値を保持して、更新後の再採番条件判定に利用する。
     const currentDisplayOrder = currentCategory.display_order;
     const currentCategoryType = currentCategory.category_type as CategoryTypeValue;
 
+    // フォーム入力 position から新しい表示順を算出する。
     const display_order = await calculateCategoryDisplayOrder(
       category_type,
       position,
       currentDisplayOrder
     );
 
+    // first / after の場合は既存順序の退避（シフト）が必要。
     if (position.type === "first" || position.type === "after") {
       await shiftCategoryDisplayOrder(category_type, display_order, id);
     }
 
+    // 対象レコード本体を更新する。
     const { error } = await supabase
       .from("categories")
       .update({
@@ -297,8 +322,10 @@ export async function updateCategory({
       return { success: false, error };
     }
 
+    // 更新後に更新先種別の並び順を正規化する。
     await reorderCategoriesByType(category_type);
 
+    // 種別変更が発生した場合のみ、移動元種別側も再採番して整合を保つ。
     if (currentCategoryType !== category_type) {
       await reorderCategoriesByType(currentCategoryType);
     }
@@ -318,6 +345,7 @@ export async function updateCategory({
 function getTableNameByType(
   categoryType: CategoryTypeValue
 ): "documents" | "videos" | "applications" {
+  // categoryType と物理テーブル名の対応をここで一元化する。
   if (categoryType === "documents") {
     return "documents";
   }
@@ -330,6 +358,7 @@ function getTableNameByType(
 }
 
 function toError(error: unknown, fallbackMessage: string): Error {
+  // unknown を Error に正規化して、上位へ統一的に返す。
   if (error instanceof Error) {
     return error;
   }
@@ -351,10 +380,13 @@ async function rollbackContentMove(
   originalCategoryId: number,
   uncategorizedId: number
 ) {
+  // movedContentIds: Step1 で実際に移動対象だったコンテンツID群。
+  // originalCategoryId / uncategorizedId: 戻し先・戻し元の category_id。
   if (movedContentIds.length === 0) {
     return null;
   }
 
+  // 未分類へ移動済みのレコードのみを元カテゴリーへ戻す。
   const { error } = await supabase
     .from(tableName)
     .update({ category_id: originalCategoryId })
@@ -369,6 +401,7 @@ async function rollbackCategoryDeletion(
   supabase: ReturnType<typeof createClientSupabaseClient>,
   id: number
 ) {
+  // 論理削除を取り消して is_deleted=false に復旧する。
   const { error } = await supabase.from("categories").update({ is_deleted: false }).eq("id", id);
   return error;
 }
@@ -382,8 +415,11 @@ async function rollbackCategoryDeletion(
  */
 export async function deleteCategory(id: number, categoryType: CategoryTypeValue) {
   try {
+    // id: 削除対象カテゴリーID。
+    // categoryType: 呼び出し元が期待する対象種別（誤削除防止に利用）。
     const supabase = createClientSupabaseClient();
 
+    // Step 0-1: 削除対象の存在と現在状態を確認する。
     const { data: deletingCategory, error: categoryError } = await supabase
       .from("categories")
       .select("id, name, category_type")
@@ -395,6 +431,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       return { success: false, error: categoryError ?? new Error("削除対象が見つかりません。") };
     }
 
+    // Step 0-2: 呼び出し側の種別と実データ種別が一致するか検証する。
     if (deletingCategory.category_type !== categoryType) {
       return {
         success: false,
@@ -402,10 +439,12 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       };
     }
 
+    // Step 0-3: 未分類カテゴリーは業務上の保護対象として削除禁止。
     if (deletingCategory.name === UNCLASSIFIED_CATEGORY_NAME) {
       return { success: false, error: new Error("未分類カテゴリーは削除できません。") };
     }
 
+    // Step 0-4: 移動先として同種別の未分類カテゴリーを取得する。
     const { data: uncategorized, error: uncategorizedError } = await supabase
       .from("categories")
       .select("id")
@@ -421,7 +460,11 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       };
     }
 
+    // tableName: categoryType に紐づく実テーブル名（documents/videos/applications）。
     const tableName = getTableNameByType(categoryType);
+
+    // Step 0-5: 削除対象カテゴリーに紐づくコンテンツIDを事前取得する。
+    // movedContentIds は移動件数確認とロールバック範囲の基準になる。
     const { data: contentsToMove, error: contentsToMoveError } = await supabase
       .from(tableName)
       .select("id")
@@ -436,6 +479,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
 
     // Step 1: 紐づくコンテンツを未分類へ移動する。
     if (movedContentIds.length > 0) {
+      // movedContents: UPDATE + select("id") の戻り値。実際に更新された件数確認に利用する。
       const { data: movedContents, error: moveError } = await supabase
         .from(tableName)
         .update({ category_id: uncategorized.id })
@@ -451,6 +495,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       const movedCount = movedContents?.length ?? 0;
       const expectedMoveCount = movedContentIds.length;
 
+      // 移動対象件数と実更新件数が一致しない場合は部分更新を戻して失敗とする。
       if (movedCount !== expectedMoveCount) {
         const rollbackError = await rollbackContentMove(
           supabase,
@@ -478,6 +523,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       .eq("id", id);
 
     if (deleteError) {
+      // 論理削除に失敗したら、先に動かしたコンテンツを元に戻して整合を保つ。
       const rollbackError = await rollbackContentMove(
         supabase,
         tableName,
@@ -496,11 +542,13 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
     try {
       await reorderCategoriesByType(categoryType);
     } catch (reorderCategoriesError) {
+      // 再採番失敗時は、論理削除を先に戻す。
       const rollbackDeleteError = await rollbackCategoryDeletion(supabase, id);
       if (rollbackDeleteError) {
         return { success: false, error: rollbackDeleteError };
       }
 
+      // 続いてコンテンツ移動も戻し、操作全体を取り消す。
       const rollbackError = await rollbackContentMove(
         supabase,
         tableName,
