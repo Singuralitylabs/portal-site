@@ -83,7 +83,10 @@ export default async function ProfilePage() {
         `プロフィール更新成功 / position_tags更新失敗 (userId=${user.id}):`,
         positionTagsError
       );
-      return { success: false, message: "プロフィールは更新されましたが、活動チーム・役割の更新に失敗しました" };
+      return {
+        success: false,
+        message: "プロフィールは更新されましたが、活動チーム・役割の更新に失敗しました",
+      };
     }
 
     return { success: true };
