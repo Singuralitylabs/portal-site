@@ -56,6 +56,12 @@ export function ProfilePageTemplate({
     setErrors({}); // エラーもリセット
   }, [initialUser, initialPositionIds]);
 
+  // URL形式チェック関数
+  const validateUrl = (url: string | null) => {
+    if (!url) return true;
+    return /^https?:\/\//.test(url);
+  };
+
   // プロフィール更新処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

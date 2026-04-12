@@ -222,6 +222,14 @@ export function VideoFormModal({
         placeholder="配置位置を選択"
         mb="sm"
       />
+      <Select
+        label="表示順"
+        data={positionOptions}
+        value={position}
+        onChange={value => setPosition(value || "last")}
+        placeholder="配置位置を選択"
+        mb="sm"
+      />
       <Group mt="md" justify="flex-end">
         <Button variant="default" onClick={onClose}>
           キャンセル
