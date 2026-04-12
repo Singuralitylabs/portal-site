@@ -56,7 +56,7 @@ export async function registerDocument({
   category_id,
   description,
   url,
-  assignee,
+  assignee_id,
   created_by,
   position,
 }: DocumentInsertFormType) {
@@ -75,7 +75,7 @@ export async function registerDocument({
       category_id,
       description,
       url,
-      assignee,
+      assignee_id,
       display_order,
       is_deleted: false,
       created_by,
@@ -108,7 +108,7 @@ export async function updateDocument({
   category_id,
   description,
   url,
-  assignee,
+  assignee_id,
   updated_by,
   position,
 }: DocumentUpdateFormType) {
@@ -144,7 +144,7 @@ export async function updateDocument({
       category_id,
       description,
       url,
-      assignee,
+      assignee_id,
       display_order,
       updated_by,
     })

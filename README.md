@@ -12,11 +12,13 @@
 ## 主な機能
 
 - Google認証による会員管理 - Supabase Authを使用した安全な認証
+- ホーム - 本日のカレンダーイベント（時間・タイトル・場所・リンク）をホーム画面に表示
 - 資料 - 申請フォームや各種ドキュメントへのアクセス
 - 動画 - 学習教材等の各種動画の閲覧
 - アプリ - メンバーが開発したアプリの共有
 - 会員 - シンラボメンバー同士の交流促進用ページ
 - コンテンツ管理 - 管理者・メンテナー向けの編集機能
+- カテゴリー管理 - 資料/動画/アプリ用カテゴリーの追加・編集・削除
 - カレンダー - シンラボイベントやシンラボMTGおよび日本の祝祭日を統合したカレンダー
 
 ## 技術スタック
@@ -45,26 +47,30 @@
 
 ## プロジェクト構成
 
-```
+```text
 portal-site/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # 認証関連ページ（ログイン、コールバックなど）
-│   ├── (authenticated)/   # 認証済みユーザー向けページ
-│   ├── services/          # APIクライアント（Supabase連携）
-│   ├── types/             # TypeScript型定義
-│   ├── api/               # 外部サービスとのAPI連携
-│   └── constants/         # 定数定義
-├── docs/                  # プロジェクトドキュメント
-│   ├── setup.md           # 環境構築手順
-│   ├── database.md        # データベース設計書
-│   ├── specification.md   # 機能仕様書
-│   └── testing.md         # テスト設計書
-├── supabase/              # Supabaseマイグレーション
-│   ├── migrations/        # DBマイグレーションファイル
-│   └── README.md          # Supabase設定ガイド
-├── tests/                 # テストコード
-│   └── *.test.ts          # 各種テストコード
-└── public/                # 静的ファイル
+├── app/                         # Next.js App Router
+│   ├── (auth)/                  # 認証関連ページ（ログイン、コールバックなど）
+│   ├── (authenticated)/         # 認証済みユーザー向けページ
+│   ├── api/                     # 外部サービス連携API
+│   ├── constants/               # 定数定義
+│   ├── components/              # 共通・機能別UIコンポーネントを配置
+│   ├── hooks/                   # カスタムフック
+│   ├── providers/               # コンテキストプロバイダー
+│   ├── services/                # APIクライアント（Supabase連携）
+│   └── types/                   # TypeScript型定義
+├── docs/                        # プロジェクトドキュメント
+│   ├── api-specification.md     # API仕様書（GoogleカレンダーAPI / Slack通知API）
+│   ├── database.md              # データベース設計書
+│   ├── setup.md                 # 環境構築手順
+│   ├── specification.md         # 機能仕様書
+│   └── testing.md               # テスト設計書
+├── supabase/                    # Supabaseマイグレーション
+│   ├── migrations/              # DBマイグレーションファイル
+│   └── README.md                # Supabase設定ガイド
+├── tests/                       # テストコード
+│   └── *.test.ts                # 各種テストコード
+└── public/                      # 静的ファイル
 ```
 
 ## 開発環境の構築

@@ -12,15 +12,30 @@ import type { CategoryItemType, ContentTableType, PlacementPositionType } from "
  * @param excludeId 除外するアイテムID（編集時に自分自身を除外するため）
  * @returns アイテム一覧（id, name, display_order）
  */
+
 export async function getItemsByCategory(
   table: ContentTableType,
   categoryId: number,
   excludeId?: number
 ): Promise<CategoryItemType[]> {
   const supabase = createClientSupabaseClient();
-  let query = supabase
-    .from(table)
-    .select("id, name, display_order")
+  let query;
+
+  if (table === "documents") {
+    query = supabase
+      .from("documents")
+      .select(
+        "id,name,display_order,assignee_id,assignee:users!documents_assignee_fk(display_name)"
+      );
+  } else if (table === "videos") {
+    query = supabase
+      .from("videos")
+      .select("id,name,display_order,assignee_id,assignee:users!videos_assignee_fk(display_name)");
+  } else {
+    query = supabase.from("applications").select("id,name,display_order");
+  }
+
+  query = query
     .eq("category_id", categoryId)
     .eq("is_deleted", false)
     .order("display_order", { ascending: true, nullsFirst: false });
@@ -37,7 +52,7 @@ export async function getItemsByCategory(
     return [];
   }
 
-  return data || [];
+  return (data ?? []) as CategoryItemType[];
 }
 
 /**
@@ -52,13 +67,9 @@ export async function calculateDisplayOrder(
   table: ContentTableType,
   categoryId: number,
   position: PlacementPositionType,
-  currentDisplayOrder?: number | null
+  currentDisplayOrder?: number
 ): Promise<number> {
-  if (
-    position.type === "current" &&
-    currentDisplayOrder !== null &&
-    currentDisplayOrder !== undefined
-  ) {
+  if (position.type === "current" && currentDisplayOrder !== undefined) {
     return currentDisplayOrder;
   }
 
@@ -77,8 +88,8 @@ export async function calculateDisplayOrder(
       .order("display_order", { ascending: false })
       .limit(1);
 
-    const maxOrder = data?.[0]?.display_order;
-    return maxOrder !== null && maxOrder !== undefined ? maxOrder + 1 : 1;
+    const maxOrder = data?.[0]?.display_order ?? 0;
+    return maxOrder + 1;
   }
 
   if (position.type === "after") {
@@ -88,8 +99,8 @@ export async function calculateDisplayOrder(
       .eq("id", position.afterId)
       .single();
 
-    const afterOrder = data?.display_order;
-    return afterOrder !== null && afterOrder !== undefined ? afterOrder + 1 : 1;
+    const afterOrder = data?.display_order ?? 0;
+    return afterOrder + 1;
   }
 
   return 1;
@@ -131,7 +142,7 @@ export async function shiftDisplayOrder(
     for (const item of affectedItems) {
       await supabase
         .from(table)
-        .update({ display_order: (item.display_order ?? 0) + 1 })
+        .update({ display_order: item.display_order + 1 })
         .eq("id", item.id);
     }
   }
@@ -153,7 +164,7 @@ export async function reorderItemsInCategory(
     .from(table)
     .select("id")
     .eq("category_id", categoryId)
-    .order("display_order", { ascending: true, nullsFirst: false });
+    .order("display_order", { ascending: true });
 
   if (!items || items.length === 0) {
     return;

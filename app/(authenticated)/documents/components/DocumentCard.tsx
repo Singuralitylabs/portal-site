@@ -11,9 +11,10 @@ interface DocumentCardProps {
   isContentMgr: boolean;
   categories: SelectCategoryType[];
   userId: number;
+  onDetailClick: (document: DocumentWithCategoryType) => void;
 }
 
-export function DocumentCard({ document, isContentMgr, categories, userId }: DocumentCardProps) {
+export function DocumentCard({ document, isContentMgr, categories, userId, onDetailClick }: DocumentCardProps) {
   const getFileTypeIcon = (fileType: string) => {
     switch (fileType) {
       case "pdf":
@@ -56,15 +57,8 @@ export function DocumentCard({ document, isContentMgr, categories, userId }: Doc
       </div>
 
       <div className="p-4 pt-0">
-        <Button
-          color="#000"
-          component="a"
-          href={document.url}
-          fullWidth
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          資料を開く
+        <Button color="#000" fullWidth onClick={() => onDetailClick(document)}>
+          詳細
         </Button>
       </div>
     </Card>

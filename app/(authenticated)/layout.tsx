@@ -1,8 +1,8 @@
-import { SideNav } from "./components/SideNav";
+import { NavigationWrapper } from "./components/NavigationWrapper";
 import { AuthLayout as AuthGuard } from "./auth-layout";
 import { getServerCurrentUser } from "@/app/services/api/supabase-server";
 import { fetchUserInfoByAuthId } from "@/app/services/api/users-server";
-import { checkAdminPermissions } from "@/app/services/auth/permissions";
+import { checkAdminPermissions, checkContentPermissions } from "@/app/services/auth/permissions";
 
 export default async function AuthLayout({
   children,
@@ -10,6 +10,7 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }>) {
   let isAdmin = false;
+  let isContentMgr = false;
 
   try {
     const { authId, error: currentUserError } = await getServerCurrentUser();
@@ -17,6 +18,7 @@ export default async function AuthLayout({
       const { role, error: roleError } = await fetchUserInfoByAuthId({ authId });
       if (!roleError && role) {
         isAdmin = checkAdminPermissions(role);
+        isContentMgr = checkContentPermissions(role);
       }
     }
   } catch (error: unknown) {
@@ -34,10 +36,9 @@ export default async function AuthLayout({
 
   return (
     <AuthGuard>
-      <div className="sm:flex min-h-screen">
-        <SideNav isAdmin={isAdmin} />
-        <div className="flex-1 sm:ml-64 p-4">{children}</div>
-      </div>
+      <NavigationWrapper isAdmin={isAdmin} isContentMgr={isContentMgr}>
+        {children}
+      </NavigationWrapper>
     </AuthGuard>
   );
 }

@@ -1,23 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Drawer, Button } from "@mantine/core";
+import { useMemo } from "react";
+import { Drawer } from "@mantine/core";
 import {
   AppWindow,
   FileText,
   FileVideo,
   House,
-  LogOut,
-  Menu,
   Settings,
-  User,
   Users,
   Calendar,
+  FolderTree,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
-import { useRouter } from "next/navigation";
 
 interface NavItem {
   title: string;
@@ -30,11 +26,6 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     title: "ホーム",
     href: "/",
     icon: <House className="h-5 w-5" />,
-  },
-  {
-    title: "プロフィール",
-    href: "/profile",
-    icon: <User className="h-5 w-5" />,
   },
   {
     title: "動画",
@@ -69,39 +60,35 @@ const ADMIN_NAV_ITEM: NavItem = {
   icon: <Settings className="h-5 w-5" />,
 };
 
-const LOGOUT_NAV_ITEM: NavItem = {
-  title: "ログアウト",
-  href: "/login",
-  icon: <LogOut className="h-5 w-5" />,
+const CATEGORY_ADMIN_NAV_ITEM: NavItem = {
+  title: "カテゴリー管理",
+  href: "/categories",
+  icon: <FolderTree className="h-5 w-5" />,
 };
 
-export function SideNav({ isAdmin }: { isAdmin: boolean }) {
-  const [open, setOpen] = useState(false);
-  const router = useRouter();
+interface SideNavProps {
+  isAdmin: boolean;
+  isContentMgr: boolean;
+  open: boolean;
+  onClose: () => void;
+}
 
-  // isAdminに応じて動的にnavItemsを構築
+export function SideNav({ isAdmin, isContentMgr, open, onClose }: SideNavProps) {
   const navItems = useMemo<NavItem[]>(
-    () => [...DEFAULT_NAV_ITEMS, ...(isAdmin ? [ADMIN_NAV_ITEM] : []), LOGOUT_NAV_ITEM],
-    [isAdmin]
+    () => [
+      ...DEFAULT_NAV_ITEMS,
+      ...(isContentMgr ? [CATEGORY_ADMIN_NAV_ITEM] : []),
+      ...(isAdmin ? [ADMIN_NAV_ITEM] : []),
+    ],
+    [isAdmin, isContentMgr]
   );
-
-  const handleSignOut = async () => {
-    const supabase = createClientSupabaseClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
 
   return (
     <>
-      {/* ハンバーガーメニュー (モバイル用) */}
-      <Button variant="subtle" onClick={() => setOpen(true)} className="sm:hidden mt-4">
-        <Menu size={32} className="sm:hidden" />
-      </Button>
-
-      {/* モバイル用ハンバーガーメニュー */}
+      {/* モバイル用ドロワー */}
       <Drawer
         opened={open}
-        onClose={() => setOpen(false)}
+        onClose={onClose}
         position="left"
         size="250px"
         padding="md"
@@ -122,30 +109,18 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
         }
       >
         <nav className="space-y-2">
-          {navItems.map(item =>
-            item.title === "ログアウト" ? (
-              <div key={item.title} className="px-3 py-2">
-                <button
-                  onClick={handleSignOut}
-                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
-                >
-                  {item.icon}
-                  {item.title}
-                </button>
-              </div>
-            ) : (
-              <div key={item.href} className="px-3 py-2">
-                <Link
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
-                >
-                  {item.icon}
-                  {item.title}
-                </Link>
-              </div>
-            )
-          )}
+          {navItems.map(item => (
+            <div key={item.href} className="px-3 py-2">
+              <Link
+                href={item.href}
+                onClick={onClose}
+                className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
+              >
+                {item.icon}
+                {item.title}
+              </Link>
+            </div>
+          ))}
         </nav>
       </Drawer>
 
@@ -167,29 +142,17 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-          {navItems.map(item =>
-            item.title === "ログアウト" ? (
-              <div key={item.title} className="px-3 py-2">
-                <button
-                  onClick={handleSignOut}
-                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground text-left bg-transparent border-none font-inherit text-inherit cursor-pointer"
-                >
-                  {item.icon}
-                  {item.title}
-                </button>
-              </div>
-            ) : (
-              <div key={item.href} className="px-3 py-2">
-                <Link
-                  href={item.href}
-                  className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
-                >
-                  {item.icon}
-                  {item.title}
-                </Link>
-              </div>
-            )
-          )}
+          {navItems.map(item => (
+            <div key={item.href} className="px-3 py-2">
+              <Link
+                href={item.href}
+                className="inline-flex items-center gap-3 rounded-sm text-muted-foreground transition-all hover:text-foreground"
+              >
+                {item.icon}
+                {item.title}
+              </Link>
+            </div>
+          ))}
         </nav>
       </div>
     </>

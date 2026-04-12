@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { registerDocument, updateDocument } from "@/app/services/api/documents-client";
 import type { DocumentWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
-import { z } from "zod";
+import { isValidUrl } from "@/app/utils/url-validation";
+import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 
 interface DocumentFormModalProps {
   opened: boolean;
@@ -22,13 +23,20 @@ export function DocumentFormModal({
   userId,
   initialData,
 }: DocumentFormModalProps) {
+  const supabase = createClientSupabaseClient();
   const [form, setForm] = useState({
     name: "",
     category_id: 0,
     description: "",
     url: "",
-    assignee: "",
+    assignee_id: null as number | null,
   });
+  const [users, setUsers] = useState<
+    {
+      id: number;
+      display_name: string;
+    }[]
+  >([]);
   const router = useRouter();
 
   // 表示順操作フック
@@ -43,12 +51,25 @@ export function DocumentFormModal({
       category_id: initialData?.category_id ?? 0,
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
-      assignee: initialData?.assignee ?? "",
+      assignee_id: initialData?.assignee_id ?? null,
     });
 
     // 表示順の初期化
     setPosition(initialData ? "current" : "last");
   }, [opened, initialData, setPosition]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from("users")
+        .select("id, display_name")
+        .order("display_name");
+
+      if (data) setUsers(data);
+    };
+
+    fetchUsers();
+  }, []);
 
   // カテゴリー変更時の処理
   const handleCategoryChangeWrapper = async (value: string | null) => {
@@ -66,16 +87,11 @@ export function DocumentFormModal({
       });
       return;
     }
-    // URLの形式チェック
-    const httpUrl = z.url({
-      protocol: /^https?$/,
-      hostname: z.regexes.domain,
-    });
-    const urlValidation = httpUrl.safeParse(form.url);
-    if (!urlValidation.success) {
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
+    if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
-        message: urlValidation.error?.message || "正しいURLを入力してください",
+        message: "URLは https:// から始まる正しい形式で入力してください",
         color: "red",
       });
       return;
@@ -90,7 +106,7 @@ export function DocumentFormModal({
       category_id: form.category_id,
       description: form.description,
       url: form.url,
-      assignee: form.assignee,
+      assignee_id: form.assignee_id,
       position: parsedPosition,
     };
 
@@ -157,10 +173,24 @@ export function DocumentFormModal({
         required
         mb="sm"
       />
-      <TextInput
-        label="担当者"
-        value={form.assignee}
-        onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}
+      <Select
+        label="責任者"
+        data={
+          users.map(user => ({
+            value: String(user.id),
+            label: user.display_name,
+          })) ?? []
+        }
+        value={form.assignee_id ? String(form.assignee_id) : ""}
+        onChange={value => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
+        mb="sm"
+      />
+      <Select
+        label="表示順"
+        data={positionOptions}
+        value={position}
+        onChange={value => setPosition(value || "last")}
+        placeholder="配置位置を選択"
         mb="sm"
       />
       <Select

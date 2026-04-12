@@ -3,152 +3,212 @@
 ## 目次
 
 1. [概要](#1-概要)
-2. [テスト戦略](#2-テスト戦略)
-3. [テスト項目一覧](#3-テスト項目一覧)
+2. [テスト方針](#2-テスト方針)
+    - [2.1 テストピラミッドと優先度](#21-テストピラミッドと優先度)
+    - [2.2 実行タイミング（PR / リリース前）](#22-実行タイミングpr--リリース前)
+    - [2.3 テストデータ方針](#23-テストデータ方針)
+    - [2.4 可観測性](#24-可観測性)
+    - [2.5 ユニットテストの要否判断](#25-ユニットテストの要否判断)
+3. [テスト対象と観点](#3-テスト対象と観点)
+    - [3.1 サービス層ユニットテスト](#31-サービス層ユニットテスト)
+    - [3.2 セキュリティテスト](#32-セキュリティテスト)
+    - [3.3 型安全性テスト](#33-型安全性テスト)
+    - [3.4 ビルドテスト](#34-ビルドテスト)
+    - [3.5 コード品質テスト](#35-コード品質テスト)
+    - [3.6 E2Eテスト（未実装・リリース前のみ）](#36-e2eテスト未実装リリース前のみ)
+4. [CI / ツール構成](#4-ci--ツール構成)
+    - [4.1 GitHub Actions ワークフロー](#41-github-actions-ワークフロー)
+    - [4.2 導入済みツール](#42-導入済みツール)
+    - [4.3 実行環境](#43-実行環境)
+5. [テスト規約](#5-テスト規約)
 
 ## 1. 概要
 
-本ドキュメントは Singularity Lab Portal アプリケーションのテスト設計について記載します。
+本ドキュメントは Singularity Lab Portal アプリケーションのテスト方針、テスト対象と観点、CI/ツール構成を整理する。
 
-## 2. テスト戦略
+## 2. テスト方針
 
-### 2.1 テストピラミッド
+### 2.1 テストピラミッドと優先度
 
-```
+```text
     E2E Tests (少数)
   Integration Tests (中程度)
-Unit Tests (多数) - Component Tests
+Unit Tests (多数)
 ```
 
-## 3. テスト項目一覧
+- **狙い**: 変更頻度が高く壊れやすい領域は Unit/静的検査で早期に検知し、統合・E2E は本数を絞って「破綻していないこと」を確認する。
+- **優先度の決め方**: 変更頻度・影響範囲・障害時コストの観点で、認証/認可、データ整合性、ビルド成立性を優先する。
 
-### 3.1 APIサービス層の単体テスト（高優先度）
+### 2.2 実行タイミング（PR / リリース前）
 
-データの整合性とビジネスロジックの正確性を確保する
+PR では短時間で完了するチェックを必須とし、リリース前は範囲を絞った確認を追加する。
 
-#### テストポイント:
+- **PR（原則）**: 変更内容に応じて CI が自動実行される（型チェック、Lint、ビルド、ユニットテスト、デバッグ出力検知）。
+- **リリース前**: 影響範囲が広い変更（例: 認証/認可、データ参照、主要画面の動線）に対して、主要フローの手動確認（または最小限のE2E）を追加する。
 
-- **CRUD操作**: 作成・読込・更新・削除の正常動作
-- **バリデーション**: 入力値検証とエラーハンドリング
-- **権限チェック**: 認証・認可の適切な制御
-- **エラー処理**: ネットワークエラー、DB制約違反時の適切な処理
-- **戻り値**: 期待する型・構造でのレスポンス
+CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-github-actions-ワークフロー) に記載する。
 
-#### 対象領域:
+### 2.3 テストデータ方針
 
-- ドキュメント管理機能（登録・削除）
-- ユーザー管理機能（新規登録・ステータス取得）
-- データ取得機能（一覧・詳細）
+- **原則**: Unit テストはモック/スタブで独立性を確保し、外部依存は直接叩かない。
+- **統合確認が必要な場合**: 専用環境とシードデータを前提に、対象を最小限に絞って再現性を担保する。
 
-### 3.2 セキュリティテスト（高優先度）
+### 2.4 可観測性
 
-認証・認可システムの安全性を確保する
+- **失敗時の調査容易性**: テストが失敗した際に原因を素早く特定できるよう、
+  確認観点ごとにチェックを分離し、テスト名やジョブ名から目的が読み取れる命名にする。
+- **ログの扱い**: 開発時のデバッグ出力（`console.log` 等）がコードに残った場合は
+  CIで検知してエラーにする。一方、障害調査に必要なログ（エラーログ等）は意図的に残す。
 
-#### テストポイント:
+### 2.5 ユニットテストの要否判断
 
-- **認証制御**: 未認証ユーザーのアクセス阻止
-- **認可制御**: ロール別機能制限（管理者・メンバー）
-- **データアクセス**: Row Level Security (RLS) による適切なデータ分離
-- **セッション管理**: ログイン状態の正確な管理
+機能の追加・修正時に Jest ユニットテストを書くかどうかは、以下の基準で判断する。この基準は新規コード・既存コードを問わず適用し、テスト済みのコードを修正した場合は対応するテストも合わせて更新する。
 
-### 3.3 型安全性テスト（高優先度）
+**テストを書くべきもの**
 
-TypeScript型定義の整合性を確保する
+| 対象 | 理由 | テストの例 |
+| --- | --- | --- |
+| 認証・認可ロジック | 壊れるとセキュリティ事故につながる。手動確認では全パターンの網羅が困難 | `permissions.test.ts`, `server-auth.test.ts` |
+| 複数箇所から呼ばれる共通ユーティリティ関数 | 影響範囲が広く、変更時の副作用を検知する必要がある | `display-order.test.ts` |
+| 外部API連携のエラーハンドリング | 障害時の挙動（リトライ、フォールバック、エラーレスポンス）はテストなしでは確認できない | `slack-notification.test.ts`, `calendar.test.ts` |
 
-#### テストポイント:
+上記に該当しないもの（単純なSupabaseのCRUDラッパー、UIの見た目、`page.tsx` のデータ受け渡し、定数・型定義など）は、RLSポリシー・型チェック・Lint・ビルド・レビューでカバーできるためユニットテストは原則不要とする。判断に迷う場合は、ロジックの複雑さや障害時の影響度を基準にチームで相談する。
 
-- **データベース型**: スキーマと型定義の一致
-- **API契約**: リクエスト・レスポンス型の整合性
-- **コンポーネント型**: Props型定義の正確性
+## 3. テスト対象と観点
 
-### 3.4 ビルドテスト（高優先度）
+### 3.1 サービス層ユニットテスト
 
-本番デプロイ前のビルドエラーを検出する
+サービス層（ビジネスロジック）の正しさを、外部I/Oから切り離して確認する。
 
-#### テストポイント:
+- **観点**
+  - 代表的な正常系（CRUDの代表ケース）
+  - 入力のバリデーション（代表ケース）
+  - 戻り値の型・構造が想定どおりであること（代表レスポンス）
+  - 代表的な失敗（例: ネットワーク失敗、制約違反）時の扱い
+- **対象領域（最小範囲の例）**
+  - コンテンツ取得（一覧・詳細）
+  - コンテンツ管理（登録・更新・削除）
+  - ユーザー管理（登録・承認）
+  - 参照系マスタ（カテゴリ等）
+- **実行タイミング**: [2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う。
 
-- **コンパイル**: TypeScriptエラーの検出
-- **最適化**: Next.jsビルド処理の成功
-- **依存関係**: パッケージ間の整合性確認
-- **静的ファイル**: アセット生成の確認
+### 3.2 セキュリティテスト
 
-### 3.5 コード品質テスト（高優先度）
+認証・認可・承認ステータスの制御が、意図した振る舞いを満たすことを確認する。
 
-保守性とコード品質を維持する
+本プロジェクトのセキュリティテストは、**単体で確認できる部分はユニット**、**実際の認証フローに関わる部分は統合/ E2E**に分類する。
 
-#### テストポイント:
+- **観点**
 
-- **デバッグコード除去**: console.log、debugger文の検出
-- **未使用コード**: 不要なimport・関数・変数の検出
-- **コーディング規約**: ESLintルール準拠
-- **型安全性**: TypeScriptの型エラー検出
+| 観点 | CI（自動） | 手動 |
+| --- | --- | --- |
+| 認証制御 | 認証ヘルパー関数の判定ロジック | 未認証ユーザーのリダイレクト |
+| 認可制御 | 権限判定ロジック（ロール別の許可/拒否） | UI・ミドルウェアでのアクセス制御 |
+| 承認ステータス制御 | ステータス判定ロジック（pending/rejected） | 画面遷移の正当性 |
+| データアクセス | ―（ユニットでは検証困難） | RLSによるデータ分離 |
 
-### 3.6 コアコンポーネントテスト（中優先度）
+- **実行タイミング**: [2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う。
 
-ユーザー操作に直結するUI機能の品質を確保する
+### 3.3 型安全性テスト
 
-#### テストポイント:
+TypeScript と型生成の運用によって、型の破綻を早期に検知する。
 
-- **イベント処理**: クリック・フォーム送信などの動作
-- **状態管理**: コンポーネント内状態の正確な更新
-- **条件表示**: 権限・状態による表示制御
-- **エラーハンドリング**: UI上でのエラー表示・処理
+- **観点**
+  - **コンポーネント/ロジック型**: 型チェックと静的解析により型不整合を検知する
+  - **データベース型**: 型生成の実行と差分確認により、スキーマと型定義の整合性を保つ
 
-#### 対象コンポーネント:
+- **実行タイミング**: [2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う。
 
-- 認証関連（ログインボタン）
-- データ操作（ドキュメントカード、モーダル）
-- ナビゲーション（サイドナビ）
+### 3.4 ビルドテスト
 
-### 3.7 データ取得系API テスト（中優先度）
+本番相当のビルドが成立することを確認する。
 
-データフェッチ処理の信頼性を確保する
+- **観点**
+  - 本番相当のビルドが完走する
+  - 依存関係のインストールが lockfile どおりに成功する
 
-#### テストポイント:
+- **実行タイミング**: [2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う。
 
-- **データ取得**: 正しいクエリでのデータ取得
-- **フィルタリング**: 削除フラグやユーザー権限による絞り込み
-- **エラーハンドリング**: 取得失敗時の適切な処理
-- **パフォーマンス**: レスポンス時間の妥当性
+### 3.5 コード品質テスト
 
-### 3.8 ページレベル統合テスト（中低優先度）
+デバッグ用出力の混入を早期に検知する。
 
-ページ全体の機能統合を確認する
+- **観点**
+  - **デバッグ出力**: `console.log` / `console.info` / `debugger` の混入を検知して失敗させる（`check_console_log.yml`）
 
-#### テストポイント:
+- **実行タイミング**: [2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う。
 
-- **データ連携**: API・コンポーネント間のデータ流れ
-- **ページ遷移**: 認証状態によるリダイレクト
-- **レイアウト**: 画面表示の正確性
-- **パフォーマンス**: ページ読み込み速度
+### 3.6 E2Eテスト（未実装・リリース前のみ）
 
-### 3.9 UIコンポーネントテスト（中低優先度）
+実ユーザー視点の主要ジャーニーを、少数のケースで確認する（全網羅はしない）。
 
-表示専用コンポーネントの表示を確認する
+- **実施条件**: リリース前、または影響範囲が大きい変更（認証/認可、データ参照、主要画面の動線）
+- **実施方法**: 単一ブラウザで、主要フローを1〜2本確認する（当面は手動）
+- **対象フロー例**
+  - ログイン → コンテンツ（資料）閲覧 → ログアウト
+  - admin/maintainer による更新操作 → 一覧/詳細への反映
+  - pending/rejected ユーザーが保護ページへアクセス → 適切な誘導
 
-#### テストポイント:
+- **実行タイミング**: リリース前のみ（[2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う）。
 
-- **表示内容**: 渡されたpropsの正確な表示
-- **スタイリング**: 基本的なCSS適用確認
-- **アクセシビリティ**: 基本的なa11y要件
+## 4. CI / ツール構成
 
-### 3.10 E2Eテスト（低優先度）
+### 4.1 GitHub Actions ワークフロー
 
-ユーザージャーニー全体を動作確認する
+GitHub Actions は CI/CD の実行基盤として利用する。詳細は各ワークフロー定義を参照する。
 
-#### テストポイント:
+| Workflow | 目的 | 主な実行内容 | トリガー |
+| --- | --- | --- | --- |
+| Build Test ([.github/workflows/build.yml](../.github/workflows/build.yml)) | 本番相当のビルド成立性を検証 | 依存関係インストール + ビルド | `push` / `pull_request`（`app/**`）、`workflow_dispatch` |
+| TypeScript Type Check ([.github/workflows/typecheck.yml](../.github/workflows/typecheck.yml)) | 型安全性と静的品質の早期検出 | 型チェック + ESLint | `push` / `pull_request`（`app/**`, `*.ts(x)` 等）、`workflow_dispatch` |
+| Jest Unit Tests ([.github/workflows/test.yml](../.github/workflows/test.yml)) | ユニットテスト実行 | ユニットテスト | `push` / `pull_request`（`app/**`, `tests/**`, `jest.config.js`, `package.json`, `package-lock.json`）、`workflow_dispatch` |
+| Check console.log and debugger ([.github/workflows/check_console_log.yml](../.github/workflows/check_console_log.yml)) | デバッグ用出力の混入を防止 | console/debugger 検査 | `push` / `pull_request`（`app/**`, `scripts/lint-logs.cjs`, `package.json`, `package-lock.json`）、`workflow_dispatch` |
+| Supabase DB Types Consistency ([.github/workflows/db-types.yml](../.github/workflows/db-types.yml)) | DB 型定義の整合性監視（準備中） | 依存関係インストール（型生成/差分チェックは保留） | `push` / `pull_request`（`supabase/**`, `app/types/lib/database.types.ts` 等）、`workflow_dispatch` |
 
-- **ユーザーフロー**: ログインから主要機能利用まで
-- **ブラウザ互換性**: 主要ブラウザでの動作確認
-- **パフォーマンス**: 実環境での応答性能
-- **回帰テスト**: 機能追加・修正時の既存機能への影響確認
+### 4.2 導入済みツール
 
-### 3.11 Supabase 統合テスト（低優先度）
+- **Jest**: ユニットテスト実行基盤
+- **TypeScript**: 型チェック（`tsc --noEmit`）
+- **ESLint**: 静的解析
+- **カスタムスクリプト**: デバッグ出力検査（`lint:logs`）
+- **Supabase CLI**: 型生成・スキーマ整合性確認（CI は準備中、現状は手動）
 
-外部サービス連携を確認する
+### 4.3 実行環境
 
-#### テストポイント:
+- **Node.js 22.x**: CI 実行環境
+- **Next.js**: 本番ビルド互換の検証
 
-- **接続確認**: データベース・認証サービスとの通信
-- **設定確認**: 環境変数・設定値の正確性
-- **制約確認**: DB制約・RLSポリシーの動作
+## 5. テスト規約
+
+### テストファイルの配置
+
+- 原則としてテストコードは `tests/` 配下に配置する。
+- ディレクトリ構成は、対象コード（例: `app/` 配下）の構造に寄せて配置する。
+
+### ファイル名の命名
+
+- Jest は `*.test.ts` / `*.spec.ts` をテストとして実行できるが、本プロジェクトでは `*.test.ts` に統一する。
+- テストファイル名は「対象 + 期待する振る舞い」が想像できる名前にする。
+
+例:
+
+- `tests/services/auth/permissions.test.ts`
+
+### テストの検証対象
+
+- **検証する**: 関数の入力に対する出力（返り値）、副作用の結果（状態変化）、エラー時の振る舞い
+- **検証しない**: 内部実装の呼び出し手順（クエリメソッドをどの引数で呼んだか等）
+- モックは外部依存を切り離すために使用するが、モック呼び出し引数の逐次検証は原則行わない
+- 返り値を持たない関数は、副作用の結果（更新値・更新対象）が正しいことを検証する
+
+### 現在の実装済みテスト一覧
+
+| テストスクリプト | テスト対象スクリプト | 対象関数 | テスト内容の概要 |
+| --- | --- | --- | --- |
+| `tests/services/auth/permissions.test.ts` | `app/services/auth/permissions.ts` | `checkAdminPermissions`, `checkContentPermissions` | ロール（admin/maintainer/member/unknown）ごとの権限判定（許可/拒否）を検証する。 |
+| `tests/services/auth/server-auth.test.ts` | `app/services/auth/server-auth.ts` | `getServerAuth` | 認証エラー、ユーザー情報取得失敗、ステータス別応答、例外時の戻り値とエラーハンドリングを検証する。 |
+| `tests/services/api/utils/display-order.test.ts` | `app/services/api/utils/display-order.ts` | `getItemsByCategory`, `calculateDisplayOrder`, `shiftDisplayOrder`, `reorderItemsInCategory` | 表示順ロジックの代表ケース（取得、配置計算、カテゴリ内シフト、再採番）を検証する。 |
+| `tests/api/notifications/slack-notification.test.ts` | `app/api/notifications/slack/route.ts` | `POST` | Slack 通知 API の正常系（送信/スキップ）を検証する。 |
+| `tests/api/calendar.test.ts` | `app/api/calendar/calendar-server.ts`, `app/api/calendar/events/route.ts` | `fetchCalendarEvents`, `GET` | Google Calendar 連携の正常取得と認証失敗時のエラー応答を最小ケースで検証する。 |
+| `tests/services/api/supabase-client.test.ts` | `app/services/api/supabase-client.ts`, `app/services/api/applications-client.ts`, `app/services/api/documents-client.ts`, `app/services/api/videos-client.ts`, `app/services/api/users-client.ts` | `createClientSupabaseClient`, `getApplicationsByCategory`, `deleteApplication`, `registerApplication`, `updateApplication`, `getDocumentsByCategory`, `deleteDocument`, `registerDocument`, `updateDocument`, `getVideosByCategory`, `deleteVideo`, `registerVideo`, `updateVideo`, `addNewUser`, `fetchUserRoleById`, `fetchUserStatusById`, `fetchUserIdByAuthId`, `approveUser`, `rejectUser` | クライアント側 CRUD とユーザー操作について、返り値・エラーハンドリング・副作用（再採番等）中心に検証する。 |
+| `tests/services/api/supabase-server.test.ts` | `app/services/api/documents-server.ts`, `app/services/api/applications-server.ts`, `app/services/api/categories-server.ts`, `app/services/api/videos-server.ts`, `app/services/api/users-server.ts`, `app/services/api/supabase-server.ts` | `fetchDocuments`, `fetchApplications`, `fetchCategoriesByType`, `fetchVideos`, `fetchVideoById`, `fetchUserStatusByIdInServer`, `fetchUserInfoByAuthId`, `fetchActiveUsers`, `fetchApprovalUsers`, `fetchUserByAuthIdInServer`, `updateUserProfileServerInServer`, `createServerSupabaseClient`, `getServerCurrentUser` | サーバー側取得/更新処理と Supabase クライアント生成処理について、正常系/異常系の振る舞いを検証する。 |

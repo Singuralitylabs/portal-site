@@ -1,16 +1,20 @@
 "use client";
 
 import { PageTitle } from "@/app/components/PageTitle";
-import { Button, TextInput, Textarea } from "@mantine/core";
+import { Button, MultiSelect, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect, useTransition } from "react";
-import { ProfileUserType } from "@/app/types";
+import { PositionType, ProfileUserType } from "@/app/types";
+import { validateUrls } from "@/app/utils/url-validation";
 
 interface ProfilePageTemplateProps {
   initialUser: ProfileUserType;
+  allPositions: PositionType[];
+  initialPositionIds: number[];
   updateProfile: (
     displayName: string,
     bio: string,
+    positionIds: number[],
     x_url: string | null,
     facebook_url: string | null,
     instagram_url: string | null,
@@ -19,10 +23,16 @@ interface ProfilePageTemplateProps {
   ) => Promise<{ success: boolean; message?: string }>;
 }
 
-export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageTemplateProps) {
+export function ProfilePageTemplate({
+  initialUser,
+  allPositions,
+  initialPositionIds,
+  updateProfile,
+}: ProfilePageTemplateProps) {
   const [user, setUser] = useState<ProfileUserType>(initialUser);
   const [name, setName] = useState(initialUser.display_name);
   const [bio, setBio] = useState(initialUser.bio || "");
+  const [selectedPositionIds, setSelectedPositionIds] = useState<number[]>(initialPositionIds);
   const [x_url, setXUrl] = useState(initialUser.x_url || "");
   const [facebook_url, setFacebookUrl] = useState(initialUser.facebook_url || "");
   const [instagram_url, setInstagramUrl] = useState(initialUser.instagram_url || "");
@@ -37,13 +47,14 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
     setUser(initialUser);
     setName(initialUser.display_name);
     setBio(initialUser.bio || "");
+    setSelectedPositionIds(initialPositionIds);
     setXUrl(initialUser.x_url || "");
     setFacebookUrl(initialUser.facebook_url || "");
     setInstagramUrl(initialUser.instagram_url || "");
     setGithubUrl(initialUser.github_url || "");
     setPortfolioUrl(initialUser.portfolio_url || "");
     setErrors({}); // エラーもリセット
-  }, [initialUser]);
+  }, [initialUser, initialPositionIds]);
 
   // URL形式チェック関数
   const validateUrl = (url: string | null) => {
@@ -55,30 +66,46 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // URLのバリデーションチェック
-    const newErrors: Record<string, string> = {};
-    if (!validateUrl(x_url))
-      newErrors.x_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(facebook_url))
-      newErrors.facebook_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(instagram_url))
-      newErrors.instagram_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(github_url))
-      newErrors.github_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
-    if (!validateUrl(portfolio_url))
-      newErrors.portfolio_url =
-        "URLは http:// または https:// で始めてください。無ければ空欄にしてください。";
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
+    const urlData = {
+      x_url,
+      facebook_url,
+      instagram_url,
+      github_url,
+      portfolio_url,
+    };
 
-    // URL入力にエラーがあれば表示して中断
-    if (Object.keys(newErrors).length > 0) {
+    const invalidFields = validateUrls(urlData);
+
+    if (invalidFields.length > 0) {
+      const newErrors: Record<string, string> = {};
+      const urlErrorMessage =
+        "URLは https:// から始まる正しい形式で入力してください。無ければ空欄にしてください。";
+
+      invalidFields.forEach(field => {
+        newErrors[field] = urlErrorMessage;
+      });
+
       setErrors(newErrors);
+
+      const fieldLabels: Record<string, string> = {
+        x_url: "X_URL",
+        facebook_url: "Facebook_URL",
+        instagram_url: "Instagram_URL",
+        github_url: "GitHub_URL",
+        portfolio_url: "ポートフォリオのURL",
+      };
+      const invalidLabels = invalidFields.map(field => fieldLabels[field] || field);
+      const errorMessage = (
+        <>
+          次のフィールドに無効なURLが含まれています:
+          <br />
+          {invalidLabels.join(", ")}
+        </>
+      );
       notifications.show({
         title: "入力エラー",
-        message: "URLの形式を確認してください",
+        message: errorMessage,
         color: "red",
       });
       return;
@@ -92,6 +119,7 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
       const { success, message } = await updateProfile(
         name,
         bio,
+        selectedPositionIds,
         x_url || null,
         facebook_url || null,
         instagram_url || null,
@@ -160,6 +188,17 @@ export function ProfilePageTemplate({ initialUser, updateProfile }: ProfilePageT
                 名前
               </label>
               <TextInput id="name" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+
+            <div>
+              <MultiSelect
+                label="活動チーム、役割など"
+                data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
+                value={selectedPositionIds.map(String)}
+                onChange={values => setSelectedPositionIds(values.map(Number))}
+                placeholder="選択してください"
+                clearable
+              />
             </div>
 
             <div>

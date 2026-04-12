@@ -3,8 +3,10 @@ import { Modal, TextInput, Select, Textarea, Button, Group, NumberInput } from "
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
+import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
+import { isValidUrl } from "@/app/utils/url-validation";
 
 interface VideoFormModalProps {
   opened: boolean;
@@ -21,6 +23,7 @@ export function VideoFormModal({
   userId,
   initialData,
 }: VideoFormModalProps) {
+  const supabase = createClientSupabaseClient();
   const [form, setForm] = useState({
     name: "",
     category_id: 0,
@@ -29,8 +32,14 @@ export function VideoFormModal({
     thumbnail_path: "",
     thumbnail_time: 0,
     length: 0,
-    assignee: "",
+    assignee_id: null as number | null,
   });
+  const [users, setUsers] = useState<
+    {
+      id: number;
+      display_name: string;
+    }[]
+  >([]);
   const router = useRouter();
 
   // 表示順操作フック
@@ -48,12 +57,25 @@ export function VideoFormModal({
       thumbnail_path: initialData?.thumbnail_path ?? "",
       thumbnail_time: initialData?.thumbnail_time ?? 0,
       length: initialData?.length ?? 0,
-      assignee: initialData?.assignee ?? "",
+      assignee_id: initialData?.assignee_id ?? null,
     });
 
     // 表示順の初期化
     setPosition(initialData ? "current" : "last");
   }, [opened, initialData, setPosition]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from("users")
+        .select("id, display_name")
+        .order("display_name");
+
+      if (data) setUsers(data);
+    };
+
+    fetchUsers();
+  }, []);
 
   // カテゴリー変更時の処理
   const handleCategoryChangeWrapper = async (value: string | null) => {
@@ -71,12 +93,11 @@ export function VideoFormModal({
       });
       return;
     }
-    // URL形式チェック
-    const urlValidation = /^https?:\/\/.+/.test(form.url);
-    if (!urlValidation) {
+    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
+    if (!isValidUrl(form.url)) {
       notifications.show({
         title: "入力エラー",
-        message: "正しいURLを入力してください",
+        message: "URLは https:// から始まる正しい形式で入力してください",
         color: "red",
       });
       return;
@@ -94,7 +115,7 @@ export function VideoFormModal({
       thumbnail_path: form.thumbnail_path,
       thumbnail_time: form.thumbnail_time,
       length: form.length,
-      assignee: form.assignee,
+      assignee_id: form.assignee_id,
       position: parsedPosition,
     };
 
@@ -181,10 +202,24 @@ export function VideoFormModal({
         min={0}
         mb="sm"
       />
-      <TextInput
-        label="担当者"
-        value={form.assignee}
-        onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}
+      <Select
+        label="責任者"
+        data={
+          users.map(user => ({
+            value: String(user.id),
+            label: user.display_name,
+          })) ?? []
+        }
+        value={form.assignee_id ? String(form.assignee_id) : ""}
+        onChange={value => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
+        mb="sm"
+      />
+      <Select
+        label="表示順"
+        data={positionOptions}
+        value={position}
+        onChange={value => setPosition(value || "last")}
+        placeholder="配置位置を選択"
         mb="sm"
       />
       <Select

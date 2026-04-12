@@ -28,7 +28,10 @@ export async function fetchVideoById(videoId: number): Promise<{
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
-    .select(`*, category:categories(name)`)
+    .select(
+      `*, category:categories (name),
+      assignee:users!videos_assignee_fk (display_name)`
+    )
     .eq("id", videoId)
     .eq("is_deleted", false)
     .maybeSingle();
