@@ -22,7 +22,7 @@ GitHub リポジトリの **Settings → Secrets and variables → Actions → S
 | 名前 | 内容 | 取得方法 |
 | --- | --- | --- |
 | `FORK_SYNC_TOKEN` | フォーク同期用トークン | GitHub Settings → Developer Settings → Fine-grained tokens で発行 |
-| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | https://supabase.com/dashboard/account/tokens で発行 |
+| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン（`db-types.yml` を使う場合のみ必要） | https://supabase.com/dashboard/account/tokens で発行 |
 
 ### GitHub Variables の登録
 

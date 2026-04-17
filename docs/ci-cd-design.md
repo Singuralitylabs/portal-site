@@ -72,13 +72,13 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 **GITHUB_TOKEN:**
 
-各ワークフローに自動で付与されるトークン。必要最小限の権限のみ許可する。
+各ワークフローに自動で付与されるトークン。必要最小限の権限のみ許可し、各ワークフローでは `permissions` を明示してデフォルト権限に依存しない。
 
 | ワークフロー | 権限 | 理由 |
 | --- | --- | --- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml) | デフォルト（コード読み取り + PR 作成） | PR の作成に必要 |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | コード読み取りのみ | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | コード書き込み | タグのプッシュと GitHub Release の作成に必要 |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml) | `contents: read`, `pull-requests: write` | リリース PR の作成に必要 |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | `contents: read` | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write` | タグのプッシュと GitHub Release の作成に必要 |
 
 **Secrets:**
 
