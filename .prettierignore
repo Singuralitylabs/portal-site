@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+.next/
+out/
+coverage/
+
+# Local/temporary artifacts
+playwright-local/artifacts/
+playwright-local/playwright-local/artifacts/
+
+# Supabase SQL migrations are outside current prettier parser targets
+supabase/**/*.sql
+
+# Supabase型自動生成ファイル（全体formatから除外、db:types後に個別整形）
+app/types/lib/database.types.ts

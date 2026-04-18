@@ -20,7 +20,10 @@ export default async function Home() {
 
   const todayLabel = `${y}/${Number(m)}/${Number(d)}`;
 
-  const { data: events, error } = await fetchCalendarEvents({ startDate: timeMin, endDate: timeMax });
+  const { data: events, error } = await fetchCalendarEvents({
+    startDate: timeMin,
+    endDate: timeMax,
+  });
 
   return (
     <div className="min-h-screen bg-background">

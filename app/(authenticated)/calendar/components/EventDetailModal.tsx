@@ -103,12 +103,14 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
               <p
                 className="text-sm md:text-base text-gray-900"
                 dangerouslySetInnerHTML={{
-                  __html: "📍 " + DOMPurify.sanitize(formatTextToHtml(event.location), {
-                    ALLOWED_TAGS: ["a", "br"],
-                    ALLOWED_ATTR: ["href", "target", "rel", "class"],
-                  }),
+                  __html:
+                    "📍 " +
+                    DOMPurify.sanitize(formatTextToHtml(event.location), {
+                      ALLOWED_TAGS: ["a", "br"],
+                      ALLOWED_ATTR: ["href", "target", "rel", "class"],
+                    }),
                 }}
-                onClick={(e) => {
+                onClick={e => {
                   const target = e.target as HTMLElement;
                   if (target.tagName === "A") {
                     e.preventDefault();
@@ -133,7 +135,7 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
                     ALLOWED_ATTR: ["href", "target", "rel", "class"],
                   }),
                 }}
-                onClick={(e) => {
+                onClick={e => {
                   // すべてのリンクを新規タブで開く
                   const target = e.target as HTMLElement;
                   if (target.tagName === "A") {

@@ -1,4 +1,7 @@
-import { checkAdminPermissions, checkContentPermissions } from "../../../app/services/auth/permissions";
+import {
+  checkAdminPermissions,
+  checkContentPermissions,
+} from "../../../app/services/auth/permissions";
 import { USER_ROLE } from "../../../app/constants/user";
 
 /**
