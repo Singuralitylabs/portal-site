@@ -14,4 +14,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   }
+  {
+    "cSpell.enabled": false
+}
 }
