@@ -388,7 +388,7 @@ if (data.success) {
 |-----------|---|------|------|
 | `image` | File | ✅ | アップロードする画像ファイル（最大1MB、jpg/jpeg/png/gif）|
 
-**ファイルの保存パス**: `{auth_id}/avatar.{ext}`（拡張子はアップロードしたファイルに合わせる）
+**ファイルの保存パス**: `{auth_id}/avatar`（拡張子なし固定。異なる拡張子で再アップロードしても同一オブジェクトに上書きされる）
 
 **レスポンス**: JSON形式
 
@@ -414,7 +414,7 @@ if (data.success) {
 
 ```json
 {
-  "profile_image_path": "abc123/avatar.jpg"
+  "profile_image_path": "abc123/avatar"
 }
 ```
 
