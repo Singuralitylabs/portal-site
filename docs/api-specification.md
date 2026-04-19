@@ -5,6 +5,7 @@
 1. [概要](#1-概要)
 2. [GoogleカレンダーAPI](#2-googleカレンダーapi)
 3. [Slack通知API](#3-slack通知api)
+4. [プロフィール画像API](#4-プロフィール画像api)
 
 ## 1. 概要
 
@@ -14,6 +15,7 @@
 
 - GoogleカレンダーAPI: Googleカレンダーからイベント情報を取得
 - Slack通知API: シンラボSlackへの通知送信
+- プロフィール画像API: ユーザーのカスタムプロフィール画像のアップロード・削除
 
 ---
 
@@ -345,5 +347,165 @@ if (data.success) {
   console.log("通知送信成功");
 } else {
   console.error("通知送信エラー:", data.error);
+}
+```
+
+---
+
+## 4. プロフィール画像API
+
+### 4.1 概要
+
+ログインユーザーがカスタムプロフィール画像をアップロード・削除するためのAPIです。
+
+#### 主な機能
+
+- プロフィール画像のアップロード（新規設定・上書き更新）
+- プロフィール画像の削除
+- Supabase Storage（`profile-images` バケット）へのファイル保存
+- 許可する拡張子: jpg / jpeg / png / gif
+- ファイルサイズ上限: 1MB
+
+#### アバター表示の優先順位
+
+1. カスタムプロフィール画像（`profile_image_path` が設定されている場合）
+2. Google アカウントのプロフィール画像（`avatar_url`）
+3. 表示名の先頭1文字をイニシャルとして表示
+
+### 4.2 APIエンドポイント
+
+#### 画像アップロードAPI
+
+**エンドポイント**: `POST /api/profile/image`
+
+**説明**: プロフィール画像をアップロードします。既存の画像がある場合は上書きします。
+
+**認証**: 必須（ログインユーザーのみ）
+
+**リクエスト形式**: `multipart/form-data`
+
+| フィールド | 型 | 必須 | 説明 |
+|-----------|---|------|------|
+| `image` | File | ✅ | アップロードする画像ファイル（最大1MB、jpg/jpeg/png/gif）|
+
+**ファイルの保存パス**: `{auth_id}/avatar.{ext}`（拡張子はアップロードしたファイルに合わせる）
+
+**レスポンス**: JSON形式
+
+#### 画像削除API
+
+**エンドポイント**: `DELETE /api/profile/image`
+
+**説明**: プロフィール画像を削除します。Storageからファイルを削除し、`profile_image_path` を `NULL` に更新します。
+
+**認証**: 必須（ログインユーザーのみ）
+
+**リクエストボディ**: なし
+
+**レスポンス**: JSON形式
+
+### 4.3 レスポンス形式
+
+#### アップロード成功時のレスポンス
+
+**ステータスコード**: `200 OK`
+
+**レスポンスボディ**:
+
+```json
+{
+  "profile_image_path": "abc123/avatar.jpg"
+}
+```
+
+#### 削除成功時のレスポンス
+
+**ステータスコード**: `200 OK`
+
+**レスポンスボディ**:
+
+```json
+{
+  "success": true
+}
+```
+
+#### バリデーションエラー時のレスポンス
+
+**ステータスコード**: `400 Bad Request`
+
+**レスポンスボディ**:
+
+```json
+{
+  "error": "エラーメッセージ"
+}
+```
+
+| エラーケース | メッセージ例 |
+|-------------|------------|
+| ファイル未添付 | `"画像ファイルを選択してください"` |
+| ファイルサイズ超過 | `"ファイルサイズは1MB以下にしてください"` |
+| 拡張子不正 | `"jpg / jpeg / png / gif のみアップロード可能です"` |
+
+#### 認証エラー時のレスポンス
+
+**ステータスコード**: `401 Unauthorized`
+
+**レスポンスボディ**:
+
+```json
+{
+  "error": "認証が必要です"
+}
+```
+
+#### サーバーエラー時のレスポンス
+
+**ステータスコード**: `500 Internal Server Error`
+
+**レスポンスボディ**:
+
+```json
+{
+  "error": "エラーメッセージ"
+}
+```
+
+### 4.4 使用例
+
+#### 画像アップロード
+
+```typescript
+const formData = new FormData();
+formData.append("image", file); // file: File オブジェクト
+
+const response = await fetch("/api/profile/image", {
+  method: "POST",
+  body: formData,
+});
+
+const data = await response.json();
+
+if (response.ok) {
+  console.log("アップロード成功:", data.profile_image_path);
+} else {
+  console.error("アップロードエラー:", data.error);
+}
+```
+
+#### 画像削除
+
+```typescript
+const response = await fetch("/api/profile/image", {
+  method: "DELETE",
+});
+
+const data = await response.json();
+
+if (data.success) {
+  console.log("削除成功");
+} else {
+  console.error("削除エラー:", data.error);
 }
 ```
