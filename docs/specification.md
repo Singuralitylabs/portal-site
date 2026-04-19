@@ -544,8 +544,8 @@ sequenceDiagram
 2. プロフィール画像の管理
    - 現在のプロフィール画像を表示
    - 画像をアップロード（jpg / jpeg / png / gif、1MB 以下）
-   - 既存画像を変更（再アップロード時はユーザーごとの固定保存キー（例: `{auth_id}/avatar`）に保存し、同一キーのオブジェクトを上書きする）
-   - アップロード済み画像を削除（削除後は固定保存キー上のオブジェクトも削除し、Google アバター → イニシャルへフォールバック）
+   - 既存画像を変更（同一パスに再アップロードして上書きする）
+   - アップロード済み画像を削除（削除後は Google アバター → イニシャル → ユーザーアイコンへフォールバック）
 
 3. プロフィール情報の編集
    - フォームで名前、自己紹介、SNSアカウントや個人HP等のURLを編集可能
@@ -733,15 +733,16 @@ sequenceDiagram
 ### 7.5 データ取得
 
 - usersテーブルから以下のカラムを取得：
-  - ユーザー基本情報: `id, display_name, role, bio, avatar_url`
+  - ユーザー基本情報: `id, display_name, role, bio, avatar_url, profile_image_path`
   - 関連URL情報: `x_url, facebook_url, instagram_url, github_url, portfolio_url`
 - 取得条件：
   - `status = 'active'`（承認済みメンバーのみ）
   - `is_deleted = FALSE`（論理削除されていないメンバーのみ）
 - 表示順序：role昇順 → 名前の昇順 → 作成日時昇順
 - プロフィール画像：
-  - `avatar_url`が存在する場合：Googleプロフィール画像を表示
-  - `avatar_url`がnull/空の場合：名前のイニシャルをフォールバック表示
+  - `profile_image_path`が存在する場合：カスタムプロフィール画像を表示
+  - `profile_image_path`がnull/空、かつ`avatar_url`が存在する場合：Googleプロフィール画像を表示
+  - 両方ともnull/空の場合：名前のイニシャルをフォールバック表示
 
 ## 8. アプリ
 
