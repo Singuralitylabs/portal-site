@@ -742,7 +742,8 @@ sequenceDiagram
 - プロフィール画像：
   - `profile_image_path`が存在する場合：カスタムプロフィール画像を表示
   - `profile_image_path`がnull/空、かつ`avatar_url`が存在する場合：Googleプロフィール画像を表示
-  - 両方ともnull/空の場合：名前のイニシャルをフォールバック表示
+  - `profile_image_path`と`avatar_url`が両方ともnull/空、かつ`display_name`が存在する場合：名前のイニシャルをフォールバック表示
+  - `profile_image_path`と`avatar_url`が両方ともnull/空、かつ`display_name`もnull/空の場合：デフォルトのユーザーアイコンを表示
 
 ## 8. アプリ
 
