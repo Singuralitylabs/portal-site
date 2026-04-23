@@ -415,7 +415,7 @@ if (data.success) {
 
 ```json
 {
-  "profile_image_path": "abc123/avatar"
+  "profile_image_path": "abc123/profile-image"
 }
 ```
 

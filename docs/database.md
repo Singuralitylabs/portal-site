@@ -351,7 +351,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 | ---------------- | ------------------------------- |
 | バケット名         | `profile-images`                |
 | 公開/非公開        | 非公開（Private）               |
-| ファイルパス形式 | `{auth_id}/profile-image.{拡張子}` |
+| ファイルパス形式 | `{auth_id}/profile-image{拡張子なし固定}` |
 | 許可する拡張子     | `.jpg`, `.jpeg`, `.png`, `.gif` |
 | ファイルサイズ上限 | 1MB                             |
 
