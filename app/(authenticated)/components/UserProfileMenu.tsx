@@ -48,10 +48,7 @@ export function UserProfileMenu() {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item
-          leftSection={<User size={14} />}
-          onClick={() => router.push("/profile")}
-        >
+        <Menu.Item leftSection={<User size={14} />} onClick={() => router.push("/profile")}>
           プロフィール
         </Menu.Item>
         <Menu.Divider />

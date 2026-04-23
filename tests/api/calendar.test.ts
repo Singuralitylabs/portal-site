@@ -44,7 +44,7 @@ const createRequest = (params: Record<string, string> = {}): NextRequest =>
     nextUrl: {
       searchParams: new URLSearchParams(params),
     },
-  } as unknown as NextRequest);
+  }) as unknown as NextRequest;
 
 /**
  * calendar-server モジュールを分離読み込みする。

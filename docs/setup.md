@@ -21,7 +21,6 @@
   - [公式サイト](https://nodejs.org/)からダウンロード
   - インストール確認: `node -v`
 - Git: 最新版
-
   - [公式サイト](https://git-scm.com/)からダウンロード、又は下記コマンドによりインストール
 
     ```bash
@@ -53,19 +52,16 @@
 プロジェクトリーダーに以下のサービスへのメンバー登録を依頼してください。
 
 - GitHubリポジトリへの招待
-
   - 目的: コードの閲覧・編集・プルリクエストの作成
   - リポジトリ: `Singuralitylabs/portal-site`
   - 必要な情報: GitHubユーザー名、又はメールアドレス
 
 - Supabaseプロジェクトへの招待
-
   - 目的: データベースやポリシーの確認・更新・型定義の生成
   - プロジェクト: ポータルサイト開発用、データベース検証用
   - 必要な情報: メールアドレス
 
 - シンラボSlackの開発チャンネルの参加
-
   - 目的: チームコミュニケーション・質問・進捗共有
   - チャンネル: `201-club_チーム開発`
   - 必要な情報: なし
@@ -94,24 +90,24 @@ npm install
 
 1. `.env.local`ファイルをプロジェクトルートに作成する
 
-```bash
-touch .env.local
-```
+   ```bash
+   touch .env.local
+   ```
 
 2. 以下の環境変数を設定する **（各値は参画時に個別共有）**。
 
-```bash
-# Supabase関連（認証・データベース）
-NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
-SUPABASE_PROJECT_ID=************
+   ```bash
+   # Supabase関連（認証・データベース）
+   NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
+   SUPABASE_PROJECT_ID=************
 
-# 問い合わせ用メールアドレス
-NEXT_PUBLIC_ADMIN_EMAIL=info@future-tech-association.org
+   # 問い合わせ用メールアドレス
+   NEXT_PUBLIC_ADMIN_EMAIL=info@future-tech-association.org
 
-# Slack通知先Webhook URL
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
-```
+   # Slack通知先Webhook URL
+   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
+   ```
 
 #### 重要な注意事項
 
@@ -133,6 +129,25 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
 2. 左サイドバーの拡張機能アイコンをクリック（またはCmd/Ctrl + Shift + X）
 3. 上記の拡張機能名で検索してインストール
 
+#### ワークスペース設定の反映方法
+
+- 本リポジトリには VS Code 用のワークスペース設定が
+  [.vscode/settings.json](../.vscode/settings.json) として含まれています。
+- リポジトリを VS Code で開くと、自動的にこの設定が適用されます。
+- 設定内容を確認したい場合は、コマンドパレットから
+  `Preferences: Open Workspace Settings (JSON)` を開くか、
+  `.vscode/settings.json` を直接確認してください。
+
+#### Markdown 整形に関する補足
+
+- Markdown の整形基準は Prettier の出力に統一します。
+- 通常のネスト箇条書きは 2 スペース、
+  番号付きリスト配下の箇条書きは 3 スペースになることがあります。
+- これは Prettier の Markdown 整形仕様によるもので、VS Code 側の不具合ではありません。
+- `.vscode/settings.json` では Markdown 編集時の入力補助として
+  2 スペース設定を入れていますが、
+  Prettier 実行時の 3 スペース出力自体は変わりません。
+
 ## 3. 開発環境の起動確認
 
 ### 3.1 開発サーバーの起動
@@ -143,7 +158,7 @@ npm run dev
 
 成功すると、以下のようなメッセージが表示されます。
 
-```
+```text
 ▲ Next.js 15.x.x
 - Local:        http://localhost:3000
 - Environments: .env.local
@@ -153,7 +168,7 @@ npm run dev
 
 ### 3.2 ブラウザでの動作確認
 
-1. ブラウザで http://localhost:3000 にアクセス
+1. ブラウザで `http://localhost:3000` にアクセス
 2. ログイン画面が表示されることを確認
 3. 「Googleでログイン」ボタンが表示されることを確認
 
