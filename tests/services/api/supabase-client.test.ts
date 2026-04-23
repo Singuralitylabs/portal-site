@@ -40,7 +40,13 @@ import {
  * - `QueryResult`: Supabase クエリモックの戻り値型（`data` / `error`）
  * - `ORIGINAL_ENV`: テスト前後で process.env を復元するための退避値
  * - `create*Builder`: Supabase のメソッドチェーンを模擬するビルダー群
+ *
+ * 処理ステップ（このテストスクリプト全体）:
+ * - Step 1: 対象モジュールを import し、Supabase クライアント生成関数を jest.mock で差し替える
+ * - Step 2: create*Builder 群でメソッドチェーンのモックを構築する
+ * - Step 3: API 関数を実行し、戻り値（success/data/error）と副作用（再採番・ログ）を検証する
  */
+// supabaseClientActual: モック化されたモジュールと分離して本体実装を直接検証するための参照。
 const supabaseClientActual = jest.requireActual(
   "../../../app/services/api/supabase-client"
 ) as typeof import("../../../app/services/api/supabase-client");
@@ -48,6 +54,7 @@ const supabaseClientActual = jest.requireActual(
 // Supabase クエリ戻り値の共通型
 type QueryResult = { data: unknown; error: unknown };
 
+// ORIGINAL_ENV: createClientSupabaseClient 単体テストで環境変数を改変した後に戻すための退避値。
 const ORIGINAL_ENV = process.env;
 
 jest.mock("@supabase/ssr", () => ({
@@ -202,6 +209,21 @@ const createAwaitableSelectDoubleEqBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// select(...).in(...).eq(...).eq(...) を await で終端するクエリ用モック
+const createAwaitableSelectInDoubleEqBuilder = (result: QueryResult) => {
+  const builder: {
+    select?: jest.Mock;
+    in?: jest.Mock;
+    eq?: jest.Mock;
+    then?: (resolve: (value: QueryResult) => void) => Promise<void>;
+  } = {};
+  builder.select = jest.fn(() => builder);
+  builder.in = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.then = resolve => Promise.resolve(result).then(resolve);
+  return builder as Required<typeof builder>;
+};
+
 // createClientSupabaseClient 単体の確認
 describe("supabase-client", () => {
   const createBrowserClientMock = createBrowserClient as jest.Mock;
@@ -235,7 +257,9 @@ describe("supabase-client", () => {
 
 // application/document/video の共通 CRUD テスト
 describe("content client services", () => {
+  // createClientSupabaseClientMock: 各 API 関数で利用する Supabase クライアント生成を差し替えるモック。
   const createClientSupabaseClientMock = createClientSupabaseClient as jest.Mock;
+  // 下記4つは display-order ユーティリティ呼び出し有無を検証するためのモック参照。
   const getItemsByCategoryMock = getItemsByCategory as jest.Mock;
   const calculateDisplayOrderMock = calculateDisplayOrder as jest.Mock;
   const shiftDisplayOrderMock = shiftDisplayOrder as jest.Mock;
@@ -576,7 +600,9 @@ describe("users-client", () => {
 });
 
 describe("categories-client", () => {
+  // categories-client の戻り値だけでなく、再採番呼び出し有無もあわせて検証する。
   const createClientSupabaseClientMock = createClientSupabaseClient as jest.Mock;
+  const reorderItemsInCategoryMock = reorderItemsInCategory as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -606,6 +632,33 @@ describe("categories-client", () => {
     // Step 3: 成功レスポンスを検証する。
     expect(response).toEqual({ success: true, error: null });
     // 再採番の呼び出し有無を明示検証: register 成功時は categories の再採番が実行される。
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
+  it("registerCategory 異常系: シフト後に登録失敗した場合は再採番を試行して失敗を返す", async () => {
+    // Step 1: first 配置のシフト成功後、insert 失敗になるモックを準備する。
+    const shiftBuilder = createGteOrderBuilder({ data: [], error: null });
+    const insertError = { message: "insert failed" };
+    const insertBuilder = createInsertBuilder({ data: null, error: insertError });
+    const reorderSelectBuilder = createOrderBuilder({ data: [], error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(shiftBuilder)
+      .mockReturnValueOnce(insertBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    // Step 2: registerCategory を実行する。
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "first" },
+    });
+
+    // Step 3: 失敗を返しつつ、再採番が試行されたことを検証する。
+    expect(response).toEqual({ success: false, error: insertError });
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
@@ -644,6 +697,39 @@ describe("categories-client", () => {
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
+  it("updateCategory 異常系: シフト後に更新失敗した場合は再採番を試行して失敗を返す", async () => {
+    // Step 1: first 配置のシフト成功後、update 失敗になるモックを準備する。
+    const currentBuilder = createSelectSingleBuilder({
+      data: { display_order: 2, category_type: "documents" },
+      error: null,
+    });
+    const shiftBuilder = createGteOrderBuilder({ data: [], error: null });
+    const updateError = { message: "update failed" };
+    const updateBuilder = createUpdateBuilder({ data: null, error: updateError });
+    const reorderSelectBuilder = createOrderBuilder({ data: [], error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(currentBuilder)
+      .mockReturnValueOnce(shiftBuilder)
+      .mockReturnValueOnce(updateBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    // Step 2: updateCategory を実行する。
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリB",
+      description: null,
+      position: { type: "first" },
+    });
+
+    // Step 3: 失敗を返しつつ、再採番が試行されたことを検証する。
+    expect(response).toEqual({ success: false, error: updateError });
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
   it("deleteCategory 正常系: 未分類へ移動して削除・再採番が完了する", async () => {
     // Step 1: deleteCategory の各ステップ（取得→移動→削除→再採番）のモックを準備する。
     const deletingCategoryBuilder = createSelectSingleBuilder({
@@ -657,6 +743,14 @@ describe("categories-client", () => {
     });
     const moveBuilder = createUpdateInEqSelectBuilder({
       data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
       error: null,
     });
     const deleteCategoryBuilder = createUpdateBuilder({ data: null, error: null });
@@ -673,6 +767,8 @@ describe("categories-client", () => {
       .mockReturnValueOnce(uncategorizedBuilder)
       .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
+      .mockReturnValueOnce(remainingOriginalCheckBuilder)
       .mockReturnValueOnce(deleteCategoryBuilder)
       .mockReturnValueOnce(reorderCategorySelectBuilder)
       .mockReturnValueOnce(reorderCategoryUpdateBuilder1)
@@ -684,6 +780,7 @@ describe("categories-client", () => {
 
     // Step 3: 成功レスポンスを検証する。
     expect(response).toEqual({ success: true, error: null });
+    expect(reorderItemsInCategoryMock).toHaveBeenCalledWith("documents", 1);
     // 再採番の呼び出し有無を明示検証: delete 成功時は categories の再採番が実行される。
     expect(reorderCategorySelectBuilder.order).toHaveBeenCalledTimes(1);
   });
@@ -700,6 +797,14 @@ describe("categories-client", () => {
       error: null,
     });
     const moveBuilder = createUpdateInEqSelectBuilder({ data: [{ id: 100 }], error: null });
+    const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
+      data: [{ id: 100 }],
+      error: null,
+    });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
     const deleteBuilder = createUpdateBuilder({ data: null, error: null });
     const reorderCategoriesBuilder = createOrderBuilder({
       data: null,
@@ -714,6 +819,8 @@ describe("categories-client", () => {
       .mockReturnValueOnce(uncategorizedBuilder)
       .mockReturnValueOnce(contentsToMoveBuilder)
       .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
+      .mockReturnValueOnce(remainingOriginalCheckBuilder)
       .mockReturnValueOnce(deleteBuilder)
       .mockReturnValueOnce(reorderCategoriesBuilder)
       .mockReturnValueOnce(rollbackDeleteBuilder)

@@ -30,7 +30,13 @@ import { cookies } from "next/headers";
  * 主な定義:
  * - `QueryResult`: Supabase クエリモックの戻り値型（`data` / `error`）
  * - `create*Builder`: Supabase のメソッドチェーンを模擬するビルダー群
+ *
+ * 処理ステップ（このテストスクリプト全体）:
+ * - Step 1: server 側 API モジュールと Supabase 依存を import し、jest.mock で差し替える
+ * - Step 2: create*Builder 群で一覧/単体/更新クエリのモックチェーンを構築する
+ * - Step 3: API 実行結果の戻り値整形（data/error）とログ出力、副作用を検証する
  */
+// supabaseServerActual: mock 経由ではなくモジュール本体関数を直接検証するための参照。
 const supabaseServerActual = jest.requireActual(
   "../../../app/services/api/supabase-server"
 ) as typeof import("../../../app/services/api/supabase-server");
@@ -97,6 +103,7 @@ const createUpdateSelectSingleBuilder = (result: QueryResult) => {
 
 // サーバー API サービス（documents/applications/categories/videos/users）のテスト
 describe("server API services", () => {
+  // createServerSupabaseClientMock: server API が内部で生成する Supabase client を差し替える。
   const createServerSupabaseClientMock = createServerSupabaseClient as jest.Mock;
 
   beforeEach(() => {
@@ -423,8 +430,10 @@ describe("server API services", () => {
 
 // supabase-server モジュール本体のテスト
 describe("supabase-server module", () => {
+  // createServerClientMock/cookiesMock: createServerSupabaseClient の依存関数を直接検証するためのモック。
   const createServerClientMock = createServerClient as jest.Mock;
   const cookiesMock = cookies as jest.Mock;
+  // originalEnv: 環境変数を書き換えるテスト後に復元する退避値。
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
