@@ -6,7 +6,7 @@
 2. [テーブル設計](#2-テーブル設計)
 3. [ER図](#3-er図)
 4. [Row-Level-Security(RLS)ポリシー](#4-row-level-securityrlsポリシー)
-5. [Supabase Storage](#5-supabase-Storage)
+5. [Supabase Storage](#5-supabase-storage)
 6. [サポート関数・備考](#6-サポート関数備考)
 7. [データアクセス制御の実現](#7-データアクセス制御の実現)
 
