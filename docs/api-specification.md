@@ -415,6 +415,7 @@ if (data.success) {
 
 ```json
 {
+  "success": true,
   "profile_image_path": "abc123/profile-image"
 }
 ```
@@ -439,6 +440,7 @@ if (data.success) {
 
 ```json
 {
+  "success": false,
   "error": "エラーメッセージ"
 }
 ```
@@ -457,6 +459,7 @@ if (data.success) {
 
 ```json
 {
+  "success": false,
   "error": "認証が必要です"
 }
 ```
@@ -469,6 +472,7 @@ if (data.success) {
 
 ```json
 {
+  "success": false,
   "error": "エラーメッセージ"
 }
 ```
@@ -488,7 +492,7 @@ const response = await fetch("/api/profile/image", {
 
 const data = await response.json();
 
-if (response.ok) {
+if (data.success) {
   console.log("アップロード成功:", data.profile_image_path);
 } else {
   console.error("アップロードエラー:", data.error);
