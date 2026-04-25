@@ -1,52 +1,96 @@
 name: Supabase DB Types Consistency
 
+# Supabaseのスキーマ変更と、生成済みTypeScript型の整合性をCIで検証するワークフロー
 on:
+  # Supabase関連ファイルや型定義ファイル、依存関係が変更されたときに実行
   push:
     paths:
       - "supabase/**"
       - "app/types/lib/database.types.ts"
       - "package.json"
       - "package-lock.json"
+  # PRでも同じ条件で実行し、マージ前に型ズレを検出
   pull_request:
     paths:
       - "supabase/**"
       - "app/types/lib/database.types.ts"
       - "package.json"
       - "package-lock.json"
+  # 手動実行（必要時の再検証用）
   workflow_dispatch:
 
 jobs:
   db-types:
     name: Validate Supabase types
     runs-on: ubuntu-latest
+    # 事前設定が必要なパラメータ:
+    # 1) SUPABASE_ACCESS_TOKEN
+    #    - 設定箇所: GitHub Repository > Settings > Secrets and variables > Actions > Secrets
+    # 2) SUPABASE_PROJECT_ID
+    #    - 設定箇所: GitHub Repository > Settings > Secrets and variables > Actions > Variables
+    # どちらか未設定の場合は、後続の型生成/差分チェックをスキップします。
     env:
+      # Supabase CLI認証に使用するトークン（GitHub Secrets）
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      # 型生成対象のSupabase Project ID（GitHub Variables）
       SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
 
     steps:
+      # リポジトリのソースコードをワークフロー実行環境へ取得
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Supabase CLI実行に必要なNode.js実行環境を準備
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: "npm"
 
+      # package-lock.jsonに基づいて依存関係を再現性高くインストール
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Supabase database types
+      # 必須設定（Secret/Variable）の有無を確認し、後続ステップの実行可否を決定
+      - name: Check Supabase configuration
+        id: supabase-config
         run: |
+          # どちらか未設定なら available=false を出力して後続をスキップ
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_ID" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Supabase settings are missing. Skipping DB types check."
+          else
+            # 設定が揃っている場合のみ型生成・差分チェックを実施
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Supabase CLIで public スキーマから TypeScript 型を生成し、型定義ファイルへ出力
+      - name: Generate Supabase database types
+        # 前段で設定が有効と判定された場合のみ実行
+        if: ${{ steps.supabase-config.outputs.available == 'true' }}
+        run: |
+          # 実行コマンド:
+          # - npx supabase gen types: SupabaseのDBスキーマから型を生成
+          # - --lang=typescript: 出力言語をTypeScriptに指定
+          # - --project-id: 生成対象のSupabaseプロジェクトを指定
+          # - --schema public: publicスキーマのみ対象
+          # - > app/types/lib/database.types.ts: 生成結果を既存型定義へ上書き出力
           npx supabase gen types \
             --lang=typescript \
             --project-id "$SUPABASE_PROJECT_ID" \
             --schema public \
             > app/types/lib/database.types.ts
+          # package.json の db:types と同様に、生成後に対象ファイルを整形
+          npx prettier --write app/types/lib/database.types.ts
 
+      # 生成結果とコミット済みファイルとの差分を確認し、ズレがあればCIを失敗させる
       - name: Check for drift in generated types
+        # 型生成と同様に、設定が揃っている場合のみ実行
+        if: ${{ steps.supabase-config.outputs.available == 'true' }}
         run: |
+          # git diff --quiet は差分なし=0、差分あり=1 を返す
           if ! git diff --quiet app/types/lib/database.types.ts; then
+            # GitHub Actionsのエラー注釈を出し、差分内容をログに表示
             echo "::error::Supabase generated types differ from committed version."
             git diff -- app/types/lib/database.types.ts
             exit 1
