@@ -338,7 +338,7 @@ export async function updateCategory({
     // currentCategory: 更新対象の現状（表示順・種別）を保持する。
     const { data: currentCategory, error: currentCategoryError } = await supabase
       .from("categories")
-      .select("display_order, category_type")
+      .select("display_order, category_type, name, description")
       .eq("id", id)
       .single();
 
@@ -352,6 +352,8 @@ export async function updateCategory({
     // 現在値を保持して、更新後の再採番条件判定に利用する。
     const currentDisplayOrder = currentCategory.display_order;
     const currentCategoryType = currentCategory.category_type as CategoryTypeValue;
+    const currentName = currentCategory.name;
+    const currentDescription = currentCategory.description;
 
     // フォーム入力 position から新しい表示順を算出する。
     // Step 2: 新しい表示順を計算する。
@@ -393,14 +395,52 @@ export async function updateCategory({
       return { success: false, error };
     }
 
-    // Step 5: 更新先カテゴリを再採番する。
-    // 更新後に更新先種別の並び順を正規化する。
-    await reorderCategoriesByType(category_type);
+    // Step 5: 更新後の再採番を実行する。失敗時は更新内容を元に戻す。
+    try {
+      // 更新先種別の並び順を正規化する。
+      await reorderCategoriesByType(category_type);
 
-    // Step 6: 種別変更時のみ更新前カテゴリも再採番する。
-    // 種別変更が発生した場合のみ、移動元種別側も再採番して整合を保つ。
-    if (currentCategoryType !== category_type) {
-      await reorderCategoriesByType(currentCategoryType);
+      // 種別変更が発生した場合のみ、移動元種別側も再採番して整合を保つ。
+      if (currentCategoryType !== category_type) {
+        await reorderCategoriesByType(currentCategoryType);
+      }
+    } catch (reorderError) {
+      const { error: rollbackUpdateError } = await supabase
+        .from("categories")
+        .update({
+          category_type: currentCategoryType,
+          name: currentName,
+          description: currentDescription,
+          display_order: currentDisplayOrder,
+        })
+        .eq("id", id);
+
+      if (rollbackUpdateError) {
+        return { success: false, error: rollbackUpdateError };
+      }
+
+      try {
+        await reorderCategoriesByType(currentCategoryType);
+        if (currentCategoryType !== category_type) {
+          await reorderCategoriesByType(category_type);
+        }
+      } catch (rollbackReorderError) {
+        return {
+          success: false,
+          error: toError(
+            rollbackReorderError,
+            "更新ロールバック後の再採番に失敗しました。"
+          ),
+        };
+      }
+
+      return {
+        success: false,
+        error: toError(
+          reorderError,
+          "カテゴリー再採番に失敗したため、更新処理をロールバックしました。"
+        ),
+      };
     }
 
     return { success: true, error: null };
