@@ -144,3 +144,21 @@ export type PositionType = PositionsTable["Row"];
 // Positions tag types
 type PositionTagsTable = Database["public"]["Tables"]["position_tags"];
 export type PositionTagType = PositionTagsTable["Row"];
+
+// Trash types
+export type TrashTabType = "documents" | "videos" | "applications" | "categories";
+
+export type TrashContentItem = {
+  id: number;
+  name: string;
+  updated_at: string;
+  category_id: number;
+  category: { name: string } | null;
+};
+
+export type TrashCategoryItem = {
+  id: number;
+  name: string;
+  updated_at: string;
+  category_type: string;
+};

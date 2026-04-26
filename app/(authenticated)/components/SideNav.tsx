@@ -11,6 +11,7 @@ import {
   Users,
   Calendar,
   FolderTree,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -66,6 +67,12 @@ const CATEGORY_ADMIN_NAV_ITEM: NavItem = {
   icon: <FolderTree className="h-5 w-5" />,
 };
 
+const TRASH_NAV_ITEM: NavItem = {
+  title: "ゴミ箱",
+  href: "/trash",
+  icon: <Trash2 className="h-5 w-5" />,
+};
+
 interface SideNavProps {
   isAdmin: boolean;
   isContentMgr: boolean;
@@ -77,7 +84,7 @@ export function SideNav({ isAdmin, isContentMgr, open, onClose }: SideNavProps) 
   const navItems = useMemo<NavItem[]>(
     () => [
       ...DEFAULT_NAV_ITEMS,
-      ...(isContentMgr ? [CATEGORY_ADMIN_NAV_ITEM] : []),
+      ...(isContentMgr ? [CATEGORY_ADMIN_NAV_ITEM, TRASH_NAV_ITEM] : []),
       ...(isAdmin ? [ADMIN_NAV_ITEM] : []),
     ],
     [isAdmin, isContentMgr]
