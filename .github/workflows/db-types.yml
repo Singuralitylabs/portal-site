@@ -53,21 +53,26 @@ jobs:
 
       # 必須設定（Secret/Variable）の有無を確認し、後続ステップの実行可否を決定
       - name: Check Supabase configuration
-        id: supabase-config
         run: |
-          # どちらか未設定なら available=false を出力して後続をスキップ
+          # どちらか未設定なら即時エラー終了
           if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_ID" ]; then
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "Supabase settings are missing. Skipping DB types check."
-          else
-            # 設定が揃っている場合のみ型生成・差分チェックを実施
-            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "::error::必須パラメータが未設定です。SUPABASE_ACCESS_TOKEN（Secret）または SUPABASE_PROJECT_ID（Variable）を設定してください。"
+            echo ""
+            echo "[対応方法]"
+            echo "1. Supabase側で値を確認する"
+            echo "   - Project Settings > API で Project URL / Project API Keys を確認"
+            echo "   - Project ID は Project Settings > General で確認"
+            echo "2. GitHubリポジトリで値を設定する"
+            echo "   - Settings > Secrets and variables > Actions > Secrets"
+            echo "     - SUPABASE_ACCESS_TOKEN を登録"
+            echo "   - Settings > Secrets and variables > Actions > Variables"
+            echo "     - SUPABASE_PROJECT_ID を登録"
+            echo "3. 設定後にこのワークフローを再実行する"
+            exit 1
           fi
 
       # Supabase CLIで public スキーマから TypeScript 型を生成し、型定義ファイルへ出力
       - name: Generate Supabase database types
-        # 前段で設定が有効と判定された場合のみ実行
-        if: ${{ steps.supabase-config.outputs.available == 'true' }}
         run: |
           # 実行コマンド:
           # - npx supabase gen types: SupabaseのDBスキーマから型を生成
@@ -85,8 +90,6 @@ jobs:
 
       # 生成結果とコミット済みファイルとの差分を確認し、ズレがあればCIを失敗させる
       - name: Check for drift in generated types
-        # 型生成と同様に、設定が揃っている場合のみ実行
-        if: ${{ steps.supabase-config.outputs.available == 'true' }}
         run: |
           # git diff --quiet は差分なし=0、差分あり=1 を返す
           if ! git diff --quiet app/types/lib/database.types.ts; then
