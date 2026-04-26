@@ -688,7 +688,10 @@ describe("categories-client", () => {
       error: null,
     });
     const shiftUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
-    const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: { message: "shift failed" } });
+    const shiftUpdateBuilder2 = createUpdateBuilder({
+      data: null,
+      error: { message: "shift failed" },
+    });
     const recoveryReorderSelectBuilder = createOrderBuilder({
       data: [{ id: 1 }, { id: 2 }],
       error: null,
@@ -719,6 +722,52 @@ describe("categories-client", () => {
     expect(response.error).toBeInstanceOf(Error);
     expect((response.error as Error).message).toContain("表示順更新に失敗しました");
     expect(recoveryReorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
+  it("registerCategory 正常系: 再採番途中失敗時は1回再試行して復旧できれば成功を返す", async () => {
+    // Step 1: 再採番1回目で途中失敗し、2回目で成功するモックを準備する。
+    const maxOrderBuilder = createOrderLimitBuilder({ data: [{ display_order: 3 }], error: null });
+    const insertBuilder = createInsertBuilder({ data: null, error: null });
+
+    const reorderSelectBuilder1 = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const reorderUpdateFailBuilder = createUpdateBuilder({
+      data: null,
+      error: { message: "reorder failed" },
+    });
+
+    const reorderSelectBuilder2 = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(maxOrderBuilder)
+      .mockReturnValueOnce(insertBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder1)
+      .mockReturnValueOnce(reorderUpdateFailBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder2)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    // Step 2: registerCategory を実行する。
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "last" },
+    });
+
+    // Step 3: 再試行復旧後は成功を返し、再採番selectが2回呼ばれることを検証する。
+    expect(response).toEqual({ success: true, error: null });
+    expect(reorderSelectBuilder1.order).toHaveBeenCalledTimes(1);
+    expect(reorderSelectBuilder2.order).toHaveBeenCalledTimes(1);
   });
 
   it("updateCategory 正常系: 更新成功時に success=true を返す", async () => {
@@ -865,7 +914,11 @@ describe("categories-client", () => {
       error: null,
     });
     const deleteBuilder = createUpdateBuilder({ data: null, error: null });
-    const reorderCategoriesBuilder = createOrderBuilder({
+    const reorderCategoriesBuilder1 = createOrderBuilder({
+      data: null,
+      error: { message: "reorder categories failed" },
+    });
+    const reorderCategoriesBuilder2 = createOrderBuilder({
       data: null,
       error: { message: "reorder categories failed" },
     });
@@ -881,7 +934,8 @@ describe("categories-client", () => {
       .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
       .mockReturnValueOnce(remainingOriginalCheckBuilder)
       .mockReturnValueOnce(deleteBuilder)
-      .mockReturnValueOnce(reorderCategoriesBuilder)
+      .mockReturnValueOnce(reorderCategoriesBuilder1)
+      .mockReturnValueOnce(reorderCategoriesBuilder2)
       .mockReturnValueOnce(rollbackDeleteBuilder)
       .mockReturnValueOnce(rollbackMoveBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
@@ -894,7 +948,8 @@ describe("categories-client", () => {
     expect(response.error).toBeInstanceOf(Error);
     expect((response.error as Error).message).toContain("並び順再採番対象の取得に失敗しました");
     // 再採番の呼び出し有無を明示検証: 再採番処理が実行された上で失敗していることを確認する。
-    expect(reorderCategoriesBuilder.order).toHaveBeenCalledTimes(1);
+    expect(reorderCategoriesBuilder1.order).toHaveBeenCalledTimes(1);
+    expect(reorderCategoriesBuilder2.order).toHaveBeenCalledTimes(1);
     expect(rollbackDeleteBuilder.eq).toHaveBeenCalledWith("id", 10);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);

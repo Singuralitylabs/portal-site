@@ -202,10 +202,7 @@ async function shiftCategoryDisplayOrder(
   }
 }
 
-/**
- * 指定カテゴリー種別の display_order を 1 から連番に再採番する。
- */
-async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise<void> {
+async function executeCategoryReorder(categoryType: CategoryTypeValue): Promise<void> {
   // 論理削除を除いたカテゴリーを表示順で取り出し、1 始まりの連番へ正規化する。
   const supabase = createClientSupabaseClient();
 
@@ -233,6 +230,26 @@ async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise
 
     if (error) {
       throw new Error(`並び順再採番に失敗しました(id: ${category.id}): ${error.message}`);
+    }
+  }
+}
+
+/**
+ * 指定カテゴリー種別の display_order を 1 から連番に再採番する。
+ * 途中失敗時は部分更新の可能性があるため、1回だけ再試行して復旧を試みる。
+ */
+async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise<void> {
+  try {
+    await executeCategoryReorder(categoryType);
+  } catch (error) {
+    console.error("カテゴリー再採番に失敗。再試行で復旧を試みます:", error);
+
+    try {
+      await executeCategoryReorder(categoryType);
+    } catch (retryError) {
+      throw retryError instanceof Error
+        ? retryError
+        : new Error("カテゴリー再採番に失敗しました。");
     }
   }
 }
