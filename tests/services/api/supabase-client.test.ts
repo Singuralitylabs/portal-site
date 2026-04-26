@@ -678,6 +678,49 @@ describe("categories-client", () => {
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
+  it("registerCategory 異常系: シフト途中の更新失敗時は再採番復旧を試行して失敗を返す", async () => {
+    // Step 1: シフト2件目の更新で失敗し、復旧再採番が必要になるモックを準備する。
+    const shiftBuilder = createGteOrderBuilder({
+      data: [
+        { id: 2, display_order: 5 },
+        { id: 1, display_order: 4 },
+      ],
+      error: null,
+    });
+    const shiftUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: { message: "shift failed" } });
+    const recoveryReorderSelectBuilder = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const recoveryReorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const recoveryReorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(shiftBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder1)
+      .mockReturnValueOnce(shiftUpdateBuilder2)
+      .mockReturnValueOnce(recoveryReorderSelectBuilder)
+      .mockReturnValueOnce(recoveryReorderUpdateBuilder1)
+      .mockReturnValueOnce(recoveryReorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    // Step 2: registerCategory を実行する。
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "first" },
+    });
+
+    // Step 3: 失敗レスポンスと、復旧用の再採番が試行されたことを検証する。
+    expect(response.success).toBe(false);
+    expect(response.error).toBeInstanceOf(Error);
+    expect((response.error as Error).message).toContain("表示順更新に失敗しました");
+    expect(recoveryReorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
   it("updateCategory 正常系: 更新成功時に success=true を返す", async () => {
     // Step 1: current 取得・更新・再採番のモックを準備する。
     const currentBuilder = createSelectSingleBuilder({

@@ -178,16 +178,27 @@ async function shiftCategoryDisplayOrder(
     return;
   }
 
-  for (const category of affectedCategories) {
-    // 1件ずつ display_order を +1 して衝突を回避する。
-    const { error } = await supabase
-      .from("categories")
-      .update({ display_order: category.display_order + 1 })
-      .eq("id", category.id);
+  try {
+    for (const category of affectedCategories) {
+      // 1件ずつ display_order を +1 して衝突を回避する。
+      const { error } = await supabase
+        .from("categories")
+        .update({ display_order: category.display_order + 1 })
+        .eq("id", category.id);
 
-    if (error) {
-      throw new Error(`表示順更新に失敗しました(id: ${category.id}): ${error.message}`);
+      if (error) {
+        throw new Error(`表示順更新に失敗しました(id: ${category.id}): ${error.message}`);
+      }
     }
+  } catch (error) {
+    // 部分更新が発生しうるため、失敗時は再採番でベストエフォート復旧する。
+    try {
+      await reorderCategoriesByType(categoryType);
+    } catch (reorderError) {
+      console.error("表示順更新失敗後の再採番復旧に失敗:", reorderError);
+    }
+
+    throw error instanceof Error ? error : new Error("表示順更新に失敗しました。");
   }
 }
 
