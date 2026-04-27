@@ -70,15 +70,16 @@ const createMockQueryBuilder = <T>(
     "update",
   ];
 
-  chainableMethods.forEach((method) => {
+  chainableMethods.forEach(method => {
     builder[method].mockReturnValue(builder);
   });
 
   return builder;
 };
 
-const mockCreateClientSupabaseClient =
-  createClientSupabaseClient as jest.MockedFunction<typeof createClientSupabaseClient>;
+const mockCreateClientSupabaseClient = createClientSupabaseClient as jest.MockedFunction<
+  typeof createClientSupabaseClient
+>;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -256,7 +257,7 @@ describe("reorderItemsInCategory", () => {
     const updateBuilders = items.map(() => createMockQueryBuilder());
     const supabaseStub = { from: jest.fn() };
     supabaseStub.from.mockReturnValueOnce(selectBuilder);
-    updateBuilders.forEach((builder) => {
+    updateBuilders.forEach(builder => {
       supabaseStub.from.mockReturnValueOnce(builder);
     });
     mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
@@ -269,5 +270,42 @@ describe("reorderItemsInCategory", () => {
       // 各 update が対応する item.id を対象にしていることを確認
       expect(builder.eq).toHaveBeenCalledWith("id", items[index].id);
     });
+  });
+
+  /**
+   * @description 並び順対象取得でエラーになった場合の挙動を検証する。
+   */
+  it("異常系：対象取得エラー時は例外を投げる", async () => {
+    const selectBuilder = createMockQueryBuilder({
+      data: undefined,
+      error: { message: "select failed" },
+    });
+    const supabaseStub = { from: jest.fn().mockReturnValue(selectBuilder) };
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await expect(reorderItemsInCategory("videos", 5)).rejects.toThrow(
+      "videos の並び順再採番対象取得に失敗しました: select failed"
+    );
+  });
+
+  /**
+   * @description 再採番 update でエラーになった場合の挙動を検証する。
+   */
+  it("異常系：再採番 update エラー時は例外を投げる", async () => {
+    const items = [{ id: 11 }, { id: 42 }];
+    const selectBuilder = createMockQueryBuilder({ data: items, error: null });
+    const failedUpdateBuilder = createMockQueryBuilder({
+      data: undefined,
+      error: { message: "update failed" },
+    });
+    const supabaseStub = { from: jest.fn() };
+    supabaseStub.from
+      .mockReturnValueOnce(selectBuilder)
+      .mockReturnValueOnce(failedUpdateBuilder);
+    mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
+
+    await expect(reorderItemsInCategory("videos", 5)).rejects.toThrow(
+      "videos の並び順再採番に失敗しました(id: 11): update failed"
+    );
   });
 });
