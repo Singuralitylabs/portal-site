@@ -635,6 +635,53 @@ describe("categories-client", () => {
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
+  it("registerCategory 正常系: first 指定時はシフト後に登録して再採番する", async () => {
+    // Step 1: シフト対象を複数件にした first 配置の成功モックを準備する。
+    const shiftBuilder = createGteOrderBuilder({
+      data: [
+        { id: 2, display_order: 5 },
+        { id: 1, display_order: 4 },
+      ],
+      error: null,
+    });
+    const shiftUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+    const insertBuilder = createInsertBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(shiftBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder1)
+      .mockReturnValueOnce(shiftUpdateBuilder2)
+      .mockReturnValueOnce(insertBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    // Step 2: registerCategory を実行する。
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "first" },
+    });
+
+    // Step 3: 成功レスポンスとシフト更新内容を検証する。
+    expect(response).toEqual({ success: true, error: null });
+    expect(shiftUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 6 });
+    expect(shiftUpdateBuilder1.eq).toHaveBeenCalledWith("id", 2);
+    expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 5 });
+    expect(shiftUpdateBuilder2.eq).toHaveBeenCalledWith("id", 1);
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
   it("registerCategory 異常系: シフト対象が複数件でも逐次更新後に登録失敗時は再採番を試行する", async () => {
     // Step 1: first 配置のシフト対象を複数件にして、insert 失敗になるモックを準備する。
     const shiftBuilder = createGteOrderBuilder({
@@ -802,6 +849,62 @@ describe("categories-client", () => {
     // Step 3: 成功レスポンスを検証する。
     expect(response).toEqual({ success: true, error: null });
     // 再採番の呼び出し有無を明示検証: update 成功時は categories の再採番が実行される。
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
+  it("updateCategory 正常系: after 指定時はシフト後に更新して再採番する", async () => {
+    // Step 1: current 取得、after 基準取得、シフト、更新、再採番の成功モックを準備する。
+    const currentBuilder = createSelectSingleBuilder({
+      data: {
+        display_order: 2,
+        category_type: "documents",
+        name: "カテゴリA",
+        description: "old",
+      },
+      error: null,
+    });
+    const afterBuilder = createSelectSingleBuilder({
+      data: { display_order: 4 },
+      error: null,
+    });
+    const shiftBuilder = createGteOrderBuilder({
+      data: [{ id: 7, display_order: 5 }],
+      error: null,
+    });
+    const shiftUpdateBuilder = createUpdateBuilder({ data: null, error: null });
+    const updateBuilder = createUpdateBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(currentBuilder)
+      .mockReturnValueOnce(afterBuilder)
+      .mockReturnValueOnce(shiftBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder)
+      .mockReturnValueOnce(updateBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    // Step 2: updateCategory を実行する。
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリB",
+      description: "new",
+      position: { type: "after", afterId: 3 },
+    });
+
+    // Step 3: 成功レスポンスとシフト・再採番呼び出しを検証する。
+    expect(response).toEqual({ success: true, error: null });
+    expect(shiftUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 6 });
+    expect(shiftUpdateBuilder.eq).toHaveBeenCalledWith("id", 7);
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
