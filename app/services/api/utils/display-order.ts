@@ -167,9 +167,7 @@ export async function reorderItemsInCategory(
     .order("display_order", { ascending: true });
 
   if (selectError) {
-    throw new Error(
-      `${table} の並び順再採番対象取得に失敗しました: ${selectError.message}`
-    );
+    throw new Error(`${table} の並び順再採番対象取得に失敗しました: ${selectError.message}`);
   }
 
   if (!items || items.length === 0) {

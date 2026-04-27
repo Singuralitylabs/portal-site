@@ -427,10 +427,7 @@ export async function updateCategory({
       } catch (rollbackReorderError) {
         return {
           success: false,
-          error: toError(
-            rollbackReorderError,
-            "更新ロールバック後の再採番に失敗しました。"
-          ),
+          error: toError(rollbackReorderError, "更新ロールバック後の再採番に失敗しました。"),
         };
       }
 

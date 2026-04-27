@@ -299,9 +299,7 @@ describe("reorderItemsInCategory", () => {
       error: { message: "update failed" },
     });
     const supabaseStub = { from: jest.fn() };
-    supabaseStub.from
-      .mockReturnValueOnce(selectBuilder)
-      .mockReturnValueOnce(failedUpdateBuilder);
+    supabaseStub.from.mockReturnValueOnce(selectBuilder).mockReturnValueOnce(failedUpdateBuilder);
     mockCreateClientSupabaseClient.mockReturnValue(supabaseStub as never);
 
     await expect(reorderItemsInCategory("videos", 5)).rejects.toThrow(
