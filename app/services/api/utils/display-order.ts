@@ -159,11 +159,12 @@ export async function reorderItemsInCategory(
 ): Promise<void> {
   const supabase = createClientSupabaseClient();
 
-  // カテゴリー内のアイテムを display_order の昇順で取得（削除済みも含む）
+  // カテゴリー内の未削除アイテムを display_order の昇順で取得する。
   const { data: items, error: selectError } = await supabase
     .from(table)
     .select("id")
     .eq("category_id", categoryId)
+    .eq("is_deleted", false)
     .order("display_order", { ascending: true });
 
   if (selectError) {

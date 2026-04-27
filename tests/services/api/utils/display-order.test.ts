@@ -264,6 +264,10 @@ describe("reorderItemsInCategory", () => {
 
     await reorderItemsInCategory("videos", 5);
 
+    // 未削除データのみを再採番対象にしていることを確認
+    expect(selectBuilder.eq).toHaveBeenNthCalledWith(1, "category_id", 5);
+    expect(selectBuilder.eq).toHaveBeenNthCalledWith(2, "is_deleted", false);
+
     updateBuilders.forEach((builder, index) => {
       // 先頭から連番(1始まり)で display_order が再設定されることを確認
       expect(builder.update).toHaveBeenCalledWith({ display_order: index + 1 });
