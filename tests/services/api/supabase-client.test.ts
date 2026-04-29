@@ -679,6 +679,9 @@ describe("categories-client", () => {
     expect(shiftUpdateBuilder1.eq).toHaveBeenCalledWith("id", 2);
     expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 5 });
     expect(shiftUpdateBuilder2.eq).toHaveBeenCalledWith("id", 1);
+    expect(supabase.from).toHaveBeenNthCalledWith(1, "categories");
+    expect(supabase.from).toHaveBeenNthCalledWith(2, "categories");
+    expect(supabase.from).toHaveBeenNthCalledWith(3, "categories");
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
@@ -720,6 +723,9 @@ describe("categories-client", () => {
     expect(shiftUpdateBuilder1.eq).toHaveBeenCalledWith("id", 2);
     expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 5 });
     expect(shiftUpdateBuilder2.eq).toHaveBeenCalledWith("id", 1);
+    expect(supabase.from).toHaveBeenNthCalledWith(1, "categories");
+    expect(supabase.from).toHaveBeenNthCalledWith(2, "categories");
+    expect(supabase.from).toHaveBeenNthCalledWith(3, "categories");
 
     // Step 4: 失敗時に再採番が試行されたことを検証する。
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
