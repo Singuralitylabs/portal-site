@@ -1125,4 +1125,64 @@ describe("categories-client", () => {
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
   });
+
+  it("deleteCategory 異常系: 未分類側再採番失敗時はロールバック後に双方再採番して失敗を返す", async () => {
+    // Step 1: 未分類側再採番で失敗し、ロールバックと双方再採番へ進むモックを準備する。
+    const deletingCategoryBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "一般", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 1 }, error: null });
+    const contentsToMoveBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const moveBuilder = createUpdateInEqSelectBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const movedToUncategorizedCheckBuilder = createAwaitableSelectInDoubleEqBuilder({
+      data: [{ id: 100 }, { id: 101 }],
+      error: null,
+    });
+    const remainingOriginalCheckBuilder = createAwaitableSelectDoubleEqBuilder({
+      data: [],
+      error: null,
+    });
+    const deleteBuilder = createUpdateBuilder({ data: null, error: null });
+    const rollbackDeleteBuilder = createUpdateBuilder({ data: null, error: null });
+    const rollbackMoveBuilder = createUpdateInEqBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(deletingCategoryBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(contentsToMoveBuilder)
+      .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(movedToUncategorizedCheckBuilder)
+      .mockReturnValueOnce(remainingOriginalCheckBuilder)
+      .mockReturnValueOnce(deleteBuilder)
+      .mockReturnValueOnce(rollbackDeleteBuilder)
+      .mockReturnValueOnce(rollbackMoveBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    reorderItemsInCategoryMock
+      .mockRejectedValueOnce(new Error("uncategorized reorder failed"))
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+
+    // Step 2: deleteCategory を実行する。
+    const response = await deleteCategory(10, "documents");
+
+    // Step 3: 失敗レスポンスとロールバック後の双方再採番呼び出しを検証する。
+    expect(response.success).toBe(false);
+    expect(response.error).toBeInstanceOf(Error);
+    expect((response.error as Error).message).toContain("uncategorized reorder failed");
+    expect(rollbackDeleteBuilder.eq).toHaveBeenCalledWith("id", 10);
+    expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
+    expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 10);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
+  });
 });

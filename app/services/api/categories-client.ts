@@ -739,6 +739,21 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
           return { success: false, error: rollbackError };
         }
 
+        // 未分類側再採番の部分更新を元カテゴリへ持ち帰る可能性があるため、
+        // ロールバック後に双方を再採番して display_order を正規化する。
+        try {
+          await reorderItemsInCategory(tableName, id);
+          await reorderItemsInCategory(tableName, uncategorized.id);
+        } catch (normalizeOrderError) {
+          return {
+            success: false,
+            error: toError(
+              normalizeOrderError,
+              "ロールバック後の表示順正規化に失敗しました。"
+            ),
+          };
+        }
+
         return {
           success: false,
           error: toError(
