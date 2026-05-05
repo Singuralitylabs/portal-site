@@ -377,6 +377,25 @@ describe("content client services", () => {
       consoleError.mockRestore();
     });
 
+    it("register 異常系: 再採番例外時も success=false を返す", async () => {
+      // Step 1: insert は成功し、再採番で例外が発生するモックを準備する。
+      calculateDisplayOrderMock.mockResolvedValue(3);
+      shiftDisplayOrderMock.mockResolvedValue(undefined);
+      reorderItemsInCategoryMock.mockRejectedValueOnce(new Error("reorder failed"));
+
+      const insertBuilder = createInsertBuilder({ data: null, error: null });
+      const supabase = { from: jest.fn(() => insertBuilder) };
+      createClientSupabaseClientMock.mockReturnValue(supabase);
+
+      // Step 2: register 関数を実行する。
+      const response = await registerDocument(registerPayload);
+
+      // Step 3: 例外で落ちずに失敗レスポンスへ正規化されることを検証する。
+      expect(response.success).toBe(false);
+      expect(response.error).toBeInstanceOf(Error);
+      expect((response.error as Error).message).toContain("reorder failed");
+    });
+
     it("update 正常系: カテゴリー変更時は再採番を2回実行する", async () => {
       // Step 1: current 取得・更新成功・再採番系のモックを準備する。
       calculateDisplayOrderMock.mockResolvedValue(4);
@@ -425,6 +444,30 @@ describe("content client services", () => {
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
+    });
+
+    it("update 異常系: 再採番例外時も success=false を返す", async () => {
+      // Step 1: update は成功し、再採番で例外が発生するモックを準備する。
+      calculateDisplayOrderMock.mockResolvedValue(4);
+      shiftDisplayOrderMock.mockResolvedValue(undefined);
+      reorderItemsInCategoryMock.mockRejectedValueOnce(new Error("reorder failed"));
+
+      const currentBuilder = createSelectSingleBuilder({
+        data: { display_order: 2, category_id: 1 },
+        error: null,
+      });
+      const updateBuilder = createUpdateBuilder({ data: null, error: null });
+      const supabase = { from: jest.fn() };
+      supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
+      createClientSupabaseClientMock.mockReturnValue(supabase);
+
+      // Step 2: update 関数を実行する。
+      const response = await updateDocument(updatePayload);
+
+      // Step 3: 例外で落ちずに失敗レスポンスへ正規化されることを検証する。
+      expect(response.success).toBe(false);
+      expect(response.error).toBeInstanceOf(Error);
+      expect((response.error as Error).message).toContain("reorder failed");
     });
   });
 });

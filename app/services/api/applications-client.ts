@@ -93,7 +93,15 @@ export async function registerApplication({
   }
 
   // 登録後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("applications", category_id);
+  try {
+    await reorderItemsInCategory("applications", category_id);
+  } catch (error) {
+    console.error("アプリ登録後の表示順再採番エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("アプリ登録後の表示順再採番に失敗しました。"),
+    };
+  }
 
   return { success: true, error: null };
 }
@@ -160,11 +168,19 @@ export async function updateApplication({
   }
 
   // 更新後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("applications", category_id);
+  try {
+    await reorderItemsInCategory("applications", category_id);
 
-  // カテゴリーが変更された場合、元のカテゴリーも振り直す
-  if (currentCategoryId && currentCategoryId !== category_id) {
-    await reorderItemsInCategory("applications", currentCategoryId);
+    // カテゴリーが変更された場合、元のカテゴリーも振り直す
+    if (currentCategoryId && currentCategoryId !== category_id) {
+      await reorderItemsInCategory("applications", currentCategoryId);
+    }
+  } catch (error) {
+    console.error("アプリ更新後の表示順再採番エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("アプリ更新後の表示順再採番に失敗しました。"),
+    };
   }
 
   return { success: true, error: null };

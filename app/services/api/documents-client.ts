@@ -90,7 +90,15 @@ export async function registerDocument({
   }
 
   // 登録後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("documents", category_id);
+  try {
+    await reorderItemsInCategory("documents", category_id);
+  } catch (error) {
+    console.error("資料登録後の表示順再採番エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("資料登録後の表示順再採番に失敗しました。"),
+    };
+  }
 
   return { success: true, error: null };
 }
@@ -157,11 +165,19 @@ export async function updateDocument({
   }
 
   // 更新後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("documents", category_id);
+  try {
+    await reorderItemsInCategory("documents", category_id);
 
-  // カテゴリーが変更された場合、元のカテゴリーも振り直す
-  if (currentCategoryId && currentCategoryId !== category_id) {
-    await reorderItemsInCategory("documents", currentCategoryId);
+    // カテゴリーが変更された場合、元のカテゴリーも振り直す
+    if (currentCategoryId && currentCategoryId !== category_id) {
+      await reorderItemsInCategory("documents", currentCategoryId);
+    }
+  } catch (error) {
+    console.error("資料更新後の表示順再採番エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("資料更新後の表示順再採番に失敗しました。"),
+    };
   }
 
   return { success: true, error: null };

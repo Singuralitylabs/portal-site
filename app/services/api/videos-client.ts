@@ -88,7 +88,15 @@ export async function registerVideo({
   }
 
   // 登録後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("videos", category_id);
+  try {
+    await reorderItemsInCategory("videos", category_id);
+  } catch (error) {
+    console.error("動画登録後の表示順再採番エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("動画登録後の表示順再採番に失敗しました。"),
+    };
+  }
 
   return { success: true, error: null };
 }
@@ -158,11 +166,19 @@ export async function updateVideo({
   }
 
   // 更新後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("videos", category_id);
+  try {
+    await reorderItemsInCategory("videos", category_id);
 
-  // カテゴリーが変更された場合、元のカテゴリーも振り直す
-  if (currentCategoryId && currentCategoryId !== category_id) {
-    await reorderItemsInCategory("videos", currentCategoryId);
+    // カテゴリーが変更された場合、元のカテゴリーも振り直す
+    if (currentCategoryId && currentCategoryId !== category_id) {
+      await reorderItemsInCategory("videos", currentCategoryId);
+    }
+  } catch (error) {
+    console.error("動画更新後の表示順再採番エラー:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("動画更新後の表示順再採番に失敗しました。"),
+    };
   }
 
   return { success: true, error: null };
