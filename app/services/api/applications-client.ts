@@ -155,7 +155,7 @@ export async function updateApplication({
   // 現在のアプリ情報を取得（現在のdisplay_orderとcategory_idを知るため）
   const { data: currentApp } = await supabase
     .from("applications")
-    .select("display_order, category_id")
+    .select("name, category_id, description, url, developer_id, display_order")
     .eq("id", id)
     .single();
 
@@ -204,9 +204,39 @@ export async function updateApplication({
     }
   } catch (error) {
     console.error("アプリ更新後の表示順再採番エラー:", error);
+
+    if (currentApp) {
+      const { error: rollbackError } = await supabase
+        .from("applications")
+        .update({
+          name: currentApp.name,
+          category_id: currentApp.category_id,
+          description: currentApp.description,
+          url: currentApp.url,
+          developer_id: currentApp.developer_id,
+          display_order: currentApp.display_order,
+          updated_by,
+        })
+        .eq("id", id)
+        .eq("is_deleted", false);
+
+      if (rollbackError) {
+        return {
+          success: false,
+          error: new Error(
+            `アプリ更新後の再採番失敗およびロールバック失敗 (application_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${rollbackError.message}`
+          ),
+        };
+      }
+    }
+
+    const reorderErrorMessage =
+      error instanceof Error ? error.message : "アプリ更新後の表示順再採番に失敗しました。";
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("アプリ更新後の表示順再採番に失敗しました。"),
+      error: new Error(
+        `アプリ更新後の再採番に失敗したため更新をロールバックしました (application_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${reorderErrorMessage}`
+      ),
     };
   }
 

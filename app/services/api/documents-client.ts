@@ -152,7 +152,7 @@ export async function updateDocument({
   // 現在の資料情報を取得（現在のdisplay_orderとcategory_idを知るため）
   const { data: currentDoc } = await supabase
     .from("documents")
-    .select("display_order, category_id")
+    .select("name, category_id, description, url, assignee_id, display_order")
     .eq("id", id)
     .single();
 
@@ -201,9 +201,39 @@ export async function updateDocument({
     }
   } catch (error) {
     console.error("資料更新後の表示順再採番エラー:", error);
+
+    if (currentDoc) {
+      const { error: rollbackError } = await supabase
+        .from("documents")
+        .update({
+          name: currentDoc.name,
+          category_id: currentDoc.category_id,
+          description: currentDoc.description,
+          url: currentDoc.url,
+          assignee_id: currentDoc.assignee_id,
+          display_order: currentDoc.display_order,
+          updated_by,
+        })
+        .eq("id", id)
+        .eq("is_deleted", false);
+
+      if (rollbackError) {
+        return {
+          success: false,
+          error: new Error(
+            `資料更新後の再採番失敗およびロールバック失敗 (document_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${rollbackError.message}`
+          ),
+        };
+      }
+    }
+
+    const reorderErrorMessage =
+      error instanceof Error ? error.message : "資料更新後の表示順再採番に失敗しました。";
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("資料更新後の表示順再採番に失敗しました。"),
+      error: new Error(
+        `資料更新後の再採番に失敗したため更新をロールバックしました (document_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${reorderErrorMessage}`
+      ),
     };
   }
 

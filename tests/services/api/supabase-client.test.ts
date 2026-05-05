@@ -484,12 +484,23 @@ describe("content client services", () => {
       reorderItemsInCategoryMock.mockRejectedValueOnce(new Error("reorder failed"));
 
       const currentBuilder = createSelectSingleBuilder({
-        data: { display_order: 2, category_id: 1 },
+        data: {
+          name: "Doc A",
+          category_id: 1,
+          description: "desc",
+          url: "https://doc.example.com",
+          assignee_id: 1,
+          display_order: 2,
+        },
         error: null,
       });
       const updateBuilder = createUpdateBuilder({ data: null, error: null });
+      const rollbackBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
       const supabase = { from: jest.fn() };
-      supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
+      supabase.from
+        .mockReturnValueOnce(currentBuilder)
+        .mockReturnValueOnce(updateBuilder)
+        .mockReturnValueOnce(rollbackBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
       // Step 2: update 関数を実行する。
@@ -498,7 +509,21 @@ describe("content client services", () => {
       // Step 3: 例外で落ちずに失敗レスポンスへ正規化されることを検証する。
       expect(response.success).toBe(false);
       expect(response.error).toBeInstanceOf(Error);
+      expect((response.error as Error).message).toContain("document_id: 1");
+      expect((response.error as Error).message).toContain("category_id: 2");
+      expect((response.error as Error).message).toContain("previous_category_id: 1");
       expect((response.error as Error).message).toContain("reorder failed");
+      expect(rollbackBuilder.update).toHaveBeenCalledWith({
+        name: "Doc A",
+        category_id: 1,
+        description: "desc",
+        url: "https://doc.example.com",
+        assignee_id: 1,
+        display_order: 2,
+        updated_by: 11,
+      });
+      expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(1, "id", 1);
+      expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(2, "is_deleted", false);
     });
   });
 });

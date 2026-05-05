@@ -151,7 +151,9 @@ export async function updateVideo({
   // 現在の動画情報を取得（現在のdisplay_orderとcategory_idを知るため）
   const { data: currentVideo } = await supabase
     .from("videos")
-    .select("display_order, category_id")
+    .select(
+      "name, category_id, description, url, thumbnail_path, thumbnail_time, length, assignee_id, display_order"
+    )
     .eq("id", id)
     .single();
 
@@ -202,9 +204,42 @@ export async function updateVideo({
     }
   } catch (error) {
     console.error("動画更新後の表示順再採番エラー:", error);
+
+    if (currentVideo) {
+      const { error: rollbackError } = await supabase
+        .from("videos")
+        .update({
+          name: currentVideo.name,
+          category_id: currentVideo.category_id,
+          description: currentVideo.description,
+          url: currentVideo.url,
+          thumbnail_path: currentVideo.thumbnail_path,
+          thumbnail_time: currentVideo.thumbnail_time,
+          length: currentVideo.length,
+          assignee_id: currentVideo.assignee_id,
+          display_order: currentVideo.display_order,
+          updated_by,
+        })
+        .eq("id", id)
+        .eq("is_deleted", false);
+
+      if (rollbackError) {
+        return {
+          success: false,
+          error: new Error(
+            `動画更新後の再採番失敗およびロールバック失敗 (video_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${rollbackError.message}`
+          ),
+        };
+      }
+    }
+
+    const reorderErrorMessage =
+      error instanceof Error ? error.message : "動画更新後の表示順再採番に失敗しました。";
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("動画更新後の表示順再採番に失敗しました。"),
+      error: new Error(
+        `動画更新後の再採番に失敗したため更新をロールバックしました (video_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${reorderErrorMessage}`
+      ),
     };
   }
 
