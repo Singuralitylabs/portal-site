@@ -1167,6 +1167,9 @@ describe("categories-client", () => {
     expect(rollbackDeleteBuilder.eq).toHaveBeenCalledWith("id", 10);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(1, "is_deleted", false);
     expect(rollbackMoveBuilder.eq).toHaveBeenNthCalledWith(2, "category_id", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(1, "documents", 1);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(2, "documents", 10);
+    expect(reorderItemsInCategoryMock).toHaveBeenNthCalledWith(3, "documents", 1);
   });
 
   it("deleteCategory 異常系: 未分類側再採番失敗時はロールバック後に双方再採番して失敗を返す", async () => {
