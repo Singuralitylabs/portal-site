@@ -96,6 +96,15 @@ const createInsertSelectBuilder = (result: QueryResult) => {
   return builder as Required<typeof builder>;
 };
 
+// insert(...).select(...).single() で完結するクエリ用モック
+const createInsertSelectSingleBuilder = (result: QueryResult) => {
+  const builder: { insert?: jest.Mock; select?: jest.Mock; single?: jest.Mock } = {};
+  builder.insert = jest.fn(() => builder);
+  builder.select = jest.fn(() => builder);
+  builder.single = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
 // select(...).eq(...).single() で完結するクエリ用モック
 const createSelectSingleBuilder = (result: QueryResult) => {
   const builder: { select?: jest.Mock; eq?: jest.Mock; single?: jest.Mock } = {};
@@ -176,6 +185,21 @@ const createUpdateInEqBuilder = (result: QueryResult) => {
   let eqCalls = 0;
   builder.update = jest.fn(() => builder);
   builder.in = jest.fn(() => builder);
+  builder.eq = jest.fn(() => {
+    eqCalls += 1;
+    if (eqCalls >= 2) {
+      return Promise.resolve(result);
+    }
+    return builder;
+  });
+  return builder as Required<typeof builder>;
+};
+
+// update(...).eq(...).eq(...) で終端するクエリ用モック
+const createUpdateDoubleEqBuilder = (result: QueryResult) => {
+  const builder: { update?: jest.Mock; eq?: jest.Mock } = {};
+  let eqCalls = 0;
+  builder.update = jest.fn(() => builder);
   builder.eq = jest.fn(() => {
     eqCalls += 1;
     if (eqCalls >= 2) {
@@ -343,7 +367,7 @@ describe("content client services", () => {
       shiftDisplayOrderMock.mockResolvedValue(undefined);
       reorderItemsInCategoryMock.mockResolvedValue(undefined);
 
-      const insertBuilder = createInsertBuilder({ data: null, error: null });
+      const insertBuilder = createInsertSelectSingleBuilder({ data: { id: 101 }, error: null });
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
@@ -363,7 +387,7 @@ describe("content client services", () => {
       reorderItemsInCategoryMock.mockResolvedValue(undefined);
 
       const error = { message: "insert failed" };
-      const insertBuilder = createInsertBuilder({ data: null, error });
+      const insertBuilder = createInsertSelectSingleBuilder({ data: null, error });
       const supabase = { from: jest.fn(() => insertBuilder) };
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
@@ -383,8 +407,10 @@ describe("content client services", () => {
       shiftDisplayOrderMock.mockResolvedValue(undefined);
       reorderItemsInCategoryMock.mockRejectedValueOnce(new Error("reorder failed"));
 
-      const insertBuilder = createInsertBuilder({ data: null, error: null });
-      const supabase = { from: jest.fn(() => insertBuilder) };
+      const insertBuilder = createInsertSelectSingleBuilder({ data: { id: 101 }, error: null });
+      const rollbackBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
+      const supabase = { from: jest.fn() };
+      supabase.from.mockReturnValueOnce(insertBuilder).mockReturnValueOnce(rollbackBuilder);
       createClientSupabaseClientMock.mockReturnValue(supabase);
 
       // Step 2: register 関数を実行する。
@@ -393,7 +419,12 @@ describe("content client services", () => {
       // Step 3: 例外で落ちずに失敗レスポンスへ正規化されることを検証する。
       expect(response.success).toBe(false);
       expect(response.error).toBeInstanceOf(Error);
+      expect((response.error as Error).message).toContain("category_id: 1");
+      expect((response.error as Error).message).toContain("document_id: 101");
       expect((response.error as Error).message).toContain("reorder failed");
+      expect(rollbackBuilder.update).toHaveBeenCalledWith({ is_deleted: true, updated_by: 10 });
+      expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(1, "id", 101);
+      expect(rollbackBuilder.eq).toHaveBeenNthCalledWith(2, "is_deleted", false);
     });
 
     it("update 正常系: カテゴリー変更時は再採番を2回実行する", async () => {

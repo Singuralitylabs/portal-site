@@ -72,19 +72,23 @@ export async function registerApplication({
   }
 
   const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("applications").insert([
-    {
-      name,
-      category_id,
-      description,
-      url,
-      developer_id,
-      display_order,
-      is_deleted: false,
-      created_by,
-      updated_by: created_by,
-    },
-  ]);
+  const { data: insertedApplication, error } = await supabase
+    .from("applications")
+    .insert([
+      {
+        name,
+        category_id,
+        description,
+        url,
+        developer_id,
+        display_order,
+        is_deleted: false,
+        created_by,
+        updated_by: created_by,
+      },
+    ])
+    .select("id")
+    .single();
 
   // エラーが発生した場合はコンソールにエラーメッセージを出力
   if (error) {
@@ -97,9 +101,32 @@ export async function registerApplication({
     await reorderItemsInCategory("applications", category_id);
   } catch (error) {
     console.error("アプリ登録後の表示順再採番エラー:", error);
+
+    const insertedApplicationId = insertedApplication?.id;
+    if (insertedApplicationId !== undefined) {
+      const { error: rollbackError } = await supabase
+        .from("applications")
+        .update({ is_deleted: true, updated_by: created_by })
+        .eq("id", insertedApplicationId)
+        .eq("is_deleted", false);
+
+      if (rollbackError) {
+        return {
+          success: false,
+          error: new Error(
+            `アプリ登録後の再採番失敗およびロールバック失敗 (category_id: ${category_id}, application_id: ${insertedApplicationId}): ${rollbackError.message}`
+          ),
+        };
+      }
+    }
+
+    const reorderErrorMessage =
+      error instanceof Error ? error.message : "アプリ登録後の表示順再採番に失敗しました。";
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("アプリ登録後の表示順再採番に失敗しました。"),
+      error: new Error(
+        `アプリ登録後の再採番に失敗したため登録をロールバックしました (category_id: ${category_id}, application_id: ${insertedApplicationId ?? "unknown"}): ${reorderErrorMessage}`
+      ),
     };
   }
 

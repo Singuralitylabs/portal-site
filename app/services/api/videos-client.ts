@@ -65,22 +65,26 @@ export async function registerVideo({
   }
 
   const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("videos").insert([
-    {
-      name,
-      category_id,
-      description,
-      url,
-      thumbnail_path,
-      thumbnail_time,
-      length,
-      assignee_id,
-      display_order,
-      is_deleted: false,
-      created_by,
-      updated_by: created_by,
-    },
-  ]);
+  const { data: insertedVideo, error } = await supabase
+    .from("videos")
+    .insert([
+      {
+        name,
+        category_id,
+        description,
+        url,
+        thumbnail_path,
+        thumbnail_time,
+        length,
+        assignee_id,
+        display_order,
+        is_deleted: false,
+        created_by,
+        updated_by: created_by,
+      },
+    ])
+    .select("id")
+    .single();
 
   if (error) {
     console.error("動画の登録に失敗:", error);
@@ -92,9 +96,32 @@ export async function registerVideo({
     await reorderItemsInCategory("videos", category_id);
   } catch (error) {
     console.error("動画登録後の表示順再採番エラー:", error);
+
+    const insertedVideoId = insertedVideo?.id;
+    if (insertedVideoId !== undefined) {
+      const { error: rollbackError } = await supabase
+        .from("videos")
+        .update({ is_deleted: true, updated_by: created_by })
+        .eq("id", insertedVideoId)
+        .eq("is_deleted", false);
+
+      if (rollbackError) {
+        return {
+          success: false,
+          error: new Error(
+            `動画登録後の再採番失敗およびロールバック失敗 (category_id: ${category_id}, video_id: ${insertedVideoId}): ${rollbackError.message}`
+          ),
+        };
+      }
+    }
+
+    const reorderErrorMessage =
+      error instanceof Error ? error.message : "動画登録後の表示順再採番に失敗しました。";
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("動画登録後の表示順再採番に失敗しました。"),
+      error: new Error(
+        `動画登録後の再採番に失敗したため登録をロールバックしました (category_id: ${category_id}, video_id: ${insertedVideoId ?? "unknown"}): ${reorderErrorMessage}`
+      ),
     };
   }
 

@@ -69,19 +69,23 @@ export async function registerDocument({
   }
 
   const supabase = createClientSupabaseClient();
-  const { error } = await supabase.from("documents").insert([
-    {
-      name,
-      category_id,
-      description,
-      url,
-      assignee_id,
-      display_order,
-      is_deleted: false,
-      created_by,
-      updated_by: created_by,
-    },
-  ]);
+  const { data: insertedDocument, error } = await supabase
+    .from("documents")
+    .insert([
+      {
+        name,
+        category_id,
+        description,
+        url,
+        assignee_id,
+        display_order,
+        is_deleted: false,
+        created_by,
+        updated_by: created_by,
+      },
+    ])
+    .select("id")
+    .single();
 
   // エラーが発生した場合はコンソールにエラーメッセージを出力
   if (error) {
@@ -94,9 +98,32 @@ export async function registerDocument({
     await reorderItemsInCategory("documents", category_id);
   } catch (error) {
     console.error("資料登録後の表示順再採番エラー:", error);
+
+    const insertedDocumentId = insertedDocument?.id;
+    if (insertedDocumentId !== undefined) {
+      const { error: rollbackError } = await supabase
+        .from("documents")
+        .update({ is_deleted: true, updated_by: created_by })
+        .eq("id", insertedDocumentId)
+        .eq("is_deleted", false);
+
+      if (rollbackError) {
+        return {
+          success: false,
+          error: new Error(
+            `資料登録後の再採番失敗およびロールバック失敗 (category_id: ${category_id}, document_id: ${insertedDocumentId}): ${rollbackError.message}`
+          ),
+        };
+      }
+    }
+
+    const reorderErrorMessage =
+      error instanceof Error ? error.message : "資料登録後の表示順再採番に失敗しました。";
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("資料登録後の表示順再採番に失敗しました。"),
+      error: new Error(
+        `資料登録後の再採番に失敗したため登録をロールバックしました (category_id: ${category_id}, document_id: ${insertedDocumentId ?? "unknown"}): ${reorderErrorMessage}`
+      ),
     };
   }
 
