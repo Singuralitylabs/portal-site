@@ -45,7 +45,7 @@ export async function deleteDocument(id: number, userId: number) {
 }
 
 /**
- * クライアント側で資料を登録する
+ * サーバーサイドで資料を登録する
  * @param DocumentInsertFormType 資料のデータ
  * @return 登録結果
  * - success: 成功した場合はtrue
@@ -96,7 +96,7 @@ export async function registerDocument({
 }
 
 /**
- * クライアント側で資料を更新する
+ * サーバーサイドで資料を更新する
  * @param DocumentUpdateFormType 資料の更新データ
  * @return 更新結果
  * - success: 成功した場合はtrue

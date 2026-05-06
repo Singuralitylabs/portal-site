@@ -48,7 +48,7 @@ export async function deleteApplication(id: number, userId: number) {
 }
 
 /**
- * クライアント側でアプリを登録する
+ * サーバーサイドでアプリを登録する
  * @param ApplicationInsertFormType アプリのデータ
  * @return 登録結果
  * - success: 成功した場合はtrue
@@ -99,7 +99,7 @@ export async function registerApplication({
 }
 
 /**
- * クライアント側でアプリを更新する
+ * サーバーサイドでアプリを更新する
  * @param ApplicationUpdateFormType アプリの更新データ
  * @return 更新結果
  * - success: 成功した場合はtrue
