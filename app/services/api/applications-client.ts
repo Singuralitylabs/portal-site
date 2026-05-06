@@ -100,9 +100,12 @@ export async function registerApplication({
   try {
     await reorderItemsInCategory("applications", category_id);
   } catch (error) {
-    console.error("アプリ登録後の表示順再採番エラー:", error);
-
     const insertedApplicationId = insertedApplication?.id;
+    console.error(
+      `アプリ登録後の表示順再採番エラー (category_id: ${category_id}, application_id: ${insertedApplicationId ?? "unknown"}):`,
+      error
+    );
+
     if (insertedApplicationId !== undefined) {
       const { error: rollbackError } = await supabase
         .from("applications")
