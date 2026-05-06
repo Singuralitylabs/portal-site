@@ -55,7 +55,7 @@ const supabaseClientActual = jest.requireActual(
 type QueryResult = { data: unknown; error: unknown };
 
 // ORIGINAL_ENV: createClientSupabaseClient 単体テストで環境変数を改変した後に戻すための退避値。
-const ORIGINAL_ENV = process.env;
+const ORIGINAL_ENV = { ...process.env };
 
 jest.mock("@supabase/ssr", () => ({
   createBrowserClient: jest.fn(),
@@ -258,7 +258,7 @@ describe("supabase-client", () => {
   });
 
   afterAll(() => {
-    process.env = ORIGINAL_ENV;
+    process.env = { ...ORIGINAL_ENV };
   });
 
   it("環境変数を利用して Supabase クライアントを生成する", () => {
