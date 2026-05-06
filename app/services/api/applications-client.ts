@@ -72,23 +72,19 @@ export async function registerApplication({
   }
 
   const supabase = createClientSupabaseClient();
-  const { data: insertedApplication, error } = await supabase
-    .from("applications")
-    .insert([
-      {
-        name,
-        category_id,
-        description,
-        url,
-        developer_id,
-        display_order,
-        is_deleted: false,
-        created_by,
-        updated_by: created_by,
-      },
-    ])
-    .select("id")
-    .single();
+  const { error } = await supabase.from("applications").insert([
+    {
+      name,
+      category_id,
+      description,
+      url,
+      developer_id,
+      display_order,
+      is_deleted: false,
+      created_by,
+      updated_by: created_by,
+    },
+  ]);
 
   // エラーが発生した場合はコンソールにエラーメッセージを出力
   if (error) {
@@ -97,41 +93,7 @@ export async function registerApplication({
   }
 
   // 登録後、カテゴリー内の display_order を振り直す
-  try {
-    await reorderItemsInCategory("applications", category_id);
-  } catch (error) {
-    const insertedApplicationId = insertedApplication?.id;
-    console.error(
-      `アプリ登録後の表示順再採番エラー (category_id: ${category_id}, application_id: ${insertedApplicationId ?? "unknown"}):`,
-      error
-    );
-
-    if (insertedApplicationId !== undefined) {
-      const { error: rollbackError } = await supabase
-        .from("applications")
-        .update({ is_deleted: true, updated_by: created_by })
-        .eq("id", insertedApplicationId)
-        .eq("is_deleted", false);
-
-      if (rollbackError) {
-        return {
-          success: false,
-          error: new Error(
-            `アプリ登録後の再採番失敗およびロールバック失敗 (category_id: ${category_id}, application_id: ${insertedApplicationId}): ${rollbackError.message}`
-          ),
-        };
-      }
-    }
-
-    const reorderErrorMessage =
-      error instanceof Error ? error.message : "アプリ登録後の表示順再採番に失敗しました。";
-    return {
-      success: false,
-      error: new Error(
-        `アプリ登録後の再採番に失敗したため登録をロールバックしました (category_id: ${category_id}, application_id: ${insertedApplicationId ?? "unknown"}): ${reorderErrorMessage}`
-      ),
-    };
-  }
+  await reorderItemsInCategory("applications", category_id);
 
   return { success: true, error: null };
 }
@@ -158,7 +120,7 @@ export async function updateApplication({
   // 現在のアプリ情報を取得（現在のdisplay_orderとcategory_idを知るため）
   const { data: currentApp } = await supabase
     .from("applications")
-    .select("name, category_id, description, url, developer_id, display_order")
+    .select("display_order, category_id")
     .eq("id", id)
     .single();
 
@@ -198,49 +160,11 @@ export async function updateApplication({
   }
 
   // 更新後、カテゴリー内の display_order を振り直す
-  try {
-    await reorderItemsInCategory("applications", category_id);
+  await reorderItemsInCategory("applications", category_id);
 
-    // カテゴリーが変更された場合、元のカテゴリーも振り直す
-    if (currentCategoryId && currentCategoryId !== category_id) {
-      await reorderItemsInCategory("applications", currentCategoryId);
-    }
-  } catch (error) {
-    console.error("アプリ更新後の表示順再採番エラー:", error);
-
-    if (currentApp) {
-      const { error: rollbackError } = await supabase
-        .from("applications")
-        .update({
-          name: currentApp.name,
-          category_id: currentApp.category_id,
-          description: currentApp.description,
-          url: currentApp.url,
-          developer_id: currentApp.developer_id,
-          display_order: currentApp.display_order,
-          updated_by,
-        })
-        .eq("id", id)
-        .eq("is_deleted", false);
-
-      if (rollbackError) {
-        return {
-          success: false,
-          error: new Error(
-            `アプリ更新後の再採番失敗およびロールバック失敗 (application_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${rollbackError.message}`
-          ),
-        };
-      }
-    }
-
-    const reorderErrorMessage =
-      error instanceof Error ? error.message : "アプリ更新後の表示順再採番に失敗しました。";
-    return {
-      success: false,
-      error: new Error(
-        `アプリ更新後の再採番に失敗したため更新をロールバックしました (application_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}): ${reorderErrorMessage}`
-      ),
-    };
+  // カテゴリーが変更された場合、元のカテゴリーも振り直す
+  if (currentCategoryId && currentCategoryId !== category_id) {
+    await reorderItemsInCategory("applications", currentCategoryId);
   }
 
   return { success: true, error: null };

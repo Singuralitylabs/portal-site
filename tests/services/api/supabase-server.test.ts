@@ -442,7 +442,7 @@ describe("supabase-server module", () => {
   });
 
   afterAll(() => {
-    process.env = { ...originalEnv };
+    process.env = originalEnv;
   });
 
   it("createServerSupabaseClient: 環境変数を利用してクライアントを生成する", async () => {
