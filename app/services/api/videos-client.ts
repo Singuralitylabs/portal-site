@@ -203,7 +203,10 @@ export async function updateVideo({
       await reorderItemsInCategory("videos", currentCategoryId);
     }
   } catch (error) {
-    console.error("動画更新後の表示順再採番エラー:", error);
+    console.error(
+      `動画更新後の表示順再採番エラー (video_id: ${id}, category_id: ${category_id}, previous_category_id: ${currentCategoryId ?? "unknown"}):`,
+      error
+    );
 
     if (currentVideo) {
       const { error: rollbackError } = await supabase
