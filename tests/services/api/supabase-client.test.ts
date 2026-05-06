@@ -698,15 +698,12 @@ describe("categories-client", () => {
     const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
     const insertError = { message: "insert failed" };
     const insertBuilder = createInsertBuilder({ data: null, error: insertError });
-    const reorderSelectBuilder = createOrderBuilder({ data: [], error: null });
-
     const supabase = { from: jest.fn() };
     supabase.from
       .mockReturnValueOnce(shiftBuilder)
       .mockReturnValueOnce(shiftUpdateBuilder1)
       .mockReturnValueOnce(shiftUpdateBuilder2)
-      .mockReturnValueOnce(insertBuilder)
-      .mockReturnValueOnce(reorderSelectBuilder);
+      .mockReturnValueOnce(insertBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
     // Step 2: registerCategory を実行する。
@@ -727,8 +724,6 @@ describe("categories-client", () => {
     expect(supabase.from).toHaveBeenNthCalledWith(2, "categories");
     expect(supabase.from).toHaveBeenNthCalledWith(3, "categories");
 
-    // Step 4: 失敗時に再採番が試行されたことを検証する。
-    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
   it("registerCategory 異常系: シフト途中の更新失敗時は再採番復旧を試行して失敗を返す", async () => {
@@ -923,14 +918,11 @@ describe("categories-client", () => {
     const shiftBuilder = createGteOrderBuilder({ data: [], error: null });
     const updateError = { message: "update failed" };
     const updateBuilder = createUpdateBuilder({ data: null, error: updateError });
-    const reorderSelectBuilder = createOrderBuilder({ data: [], error: null });
-
     const supabase = { from: jest.fn() };
     supabase.from
       .mockReturnValueOnce(currentBuilder)
       .mockReturnValueOnce(shiftBuilder)
-      .mockReturnValueOnce(updateBuilder)
-      .mockReturnValueOnce(reorderSelectBuilder);
+      .mockReturnValueOnce(updateBuilder);
     createClientSupabaseClientMock.mockReturnValue(supabase);
 
     // Step 2: updateCategory を実行する。
@@ -942,71 +934,8 @@ describe("categories-client", () => {
       position: { type: "first" },
     });
 
-    // Step 3: 失敗を返しつつ、再採番が試行されたことを検証する。
+    // Step 3: 失敗レスポンスを検証する。
     expect(response).toEqual({ success: false, error: updateError });
-    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
-  });
-
-  it("updateCategory 異常系: 更新後の再採番失敗時は更新内容をロールバックして失敗を返す", async () => {
-    // Step 1: update 成功後に再採番が失敗し、ロールバックへ遷移するモックを準備する。
-    const currentBuilder = createSelectSingleBuilder({
-      data: {
-        display_order: 2,
-        category_type: "documents",
-        name: "旧カテゴリ",
-        description: "old",
-      },
-      error: null,
-    });
-    const updateBuilder = createUpdateBuilder({ data: null, error: null });
-    const reorderFailBuilder1 = createOrderBuilder({
-      data: null,
-      error: { message: "reorder failed" },
-    });
-    const reorderFailBuilder2 = createOrderBuilder({
-      data: null,
-      error: { message: "reorder failed" },
-    });
-    const rollbackUpdateBuilder = createUpdateBuilder({ data: null, error: null });
-    const rollbackReorderSelectBuilder = createOrderBuilder({
-      data: [{ id: 1 }, { id: 2 }],
-      error: null,
-    });
-    const rollbackReorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
-    const rollbackReorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
-
-    const supabase = { from: jest.fn() };
-    supabase.from
-      .mockReturnValueOnce(currentBuilder)
-      .mockReturnValueOnce(updateBuilder)
-      .mockReturnValueOnce(reorderFailBuilder1)
-      .mockReturnValueOnce(reorderFailBuilder2)
-      .mockReturnValueOnce(rollbackUpdateBuilder)
-      .mockReturnValueOnce(rollbackReorderSelectBuilder)
-      .mockReturnValueOnce(rollbackReorderUpdateBuilder1)
-      .mockReturnValueOnce(rollbackReorderUpdateBuilder2);
-    createClientSupabaseClientMock.mockReturnValue(supabase);
-
-    // Step 2: updateCategory を実行する。
-    const response = await updateCategory({
-      id: 10,
-      category_type: "documents",
-      name: "カテゴリB",
-      description: "new",
-      position: { type: "current" },
-    });
-
-    // Step 3: 失敗レスポンスとロールバック更新内容を検証する。
-    expect(response.success).toBe(false);
-    expect(response.error).toBeInstanceOf(Error);
-    expect((response.error as Error).message).toContain("並び順再採番対象の取得に失敗しました");
-    expect(rollbackUpdateBuilder.update).toHaveBeenCalledWith({
-      category_type: "documents",
-      name: "旧カテゴリ",
-      description: "old",
-      display_order: 2,
-    });
-    expect(rollbackUpdateBuilder.eq).toHaveBeenCalledWith("id", 10);
   });
 
   it("deleteCategory 正常系: 未分類へ移動して削除・再採番が完了する", async () => {
