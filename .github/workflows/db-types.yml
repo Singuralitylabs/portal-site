@@ -88,19 +88,8 @@ jobs:
             exit 1
           fi
 
-          # 実行コマンド:
-          # - npx supabase gen types: SupabaseのDBスキーマから型を生成
-          # - --lang=typescript: 出力言語をTypeScriptに指定
-          # - --project-id: 生成対象のSupabaseプロジェクトを指定
-          # - --schema public: publicスキーマのみ対象
-          # - > app/types/lib/database.types.ts: 生成結果を既存型定義へ上書き出力
-          npx supabase gen types \
-            --lang=typescript \
-            --project-id "$SUPABASE_PROJECT_ID" \
-            --schema public \
-            > app/types/lib/database.types.ts
-          # package.json の db:types と同様に、生成後に対象ファイルを整形
-          npx prettier --write app/types/lib/database.types.ts
+          # 共通スクリプト経由で型生成と整形を実行（ローカル/CIの設定差分を防止）
+          npm run db:types:ci
 
       # 生成結果とコミット済みファイルとの差分を確認し、ズレがあればCIを失敗させる
       - name: Check for drift in generated types

@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "format:check": "prettier --check . --ignore-unknown",
     "format": "prettier --write . --ignore-unknown",
-    "db:types": "bash -c '. ./.env.local && npx supabase gen types --lang=typescript --project-id ${SUPABASE_PROJECT_ID} --schema public > app/types/lib/database.types.ts && npx prettier --write app/types/lib/database.types.ts'",
+    "db:types": "bash -c '. ./.env.local && npm run db:types:ci'",
+    "db:types:ci": "npx supabase gen types --lang=typescript --project-id ${SUPABASE_PROJECT_ID} --schema public > app/types/lib/database.types.ts && npx prettier --write app/types/lib/database.types.ts",
     "lint:logs": "node scripts/lint-logs.cjs",
     "test": "jest --verbose --coverage"
   },
