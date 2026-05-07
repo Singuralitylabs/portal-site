@@ -23,6 +23,8 @@ jobs:
   db-types:
     name: Validate Supabase types
     runs-on: ubuntu-latest
+    # fork 由来の pull_request では secrets/vars が利用できないためジョブをスキップ
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     # 事前設定が必要なパラメータ:
     # 1) SUPABASE_ACCESS_TOKEN
     #    - 設定箇所: GitHub Repository > Settings > Secrets and variables > Actions > Secrets
