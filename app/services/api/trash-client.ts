@@ -21,6 +21,7 @@ export async function restoreDocument(id: number, userId: number): Promise<Resto
       .from("documents")
       .select("category_id")
       .eq("id", id)
+      .eq("is_deleted", true)
       .single();
 
     if (fetchError || !doc) {
@@ -46,7 +47,8 @@ export async function restoreDocument(id: number, userId: number): Promise<Resto
         display_order: newDisplayOrder,
         updated_by: userId,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("is_deleted", true);
 
     if (updateError) {
       return { success: false, error: updateError };
@@ -76,6 +78,7 @@ export async function restoreVideo(id: number, userId: number): Promise<RestoreR
       .from("videos")
       .select("category_id")
       .eq("id", id)
+      .eq("is_deleted", true)
       .single();
 
     if (fetchError || !video) {
@@ -101,7 +104,8 @@ export async function restoreVideo(id: number, userId: number): Promise<RestoreR
         display_order: newDisplayOrder,
         updated_by: userId,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("is_deleted", true);
 
     if (updateError) {
       return { success: false, error: updateError };
@@ -131,6 +135,7 @@ export async function restoreApplication(id: number, userId: number): Promise<Re
       .from("applications")
       .select("category_id")
       .eq("id", id)
+      .eq("is_deleted", true)
       .single();
 
     if (fetchError || !app) {
@@ -156,7 +161,8 @@ export async function restoreApplication(id: number, userId: number): Promise<Re
         display_order: newDisplayOrder,
         updated_by: userId,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("is_deleted", true);
 
     if (updateError) {
       return { success: false, error: updateError };
@@ -185,6 +191,7 @@ export async function restoreCategory(id: number): Promise<RestoreResult> {
       .from("categories")
       .select("category_type")
       .eq("id", id)
+      .eq("is_deleted", true)
       .single();
 
     if (fetchError || !category) {
@@ -209,7 +216,8 @@ export async function restoreCategory(id: number): Promise<RestoreResult> {
         is_deleted: false,
         display_order: newDisplayOrder,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("is_deleted", true);
 
     if (updateError) {
       return { success: false, error: updateError };
