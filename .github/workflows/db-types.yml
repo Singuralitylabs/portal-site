@@ -28,7 +28,7 @@ jobs:
     #    - 設定箇所: GitHub Repository > Settings > Secrets and variables > Actions > Secrets
     # 2) SUPABASE_PROJECT_ID
     #    - 設定箇所: GitHub Repository > Settings > Secrets and variables > Actions > Variables
-    # どちらか未設定の場合は、後続の型生成/差分チェックをスキップします。
+    # どちらか未設定の場合は、エラー終了して対応方法を表示します。
     env:
       # Supabase CLI認証に使用するトークン（GitHub Secrets）
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
