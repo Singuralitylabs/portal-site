@@ -22,7 +22,7 @@ CREATE POLICY "content_managers_can_insert_videos" ON "videos"
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    is_content_manager()
+    is_active_user() AND is_content_manager()
   );
 
 -- UPDATE: adminまたはmaintainerがvideosを更新可能
@@ -31,11 +31,10 @@ CREATE POLICY "content_managers_can_update_videos" ON "videos"
   FOR UPDATE
   TO authenticated
   USING (
-    is_deleted = FALSE
-    AND is_content_manager()
+    is_active_user() AND is_content_manager()
   )
   WITH CHECK (
-    is_content_manager()
+    is_active_user() AND is_content_manager()
   );
 
 -- 物理削除の禁止（DELETEクエリを実行できないようにする）

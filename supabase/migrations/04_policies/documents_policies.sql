@@ -8,10 +8,8 @@ CREATE POLICY "authenticated_users_can_read_documents" ON "documents"
   USING (
     is_active_user()
     AND (
-      -- 一般ユーザー: 削除されていないもののみ
       is_deleted = FALSE
       OR
-      -- admin/maintainer: 削除済みも含めてすべて閲覧可能
       is_content_manager()
     )
   );
@@ -22,7 +20,7 @@ CREATE POLICY "content_managers_can_insert_documents" ON "documents"
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    is_content_manager()
+    is_active_user() AND is_content_manager()
   );
 
 -- UPDATE: adminまたはmaintainerがdocumentsを更新可能
@@ -31,11 +29,10 @@ CREATE POLICY "content_managers_can_update_documents" ON "documents"
   FOR UPDATE
   TO authenticated
   USING (
-    is_deleted = FALSE
-    AND is_content_manager()
+    is_active_user() AND is_content_manager()
   )
   WITH CHECK (
-    is_content_manager()
+    is_active_user() AND is_content_manager()
   );
 
 -- 物理削除の禁止（DELETEクエリを実行できないようにする）

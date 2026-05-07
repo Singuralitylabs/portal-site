@@ -32,7 +32,7 @@ CREATE POLICY "content_managers_can_insert" ON "position_tags"
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    is_content_manager()
+    is_active_user() AND is_content_manager()
   );
 
 -- UPDATE: ユーザーは自身のデータのみ更新可能
@@ -69,10 +69,10 @@ CREATE POLICY "content_managers_can_update" ON "position_tags"
   FOR UPDATE
   TO authenticated
   USING (
-    is_content_manager()
+    is_active_user() AND is_content_manager()
   )
   WITH CHECK (
-    is_content_manager()
+    is_active_user() AND is_content_manager()
   );
 
 -- DELETE: ユーザーは自身のデータのみを、管理者またはメンテナーは全データを物理削除可能
@@ -91,7 +91,7 @@ CREATE POLICY "self_user_or_admins_can_physical_delete" ON "position_tags"
             AND users.is_deleted = FALSE
         )
         OR
-        is_content_manager()
+        (is_active_user() AND is_content_manager())
       );
 
 -- RLSを有効化
