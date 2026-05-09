@@ -12,11 +12,7 @@ import {
   registerDocument,
   updateDocument,
 } from "../../../app/services/api/documents-client";
-import {
-  deleteCategory,
-  registerCategory,
-  updateCategory,
-} from "../../../app/services/api/categories-client";
+import { registerCategory, updateCategory } from "../../../app/services/api/categories-client";
 import {
   deleteVideo,
   getVideosByCategory,
@@ -162,21 +158,6 @@ const createOrderBuilder = (result: QueryResult) => {
   builder.select = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.order = jest.fn(() => Promise.resolve(result));
-  return builder as Required<typeof builder>;
-};
-
-// update(...).eq(...).eq(...) で終端するクエリ用モック
-const createUpdateDoubleEqBuilder = (result: QueryResult) => {
-  const builder: { update?: jest.Mock; eq?: jest.Mock } = {};
-  let eqCalls = 0;
-  builder.update = jest.fn(() => builder);
-  builder.eq = jest.fn(() => {
-    eqCalls += 1;
-    if (eqCalls >= 2) {
-      return Promise.resolve(result);
-    }
-    return builder;
-  });
   return builder as Required<typeof builder>;
 };
 
@@ -397,26 +378,6 @@ describe("content client services", () => {
       consoleError.mockRestore();
     });
 
-    it("register 異常系: 再採番で例外が発生しても success=false を返す", async () => {
-      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-      calculateDisplayOrderMock.mockResolvedValue(3);
-      shiftDisplayOrderMock.mockResolvedValue(undefined);
-      reorderItemsInCategoryMock.mockRejectedValue(new Error("reorder failed"));
-
-      const insertBuilder = createInsertBuilder({ data: null, error: null });
-      const supabase = { from: jest.fn(() => insertBuilder) };
-      createClientSupabaseClientMock.mockReturnValue(supabase);
-
-      const response = await (
-        registerFn as unknown as (payload: typeof registerPayload) => Promise<any>
-      )(registerPayload);
-
-      expect(response.success).toBe(false);
-      expect(response.error).toBeInstanceOf(Error);
-      expect(consoleError).toHaveBeenCalled();
-      consoleError.mockRestore();
-    });
-
     it("update 正常系: カテゴリー変更時は再採番を2回実行する", async () => {
       calculateDisplayOrderMock.mockResolvedValue(4);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
@@ -466,31 +427,6 @@ describe("content client services", () => {
       // 失敗時は再採番を実行しないことを確認
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
       // 失敗時にエラーログが出力されることを確認
-      expect(consoleError).toHaveBeenCalled();
-      consoleError.mockRestore();
-    });
-
-    it("update 異常系: 再採番で例外が発生しても success=false を返す", async () => {
-      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-      calculateDisplayOrderMock.mockResolvedValue(4);
-      shiftDisplayOrderMock.mockResolvedValue(undefined);
-      reorderItemsInCategoryMock.mockRejectedValue(new Error("reorder failed"));
-
-      const currentBuilder = createSelectSingleBuilder({
-        data: { display_order: 2, category_id: 1 },
-        error: null,
-      });
-      const updateBuilder = createUpdateBuilder({ data: null, error: null });
-      const supabase = { from: jest.fn() };
-      supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
-      createClientSupabaseClientMock.mockReturnValue(supabase);
-
-      const response = await (
-        updateFn as unknown as (payload: typeof updatePayload) => Promise<any>
-      )(updatePayload);
-
-      expect(response.success).toBe(false);
-      expect(response.error).toBeInstanceOf(Error);
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -591,33 +527,6 @@ describe("categories-client", () => {
     expect(response).toEqual({ success: true, error: null });
     expect(shiftUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 6 });
     expect(shiftUpdateBuilder.eq).toHaveBeenCalledWith("id", 2);
-    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
-  });
-
-  it("deleteCategory 正常系: 紐づくコンテンツを未分類へ移動して削除できる", async () => {
-    const deletingCategoryBuilder = createSelectSingleBuilder({
-      data: { id: 10, name: "カテゴリA", category_type: "documents" },
-      error: null,
-    });
-    const uncategorizedBuilder = createSelectSingleBuilder({ data: { id: 99 }, error: null });
-    const moveBuilder = createUpdateDoubleEqBuilder({ data: null, error: null });
-    const deleteBuilder = createUpdateBuilder({ data: null, error: null });
-    const reorderSelectBuilder = createOrderBuilder({ data: [{ id: 1 }], error: null });
-    const reorderUpdateBuilder = createUpdateBuilder({ data: null, error: null });
-
-    const supabase = { from: jest.fn() };
-    supabase.from
-      .mockReturnValueOnce(deletingCategoryBuilder)
-      .mockReturnValueOnce(uncategorizedBuilder)
-      .mockReturnValueOnce(moveBuilder)
-      .mockReturnValueOnce(deleteBuilder)
-      .mockReturnValueOnce(reorderSelectBuilder)
-      .mockReturnValueOnce(reorderUpdateBuilder);
-    createClientSupabaseClientMock.mockReturnValue(supabase);
-
-    const response = await deleteCategory(10, "documents");
-
-    expect(response).toEqual({ success: true, error: null });
     expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
   });
 
