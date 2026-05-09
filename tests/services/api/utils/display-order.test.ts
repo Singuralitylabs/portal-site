@@ -10,22 +10,6 @@ import {
   shiftDisplayOrder,
 } from "../../../../app/services/api/utils/display-order";
 
-/**
- * スクリプト概要:
- * このテストファイルは `display-order.ts` の4関数
- * (`getItemsByCategory` / `calculateDisplayOrder` / `shiftDisplayOrder` / `reorderItemsInCategory`)
- * のクエリ構築と戻り値整形を検証する。
- *
- * スクリプト処理内容:
- * - Supabase クエリチェーン（select/eq/order/update など）をモックで再現する
- * - 正常系/異常系で期待される戻り値と副作用（更新クエリ呼び出し）を検証する
- *
- * 処理ステップ（このテストスクリプト全体）:
- * - Step 1: `createClientSupabaseClient` をモック化し、外部依存を固定する
- * - Step 2: `createMockQueryBuilder` でチェーン可能なクエリモックを生成する
- * - Step 3: 対象関数を実行し、戻り値・ログ・クエリ呼び出し内容を検証する
- */
-
 type QueryResponse<T> = {
   data?: T;
   error?: { message: string } | null;

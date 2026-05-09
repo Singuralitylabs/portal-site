@@ -18,25 +18,10 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
- * スクリプト概要:
- * このテストファイルは、サーバー側 API 層（`app/services/api/*-server.ts`）の
- * Supabase クエリ実行と戻り値整形を検証する。
- *
- * 主な目的:
- * - 一覧/単体取得の正常系・異常系の戻り値仕様を担保する
- * - users-server の整形ロジック（既定値・絞り込み）を担保する
- * - `createServerSupabaseClient` / `getServerCurrentUser` のモジュール本体挙動を担保する
- *
- * 主な定義:
- * - `QueryResult`: Supabase クエリモックの戻り値型（`data` / `error`）
- * - `create*Builder`: Supabase のメソッドチェーンを模擬するビルダー群
- *
- * 処理ステップ（このテストスクリプト全体）:
- * - Step 1: server 側 API モジュールと Supabase 依存を import し、jest.mock で差し替える
- * - Step 2: create*Builder 群で一覧/単体/更新クエリのモックチェーンを構築する
- * - Step 3: API 実行結果の戻り値整形（data/error）とログ出力、副作用を検証する
+ * サーバー側 Supabase サービス群のテスト。
+ * - 対象関数: 各 fetch 系関数 / createServerSupabaseClient / getServerCurrentUser
+ * - 検証観点: 正常系データ返却、異常系エラー返却、環境変数を使ったクライアント生成
  */
-// supabaseServerActual: mock 経由ではなくモジュール本体関数を直接検証するための参照。
 const supabaseServerActual = jest.requireActual(
   "../../../app/services/api/supabase-server"
 ) as typeof import("../../../app/services/api/supabase-server");

@@ -93,7 +93,14 @@ export async function registerApplication({
   }
 
   // 登録後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("applications", category_id);
+  try {
+    await reorderItemsInCategory("applications", category_id);
+  } catch (error) {
+    const reorderError =
+      error instanceof Error ? error : new Error("アプリの並び順再採番に失敗しました。");
+    console.error("Supabase アプリ登録エラー:", reorderError.message);
+    return { success: false, error: reorderError };
+  }
 
   return { success: true, error: null };
 }
@@ -160,11 +167,18 @@ export async function updateApplication({
   }
 
   // 更新後、カテゴリー内の display_order を振り直す
-  await reorderItemsInCategory("applications", category_id);
+  try {
+    await reorderItemsInCategory("applications", category_id);
 
-  // カテゴリーが変更された場合、元のカテゴリーも振り直す
-  if (currentCategoryId && currentCategoryId !== category_id) {
-    await reorderItemsInCategory("applications", currentCategoryId);
+    // カテゴリーが変更された場合、元のカテゴリーも振り直す
+    if (currentCategoryId && currentCategoryId !== category_id) {
+      await reorderItemsInCategory("applications", currentCategoryId);
+    }
+  } catch (error) {
+    const reorderError =
+      error instanceof Error ? error : new Error("アプリの並び順再採番に失敗しました。");
+    console.error("Supabase アプリ更新エラー:", reorderError.message);
+    return { success: false, error: reorderError };
   }
 
   return { success: true, error: null };

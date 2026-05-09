@@ -39,26 +39,10 @@ import {
 } from "../../../app/services/api/utils/display-order";
 
 /**
- * スクリプト概要:
- * このテストファイルは、クライアント側 API 層（`app/services/api/*-client.ts`）の
- * Supabase 呼び出しと戻り値ハンドリングを検証する。
- *
- * 主な目的:
- * - 正常系: 期待する戻り値（success/data/error）が返ること
- * - 異常系: 失敗時にエラーを返し、必要なログ・ロールバック分岐が動作すること
- * - 副作用: 表示順再採番などの補助処理が必要条件でのみ呼ばれること
- *
- * 主な定義:
- * - `QueryResult`: Supabase クエリモックの戻り値型（`data` / `error`）
- * - `ORIGINAL_ENV`: テスト前後で process.env を復元するための退避値
- * - `create*Builder`: Supabase のメソッドチェーンを模擬するビルダー群
- *
- * 処理ステップ（このテストスクリプト全体）:
- * - Step 1: 対象モジュールを import し、Supabase クライアント生成関数を jest.mock で差し替える
- * - Step 2: create*Builder 群でメソッドチェーンのモックを構築する
- * - Step 3: API 関数を実行し、戻り値（success/data/error）と副作用（再採番・ログ）を検証する
+ * クライアント側 Supabase サービス群のテスト。
+ * - 対象関数: createClientSupabaseClient / 各 content CRUD / users-client 系関数
+ * - 検証観点: 正常系戻り値、異常系エラーハンドリング、副作用(再採番)の呼び出し
  */
-// supabaseClientActual: モック化されたモジュールと分離して本体実装を直接検証するための参照。
 const supabaseClientActual = jest.requireActual(
   "../../../app/services/api/supabase-client"
 ) as typeof import("../../../app/services/api/supabase-client");
@@ -413,6 +397,26 @@ describe("content client services", () => {
       consoleError.mockRestore();
     });
 
+    it("register 異常系: 再採番で例外が発生しても success=false を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      calculateDisplayOrderMock.mockResolvedValue(3);
+      shiftDisplayOrderMock.mockResolvedValue(undefined);
+      reorderItemsInCategoryMock.mockRejectedValue(new Error("reorder failed"));
+
+      const insertBuilder = createInsertBuilder({ data: null, error: null });
+      const supabase = { from: jest.fn(() => insertBuilder) };
+      createClientSupabaseClientMock.mockReturnValue(supabase);
+
+      const response = await (
+        registerFn as unknown as (payload: typeof registerPayload) => Promise<any>
+      )(registerPayload);
+
+      expect(response.success).toBe(false);
+      expect(response.error).toBeInstanceOf(Error);
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
     it("update 正常系: カテゴリー変更時は再採番を2回実行する", async () => {
       calculateDisplayOrderMock.mockResolvedValue(4);
       shiftDisplayOrderMock.mockResolvedValue(undefined);
@@ -462,6 +466,31 @@ describe("content client services", () => {
       // 失敗時は再採番を実行しないことを確認
       expect(reorderItemsInCategoryMock).not.toHaveBeenCalled();
       // 失敗時にエラーログが出力されることを確認
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it("update 異常系: 再採番で例外が発生しても success=false を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      calculateDisplayOrderMock.mockResolvedValue(4);
+      shiftDisplayOrderMock.mockResolvedValue(undefined);
+      reorderItemsInCategoryMock.mockRejectedValue(new Error("reorder failed"));
+
+      const currentBuilder = createSelectSingleBuilder({
+        data: { display_order: 2, category_id: 1 },
+        error: null,
+      });
+      const updateBuilder = createUpdateBuilder({ data: null, error: null });
+      const supabase = { from: jest.fn() };
+      supabase.from.mockReturnValueOnce(currentBuilder).mockReturnValueOnce(updateBuilder);
+      createClientSupabaseClientMock.mockReturnValue(supabase);
+
+      const response = await (
+        updateFn as unknown as (payload: typeof updatePayload) => Promise<any>
+      )(updatePayload);
+
+      expect(response.success).toBe(false);
+      expect(response.error).toBeInstanceOf(Error);
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
