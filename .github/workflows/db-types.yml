@@ -80,7 +80,7 @@ jobs:
             echo ""
             echo "::error::[対応方法]"
             echo "::error::1. Supabase側で値を確認する"
-            echo "::error::   - Project Settings > API で Project API Keys を確認"
+            echo "::error::   - Supabase Dashboard > Account Settings > Access Tokens で Personal Access Token（PAT）を発行/確認"
             echo "::error::2. GitHubリポジトリで値を設定する"
             echo "::error::   - Settings > Secrets and variables > Actions > Secrets"
             echo "::error::     - SUPABASE_ACCESS_TOKEN を登録"
