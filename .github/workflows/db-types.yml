@@ -25,12 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     # fork 由来の pull_request では secrets/vars が利用できないためジョブをスキップ
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-    # 事前設定が必要なパラメータ:
-    # 1) SUPABASE_ACCESS_TOKEN
-    #    - 設定箇所: GitHub Repository > Settings > Secrets and variables > Actions > Secrets
-    # 2) SUPABASE_PROJECT_ID
-    #    - 設定箇所: GitHub Repository > Settings > Secrets and variables > Actions > Variables
-    # どちらか未設定の場合は、エラー終了して対応方法を表示します。
     env:
       # 型生成対象のSupabase Project ID（GitHub Variables）
       SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
