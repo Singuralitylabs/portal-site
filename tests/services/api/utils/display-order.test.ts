@@ -46,7 +46,6 @@ type MockQueryBuilder<T> = {
 const createMockQueryBuilder = <T>(
   response: QueryResponse<T> = { data: undefined, error: null }
 ): MockQueryBuilder<T> => {
-  // builder: Supabase のチェーン呼び出しを模擬する共通モック。
   const builder: MockQueryBuilder<T> = {
     select: jest.fn(),
     eq: jest.fn(),
@@ -59,7 +58,6 @@ const createMockQueryBuilder = <T>(
     then: (onfulfilled, onrejected) => Promise.resolve(response).then(onfulfilled, onrejected),
   };
 
-  // chainableMethods: 返り値として builder 自身を返すメソッド群。
   const chainableMethods: ChainableKey[] = [
     "select",
     "eq",
@@ -264,7 +262,6 @@ describe("reorderItemsInCategory", () => {
 
     await reorderItemsInCategory("videos", 5);
 
-    // 未削除データのみを再採番対象にしていることを確認
     expect(selectBuilder.eq).toHaveBeenNthCalledWith(1, "category_id", 5);
     expect(selectBuilder.eq).toHaveBeenNthCalledWith(2, "is_deleted", false);
 
@@ -276,9 +273,6 @@ describe("reorderItemsInCategory", () => {
     });
   });
 
-  /**
-   * @description 並び順対象取得でエラーになった場合の挙動を検証する。
-   */
   it("異常系：対象取得エラー時は例外を投げる", async () => {
     const selectBuilder = createMockQueryBuilder({
       data: undefined,
@@ -292,9 +286,6 @@ describe("reorderItemsInCategory", () => {
     );
   });
 
-  /**
-   * @description 再採番 update でエラーになった場合の挙動を検証する。
-   */
   it("異常系：再採番 update エラー時は例外を投げる", async () => {
     const items = [{ id: 11 }, { id: 42 }];
     const selectBuilder = createMockQueryBuilder({ data: items, error: null });
