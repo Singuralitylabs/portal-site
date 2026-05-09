@@ -96,18 +96,8 @@ jobs:
         run: |
           # git diff --quiet は差分なし=0、差分あり=1 を返す
           if ! git diff --quiet app/types/lib/database.types.ts; then
-            # GitHub Actionsのエラー注釈を出し、差分内容と対応方法をログに表示
-            echo "::error::生成された database.types.ts とコミット済みファイルに差分があります。"
-            echo ""
-            echo "::error::[要因]"
-            echo "::error::Supabase スキーマ変更に対して型定義ファイルが未更新"
-            echo "::error::- Supabase CLIや整形結果の差異により生成結果が変化"
-            echo ""
-            echo "::error::[対応方法]"
-            echo "::error::1. 開発者ローカル環境で npm run db:types を実行してください"
-            echo "::error::2. 生成された app/types/lib/database.types.ts の差分を確認してください"
-            echo "::error::3. 差分をコミットしてPRへ反映してください"
-            echo "::error::4. 反映後に本ワークフローを再実行してください"
+            echo "::error::database.types.ts がsupabaseスキーマの型定義と一致していません。"
+            echo "::error::npm run db:types を実行後、再度コミット・プッシュしてください。"
             git diff -- app/types/lib/database.types.ts
             exit 1
           fi
