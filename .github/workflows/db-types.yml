@@ -89,7 +89,7 @@ jobs:
           fi
 
           # 共通スクリプト経由で型生成と整形を実行（ローカル/CIの設定差分を防止）
-          npm run db:types:ci
+          npm run db:types
 
       # 生成結果とコミット済みファイルとの差分を確認し、ズレがあればCIを失敗させる
       - name: Check for drift in generated types
