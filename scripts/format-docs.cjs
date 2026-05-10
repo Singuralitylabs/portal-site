@@ -71,7 +71,7 @@ function normalizeTableLine(line) {
 }
 
 function normalizeMarkdown(content) {
-  const normalizedSource = content.replace(/\n+$/g, "");
+  const normalizedSource = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n+$/g, "");
   const lines = normalizedSource.split("\n");
   let inFence = false;
 
