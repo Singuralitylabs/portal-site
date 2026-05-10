@@ -40,16 +40,18 @@ function run(command, args, options = {}) {
 
   if (result.error) {
     const message = result.error.stack || result.error.message || String(result.error);
+    process.stderr.write("コマンド実行中にエラーが発生しました。\n");
     process.stderr.write(`${message}\n`);
     process.exit(1);
   }
 
   if (result.status === null) {
-    process.stderr.write("Command failed before exit status was returned.\n");
+    process.stderr.write("コマンドが終了コードを返す前に失敗しました。\n");
     process.exit(1);
   }
 
   if (result.status !== 0) {
+    process.stderr.write(`コマンドが異常終了しました（終了コード: ${result.status}）。\n`);
     if (result.stdout) process.stdout.write(result.stdout);
     if (result.stderr) process.stderr.write(result.stderr);
     process.exit(result.status);
@@ -66,7 +68,7 @@ const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
 // SUPABASE_PROJECT_ID を環境変数から取得。存在しない場合はエラーを出して終了する。
 const projectId = process.env.SUPABASE_PROJECT_ID;
 if (!projectId) {
-  console.error("SUPABASE_PROJECT_ID is not set.");
+  console.error("SUPABASE_PROJECT_ID が設定されていません。");
   process.exit(1);
 }
 
