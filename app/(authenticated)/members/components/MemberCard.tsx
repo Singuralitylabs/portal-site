@@ -3,7 +3,8 @@
 import { MemberType } from "@/app/types";
 import { Card, Avatar, Text, Group, Badge } from "@mantine/core";
 import { MemberDetailModal } from "./MemberDetailModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 
 interface MemberCardProps {
   member: MemberType;
@@ -11,12 +12,23 @@ interface MemberCardProps {
 
 export function MemberCard({ member }: MemberCardProps) {
   const [modalOpened, setModalOpened] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!member.profile_image_path) return;
+    const supabase = createClientSupabaseClient();
+    supabase.storage
+      .from("profile-images")
+      .createSignedUrl(member.profile_image_path, 3600)
+      .then(({ data }) => {
+        if (data?.signedUrl) {
+          setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
+        }
+      });
+  }, [member.profile_image_path]);
+
+  const avatarSrc = profileImageUrl ?? member.avatar_url ?? null;
   const avatarContent = member.display_name.charAt(0).toUpperCase();
-
-  const handleOpenModal = () => {
-    setModalOpened(true);
-  };
 
   return (
     <div>
@@ -25,12 +37,12 @@ export function MemberCard({ member }: MemberCardProps) {
         padding="lg"
         radius="md"
         withBorder
-        onClick={handleOpenModal}
+        onClick={() => setModalOpened(true)}
         style={{ cursor: "pointer" }}
       >
         <Group align="flex-start" gap="sm">
-          <Avatar src={member.avatar_url} color="blue" radius="xl">
-            {!member.avatar_url && avatarContent}
+          <Avatar src={avatarSrc} color="blue" radius="xl">
+            {!avatarSrc && avatarContent}
           </Avatar>
           <div style={{ flex: 1 }}>
             <Group
@@ -80,6 +92,7 @@ export function MemberCard({ member }: MemberCardProps) {
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
         memberInfo={member}
+        profileImageUrl={profileImageUrl}
       />
     </div>
   );
