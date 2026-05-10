@@ -8,8 +8,10 @@ CREATE POLICY "authenticated_users_can_read_applications" ON "applications"
   USING (
     is_active_user()
     AND (
+      -- 一般ユーザー: 削除されていないもののみ
       is_deleted = FALSE
       OR
+      -- admin/maintainer: 削除済みも含めてすべて閲覧可能
       is_content_manager()
     )
   );
@@ -29,7 +31,7 @@ CREATE POLICY "content_managers_can_update_applications" ON "applications"
   FOR UPDATE
   TO authenticated
   USING (
-    is_active_user() AND is_content_manager()
+    is_deleted = FALSE AND is_active_user() AND is_content_manager()
   )
   WITH CHECK (
     is_active_user() AND is_content_manager()

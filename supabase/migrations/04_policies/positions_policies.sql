@@ -31,7 +31,7 @@ CREATE POLICY "content_managers_can_update_positions" ON "positions"
   FOR UPDATE
   TO authenticated
   USING (
-    is_active_user() AND is_content_manager()
+    is_deleted = FALSE AND is_active_user() AND is_content_manager()
   )
   WITH CHECK (
     is_active_user() AND is_content_manager()
