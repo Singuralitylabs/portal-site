@@ -129,10 +129,11 @@ for (const file of files) {
   // 変換結果に差分がある場合のみ処理する
   if (original !== formatted) {
     hasDiff = true;
+    const rel = path.relative(process.cwd(), file);
+    diffFiles.push(rel);
     // チェックモード以外ではファイルを書き換える
     if (!isCheck) {
       fs.writeFileSync(file, formatted, "utf8");
-      const rel = path.relative(process.cwd(), file);
       console.log(`${rel}: 正規化しました`);
     }
   }
@@ -140,6 +141,9 @@ for (const file of files) {
 
 if (isCheck && hasDiff) {
   console.error("docs の Markdown 正規化が必要です。");
+  for (const file of diffFiles) {
+    console.error(`- ${file}`);
+  }
   process.exit(1);
 }
 
