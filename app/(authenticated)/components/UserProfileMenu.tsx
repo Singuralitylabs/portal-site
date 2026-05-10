@@ -6,10 +6,37 @@ import { User, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
+import { useEffect, useState } from "react";
 
 export function UserProfileMenu() {
   const { user, loading } = useSupabaseAuth();
   const router = useRouter();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const supabase = createClientSupabaseClient();
+    supabase
+      .from("users")
+      .select("profile_image_path")
+      .eq("auth_id", user.id)
+      .eq("is_deleted", false)
+      .maybeSingle()
+      .then(({ data }) => {
+        const path = data?.profile_image_path;
+        if (!path) return;
+
+        supabase.storage
+          .from("profile-images")
+          .createSignedUrl(path, 3600)
+          .then(({ data: urlData }) => {
+            if (urlData?.signedUrl) {
+              setProfileImageUrl(`${urlData.signedUrl}&t=${Date.now()}`);
+            }
+          });
+      });
+  }, [user]);
 
   const handleSignOut = async () => {
     const supabase = createClientSupabaseClient();
@@ -25,7 +52,9 @@ export function UserProfileMenu() {
     router.push("/login");
   };
 
-  const avatarUrl = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
+  const googleAvatarUrl =
+    user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
+  const avatarSrc = profileImageUrl ?? googleAvatarUrl;
   const displayName: string = user?.user_metadata?.full_name ?? "";
   const initial = displayName.charAt(0) || null;
 
@@ -38,7 +67,7 @@ export function UserProfileMenu() {
       <Menu.Target>
         <UnstyledButton aria-label="ユーザーメニュー">
           <Avatar
-            src={avatarUrl}
+            src={avatarSrc}
             size="sm"
             radius="xl"
             imageProps={{ referrerPolicy: "no-referrer" }}
