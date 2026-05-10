@@ -67,25 +67,21 @@ function normalizeMarkdown(content) {
   const normalizedSource = content.replace(/\n+$/g, "");
   const lines = normalizedSource.split("\n");
   let inFence = false;
-  let inTextFence = false;
 
   const normalized = lines.map(line => {
     const trimmed = line.trim();
-    // コードフェンスの内外を判定し、フェンス内は変換しない
+    // コードフェンスの内外を判定し、全フェンス内は変換しない
     if (trimmed.startsWith("```")) {
-      const lang = trimmed.slice(3).trim().toLowerCase();
       if (!inFence) {
         inFence = true;
-        inTextFence = lang === "text";
       } else {
         inFence = false;
-        inTextFence = false;
       }
       return line;
     }
 
     // フェンス内はそのまま保持する
-    if (inFence || inTextFence) {
+    if (inFence) {
       return line;
     }
 
