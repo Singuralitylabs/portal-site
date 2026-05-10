@@ -7,7 +7,7 @@ import { User } from "lucide-react";
 import { useState, useEffect, useTransition, useRef } from "react";
 import { PositionType, ProfileUserType } from "@/app/types";
 import { validateUrls } from "@/app/utils/url-validation";
-import { useProfileImage } from "@/app/providers/profile-image-provider";
+import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
 const MAX_FILE_SIZE = 1024 * 1024;
@@ -49,15 +49,14 @@ export function ProfilePageTemplate({
   const [profileImagePath, setProfileImagePath] = useState<string | null>(
     initialUser.profile_image_path ?? null
   );
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { profileImageUrl, googleAvatarUrl, refreshProfileImage } = useProfileImage();
 
   useEffect(() => {
     setUser(initialUser);
     setName(initialUser.display_name);
     setBio(initialUser.bio || "");
-    setProfileImagePath(initialUser.profile_image_path ?? null);
     setSelectedPositionIds(initialPositionIds);
     setXUrl(initialUser.x_url || "");
     setFacebookUrl(initialUser.facebook_url || "");
@@ -66,6 +65,22 @@ export function ProfilePageTemplate({
     setPortfolioUrl(initialUser.portfolio_url || "");
     setErrors({});
   }, [initialUser, initialPositionIds]);
+
+  useEffect(() => {
+    if (!profileImagePath) {
+      setProfileImageUrl(null);
+      return;
+    }
+    const supabase = createClientSupabaseClient();
+    supabase.storage
+      .from("profile-images")
+      .createSignedUrl(profileImagePath, 3600)
+      .then(({ data }) => {
+        if (data?.signedUrl) {
+          setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
+        }
+      });
+  }, [profileImagePath]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,76 +107,56 @@ export function ProfilePageTemplate({
     }
 
     setIsImageLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
+    const formData = new FormData();
+    formData.append("image", file);
 
-      const response = await fetch("/api/profile/image", { method: "POST", body: formData });
-      const data = await response.json();
+    const response = await fetch("/api/profile/image", { method: "POST", body: formData });
+    const data = await response.json();
 
-      if (data.success) {
-        setProfileImagePath(data.profile_image_path);
-        await refreshProfileImage(data.profile_image_path);
-        notifications.show({
-          title: "成功",
-          message: "プロフィール画像を更新しました",
-          color: "green",
-          autoClose: 3000,
-        });
-      } else {
-        notifications.show({
-          title: "エラー",
-          message: data.error || "画像のアップロードに失敗しました",
-          color: "red",
-          autoClose: 3000,
-        });
-      }
-    } catch {
+    if (data.success) {
+      setProfileImagePath(data.profile_image_path);
+      notifications.show({
+        title: "成功",
+        message: "プロフィール画像を更新しました",
+        color: "green",
+        autoClose: 3000,
+      });
+    } else {
       notifications.show({
         title: "エラー",
-        message: "通信エラーが発生しました",
+        message: data.error || "画像のアップロードに失敗しました",
         color: "red",
         autoClose: 3000,
       });
-    } finally {
-      setIsImageLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
+
+    setIsImageLoading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleImageDelete = async () => {
     setIsImageLoading(true);
-    try {
-      const response = await fetch("/api/profile/image", { method: "DELETE" });
-      const data = await response.json();
+    const response = await fetch("/api/profile/image", { method: "DELETE" });
+    const data = await response.json();
 
-      if (data.success) {
-        setProfileImagePath(null);
-        await refreshProfileImage(null);
-        notifications.show({
-          title: "成功",
-          message: "プロフィール画像を削除しました",
-          color: "green",
-          autoClose: 3000,
-        });
-      } else {
-        notifications.show({
-          title: "エラー",
-          message: data.error || "画像の削除に失敗しました",
-          color: "red",
-          autoClose: 3000,
-        });
-      }
-    } catch {
+    if (data.success) {
+      setProfileImagePath(null);
+      setProfileImageUrl(null);
+      notifications.show({
+        title: "成功",
+        message: "プロフィール画像を削除しました",
+        color: "green",
+        autoClose: 3000,
+      });
+    } else {
       notifications.show({
         title: "エラー",
-        message: "通信エラーが発生しました",
+        message: data.error || "画像の削除に失敗しました",
         color: "red",
         autoClose: 3000,
       });
-    } finally {
-      setIsImageLoading(false);
     }
+    setIsImageLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -241,14 +236,14 @@ export function ProfilePageTemplate({
     });
   };
 
-  const avatarSrc = profileImageUrl ?? googleAvatarUrl ?? user.avatar_url ?? null;
+  const avatarSrc = profileImageUrl ?? user.avatar_url ?? null;
   const initial = user.display_name.charAt(0) || null;
 
   return (
     <>
       <PageTitle>プロフィール</PageTitle>
 
-      {/* プロフィール情報表示（表示専用） */}
+      {/* プロフィール情報表示 */}
       <div className="p-4 mb-4 bg-white rounded-lg shadow-sm">
         <div className="flex items-center gap-4">
           <Avatar
@@ -273,54 +268,42 @@ export function ProfilePageTemplate({
             </div>
           </div>
         </div>
+
+        {/* 画像操作ボタン */}
+        <Group mt="sm" gap="xs">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/gif"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+          <Button
+            variant="outline"
+            size="xs"
+            loading={isImageLoading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            画像を変更
+          </Button>
+          {profileImagePath && (
+            <Button
+              variant="outline"
+              color="red"
+              size="xs"
+              loading={isImageLoading}
+              onClick={handleImageDelete}
+            >
+              画像を削除
+            </Button>
+          )}
+        </Group>
       </div>
 
       {/* プロフィール編集フォーム */}
       <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {/* プロフィール画像 */}
-            <div>
-              <label className="block text-sm font-medium mb-2">プロフィール画像</label>
-              <div className="flex items-center gap-4">
-                <Avatar
-                  src={avatarSrc}
-                  size={64}
-                  radius="xl"
-                  imageProps={{ referrerPolicy: "no-referrer" }}
-                >
-                  {initial ?? <User size={24} />}
-                </Avatar>
-                <Group gap="xs">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif"
-                    onChange={handleFileChange}
-                    style={{ display: "none" }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    loading={isImageLoading}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    画像を変更
-                  </Button>
-                  <Button
-                    variant="outline"
-                    color="red"
-                    size="xs"
-                    loading={isImageLoading}
-                    disabled={!profileImagePath}
-                    onClick={handleImageDelete}
-                  >
-                    画像を削除
-                  </Button>
-                </Group>
-              </div>
-            </div>
-
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-1">
                 名前
