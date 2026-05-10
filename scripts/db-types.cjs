@@ -50,6 +50,7 @@ function run(command, args, options = {}) {
 // プロジェクトルートを基準に .env.local を読み込む
 const projectRoot = path.resolve(__dirname, "..");
 loadDotEnv(path.join(projectRoot, ".env.local"));
+const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
 
 // SUPABASE_PROJECT_ID を環境変数から取得。存在しない場合はエラーを出して終了する。
 const projectId = process.env.SUPABASE_PROJECT_ID;
@@ -59,7 +60,7 @@ if (!projectId) {
 }
 
 // Supabase CLI を使って TypeScript の型定義を生成する。生成されたコードは app/types/lib/database.types.ts に保存する。
-const generated = run("npx", [
+const generated = run(npxCmd, [
   "supabase",
   "gen",
   "types",
@@ -74,6 +75,6 @@ const outputPath = path.join(projectRoot, "app/types/lib/database.types.ts");
 fs.writeFileSync(outputPath, generated.stdout ?? "", "utf8");
 
 // 生成されたコードを Prettier で整形する
-run("npx", ["prettier", "--write", outputPath], {
+run(npxCmd, ["prettier", "--write", outputPath], {
   stdio: "inherit",
 });
