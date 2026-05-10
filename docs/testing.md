@@ -20,7 +20,7 @@
    - [4.1 GitHub Actions ワークフロー](#41-github-actions-ワークフロー)
    - [4.2 導入済みツール](#42-導入済みツール)
    - [4.3 実行環境](#43-実行環境)
-  - [4.4 Supabase DB Types チェックの前提設定](#44-supabase-db-types-チェックの前提設定)
+   - [4.4 Supabase DB Types チェックの前提設定](#44-supabase-db-types-チェックの前提設定)
 5. [テスト規約](#5-テスト規約)
 
 ## 1. 概要
