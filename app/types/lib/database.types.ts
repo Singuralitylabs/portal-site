@@ -278,6 +278,7 @@ export type Database = {
           instagram_url: string | null;
           is_deleted: boolean;
           portfolio_url: string | null;
+          profile_image_path: string | null;
           role: string;
           status: string;
           updated_at: string;
@@ -296,6 +297,7 @@ export type Database = {
           instagram_url?: string | null;
           is_deleted?: boolean;
           portfolio_url?: string | null;
+          profile_image_path?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;
@@ -314,6 +316,7 @@ export type Database = {
           instagram_url?: string | null;
           is_deleted?: boolean;
           portfolio_url?: string | null;
+          profile_image_path?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;

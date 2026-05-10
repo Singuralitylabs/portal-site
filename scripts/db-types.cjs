@@ -38,10 +38,21 @@ function run(command, args, options = {}) {
     ...options,
   });
 
+  if (result.error) {
+    const message = result.error.stack || result.error.message || String(result.error);
+    process.stderr.write(`${message}\n`);
+    process.exit(1);
+  }
+
+  if (result.status === null) {
+    process.stderr.write("Command failed before exit status was returned.\n");
+    process.exit(1);
+  }
+
   if (result.status !== 0) {
     if (result.stdout) process.stdout.write(result.stdout);
     if (result.stderr) process.stderr.write(result.stderr);
-    process.exit(result.status || 1);
+    process.exit(result.status);
   }
 
   return result;
