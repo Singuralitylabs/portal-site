@@ -4,6 +4,11 @@ const path = require("path");
 const isCheck = process.argv.includes("--check");
 const docsRoot = path.resolve(process.cwd(), "docs");
 
+if (!fs.existsSync(docsRoot)) {
+  console.error(`docs ディレクトリが見つかりません: ${docsRoot}`);
+  process.exit(1);
+}
+
 // docs 配下の Markdown ファイルを再帰的に収集する
 function getMarkdownFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
