@@ -4,16 +4,20 @@ const path = require("path");
 const isCheck = process.argv.includes("--check");
 const docsRoot = path.resolve(process.cwd(), "docs");
 
+// docs 配下の Markdown ファイルを再帰的に収集する
 function getMarkdownFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files = [];
 
+  // ディレクトリを走査して .md ファイルだけを収集する
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
+    // 子ディレクトリは再帰的に探索する
     if (entry.isDirectory()) {
       files.push(...getMarkdownFiles(fullPath));
       continue;
     }
+    // Markdown ファイルのみ対象にする
     if (entry.isFile() && entry.name.endsWith(".md")) {
       files.push(fullPath);
     }
@@ -22,8 +26,10 @@ function getMarkdownFiles(dir) {
   return files;
 }
 
+// 表の 1 行を正規化し、区切り行は --- 形式に統一する
 function normalizeTableLine(line) {
   const match = line.match(/^(\s*)(\|.*)$/);
+  // 表形式でない行はそのまま返す
   if (!match) {
     return line;
   }
@@ -36,6 +42,7 @@ function normalizeTableLine(line) {
     .slice(1, -1)
     .map(cell => cell.trim());
 
+  // セルがない場合は変換しない
   if (cells.length === 0) {
     return line;
   }
@@ -55,6 +62,7 @@ function normalizeTableLine(line) {
   return `${indent}|${normalized.join("|")}|`;
 }
 
+// Markdown 全体を要件に沿って正規化する
 function normalizeMarkdown(content) {
   const normalizedSource = content.replace(/\n+$/g, "");
   const lines = normalizedSource.split("\n");
@@ -63,6 +71,7 @@ function normalizeMarkdown(content) {
 
   const normalized = lines.map(line => {
     const trimmed = line.trim();
+    // コードフェンスの内外を判定し、フェンス内は変換しない
     if (trimmed.startsWith("```")) {
       const lang = trimmed.slice(3).trim().toLowerCase();
       if (!inFence) {
@@ -75,6 +84,7 @@ function normalizeMarkdown(content) {
       return line;
     }
 
+    // フェンス内はそのまま保持する
     if (inFence || inTextFence) {
       return line;
     }
@@ -94,7 +104,6 @@ function normalizeMarkdown(content) {
     }
 
     // 区切り線は --- を維持（*** への変換は行わない）
-
     next = normalizeTableLine(next);
     if (trailingSpaces) {
       next += hasHardBreak ? "  " : trailingSpaces;
@@ -108,25 +117,28 @@ function normalizeMarkdown(content) {
 const files = getMarkdownFiles(docsRoot);
 let hasDiff = false;
 
+// 差分があるファイルを検出し、必要に応じて上書きする
 for (const file of files) {
   const original = fs.readFileSync(file, "utf8");
   const formatted = normalizeMarkdown(original);
 
+  // 変換結果に差分がある場合のみ処理する
   if (original !== formatted) {
     hasDiff = true;
+    // チェックモード以外ではファイルを書き換える
     if (!isCheck) {
       fs.writeFileSync(file, formatted, "utf8");
       const rel = path.relative(process.cwd(), file);
-      console.log(`${rel}: normalized`);
+      console.log(`${rel}: 正規化しました`);
     }
   }
 }
 
 if (isCheck && hasDiff) {
-  console.error("docs markdown normalization is required.");
+  console.error("docs の Markdown 正規化が必要です。");
   process.exit(1);
 }
 
 if (isCheck && !hasDiff) {
-  console.log("docs markdown normalization: no issues found");
+  console.log("docs の Markdown 正規化: 問題はありません");
 }
