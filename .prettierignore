@@ -16,9 +16,5 @@ supabase/**/*.sql
 # Supabase型自動生成ファイル（全体formatから除外、db:types後に個別整形）
 app/types/lib/database.types.ts
 
-<<<<<<< HEAD
 # docs配下Markdownはformat-docs.cjsで整形する
-=======
-# docs配下Markdownはremarkで整形する
->>>>>>> docs: Markdown整形ルールを安定化
 docs/**/*.md
