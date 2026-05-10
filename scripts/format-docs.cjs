@@ -88,7 +88,7 @@ function normalizeMarkdown(content) {
     // hard line break 用の行末2スペースは保持する
     const trailing = line.match(/[ \t]+$/);
     const trailingSpaces = trailing ? trailing[0] : "";
-    const hasHardBreak = trailingSpaces.length >= 2;
+    const hasHardBreak = / {2,}$/.test(trailingSpaces);
     let next = trailing ? line.slice(0, -trailingSpaces.length) : line;
 
     // 全文で不要な underscore エスケープを除去
