@@ -9,6 +9,8 @@ on:
       - "app/types/lib/database.types.ts"
       - "package.json"
       - "package-lock.json"
+      - "scripts/db-types.cjs"
+      - ".github/workflows/db-types.yml"
   # PRでも同じ条件で実行し、マージ前に型ズレを検出
   pull_request:
     paths:
@@ -16,6 +18,8 @@ on:
       - "app/types/lib/database.types.ts"
       - "package.json"
       - "package-lock.json"
+      - "scripts/db-types.cjs"
+      - ".github/workflows/db-types.yml"
   # 手動実行（必要時の再検証用）
   workflow_dispatch:
 
