@@ -50,6 +50,7 @@ export function ProfilePageTemplate({
     initialUser.profile_image_path ?? null
   );
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [imageVersion, setImageVersion] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,7 +81,7 @@ export function ProfilePageTemplate({
           setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
         }
       });
-  }, [profileImagePath]);
+  }, [profileImagePath, imageVersion]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,6 +116,7 @@ export function ProfilePageTemplate({
 
     if (data.success) {
       setProfileImagePath(data.profile_image_path);
+      setImageVersion(v => v + 1);
       notifications.show({
         title: "成功",
         message: "プロフィール画像を更新しました",
