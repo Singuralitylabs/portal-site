@@ -72,7 +72,7 @@ export async function fetchActiveUsers(): Promise<{
   const { data, error } = await supabase
     .from("users")
     .select(
-      "id, display_name, bio, avatar_url, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+      "id, display_name, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
     )
     .eq("status", "active")
     .eq("is_deleted", false)
@@ -94,6 +94,7 @@ export async function fetchActiveUsers(): Promise<{
     display_name: user.display_name,
     bio: user.bio,
     avatar_url: user.avatar_url,
+    profile_image_path: user.profile_image_path,
     x_url: user.x_url,
     facebook_url: user.facebook_url,
     instagram_url: user.instagram_url,
