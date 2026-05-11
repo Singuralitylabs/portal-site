@@ -43,6 +43,7 @@ function normalizeTableLine(line) {
   const tablePart = match[2];
   const hasTrailingPipe = tablePart.endsWith("|");
   const tableBody = hasTrailingPipe ? tablePart.slice(1, -1) : tablePart.slice(1);
+
   const cells = tableBody.split("|").map(cell => cell.trim());
 
   // セルがない場合は変換しない
