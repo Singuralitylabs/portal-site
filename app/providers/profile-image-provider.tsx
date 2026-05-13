@@ -11,8 +11,6 @@ import { useSupabaseAuth } from "./supabase-auth-provider";
 interface ProfileImageContextType {
   // Supabase Storage の署名付きURL（有効期限1時間）。未設定なら null
   profileImageUrl: string | null;
-  // DBに保存されたGoogle OAuth の avatar_url（ログイン時に最新化）
-  googleAvatarUrl: string | null;
   // 画像のパスを受け取り、署名付きURLを再取得してコンテキストを更新する。
   // newPath に文字列を渡すと新しいパスで取得、null を渡すと画像なし状態にリセット、
   // 省略すると現在のパスで再取得（キャッシュバスティング用）。
@@ -21,60 +19,45 @@ interface ProfileImageContextType {
 
 const ProfileImageContext = createContext<ProfileImageContextType>({
   profileImageUrl: null,
-  googleAvatarUrl: null,
   refreshProfileImage: async () => {},
 });
 
 export function ProfileImageProvider({ children }: { children: React.ReactNode }) {
   const { user } = useSupabaseAuth();
-  // Storage上のファイルパス（例: "user-id/profile-image"）。署名付きURL再生成に使用
+  // Storage上のファイルパス（例: "user-id/profile.jpg"）。署名付きURL再生成に使用
   const [profileImagePath, setProfileImagePath] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null);
 
   // 指定パスの署名付きURLを取得して state に反映する。
   // &t=... を末尾に付与することで、同一パスへの再アップロード後もブラウザキャッシュを回避する。
   const fetchSignedUrl = useCallback(async (path: string) => {
     const supabase = createClientSupabaseClient();
-    const { data, error } = await supabase.storage
+    const { data } = await supabase.storage
       .from("profile-images")
       .createSignedUrl(path, 3600);
-    if (error || !data?.signedUrl) {
-      setProfileImageUrl(null);
-      return;
+    if (data?.signedUrl) {
+      setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
     }
-    setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
   }, []);
 
-  // ログイン・ログアウト時にDBから profile_image_path と avatar_url を取得して初期化する
+  // ログイン・ログアウト時にDBから profile_image_path を取得して初期化する
   useEffect(() => {
     if (!user) {
       setProfileImagePath(null);
       setProfileImageUrl(null);
-      setGoogleAvatarUrl(null);
       return;
     }
     const supabase = createClientSupabaseClient();
     supabase
       .from("users")
-      .select("profile_image_path, avatar_url")
+      .select("profile_image_path")
       .eq("auth_id", user.id)
       .eq("is_deleted", false)
       .maybeSingle()
       .then(({ data }) => {
         const path = data?.profile_image_path ?? null;
         setProfileImagePath(path);
-        if (path) {
-          fetchSignedUrl(path);
-        } else {
-          setProfileImageUrl(null);
-        }
-        // user_metadata はSupabase Authが保持する最新値のため優先して使用する。
-        // SIGNED_IN 直後はDBへのavatar_url同期がまだ完了していない場合があるため、
-        // DBのavatar_urlはメタデータが存在しない場合のフォールバックとして扱う。
-        const metadataAvatarUrl =
-          user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
-        setGoogleAvatarUrl(metadataAvatarUrl ?? data?.avatar_url ?? null);
+        if (path) fetchSignedUrl(path);
       });
   }, [user, fetchSignedUrl]);
 
@@ -99,7 +82,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   );
 
   return (
-    <ProfileImageContext.Provider value={{ profileImageUrl, googleAvatarUrl, refreshProfileImage }}>
+    <ProfileImageContext.Provider value={{ profileImageUrl, refreshProfileImage }}>
       {children}
     </ProfileImageContext.Provider>
   );
