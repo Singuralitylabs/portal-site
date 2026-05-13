@@ -16,7 +16,9 @@ if (!fs.statSync(docsRoot).isDirectory()) {
 
 // docs 配下の Markdown ファイルを再帰的に収集する
 function getMarkdownFiles(dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const entries = fs
+    .readdirSync(dir, { withFileTypes: true })
+    .sort((a, b) => a.name.localeCompare(b.name));
   const files = [];
 
   // ディレクトリを走査して .md ファイルだけを収集する
