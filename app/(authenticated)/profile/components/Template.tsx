@@ -7,7 +7,7 @@ import { User } from "lucide-react";
 import { useState, useEffect, useTransition, useRef } from "react";
 import { PositionType, ProfileUserType } from "@/app/types";
 import { validateUrls } from "@/app/utils/url-validation";
-import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
+import { useProfileImage } from "@/app/providers/profile-image-provider";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
 const MAX_FILE_SIZE = 1024 * 1024;
@@ -49,10 +49,9 @@ export function ProfilePageTemplate({
   const [profileImagePath, setProfileImagePath] = useState<string | null>(
     initialUser.profile_image_path ?? null
   );
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  const [imageVersion, setImageVersion] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { profileImageUrl, refreshProfileImage } = useProfileImage();
 
   useEffect(() => {
     setUser(initialUser);
@@ -66,22 +65,6 @@ export function ProfilePageTemplate({
     setPortfolioUrl(initialUser.portfolio_url || "");
     setErrors({});
   }, [initialUser, initialPositionIds]);
-
-  useEffect(() => {
-    if (!profileImagePath) {
-      setProfileImageUrl(null);
-      return;
-    }
-    const supabase = createClientSupabaseClient();
-    supabase.storage
-      .from("profile-images")
-      .createSignedUrl(profileImagePath, 3600)
-      .then(({ data }) => {
-        if (data?.signedUrl) {
-          setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
-        }
-      });
-  }, [profileImagePath, imageVersion]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,7 +99,7 @@ export function ProfilePageTemplate({
 
     if (data.success) {
       setProfileImagePath(data.profile_image_path);
-      setImageVersion(v => v + 1);
+      await refreshProfileImage(data.profile_image_path);
       notifications.show({
         title: "成功",
         message: "プロフィール画像を更新しました",
@@ -143,7 +126,7 @@ export function ProfilePageTemplate({
 
     if (data.success) {
       setProfileImagePath(null);
-      setProfileImageUrl(null);
+      await refreshProfileImage(null);
       notifications.show({
         title: "成功",
         message: "プロフィール画像を削除しました",

@@ -6,37 +6,12 @@ import { User, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
-import { useEffect, useState } from "react";
+import { useProfileImage } from "@/app/providers/profile-image-provider";
 
 export function UserProfileMenu() {
   const { user, loading } = useSupabaseAuth();
+  const { profileImageUrl } = useProfileImage();
   const router = useRouter();
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const supabase = createClientSupabaseClient();
-    supabase
-      .from("users")
-      .select("profile_image_path")
-      .eq("auth_id", user.id)
-      .eq("is_deleted", false)
-      .maybeSingle()
-      .then(({ data }) => {
-        const path = data?.profile_image_path;
-        if (!path) return;
-
-        supabase.storage
-          .from("profile-images")
-          .createSignedUrl(path, 3600)
-          .then(({ data: urlData }) => {
-            if (urlData?.signedUrl) {
-              setProfileImageUrl(`${urlData.signedUrl}&t=${Date.now()}`);
-            }
-          });
-      });
-  }, [user]);
 
   const handleSignOut = async () => {
     const supabase = createClientSupabaseClient();
