@@ -53,11 +53,6 @@ function normalizeTableLine(line) {
 
   const cells = tableBody.split("|").map(cell => cell.trim());
 
-  // セルがない場合は変換しない
-  if (cells.length === 0) {
-    return line;
-  }
-
   const delimiterOnly = cells.every(cell => /^:?-{2,}:?$/.test(cell));
 
   if (delimiterOnly) {
