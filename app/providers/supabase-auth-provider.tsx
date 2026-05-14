@@ -92,7 +92,8 @@ export function SupabaseAuthProvider({
   }, []);
 
   const syncUserToDatabase = async (user: User) => {
-    const latestAvatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+    const latestAvatarUrl =
+      user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
     try {
       // ユーザーが既にusersテーブルに存在するかチェック
       const { userId, error: userError } = await fetchUserIdByAuthId({ authId: user.id });

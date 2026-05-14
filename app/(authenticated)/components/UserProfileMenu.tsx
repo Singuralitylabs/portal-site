@@ -10,7 +10,7 @@ import { useProfileImage } from "@/app/providers/profile-image-provider";
 
 export function UserProfileMenu() {
   const { user, loading } = useSupabaseAuth();
-  const { profileImageUrl } = useProfileImage();
+  const { profileImageUrl, googleAvatarUrl } = useProfileImage();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -27,8 +27,6 @@ export function UserProfileMenu() {
     router.push("/login");
   };
 
-  const googleAvatarUrl =
-    user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
   const avatarSrc = profileImageUrl ?? googleAvatarUrl;
   const displayName: string = user?.user_metadata?.full_name ?? "";
   const initial = displayName.charAt(0) || null;

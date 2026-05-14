@@ -8,39 +8,71 @@ VALUES (
   ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
 ) ON CONFLICT (id) DO NOTHING;
 
--- 認証済みユーザーは全ファイルを閲覧可能
+-- active な認証済みユーザーは全ファイルを閲覧可能
 CREATE POLICY "Authenticated users can view profile images"
 ON storage.objects FOR SELECT
 TO authenticated
-USING (bucket_id = 'profile-images');
+USING (
+  bucket_id = 'profile-images'
+  AND EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE auth_id = auth.uid()
+      AND status = 'active'
+  )
+);
 
--- ユーザーは自身の auth_id フォルダにのみアップロード可能
+-- active なユーザーは自身の auth_id フォルダにのみアップロード可能
 CREATE POLICY "Users can upload their own profile image"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'profile-images'
   AND (storage.foldername(name))[1] = auth.uid()::text
+  AND EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE auth_id = auth.uid()
+      AND status = 'active'
+  )
 );
 
--- ユーザーは自身の auth_id フォルダのファイルのみ更新可能
+-- active なユーザーは自身の auth_id フォルダのファイルのみ更新可能
 CREATE POLICY "Users can update their own profile image"
 ON storage.objects FOR UPDATE
 TO authenticated
 USING (
   bucket_id = 'profile-images'
   AND (storage.foldername(name))[1] = auth.uid()::text
+  AND EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE auth_id = auth.uid()
+      AND status = 'active'
+  )
 )
 WITH CHECK (
   bucket_id = 'profile-images'
   AND (storage.foldername(name))[1] = auth.uid()::text
+  AND EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE auth_id = auth.uid()
+      AND status = 'active'
+  )
 );
 
--- ユーザーは自身の auth_id フォルダのファイルのみ削除可能
+-- active なユーザーは自身の auth_id フォルダのファイルのみ削除可能
 CREATE POLICY "Users can delete their own profile image"
 ON storage.objects FOR DELETE
 TO authenticated
 USING (
   bucket_id = 'profile-images'
   AND (storage.foldername(name))[1] = auth.uid()::text
+  AND EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE auth_id = auth.uid()
+      AND status = 'active'
+  )
 );

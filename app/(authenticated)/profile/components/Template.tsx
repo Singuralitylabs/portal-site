@@ -228,7 +228,7 @@ export function ProfilePageTemplate({
     <>
       <PageTitle>プロフィール</PageTitle>
 
-      {/* プロフィール情報表示 */}
+      {/* プロフィール情報表示（表示専用） */}
       <div className="p-4 mb-4 bg-white rounded-lg shadow-sm">
         <div className="flex items-center gap-4">
           <Avatar
@@ -253,42 +253,54 @@ export function ProfilePageTemplate({
             </div>
           </div>
         </div>
-
-        {/* 画像操作ボタン */}
-        <Group mt="sm" gap="xs">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/gif"
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-          />
-          <Button
-            variant="outline"
-            size="xs"
-            loading={isImageLoading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            画像を変更
-          </Button>
-          {profileImagePath && (
-            <Button
-              variant="outline"
-              color="red"
-              size="xs"
-              loading={isImageLoading}
-              onClick={handleImageDelete}
-            >
-              画像を削除
-            </Button>
-          )}
-        </Group>
       </div>
 
       {/* プロフィール編集フォーム */}
       <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
+            {/* プロフィール画像 */}
+            <div>
+              <label className="block text-sm font-medium mb-2">プロフィール画像</label>
+              <div className="flex items-center gap-4">
+                <Avatar
+                  src={avatarSrc}
+                  size={64}
+                  radius="xl"
+                  imageProps={{ referrerPolicy: "no-referrer" }}
+                >
+                  {initial ?? <User size={24} />}
+                </Avatar>
+                <Group gap="xs">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif"
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    loading={isImageLoading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    画像を変更
+                  </Button>
+                  <Button
+                    variant="outline"
+                    color="red"
+                    size="xs"
+                    loading={isImageLoading}
+                    disabled={!profileImagePath}
+                    onClick={handleImageDelete}
+                  >
+                    画像を削除
+                  </Button>
+                </Group>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-1">
                 名前
