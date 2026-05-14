@@ -1,5 +1,8 @@
 import { fetchApplications } from "../../../app/services/api/applications-server";
-import { fetchCategoriesByType } from "../../../app/services/api/categories-server";
+import {
+  fetchCategoriesByType,
+  fetchCategoriesForManagement,
+} from "../../../app/services/api/categories-server";
 import { fetchDocuments } from "../../../app/services/api/documents-server";
 import { createServerSupabaseClient } from "../../../app/services/api/supabase-server";
 import {
@@ -122,6 +125,44 @@ describe("server API services", () => {
       // 一覧取得失敗時に data=null とエラーが返ることを確認
       expect(response).toEqual({ data: null, error: result.error });
       // 失敗時にエラーログが出力されることを確認
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+  });
+
+  describe("fetchCategoriesForManagement", () => {
+    it("正常系: 管理画面向けカテゴリー一覧を返す", async () => {
+      const result = {
+        data: [
+          {
+            id: 1,
+            category_type: "documents",
+            name: "資料",
+            description: "desc",
+            display_order: 1,
+          },
+        ],
+        error: null,
+      };
+      const builder = createOrderBuilder(result);
+      const supabase = { from: jest.fn(() => builder) };
+      createServerSupabaseClientMock.mockResolvedValue(supabase);
+
+      const response = await fetchCategoriesForManagement("documents");
+
+      expect(response).toEqual({ data: result.data, error: null });
+    });
+
+    it("異常系: エラー時は data=null を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      const result = { data: null, error: { message: "failed" } };
+      const builder = createOrderBuilder(result);
+      const supabase = { from: jest.fn(() => builder) };
+      createServerSupabaseClientMock.mockResolvedValue(supabase);
+
+      const response = await fetchCategoriesForManagement("videos");
+
+      expect(response).toEqual({ data: null, error: result.error });
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
