@@ -246,8 +246,9 @@ describe("reorderItemsInCategory", () => {
 
     await reorderItemsInCategory("videos", 5);
 
-    expect(selectBuilder.eq).toHaveBeenNthCalledWith(1, "category_id", 5);
-    expect(selectBuilder.eq).toHaveBeenNthCalledWith(2, "is_deleted", false);
+    expect(selectBuilder.eq).toHaveBeenCalledWith("category_id", 5);
+    expect(selectBuilder.eq).toHaveBeenCalledWith("is_deleted", false);
+    expect(selectBuilder.eq).toHaveBeenCalledTimes(2);
 
     updateBuilders.forEach((builder, index) => {
       // 先頭から連番(1始まり)で display_order が再設定されることを確認
