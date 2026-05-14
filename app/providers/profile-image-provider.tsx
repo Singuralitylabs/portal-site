@@ -11,6 +11,8 @@ import { useSupabaseAuth } from "./supabase-auth-provider";
 interface ProfileImageContextType {
   // Supabase Storage の署名付きURL（有効期限1時間）。未設定なら null
   profileImageUrl: string | null;
+  // DBに保存されたGoogle OAuth の avatar_url（ログイン時に最新化）
+  googleAvatarUrl: string | null;
   // 画像のパスを受け取り、署名付きURLを再取得してコンテキストを更新する。
   // newPath に文字列を渡すと新しいパスで取得、null を渡すと画像なし状態にリセット、
   // 省略すると現在のパスで再取得（キャッシュバスティング用）。
@@ -19,6 +21,7 @@ interface ProfileImageContextType {
 
 const ProfileImageContext = createContext<ProfileImageContextType>({
   profileImageUrl: null,
+  googleAvatarUrl: null,
   refreshProfileImage: async () => {},
 });
 
@@ -27,6 +30,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   // Storage上のファイルパス（例: "user-id/profile.jpg"）。署名付きURL再生成に使用
   const [profileImagePath, setProfileImagePath] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null);
 
   // 指定パスの署名付きURLを取得して state に反映する。
   // &t=... を末尾に付与することで、同一パスへの再アップロード後もブラウザキャッシュを回避する。
@@ -40,17 +44,18 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // ログイン・ログアウト時にDBから profile_image_path を取得して初期化する
+  // ログイン・ログアウト時にDBから profile_image_path と avatar_url を取得して初期化する
   useEffect(() => {
     if (!user) {
       setProfileImagePath(null);
       setProfileImageUrl(null);
+      setGoogleAvatarUrl(null);
       return;
     }
     const supabase = createClientSupabaseClient();
     supabase
       .from("users")
-      .select("profile_image_path")
+      .select("profile_image_path, avatar_url")
       .eq("auth_id", user.id)
       .eq("is_deleted", false)
       .maybeSingle()
@@ -58,6 +63,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
         const path = data?.profile_image_path ?? null;
         setProfileImagePath(path);
         if (path) fetchSignedUrl(path);
+        setGoogleAvatarUrl(data?.avatar_url ?? null);
       });
   }, [user, fetchSignedUrl]);
 
@@ -82,7 +88,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   );
 
   return (
-    <ProfileImageContext.Provider value={{ profileImageUrl, refreshProfileImage }}>
+    <ProfileImageContext.Provider value={{ profileImageUrl, googleAvatarUrl, refreshProfileImage }}>
       {children}
     </ProfileImageContext.Provider>
   );

@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { User, Session, AuthChangeEvent, AuthError } from "@supabase/supabase-js";
 import { createClientSupabaseClient } from "../services/api/supabase-client";
 import { UserStatusType } from "../types";
-import { addNewUser, fetchUserIdByAuthId } from "../services/api/users-client";
+import { addNewUser, fetchUserIdByAuthId, updateUserAvatarUrl } from "../services/api/users-client";
 
 interface SupabaseAuthContextType {
   user: User | null;
@@ -92,6 +92,8 @@ export function SupabaseAuthProvider({
   }, []);
 
   const syncUserToDatabase = async (user: User) => {
+    const latestAvatarUrl =
+      user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
     try {
       // ユーザーが既にusersテーブルに存在するかチェック
       const { userId, error: userError } = await fetchUserIdByAuthId({ authId: user.id });
@@ -101,7 +103,7 @@ export function SupabaseAuthProvider({
           authId: user.id,
           email: user.email || "",
           displayName: user.user_metadata?.full_name || "",
-          avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+          avatarUrl: latestAvatarUrl,
         });
 
         if (!newUserError) {
@@ -130,6 +132,9 @@ export function SupabaseAuthProvider({
             console.error("Slack通知の送信に失敗:", notificationError);
           }
         }
+      } else {
+        // 既存ユーザーの場合、最新のGoogle avatar_urlでDBを更新する
+        await updateUserAvatarUrl({ authId: user.id, avatarUrl: latestAvatarUrl });
       }
     } catch (error) {
       console.error("ユーザー情報の同期エラー:", error);
