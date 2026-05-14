@@ -6,12 +6,7 @@ CREATE POLICY "authenticated_users_can_read_all" ON "position_tags"
   FOR SELECT
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE auth_id = auth.uid()
-      AND status = 'active'
-      AND is_deleted = FALSE
-    )
+    is_active_user()
   );
 
 -- INSERT: ユーザーは自身のデータのみ登録可能
@@ -37,14 +32,7 @@ CREATE POLICY "content_managers_can_insert" ON "position_tags"
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE 
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_active_user() AND is_content_manager()
   );
 
 -- UPDATE: ユーザーは自身のデータのみ更新可能
@@ -81,24 +69,10 @@ CREATE POLICY "content_managers_can_update" ON "position_tags"
   FOR UPDATE
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_active_user() AND is_content_manager()
   )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_active_user() AND is_content_manager()
   );
 
 -- DELETE: ユーザーは自身のデータのみを、管理者またはメンテナーは全データを物理削除可能
@@ -117,14 +91,7 @@ CREATE POLICY "self_user_or_admins_can_physical_delete" ON "position_tags"
             AND users.is_deleted = FALSE
         )
         OR
-        EXISTS (
-          SELECT 1 FROM users
-          WHERE
-            auth_id = auth.uid()
-            AND role IN ('admin', 'maintainer')
-            AND status = 'active'
-            AND is_deleted = FALSE
-        )
+        (is_active_user() AND is_content_manager())
       );
 
 -- RLSを有効化
