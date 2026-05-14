@@ -159,12 +159,17 @@ export async function reorderItemsInCategory(
 ): Promise<void> {
   const supabase = createClientSupabaseClient();
 
-  // カテゴリー内のアイテムを display_order の昇順で取得（削除済みも含む）
-  const { data: items } = await supabase
+  // カテゴリー内の未削除アイテムを display_order の昇順で取得する。
+  const { data: items, error: selectError } = await supabase
     .from(table)
     .select("id")
     .eq("category_id", categoryId)
+    .eq("is_deleted", false)
     .order("display_order", { ascending: true });
+
+  if (selectError) {
+    throw new Error(`${table} の並び順再採番対象取得に失敗しました: ${selectError.message}`);
+  }
 
   if (!items || items.length === 0) {
     return;
@@ -172,9 +177,15 @@ export async function reorderItemsInCategory(
 
   // 1 から順に振り直す（衝突を避けるため順次更新）
   for (const [index, item] of items.entries()) {
-    await supabase
+    const { error: updateError } = await supabase
       .from(table)
       .update({ display_order: index + 1 })
       .eq("id", item.id);
+
+    if (updateError) {
+      throw new Error(
+        `${table} の並び順再採番に失敗しました(id: ${item.id}): ${updateError.message}`
+      );
+    }
   }
 }

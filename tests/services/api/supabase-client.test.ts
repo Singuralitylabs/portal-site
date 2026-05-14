@@ -12,6 +12,7 @@ import {
   registerDocument,
   updateDocument,
 } from "../../../app/services/api/documents-client";
+import { registerCategory, updateCategory } from "../../../app/services/api/categories-client";
 import {
   deleteVideo,
   getVideosByCategory,
@@ -114,6 +115,49 @@ const createAwaitableUpdateBuilder = (result: QueryResult) => {
   builder.update = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.then = resolve => Promise.resolve(result).then(resolve);
+  return builder as Required<typeof builder>;
+};
+
+// select(...).eq(...).order(...).limit(...) で終端するクエリ用モック
+const createOrderLimitBuilder = (result: QueryResult) => {
+  const builder: {
+    select?: jest.Mock;
+    eq?: jest.Mock;
+    order?: jest.Mock;
+    limit?: jest.Mock;
+  } = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.order = jest.fn(() => builder);
+  builder.limit = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
+// select(...).eq(...).eq(...).gte(...).order(...) で終端するクエリ用モック
+const createGteOrderBuilder = (result: QueryResult) => {
+  const builder: {
+    select?: jest.Mock;
+    eq?: jest.Mock;
+    neq?: jest.Mock;
+    gte?: jest.Mock;
+    order?: jest.Mock;
+    then?: (resolve: (value: QueryResult) => void) => Promise<void>;
+  } = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.neq = jest.fn(() => builder);
+  builder.gte = jest.fn(() => builder);
+  builder.order = jest.fn(() => builder);
+  builder.then = resolve => Promise.resolve(result).then(resolve);
+  return builder as Required<typeof builder>;
+};
+
+// select(...).eq(...).order(...) で終端するクエリ用モック
+const createOrderBuilder = (result: QueryResult) => {
+  const builder: { select?: jest.Mock; eq?: jest.Mock; order?: jest.Mock } = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.order = jest.fn(() => Promise.resolve(result));
   return builder as Required<typeof builder>;
 };
 
@@ -386,6 +430,123 @@ describe("content client services", () => {
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
+  });
+});
+
+describe("categories-client", () => {
+  const createClientSupabaseClientMock = createClientSupabaseClient as jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("registerCategory 正常系: first 指定時はシフト後に登録して再採番する", async () => {
+    const shiftBuilder = createGteOrderBuilder({
+      data: [
+        { id: 2, display_order: 5 },
+        { id: 1, display_order: 4 },
+      ],
+      error: null,
+    });
+    const shiftUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const shiftUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+    const insertBuilder = createInsertBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({
+      data: [{ id: 1 }, { id: 2 }],
+      error: null,
+    });
+    const reorderUpdateBuilder1 = createUpdateBuilder({ data: null, error: null });
+    const reorderUpdateBuilder2 = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(shiftBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder1)
+      .mockReturnValueOnce(shiftUpdateBuilder2)
+      .mockReturnValueOnce(insertBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder1)
+      .mockReturnValueOnce(reorderUpdateBuilder2);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "first" },
+    });
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(shiftUpdateBuilder1.update).toHaveBeenCalledWith({ display_order: 6 });
+    expect(shiftUpdateBuilder1.eq).toHaveBeenCalledWith("id", 2);
+    expect(shiftUpdateBuilder2.update).toHaveBeenCalledWith({ display_order: 5 });
+    expect(shiftUpdateBuilder2.eq).toHaveBeenCalledWith("id", 1);
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
+  it("updateCategory 正常系: after 指定時はシフト後に更新して再採番する", async () => {
+    const currentBuilder = createSelectSingleBuilder({
+      data: {
+        display_order: 2,
+        category_type: "documents",
+      },
+      error: null,
+    });
+    const afterBuilder = createSelectSingleBuilder({
+      data: { display_order: 4 },
+      error: null,
+    });
+    const shiftBuilder = createGteOrderBuilder({
+      data: [{ id: 2, display_order: 5 }],
+      error: null,
+    });
+    const shiftUpdateBuilder = createUpdateBuilder({ data: null, error: null });
+    const updateBuilder = createUpdateBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({ data: [{ id: 1 }], error: null });
+    const reorderUpdateBuilder = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(currentBuilder)
+      .mockReturnValueOnce(afterBuilder)
+      .mockReturnValueOnce(shiftBuilder)
+      .mockReturnValueOnce(shiftUpdateBuilder)
+      .mockReturnValueOnce(updateBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateCategory({
+      id: 10,
+      category_type: "documents",
+      name: "カテゴリB",
+      description: null,
+      position: { type: "after", afterId: 1 },
+    });
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(shiftUpdateBuilder.update).toHaveBeenCalledWith({ display_order: 6 });
+    expect(shiftUpdateBuilder.eq).toHaveBeenCalledWith("id", 2);
+    expect(reorderSelectBuilder.order).toHaveBeenCalledTimes(1);
+  });
+
+  it("registerCategory 異常系: 最大表示順取得エラー時は失敗を返す", async () => {
+    const maxOrderBuilder = createOrderLimitBuilder({
+      data: null,
+      error: { message: "select failed" },
+    });
+    const supabase = { from: jest.fn().mockReturnValue(maxOrderBuilder) };
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await registerCategory({
+      category_type: "documents",
+      name: "カテゴリA",
+      description: "desc",
+      position: { type: "last" },
+    });
+
+    expect(response.success).toBe(false);
+    expect((response.error as Error).message).toContain("表示順の取得に失敗しました");
   });
 });
 

@@ -123,18 +123,16 @@ async function shiftCategoryDisplayOrder(
     return;
   }
 
-  await Promise.all(
-    affectedCategories.map(async category => {
-      const { error } = await supabase
-        .from("categories")
-        .update({ display_order: category.display_order + 1 })
-        .eq("id", category.id);
+  for (const category of affectedCategories) {
+    const { error } = await supabase
+      .from("categories")
+      .update({ display_order: category.display_order + 1 })
+      .eq("id", category.id);
 
-      if (error) {
-        throw new Error(`表示順更新に失敗しました(id: ${category.id}): ${error.message}`);
-      }
-    })
-  );
+    if (error) {
+      throw new Error(`表示順更新に失敗しました(id: ${category.id}): ${error.message}`);
+    }
+  }
 }
 
 async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise<void> {
@@ -155,18 +153,16 @@ async function reorderCategoriesByType(categoryType: CategoryTypeValue): Promise
     return;
   }
 
-  await Promise.all(
-    categories.map(async (category, index) => {
-      const { error } = await supabase
-        .from("categories")
-        .update({ display_order: index + 1 })
-        .eq("id", category.id);
+  for (const [index, category] of categories.entries()) {
+    const { error } = await supabase
+      .from("categories")
+      .update({ display_order: index + 1 })
+      .eq("id", category.id);
 
-      if (error) {
-        throw new Error(`並び順再採番に失敗しました(id: ${category.id}): ${error.message}`);
-      }
-    })
-  );
+    if (error) {
+      throw new Error(`並び順再採番に失敗しました(id: ${category.id}): ${error.message}`);
+    }
+  }
 }
 
 export async function registerCategory({
