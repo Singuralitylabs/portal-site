@@ -173,3 +173,24 @@ export async function rejectUser({
 
   return { error: null };
 }
+
+// Google プロフィール画像はユーザーが変更することがあるため、ログインのたびに最新値でDBを上書きする
+export async function updateUserAvatarUrl({
+  authId,
+  avatarUrl,
+}: {
+  authId: string;
+  avatarUrl: string | null;
+}): Promise<{ error: PostgrestError | null }> {
+  const supabase = createClientSupabaseClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ avatar_url: avatarUrl })
+    .eq("auth_id", authId)
+    .eq("is_deleted", false);
+  if (error) {
+    console.error("Supabase avatar_url更新エラー:", error.message);
+    return { error };
+  }
+  return { error: null };
+}
