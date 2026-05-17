@@ -87,7 +87,7 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | 名前 | 内容 | 使用ワークフロー | 備考 |
 | --- | --- | --- | --- |
 | `FORK_SYNC_TOKEN` | フォーク同期用トークン | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する |
-| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | [`db-types.yml`](../.github/workflows/db-types.yml) | |
+| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | [`db-types.yml`](../.github/workflows/db-types.yml) |  |
 
 ## 4. リリース自動化
 

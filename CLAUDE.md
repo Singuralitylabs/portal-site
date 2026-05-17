@@ -100,6 +100,8 @@ npm run db:types   # Supabase型生成
 1. `npm run lint` - ESLintチェック
 2. `npm run type-check` - 型チェック
 3. `npm run build` - ビルドチェック
+4. docs を更新した場合は `npm run format:docs:check` を実行（差分がある場合は `npm run format:docs` を実行）
+5. PR 作成前に `npm run format:check` を実行（差分がある場合は `npm run format` を実行）
 
 ## 禁止事項
 

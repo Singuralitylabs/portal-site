@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "format:check": "prettier --check . --ignore-unknown",
-    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown && npm run format:docs:check",
+    "format": "prettier --write . --ignore-unknown && npm run format:docs",
+    "format:docs": "node scripts/format-docs.cjs",
+    "format:docs:check": "node scripts/format-docs.cjs --check",
     "db:types": "node scripts/db-types.cjs",
     "lint:logs": "node scripts/lint-logs.cjs",
     "test": "jest --verbose --coverage"
