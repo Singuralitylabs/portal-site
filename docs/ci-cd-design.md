@@ -113,7 +113,8 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 1. リポジトリの **Settings → Environments → New environment** で `production-release` を作成する
 2. **Deployment protection rules → Required reviewers** にチェックを入れ、リリース承認権限を持つメンバー／チームを追加する
-3. 必要に応じて **Deployment branches and tags** を「Selected branches」にし、`release` ブランチからの実行のみを許可する
+
+> **注意**: **Deployment branches and tags** を `release` のみに制限すると、`create-release.yml` を発火させる `pull_request` イベント（`github.ref` が `refs/pull/<n>/merge` になる）や、main ブランチからの `workflow_dispatch` 起動が Environment 制限ではじかれて承認段階に到達できない。本ワークフローでは Required reviewers のみで承認ゲートとし、branch 制限は **設定しない**（"No deployment branch policy" のまま）こと。
 
 ## 4. リリース自動化
 

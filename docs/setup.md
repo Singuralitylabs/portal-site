@@ -103,7 +103,7 @@ npm install
    | `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクトのエンドポイント URL。ブラウザ／サーバー双方から Supabase の認証・データベース API へ接続する際に使用する | Supabase Dashboard → Project Settings → API → Project URL |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の匿名 API キー。クライアント側から Supabase に接続する際の認証に使用される（実権限は RLS で制御される） | Supabase Dashboard → Project Settings → API → anon public |
    | `SUPABASE_PROJECT_ID` | Supabase プロジェクトの一意 ID。`npm run db:types` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要） | Supabase Dashboard → Project Settings → General → Reference ID |
-   | `GOOGLE_CALENDAR_IDS` | 取得対象の Google Calendar の ID 一覧（カンマ区切り）。カレンダー連携機能で予定を取得するために使用する | Google Calendar の各カレンダー設定画面（カンマ区切り） |
+   | `GOOGLE_CALENDAR_IDS` | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
    | `GOOGLE_SERVICE_ACCOUNT_KEY` | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形） |
    | `SLACK_WEBHOOK_URL` | Slack に通知を送るための Incoming Webhook URL。申請・承認イベント等の通知送信先として使用する | Slack の Incoming Webhook 設定画面 |
 

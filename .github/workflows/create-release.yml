@@ -33,6 +33,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
     outputs:
       version: ${{ steps.extract.outputs.version }}
+      target_sha: ${{ steps.target.outputs.sha }}
     steps:
       # PR タイトル or 手動入力からバージョン文字列を抽出する
       - name: バージョン抽出（PR タイトル or 手動入力）
@@ -74,6 +75,30 @@ jobs:
           ref: release
           fetch-depth: 0
 
+      # リリース対象コミットの SHA を確定する。
+      # 承認ゲートでの待機中に release ブランチが進んでも、ここで固定した SHA に対してタグを付与することで、
+      # 「意図しないコミットにタグが付く」事故を防ぐ。
+      - name: 対象コミット SHA を確定
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # 手動起動時は現時点の release HEAD を対象とする
+            SHA=$(git rev-parse HEAD)
+          else
+            # PR マージ時は確定済みのマージコミット SHA を使用（承認待ち中の release 進行に影響されない）
+            SHA="$MERGE_SHA"
+          fi
+          if [ -z "$SHA" ]; then
+            echo "::error::対象コミット SHA を決定できませんでした"
+            exit 1
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "対象コミット: $SHA"
+
       # タグ重複チェック: 同名タグが既に存在する場合はエラー終了
       - name: タグ重複チェック
         env:
@@ -96,10 +121,11 @@ jobs:
     environment:
       name: production-release
     steps:
-      - name: Checkout release branch
+      # validate ジョブで確定した SHA をチェックアウト（release ブランチ HEAD ではなく固定 SHA）
+      - name: Checkout target commit
         uses: actions/checkout@v4
         with:
-          ref: release
+          ref: ${{ needs.validate.outputs.target_sha }}
           fetch-depth: 0
           # 後続のタグ push に GITHUB_TOKEN を使うため、認証情報を保持
           persist-credentials: true
@@ -121,21 +147,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.validate.outputs.version }}
+          TARGET_SHA: ${{ needs.validate.outputs.target_sha }}
         run: |
           set -euo pipefail
+          # --target に SHA を指定し、リリース対象を確定済みコミットに固定する
           gh release create "v${VERSION}" \
-            --target release \
+            --target "${TARGET_SHA}" \
             --title "v${VERSION}" \
             --generate-notes
 
       - name: 成功サマリーを出力
         env:
           VERSION: ${{ needs.validate.outputs.version }}
+          TARGET_SHA: ${{ needs.validate.outputs.target_sha }}
         run: |
           {
             echo "## ✅ リリース v${VERSION} を公開しました"
             echo ""
             echo "- タグ: \`v${VERSION}\`"
-            echo "- 対象ブランチ: \`release\`"
+            echo "- 対象コミット: \`${TARGET_SHA}\`"
             echo "- Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${VERSION}"
           } >> "$GITHUB_STEP_SUMMARY"
