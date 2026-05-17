@@ -9,7 +9,8 @@
 3. [共通の権限設計](#3-共通の権限設計)
    - [3.1 ワークフローが持つ権限の制限](#31-ワークフローが持つ権限の制限)
    - [3.2 外部サービスのトークン管理](#32-外部サービスのトークン管理)
-   - [3.3 トークンの一覧](#33-トークンの一覧)
+   - [3.3 トークン・設定値の一覧](#33-トークン設定値の一覧)
+   - [3.4 GitHub Environments](#34-github-environments)
 4. [リリース自動化](#4-リリース自動化)
    - [4.1 ワークフロー一覧](#41-ワークフロー一覧)
    - [4.2 ガード条件と同時実行制御](#42-ガード条件と同時実行制御)
@@ -68,7 +69,7 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 - **有効期限を設定する**: トークンが漏洩していた場合でも、期限切れ後は使用できなくなる
 - **必要な権限だけを付与する**: そのワークフローが必要とする最小限の権限のみを付与し、漏洩時の影響範囲を限定する
 
-### 3.3 トークンの一覧
+### 3.3 トークン・設定値の一覧
 
 **GITHUB_TOKEN:**
 
@@ -88,6 +89,32 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | --- | --- | --- | --- |
 | `FORK_SYNC_TOKEN` | フォーク同期用トークン | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する |
 | `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | [`db-types.yml`](../.github/workflows/db-types.yml) | |
+
+**Variables:**
+
+機密ではないがワークフローから参照する設定値は GitHub の **Variables** に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions → Variables**
+
+| 名前 | 内容 | 使用ワークフロー | 備考 |
+| --- | --- | --- | --- |
+| `SUPABASE_PROJECT_ID` | 型生成対象の Supabase Project ID | [`db-types.yml`](../.github/workflows/db-types.yml) | |
+| `FORK_REPO` | フォーク同期先リポジトリ（`owner/repo` 形式） | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 同期先を切り替える際はこの値だけを変更すればよい |
+
+### 3.4 GitHub Environments
+
+承認ゲート付きのワークフローでは、GitHub の **Environments** 機能を利用する。Environment は事前にリポジトリ側で作成し、保護ルール（Required reviewers 等）を設定する必要がある。
+
+**Required reviewers が未設定の場合、承認ゲートは事実上機能せずジョブが自動で進行する**ため、本番運用を開始する前に必ず設定する。
+
+| 名前 | 用途 | 使用ワークフロー | 必須の保護ルール |
+| --- | --- | --- | --- |
+| `production-release` | タグ作成・GitHub Release 公開前の承認ゲート | [`create-release.yml`](../.github/workflows/create-release.yml) | Required reviewers にリリース承認権限者を登録 |
+
+設定手順:
+
+1. リポジトリの **Settings → Environments → New environment** で `production-release` を作成する
+2. **Deployment protection rules → Required reviewers** にチェックを入れ、リリース承認権限を持つメンバー／チームを追加する
+
+> **注意**: **Deployment branches and tags** を `release` のみに制限すると、`create-release.yml` を発火させる `pull_request` イベント（`github.ref` が `refs/pull/<n>/merge` になる）や、main ブランチからの `workflow_dispatch` 起動が Environment 制限ではじかれて承認段階に到達できない。本ワークフローでは Required reviewers のみで承認ゲートとし、branch 制限は **設定しない**（"No deployment branch policy" のまま）こと。
 
 ## 4. リリース自動化
 
@@ -136,5 +163,17 @@ concurrency:
 | [`release-pr.yml`](../.github/workflows/release-pr.yml) | PR が作成されない。リリースプロセスは開始されない | 手動での再実行が可能 |
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | フォークリポジトリが同期されない。本番デプロイには影響しない | リリース全体をブロックしない。ジョブサマリーに警告を出力 |
 | [`create-release.yml`](../.github/workflows/create-release.yml) | タグ・Release が作成されない | 手動での再実行が可能。タグ重複チェックにより二重作成を防止 |
+
+#### `create-release.yml` 部分失敗時のリカバリ
+
+[`create-release.yml`](../.github/workflows/create-release.yml) は「タグの push」と「GitHub Release の作成」を順次実行する。前段だけ成功して後段で失敗した場合、ワークフローを単純に再実行するとタグ重複チェックで停止するため、後段のみ手動で補完する必要がある。
+
+| 失敗パターン | 状態 | リカバリ手順 |
+| --- | --- | --- |
+| タグ push 前に失敗 | タグも Release も無い | バージョン番号を確認のうえ、`create-release.yml` を再実行する |
+| タグ push 成功 / Release 作成失敗 | タグのみ存在 | ワークフロー再実行は不可（タグ重複で停止）。**`gh release create vX.Y.Z --target release --title vX.Y.Z --generate-notes` を手動で実行**して Release のみ補完する |
+| Release 作成成功 / 後続失敗（理論上のみ） | タグも Release もある | 後続ステップが追加された場合のみ該当。当該ステップだけを手動で補完する |
+
+タグそのものを誤って作ってしまった場合は、`git push --delete origin vX.Y.Z` でリモートタグを削除してから再実行する。**ローカルタグの削除（`git tag -d`）も併せて行わないと、ローカルから誤って再 push されるおそれがある**点に注意する。
 
 具体的な対応手順は [GitHub Wiki: 本番環境リリース手順](https://github.com/Singuralitylabs/portal-site/wiki/%E6%9C%AC%E7%95%AA%E7%92%B0%E5%A2%83%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E6%89%8B%E9%A0%86) のトラブルシューティングを参照すること。

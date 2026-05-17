@@ -1,0 +1,170 @@
+name: Create Release
+
+# release ブランチへの PR マージ後、承認ゲートを経て Git タグと GitHub Release を作成する
+# 設計: docs/ci-cd-design.md 4.2 (ガード条件・同時実行制御)
+on:
+  pull_request:
+    branches:
+      - release
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "リリースバージョン番号（X.Y.Z 形式 / 例: 1.2.3）"
+        required: true
+        type: string
+
+# タグ push と GitHub Release 作成のため contents 書き込み権限が必要
+permissions:
+  contents: write
+
+# 同一ワークフローの同時実行を抑止。実行中のものはキャンセルせず後続をキュー待ちさせる
+concurrency:
+  group: create-release
+  cancel-in-progress: false
+
+jobs:
+  # 各種ガード条件のチェック。すべて通過した場合のみ承認ゲート → release ジョブへ進む
+  validate:
+    name: ガード条件チェック
+    runs-on: ubuntu-latest
+    # マージ済みチェック: pull_request トリガーではマージされた場合のみ実行
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      target_sha: ${{ steps.target.outputs.sha }}
+    steps:
+      # PR タイトル or 手動入力からバージョン文字列を抽出する
+      - name: バージョン抽出（PR タイトル or 手動入力）
+        id: extract
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          MANUAL_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$MANUAL_VERSION"
+          else
+            # PR タイトルチェック: 「リリース」で始まる PR のみ対象
+            if ! echo "$PR_TITLE" | grep -Eq '^リリース[[:space:]　]'; then
+              echo "::error::PR タイトルが「リリース」で始まりません: $PR_TITLE"
+              exit 1
+            fi
+            # 例: 「リリース 1.2.3」「リリース v1.2.3」→ 1.2.3
+            VERSION=$(echo "$PR_TITLE" | sed -E 's/^リリース[[:space:]　]+v?//' | tr -d '[:space:]　')
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "抽出されたバージョン: $VERSION"
+
+      # バージョン形式チェック: X.Y.Z の形式でなければエラー終了
+      - name: バージョン形式チェック
+        env:
+          VERSION: ${{ steps.extract.outputs.version }}
+        run: |
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::バージョン番号は X.Y.Z 形式である必要があります（抽出値: $VERSION）"
+            exit 1
+          fi
+
+      # タグ重複チェックのため release ブランチをチェックアウト（タグ情報も取得）
+      - name: Checkout release branch with tags
+        uses: actions/checkout@v4
+        with:
+          ref: release
+          fetch-depth: 0
+
+      # リリース対象コミットの SHA を確定する。
+      # 承認ゲートでの待機中に release ブランチが進んでも、ここで固定した SHA に対してタグを付与することで、
+      # 「意図しないコミットにタグが付く」事故を防ぐ。
+      - name: 対象コミット SHA を確定
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # 手動起動時は現時点の release HEAD を対象とする
+            SHA=$(git rev-parse HEAD)
+          else
+            # PR マージ時は確定済みのマージコミット SHA を使用（承認待ち中の release 進行に影響されない）
+            SHA="$MERGE_SHA"
+          fi
+          if [ -z "$SHA" ]; then
+            echo "::error::対象コミット SHA を決定できませんでした"
+            exit 1
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "対象コミット: $SHA"
+
+      # タグ重複チェック: 同名タグが既に存在する場合はエラー終了
+      - name: タグ重複チェック
+        env:
+          VERSION: ${{ steps.extract.outputs.version }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then
+            echo "::error::タグ \`v${VERSION}\` は既に存在します。バージョン番号を変更してください。"
+            exit 1
+          fi
+          echo "タグ \`v${VERSION}\` は未使用です。続行します。"
+
+  # 承認ゲート付きのリリースジョブ。Environment の Required reviewers で承認待ちになる
+  release:
+    name: タグ作成と GitHub Release 公開
+    runs-on: ubuntu-latest
+    needs: validate
+    # GitHub Environments 側で Required reviewers を設定することで承認ゲートとして機能する
+    environment:
+      name: production-release
+    steps:
+      # validate ジョブで確定した SHA をチェックアウト（release ブランチ HEAD ではなく固定 SHA）
+      - name: Checkout target commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.target_sha }}
+          fetch-depth: 0
+          # 後続のタグ push に GITHUB_TOKEN を使うため、認証情報を保持
+          persist-credentials: true
+
+      - name: Git ユーザー情報設定
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Git タグ作成と push
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          git tag -a "v${VERSION}" -m "リリース v${VERSION}"
+          git push origin "v${VERSION}"
+
+      - name: GitHub Release を公開
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.validate.outputs.version }}
+          TARGET_SHA: ${{ needs.validate.outputs.target_sha }}
+        run: |
+          set -euo pipefail
+          # --target に SHA を指定し、リリース対象を確定済みコミットに固定する
+          gh release create "v${VERSION}" \
+            --target "${TARGET_SHA}" \
+            --title "v${VERSION}" \
+            --generate-notes
+
+      - name: 成功サマリーを出力
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          TARGET_SHA: ${{ needs.validate.outputs.target_sha }}
+        run: |
+          {
+            echo "## ✅ リリース v${VERSION} を公開しました"
+            echo ""
+            echo "- タグ: \`v${VERSION}\`"
+            echo "- 対象コミット: \`${TARGET_SHA}\`"
+            echo "- Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${VERSION}"
+          } >> "$GITHUB_STEP_SUMMARY"

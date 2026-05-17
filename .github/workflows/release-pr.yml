@@ -1,0 +1,202 @@
+name: Release PR
+
+# main から release への「リリース PR」を作成するワークフロー
+# 手動起動時にバージョン番号を受け取り、品質チェックとリリース時の事前作業
+# （マイグレーション・新規環境変数）を自動で検出し、PR 本文に記載する
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "リリースバージョン番号（X.Y.Z 形式 / 例: 1.2.3）"
+        required: true
+        type: string
+
+# GITHUB_TOKEN の権限を必要最小限に制限する
+permissions:
+  contents: read
+  pull-requests: write
+
+# 連打による二重 PR 作成を防止する。実行中のジョブはキャンセルせず後発をキュー待ちにする
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+
+jobs:
+  # 入力バリデーション。後段ジョブの無駄な実行を防ぐため最初に実行する
+  validate-input:
+    name: 入力値の検証
+    runs-on: ubuntu-latest
+    steps:
+      - name: バージョン形式チェック
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::バージョン番号は X.Y.Z 形式で指定してください（指定値: $VERSION）"
+            exit 1
+          fi
+
+  # main ブランチに対する品質ゲート。失敗時は PR を作成しない
+  quality-checks:
+    name: 品質チェック (${{ matrix.task }})
+    runs-on: ubuntu-latest
+    needs: validate-input
+    strategy:
+      # fail-fast: false → 1 つのチェックが失敗しても他のチェックは継続実行する
+      # （build / type-check / lint / test / lint:logs のすべてを並列実行して、リリース前に全ての問題を一度に把握できるようにするため）
+      fail-fast: false
+      matrix:
+        task: [build, type-check, lint, test, lint:logs]
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ${{ matrix.task }}
+        env:
+          TASK: ${{ matrix.task }}
+        run: |
+          case "$TASK" in
+            build)      npm run build ;;
+            type-check) npm run type-check ;;
+            lint)       npm run lint ;;
+            test)       npm test ;;
+            lint:logs)  npm run lint:logs ;;
+            *)
+              # matrix.task に対応しない値が来た場合は silent pass にせず明示的に失敗させる
+              echo "::error::未対応のタスクです: $TASK（case 分岐の更新漏れの可能性あり）"
+              exit 1
+              ;;
+          esac
+
+  # 事前作業の検出とリリース PR 作成
+  create-pr:
+    name: リリース PR 作成
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    steps:
+      # release / main 両ブランチの履歴を遡るため全履歴を取得
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # release と main の双方を最新化（git fetch だけでは origin/release が無い環境への保険）
+      - name: Fetch release and main branches
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          git fetch origin release:refs/remotes/origin/release
+
+      # release..main で追加・変更されたマイグレーションファイルを抽出
+      - name: マイグレーション差分を検出
+        id: migrations
+        run: |
+          set -euo pipefail
+          MIGRATIONS=$(git diff --name-only --diff-filter=AM \
+            origin/release..origin/main -- 'supabase/migrations/' \
+            | grep -E '\.sql$' || true)
+
+          {
+            echo "list<<MIGRATIONS_EOF"
+            if [ -z "$MIGRATIONS" ]; then
+              echo "- なし"
+            else
+              echo "$MIGRATIONS" | while IFS= read -r f; do
+                [ -n "$f" ] && echo "- \`$f\`"
+              done
+            fi
+            echo "MIGRATIONS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # .env.example の差分から新規追加された環境変数キーを抽出
+      - name: 新規環境変数を検出
+        id: env-vars
+        run: |
+          set -euo pipefail
+          # 各ブランチの .env.example を取得（存在しない場合は空ファイル扱い）
+          git show origin/release:.env.example > /tmp/env.release 2>/dev/null || : > /tmp/env.release
+          git show origin/main:.env.example    > /tmp/env.main    2>/dev/null || : > /tmp/env.main
+
+          # KEY=VALUE 形式の行から KEY のみを抽出（コメント・空行は除外）
+          extract_keys() {
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$1" | sed -E 's/=.*$//' | sort -u
+          }
+
+          extract_keys /tmp/env.release > /tmp/keys.release || : > /tmp/keys.release
+          extract_keys /tmp/env.main    > /tmp/keys.main    || : > /tmp/keys.main
+
+          # main にあって release に無いキー = 新規追加された環境変数
+          NEW_KEYS=$(comm -13 /tmp/keys.release /tmp/keys.main || true)
+
+          {
+            echo "list<<ENVVARS_EOF"
+            if [ -z "$NEW_KEYS" ]; then
+              echo "- なし"
+            else
+              echo "$NEW_KEYS" | while IFS= read -r k; do
+                [ -n "$k" ] && echo "- \`$k\`"
+              done
+            fi
+            echo "ENVVARS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # 既存の main→release オープン PR がある場合は二重作成しない
+      - name: 既存リリース PR の存在確認
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NUMBER=$(gh pr list --base release --head main --state open \
+            --json number --jq '.[0].number // empty')
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: 既存 PR があれば中断
+        if: ${{ steps.existing.outputs.number != '' }}
+        run: |
+          echo "::error::既存のリリース PR #${{ steps.existing.outputs.number }} が open 状態です。先にこれをマージ／クローズしてください。"
+          exit 1
+
+      - name: リリース PR を作成
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          MIGRATIONS_LIST: ${{ steps.migrations.outputs.list }}
+          ENV_VARS_LIST: ${{ steps.env-vars.outputs.list }}
+        run: |
+          BODY=$(cat <<EOF
+          ## リリース v${VERSION}
+
+          このPRは \`main\` ブランチを \`release\` ブランチへマージするためのリリース PR です。
+          マージ後に \`create-release.yml\` が起動し、承認後に Git タグと GitHub Release が作成されます。
+
+          ### 事前作業の検出結果
+
+          **マイグレーションファイル（release..main で追加・変更）:**
+          ${MIGRATIONS_LIST}
+
+          **新規環境変数（.env.example で追加）:**
+          ${ENV_VARS_LIST}
+
+          ### マージ前チェックリスト
+
+          - [ ] 上記マイグレーションを本番 Supabase に適用済み
+          - [ ] 上記環境変数を本番環境（Vercel 等）に登録済み
+          - [ ] 差分内容を確認済み
+          EOF
+          )
+
+          gh pr create \
+            --base release \
+            --head main \
+            --title "リリース ${VERSION}" \
+            --body "$BODY"
