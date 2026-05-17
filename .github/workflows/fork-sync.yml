@@ -44,7 +44,9 @@ jobs:
             exit 1
           fi
 
-      # release ブランチの全履歴を取得（タグや過去コミットを含めて push するため）
+      # release ブランチの全履歴を取得（fork 側との fast-forward 関係を git push で検証するため。
+      # 浅い clone だと fast-forward 判定ができず push が拒否される場合があるため fetch-depth: 0 とする。
+      # 本ステップは release ブランチのみを対象とし、タグは push しない）
       - name: Checkout release branch
         uses: actions/checkout@v4
         with:
