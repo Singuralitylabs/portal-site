@@ -188,9 +188,9 @@ sequenceDiagram
 
 #### 2.6.1 未ログイン画面
 
-SVG モック（PoC）:
+PNG モック（PoC / Playwright 生成）:
 
-![未ログイン画面モック](./mockups/svg/login.svg)
+<img src="./mockups/png/login.playwright.png" width="400" alt="未ログイン画面モック" />
 
 ```text
 +----------------------------------+

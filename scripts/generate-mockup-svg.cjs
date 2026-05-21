@@ -24,7 +24,16 @@ function normalizeLines(value) {
   return [String(value)];
 }
 
-function renderTextLines({ x, y, lines, fontSize, fontWeight, fill, anchor = "start", lineGap = 1.45 }) {
+function renderTextLines({
+  x,
+  y,
+  lines,
+  fontSize,
+  fontWeight,
+  fill,
+  anchor = "start",
+  lineGap = 1.45,
+}) {
   if (!lines.length) {
     return "";
   }
@@ -70,7 +79,11 @@ function buildSvg(spec) {
   const noticeBodyStartY = 478;
   const noticeBodyFontSize = 20;
   const noticeBodyLineGap = 1.5;
-  const noticeBodyHeight = textBlockHeight(noticeBodyLines.length, noticeBodyFontSize, noticeBodyLineGap);
+  const noticeBodyHeight = textBlockHeight(
+    noticeBodyLines.length,
+    noticeBodyFontSize,
+    noticeBodyLineGap
+  );
   const noticeDomainY = noticeBodyStartY + noticeBodyHeight + 56;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
