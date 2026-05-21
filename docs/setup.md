@@ -117,6 +117,32 @@ npm install
 
 プロジェクトには既に `.vscode/settings.json` が含まれていますが、以下の拡張機能のインストールを推奨します。
 
+- ESLint
+- Prettier
+- Tailwind CSS IntelliSense
+- Draw.io Integration（`hediet.vscode-drawio`）
+
+### 2.5 画面モック（PoC）確認
+
+機能設計書向けの初期検証として、HTMLモックの確認ルートを用意しています。
+
+1. 開発サーバーを起動する
+
+  ```bash
+  npm run dev
+  ```
+
+2. ブラウザで以下にアクセスする
+
+  - `/mockups`
+  - `/mockups/login`
+
+3. 確認観点
+
+  - 認証不要で表示できること
+  - 実画面に近いレイアウト確認ができること
+  - 仕様議論用のたたき台として利用できること
+
 - ESLint: コードの静的解析
 - Prettier - Code formatter: コードフォーマッター
 - TypeScript and JavaScript Language Features: TypeScript サポート

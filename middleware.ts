@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { USER_STATUS } from "./app/constants/user";
 import { fetchUserStatusByIdInServer } from "./app/services/api/users-server";
 
-const publicRoutes = ["/login", "/callback", "/pending", "/rejected"];
+const publicRoutes = ["/login", "/callback", "/pending", "/rejected", "/mockups"];
 
 function shouldSkipMiddleware(pathname: string): boolean {
   return (

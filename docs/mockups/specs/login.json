@@ -1,0 +1,13 @@
+{
+  "title": "シンギュラリティ・ラボ ポータルサイト",
+  "subtitleLines": [
+    "本サイトには、シンギュラリティ・ラボの会員のみアクセスできます。"
+  ],
+  "buttonLabel": "Googleでログイン",
+  "noticeTitle": "ログイン時のご連絡",
+  "noticeBodyLines": [
+    "Googleアカウント選択画面では、Supabaseの認証システムを利用している仕様上、下記のURLが表示されます。",
+    "本URLはシンラボのポータルサイトへのアクセスページなので、安心してログインしてください。"
+  ],
+  "noticeDomain": "anawnwhhsgragkcorecl.supabase.co"
+}
