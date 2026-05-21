@@ -10,6 +10,10 @@ on:
         description: "リリースバージョン番号（X.Y.Z 形式 / 例: 1.2.3）"
         required: true
         type: string
+      summary:
+        description: "リリースサマリー（任意 / PR 本文の冒頭に挿入される）"
+        required: false
+        type: string
 
 # GITHUB_TOKEN の権限を必要最小限に制限する
 permissions:
@@ -170,14 +174,25 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ inputs.version }}
+          SUMMARY: ${{ inputs.summary }}
           MIGRATIONS_LIST: ${{ steps.migrations.outputs.list }}
           ENV_VARS_LIST: ${{ steps.env-vars.outputs.list }}
         run: |
+          # summary 入力が空ならセクション全体を省略する（任意入力のため）
+          # NOTE: $(...) は末尾改行を削るため、見出しとの間の空行は heredoc 側で確保する
+          if [ -n "${SUMMARY// /}" ]; then
+            SUMMARY_SECTION=$(printf '### リリースサマリー\n\n%s' "$SUMMARY")
+          else
+            SUMMARY_SECTION=""
+          fi
+
           BODY=$(cat <<EOF
           ## リリース v${VERSION}
 
           このPRは \`main\` ブランチを \`release\` ブランチへマージするためのリリース PR です。
           マージ後に \`create-release.yml\` が起動し、承認後に Git タグと GitHub Release が作成されます。
+
+          ${SUMMARY_SECTION}
 
           ### 事前作業の検出結果
 
