@@ -10,21 +10,58 @@ interface MemberCardProps {
   member: MemberType;
 }
 
+const signedUrlCache = new Map<string, string>();
+const signedUrlPromiseCache = new Map<string, Promise<string | null>>();
+
+async function getSignedProfileImageUrl(path: string) {
+  const cachedSignedUrl = signedUrlCache.get(path);
+  if (cachedSignedUrl) {
+    return cachedSignedUrl;
+  }
+
+  const pendingPromise = signedUrlPromiseCache.get(path);
+  if (pendingPromise) {
+    return pendingPromise;
+  }
+
+  const requestPromise = (async () => {
+    const supabase = createClientSupabaseClient();
+    const { data, error } = await supabase.storage.from("profile-images").createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      return null;
+    }
+
+    const signedUrl = `${data.signedUrl}&t=${Date.now()}`;
+    signedUrlCache.set(path, signedUrl);
+    return signedUrl;
+  })();
+
+  signedUrlPromiseCache.set(path, requestPromise);
+  requestPromise.finally(() => signedUrlPromiseCache.delete(path));
+
+  return requestPromise;
+}
+
 export function MemberCard({ member }: MemberCardProps) {
   const [modalOpened, setModalOpened] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!member.profile_image_path) return;
-    const supabase = createClientSupabaseClient();
-    supabase.storage
-      .from("profile-images")
-      .createSignedUrl(member.profile_image_path, 3600)
-      .then(({ data }) => {
-        if (data?.signedUrl) {
-          setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
-        }
-      });
+    if (!member.profile_image_path) {
+      setProfileImageUrl(null);
+      return;
+    }
+
+    let isMounted = true;
+    getSignedProfileImageUrl(member.profile_image_path).then(signedUrl => {
+      if (isMounted) {
+        setProfileImageUrl(signedUrl);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [member.profile_image_path]);
 
   const avatarSrc = profileImageUrl ?? member.avatar_url ?? null;
