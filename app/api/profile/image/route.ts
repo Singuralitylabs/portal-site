@@ -5,6 +5,21 @@ const BUCKET_NAME = "profile-images";
 const MAX_FILE_SIZE = 1024 * 1024;
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
 
+async function isActiveUser(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  authId: string
+) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("auth_id", authId)
+    .eq("status", "active")
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  return { isActive: !!data, error };
+}
+
 export async function POST(request: Request) {
   const { authId, error: authError } = await getServerCurrentUser();
   if (authError || !authId) {
@@ -33,6 +48,17 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createServerSupabaseClient();
+  const { isActive, error: activeUserError } = await isActiveUser(supabase, authId);
+  if (activeUserError) {
+    return NextResponse.json(
+      { success: false, error: "ユーザー情報の確認に失敗しました" },
+      { status: 500 }
+    );
+  }
+  if (!isActive) {
+    return NextResponse.json({ success: false, error: "この操作は許可されていません" }, { status: 403 });
+  }
+
   const filePath = `${authId}/profile-image`;
   const fileBuffer = await file.arrayBuffer();
 
@@ -51,7 +77,8 @@ export async function POST(request: Request) {
   const { error: updateError } = await supabase
     .from("users")
     .update({ profile_image_path: filePath, updated_at: new Date().toISOString() })
-    .eq("auth_id", authId);
+    .eq("auth_id", authId)
+    .eq("is_deleted", false);
 
   if (updateError) {
     console.error("profile_image_path 更新エラー:", updateError.message);
@@ -71,6 +98,17 @@ export async function DELETE() {
   }
 
   const supabase = await createServerSupabaseClient();
+  const { isActive, error: activeUserError } = await isActiveUser(supabase, authId);
+  if (activeUserError) {
+    return NextResponse.json(
+      { success: false, error: "ユーザー情報の確認に失敗しました" },
+      { status: 500 }
+    );
+  }
+  if (!isActive) {
+    return NextResponse.json({ success: false, error: "この操作は許可されていません" }, { status: 403 });
+  }
+
   const filePath = `${authId}/profile-image`;
 
   const { error: deleteError } = await supabase.storage.from(BUCKET_NAME).remove([filePath]);
@@ -86,7 +124,8 @@ export async function DELETE() {
   const { error: updateError } = await supabase
     .from("users")
     .update({ profile_image_path: null, updated_at: new Date().toISOString() })
-    .eq("auth_id", authId);
+    .eq("auth_id", authId)
+    .eq("is_deleted", false);
 
   if (updateError) {
     console.error("profile_image_path クリアエラー:", updateError.message);

@@ -27,7 +27,7 @@ const ProfileImageContext = createContext<ProfileImageContextType>({
 
 export function ProfileImageProvider({ children }: { children: React.ReactNode }) {
   const { user } = useSupabaseAuth();
-  // Storage上のファイルパス（例: "user-id/profile.jpg"）。署名付きURL再生成に使用
+  // Storage上のファイルパス（例: "user-id/profile-image"）。署名付きURL再生成に使用
   const [profileImagePath, setProfileImagePath] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null);
@@ -36,12 +36,14 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   // &t=... を末尾に付与することで、同一パスへの再アップロード後もブラウザキャッシュを回避する。
   const fetchSignedUrl = useCallback(async (path: string) => {
     const supabase = createClientSupabaseClient();
-    const { data } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("profile-images")
       .createSignedUrl(path, 3600);
-    if (data?.signedUrl) {
-      setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
+    if (error || !data?.signedUrl) {
+      setProfileImageUrl(null);
+      return;
     }
+    setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
   }, []);
 
   // ログイン・ログアウト時にDBから profile_image_path と avatar_url を取得して初期化する
@@ -62,7 +64,11 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
       .then(({ data }) => {
         const path = data?.profile_image_path ?? null;
         setProfileImagePath(path);
-        if (path) fetchSignedUrl(path);
+        if (path) {
+          fetchSignedUrl(path);
+        } else {
+          setProfileImageUrl(null);
+        }
         setGoogleAvatarUrl(data?.avatar_url ?? null);
       });
   }, [user, fetchSignedUrl]);
