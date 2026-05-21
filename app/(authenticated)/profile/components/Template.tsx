@@ -57,6 +57,7 @@ export function ProfilePageTemplate({
     setUser(initialUser);
     setName(initialUser.display_name);
     setBio(initialUser.bio || "");
+    setProfileImagePath(initialUser.profile_image_path ?? null);
     setSelectedPositionIds(initialPositionIds);
     setXUrl(initialUser.x_url || "");
     setFacebookUrl(initialUser.facebook_url || "");

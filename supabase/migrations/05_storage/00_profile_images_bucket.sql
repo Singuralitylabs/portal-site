@@ -17,8 +17,9 @@ USING (
   AND EXISTS (
     SELECT 1
     FROM public.users
-    WHERE auth_id = auth.uid()
-      AND status = 'active'
+    WHERE users.auth_id = auth.uid()
+      AND users.status = 'active'
+      AND users.is_deleted = false
   )
 );
 
@@ -32,8 +33,9 @@ WITH CHECK (
   AND EXISTS (
     SELECT 1
     FROM public.users
-    WHERE auth_id = auth.uid()
-      AND status = 'active'
+    WHERE users.auth_id = auth.uid()
+      AND users.status = 'active'
+      AND users.is_deleted = false
   )
 );
 
@@ -47,8 +49,9 @@ USING (
   AND EXISTS (
     SELECT 1
     FROM public.users
-    WHERE auth_id = auth.uid()
-      AND status = 'active'
+    WHERE users.auth_id = auth.uid()
+      AND users.status = 'active'
+      AND users.is_deleted = false
   )
 )
 WITH CHECK (
@@ -57,8 +60,9 @@ WITH CHECK (
   AND EXISTS (
     SELECT 1
     FROM public.users
-    WHERE auth_id = auth.uid()
-      AND status = 'active'
+    WHERE users.auth_id = auth.uid()
+      AND users.status = 'active'
+      AND users.is_deleted = false
   )
 );
 
@@ -72,7 +76,8 @@ USING (
   AND EXISTS (
     SELECT 1
     FROM public.users
-    WHERE auth_id = auth.uid()
-      AND status = 'active'
+    WHERE users.auth_id = auth.uid()
+      AND users.status = 'active'
+      AND users.is_deleted = false
   )
 );
