@@ -74,20 +74,20 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 各ワークフローに自動で付与されるトークン。必要最小限の権限のみ許可し、各ワークフローでは `permissions` を明示してデフォルト権限に依存しない。
 
-| ワークフロー | 権限 | 理由 |
-| --- | --- | --- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml) | `contents: read`, `pull-requests: write` | リリース PR の作成に必要 |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | `contents: read` | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write` | タグのプッシュと GitHub Release の作成に必要 |
+| ワークフロー                                                    | 権限                                     | 理由                                                             |
+| --------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml)         | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)           | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
 
 **Secrets:**
 
 機密情報はソースコードに書かず、GitHub の **Secrets**（暗号化された秘密情報）に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions**
 
-| 名前 | 内容 | 使用ワークフロー | 備考 |
-| --- | --- | --- | --- |
-| `FORK_SYNC_TOKEN` | フォーク同期用トークン | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する |
-| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | [`db-types.yml`](../.github/workflows/db-types.yml) | |
+| 名前                    | 内容                    | 使用ワークフロー                                      | 備考                                                                       |
+| ----------------------- | ----------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| `FORK_SYNC_TOKEN`       | フォーク同期用トークン  | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する |
+| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | [`db-types.yml`](../.github/workflows/db-types.yml)   |                                                                            |
 
 ## 4. リリース自動化
 
@@ -97,11 +97,11 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 ### 4.1 ワークフロー一覧
 
-| ワークフロー | 内容 | トリガー |
-| --- | --- | --- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml) | 品質チェック（build / type-check / lint / test）を実行し、事前作業の検出結果（マイグレーションファイル・新規環境変数）を含む main→release PR を作成する | 手動起動（バージョン番号を入力） |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | フォークリポジトリの release ブランチを同期する | release ブランチへの PR マージ後・自動 / 手動起動 |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | 承認ゲートを経て、Git タグと GitHub Release を作成する | release ブランチへの PR マージ後・承認待ち / 手動起動 |
+| ワークフロー                                                    | 内容                                                                                                                                                    | トリガー                                              |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml)         | 品質チェック（build / type-check / lint / test）を実行し、事前作業の検出結果（マイグレーションファイル・新規環境変数）を含む main→release PR を作成する | 手動起動（バージョン番号を入力）                      |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)           | フォークリポジトリの release ブランチを同期する                                                                                                         | release ブランチへの PR マージ後・自動 / 手動起動     |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | 承認ゲートを経て、Git タグと GitHub Release を作成する                                                                                                  | release ブランチへの PR マージ後・承認待ち / 手動起動 |
 
 ### 4.2 ガード条件と同時実行制御
 
@@ -109,13 +109,13 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 [`create-release.yml`](../.github/workflows/create-release.yml) はタグ作成・Release 公開を行うため、誤実行を防ぐ複数のチェックを設定する。すべてのチェックを通過した場合のみ実行される。
 
-| ガード | 内容 |
-| --- | --- |
-| マージ済みチェック | PR が実際にマージされた場合のみ動作する（PR をクローズしただけでは動かない） |
-| PR タイトルチェック | タイトルが「リリース」で始まる PR のみ対象とする |
-| バージョン形式チェック | バージョン番号が `X.Y.Z` の形式でなければエラー終了する |
-| タグ重複チェック | 同じバージョンのタグが既に存在する場合はエラー終了する |
-| 承認ゲート | GitHub Environments で設定した承認者が承認するまで実行を保留する |
+| ガード                 | 内容                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| マージ済みチェック     | PR が実際にマージされた場合のみ動作する（PR をクローズしただけでは動かない） |
+| PR タイトルチェック    | タイトルが「リリース」で始まる PR のみ対象とする                             |
+| バージョン形式チェック | バージョン番号が `X.Y.Z` の形式でなければエラー終了する                      |
+| タグ重複チェック       | 同じバージョンのタグが既に存在する場合はエラー終了する                       |
+| 承認ゲート             | GitHub Environments で設定した承認者が承認するまで実行を保留する             |
 
 #### 同時実行制御
 
@@ -131,10 +131,10 @@ concurrency:
 
 ### 4.3 失敗時の扱い
 
-| ワークフロー | 失敗した場合の影響 | 設計方針 |
-| --- | --- | --- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml) | PR が作成されない。リリースプロセスは開始されない | 手動での再実行が可能 |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | フォークリポジトリが同期されない。本番デプロイには影響しない | リリース全体をブロックしない。ジョブサマリーに警告を出力 |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | タグ・Release が作成されない | 手動での再実行が可能。タグ重複チェックにより二重作成を防止 |
+| ワークフロー                                                    | 失敗した場合の影響                                           | 設計方針                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml)         | PR が作成されない。リリースプロセスは開始されない            | 手動での再実行が可能                                       |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)           | フォークリポジトリが同期されない。本番デプロイには影響しない | リリース全体をブロックしない。ジョブサマリーに警告を出力   |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | タグ・Release が作成されない                                 | 手動での再実行が可能。タグ重複チェックにより二重作成を防止 |
 
 具体的な対応手順は [GitHub Wiki: 本番環境リリース手順](https://github.com/Singuralitylabs/portal-site/wiki/%E6%9C%AC%E7%95%AA%E7%92%B0%E5%A2%83%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E6%89%8B%E9%A0%86) のトラブルシューティングを参照すること。
