@@ -16,8 +16,10 @@ on:
         type: string
 
 # タグ push と GitHub Release 作成のため contents 書き込み権限が必要
+# また、リリース PR 本文からサマリーを抽出するため pull-requests への読み取り権限も必要
 permissions:
   contents: write
+  pull-requests: read
 
 # 同一ワークフローの同時実行を抑止。実行中のものはキャンセルせず後続をキュー待ちさせる
 concurrency:
@@ -34,6 +36,7 @@ jobs:
     outputs:
       version: ${{ steps.extract.outputs.version }}
       target_sha: ${{ steps.target.outputs.sha }}
+      summary: ${{ steps.summary.outputs.body }}
     steps:
       # PR タイトル or 手動入力からバージョン文字列を抽出する
       - name: バージョン抽出（PR タイトル or 手動入力）
@@ -99,6 +102,61 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "対象コミット: $SHA"
 
+      # リリース PR 本文から「リリースサマリー」セクションを抽出する。
+      # release-pr.yml が <!-- release-summary-start --> ~ <!-- release-summary-end --> で
+      # 囲んで PR 本文に挿入しているため、その間の本文部分を切り出して GitHub Release ノートに反映する。
+      # 抽出失敗（マーカー欠落・PR 特定不可）は致命エラーではなく、自動生成ノートのみで Release を作成する。
+      - name: リリースサマリーを PR 本文から抽出
+        id: summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          # 対象 PR 番号の特定
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            # 手動起動時: target_sha をマージコミットに持つ closed PR を逆引き
+            PR_NUMBER=$(gh pr list --base release --state merged --limit 20 \
+              --json number,mergeCommit \
+              --jq ".[] | select(.mergeCommit.oid == \"${TARGET_SHA}\") | .number" \
+              | head -n1 || true)
+          fi
+
+          if [ -z "${PR_NUMBER:-}" ]; then
+            echo "::warning::対象 PR を特定できませんでした。自動生成ノートのみで Release を作成します。"
+            # 出力は空文字（後段でフォールバック処理）
+            {
+              echo "body<<RELEASE_SUMMARY_EOF"
+              echo "RELEASE_SUMMARY_EOF"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq .body)
+
+          # マーカー間の本文を awk で抽出（マーカー行自体は除外）
+          EXTRACTED=$(printf '%s\n' "$PR_BODY" | awk '
+            /<!-- release-summary-start -->/ { capture=1; next }
+            /<!-- release-summary-end -->/   { capture=0 }
+            capture { print }
+          ')
+
+          # 全空白（改行・タブ含む）を除去して実質的に空かどうかを判定する
+          if [ -z "$(printf '%s' "$EXTRACTED" | tr -d '[:space:]')" ]; then
+            echo "::warning::PR #${PR_NUMBER} の本文にリリースサマリーマーカーが見つかりませんでした。"
+          else
+            echo "PR #${PR_NUMBER} からリリースサマリーを抽出しました（${#EXTRACTED} 文字）。"
+          fi
+
+          {
+            echo "body<<RELEASE_SUMMARY_EOF"
+            echo "$EXTRACTED"
+            echo "RELEASE_SUMMARY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       # タグ重複チェック: 同名タグが既に存在する場合はエラー終了
       - name: タグ重複チェック
         env:
@@ -148,13 +206,38 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.validate.outputs.version }}
           TARGET_SHA: ${{ needs.validate.outputs.target_sha }}
+          SUMMARY: ${{ needs.validate.outputs.summary }}
         run: |
           set -euo pipefail
+
+          # 自動生成ノート（commit/PR ベース）を API 経由で取得
+          AUTO_NOTES=$(gh api \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+            -f tag_name="v${VERSION}" \
+            -f target_commitish="${TARGET_SHA}" \
+            --jq .body)
+
+          # 抽出サマリーがあれば冒頭に配置、その下に自動生成ノートを連結
+          NOTES_FILE=$(mktemp)
+          # 全空白（改行・タブ含む）を除去して実質的に内容があるかを判定する
+          if [ -n "$(printf '%s' "$SUMMARY" | tr -d '[:space:]')" ]; then
+            {
+              printf '%s\n\n' "$SUMMARY"
+              echo "---"
+              echo ""
+              echo "$AUTO_NOTES"
+            } > "$NOTES_FILE"
+          else
+            echo "$AUTO_NOTES" > "$NOTES_FILE"
+          fi
+
           # --target に SHA を指定し、リリース対象を確定済みコミットに固定する
           gh release create "v${VERSION}" \
             --target "${TARGET_SHA}" \
             --title "v${VERSION}" \
-            --generate-notes
+            --notes-file "$NOTES_FILE"
 
       - name: 成功サマリーを出力
         env:

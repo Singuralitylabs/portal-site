@@ -180,8 +180,12 @@ jobs:
         run: |
           # summary 入力が空ならセクション全体を省略する（任意入力のため）
           # NOTE: $(...) は末尾改行を削るため、見出しとの間の空行は heredoc 側で確保する
-          if [ -n "${SUMMARY// /}" ]; then
-            SUMMARY_SECTION=$(printf '### リリースサマリー\n\n%s' "$SUMMARY")
+          # NOTE: HTML コメントマーカーは create-release.yml が PR 本文から本文（カテゴリ別の箇条書き）
+          # のみを抽出して Release ノートに転記するために使用する。マーカーで囲むのは本文だけにし、
+          # 「### リリースサマリー」見出しは PR 表示用にマーカー外へ配置する。
+          # 全空白（改行・タブ含む）を除去して実質的に内容があるかを判定する
+          if [ -n "$(printf '%s' "$SUMMARY" | tr -d '[:space:]')" ]; then
+            SUMMARY_SECTION=$(printf '### リリースサマリー\n\n<!-- release-summary-start -->\n%s\n<!-- release-summary-end -->' "$SUMMARY")
           else
             SUMMARY_SECTION=""
           fi
