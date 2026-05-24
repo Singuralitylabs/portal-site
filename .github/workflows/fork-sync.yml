@@ -1,0 +1,87 @@
+name: Fork Sync
+
+# release ブランチへの PR マージ後、フォークリポジトリの release ブランチを同期する
+# 本ワークフローの失敗はリリース全体をブロックしない（create-release.yml とは独立に動作する）
+on:
+  pull_request:
+    branches:
+      - release
+    types:
+      - closed
+  workflow_dispatch:
+
+# 本体リポジトリへの書き込みは不要。フォーク側への push は FORK_SYNC_TOKEN を使用する
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: フォークリポジトリ同期
+    runs-on: ubuntu-latest
+    # pull_request トリガー時はマージされた場合のみ実行（クローズのみは対象外）
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    steps:
+      # 同期対象設定（Variable）の確認
+      - name: 設定値の検証
+        env:
+          FORK_REPO: ${{ vars.FORK_REPO }}
+          FORK_SYNC_TOKEN: ${{ secrets.FORK_SYNC_TOKEN }}
+        run: |
+          MISSING=()
+          if [ -z "$FORK_REPO" ]; then
+            MISSING+=("FORK_REPO（Variable: owner/repo 形式の同期先フォーク）")
+          fi
+          if [ -z "$FORK_SYNC_TOKEN" ]; then
+            MISSING+=("FORK_SYNC_TOKEN（Secret: フォーク側 contents:write 権限を持つトークン）")
+          fi
+
+          if [ "${#MISSING[@]}" -gt 0 ]; then
+            echo "::error::必須パラメータが未設定です。"
+            for m in "${MISSING[@]}"; do
+              echo "::error:: - $m"
+            done
+            echo "::error::[対応方法] Settings > Secrets and variables > Actions で上記を登録してください。"
+            exit 1
+          fi
+
+      # release ブランチの全履歴を取得（fork 側との fast-forward 関係を git push で検証するため。
+      # 浅い clone だと fast-forward 判定ができず push が拒否される場合があるため fetch-depth: 0 とする。
+      # 本ステップは release ブランチのみを対象とし、タグは push しない）
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release
+          fetch-depth: 0
+
+      # フォークリポジトリへ release ブランチを push
+      - name: フォークリポジトリへ release ブランチを push
+        env:
+          FORK_REPO: ${{ vars.FORK_REPO }}
+          FORK_SYNC_TOKEN: ${{ secrets.FORK_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          # トークンをコマンドラインや echo に出さないよう URL は git remote 経由で渡す
+          git remote add fork "https://x-access-token:${FORK_SYNC_TOKEN}@github.com/${FORK_REPO}.git"
+          git push fork release:release
+
+      - name: 成功サマリーを出力
+        run: |
+          {
+            echo "## ✅ フォーク同期完了"
+            echo ""
+            echo "- 同期先: \`${{ vars.FORK_REPO }}\`"
+            echo "- 同期元ブランチ: \`release\`"
+            echo "- 同期コミット: \`$(git rev-parse HEAD)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # 失敗時の警告サマリー。create-release.yml とは独立して動作するためリリース全体は止まらない
+      - name: 失敗時の警告サマリーを出力
+        if: ${{ failure() }}
+        run: |
+          {
+            echo "## ⚠️ フォーク同期失敗"
+            echo ""
+            echo "フォークリポジトリの同期に失敗しましたが、リリース全体はブロックされません。"
+            echo "ログを確認の上、必要に応じてこのワークフローを **Re-run** するか、"
+            echo "**workflow_dispatch** から手動で再実行してください。"
+          } >> "$GITHUB_STEP_SUMMARY"
