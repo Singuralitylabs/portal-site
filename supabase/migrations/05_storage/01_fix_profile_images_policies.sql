@@ -25,14 +25,13 @@ USING (
   )
 );
 
--- INSERT: active ユーザーは {auth_id}/profile-image にのみアップロード可能
-DROP POLICY IF EXISTS "Users can upload their own profile image" ON storage.objects;
+-- INSERT: active ユーザーは自身の auth_id フォルダにのみアップロード可能
 CREATE POLICY "Users can upload their own profile image"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'profile-images'
-  AND name = auth.uid()::text || '/profile-image'
+  AND (storage.foldername(name))[1] = auth.uid()::text
   AND EXISTS (
     SELECT 1
     FROM public.users
@@ -42,14 +41,13 @@ WITH CHECK (
   )
 );
 
--- UPDATE: active ユーザーは {auth_id}/profile-image のみ更新可能
-DROP POLICY IF EXISTS "Users can update their own profile image" ON storage.objects;
+-- UPDATE: active ユーザーは自身の auth_id フォルダのファイルのみ更新可能
 CREATE POLICY "Users can update their own profile image"
 ON storage.objects FOR UPDATE
 TO authenticated
 USING (
   bucket_id = 'profile-images'
-  AND name = auth.uid()::text || '/profile-image'
+  AND (storage.foldername(name))[1] = auth.uid()::text
   AND EXISTS (
     SELECT 1
     FROM public.users
@@ -60,7 +58,7 @@ USING (
 )
 WITH CHECK (
   bucket_id = 'profile-images'
-  AND name = auth.uid()::text || '/profile-image'
+  AND (storage.foldername(name))[1] = auth.uid()::text
   AND EXISTS (
     SELECT 1
     FROM public.users
@@ -70,14 +68,13 @@ WITH CHECK (
   )
 );
 
--- DELETE: active ユーザーは {auth_id}/profile-image のみ削除可能
-DROP POLICY IF EXISTS "Users can delete their own profile image" ON storage.objects;
+-- DELETE: active ユーザーは自身の auth_id フォルダのファイルのみ削除可能
 CREATE POLICY "Users can delete their own profile image"
 ON storage.objects FOR DELETE
 TO authenticated
 USING (
   bucket_id = 'profile-images'
-  AND name = auth.uid()::text || '/profile-image'
+  AND (storage.foldername(name))[1] = auth.uid()::text
   AND EXISTS (
     SELECT 1
     FROM public.users
