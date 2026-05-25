@@ -52,6 +52,11 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
+          # 既定では checkout が GITHUB_TOKEN（github-actions[bot]）を
+          # http.extraheader として全 github.com URL に永続化する。これは fork remote URL に
+          # 埋め込んだ FORK_SYNC_TOKEN より優先されるため、push が github-actions[bot] 権限で
+          # 実行されフォークへの書き込みが 403 で拒否される。これを防ぐため認証情報を永続化しない。
+          persist-credentials: false
 
       # フォークリポジトリへ release ブランチを push
       - name: フォークリポジトリへ release ブランチを push
