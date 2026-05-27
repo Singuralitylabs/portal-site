@@ -66,6 +66,14 @@
   - チャンネル: `201-club_チーム開発`
   - 必要な情報: なし
 
+### 1.4 GitHub Actions Secrets（メンテナー向け）
+
+GitHub Actions で利用する Secrets は、リポジトリの **Settings → Secrets and variables → Actions** から登録する。
+
+| Secret              | 用途                                                                                    | 補足                                                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `SLACK_WEBHOOK_URL` | Slack に通知を送るための Incoming Webhook URL。アプリ通知と Wiki 更新通知で共通利用する | Slack の Incoming Webhook URL を登録する。通知先チャンネルを変更する場合は Slack 側で Webhook を再発行して差し替える |
+
 ## 2. プロジェクトのセットアップ
 
 ### 2.1 リポジトリのクローン
@@ -105,7 +113,7 @@ npm install
    | `SUPABASE_PROJECT_ID`           | Supabase プロジェクトの一意 ID。`npm run db:types` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要）                                                                                                                                                                                                                                                                                                 | Supabase Dashboard → Project Settings → General → Reference ID                        |
    | `GOOGLE_CALENDAR_IDS`           | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
    | `GOOGLE_SERVICE_ACCOUNT_KEY`    | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する                                                                                                                                                                                                                                                                                                                           | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形）                           |
-   | `SLACK_WEBHOOK_URL`             | Slack に通知を送るための Incoming Webhook URL。申請・承認イベント等の通知送信先として使用する                                                                                                                                                                                                                                                                                                                               | Slack の Incoming Webhook 設定画面                                                    |
+   | `SLACK_WEBHOOK_URL`             | Slack に通知を送るための Incoming Webhook URL。申請・承認イベント等の通知送信先として使用し、GitHub Actions では Wiki 更新通知にも同じ URL を共通利用する                                                                                                                                                                                                                                                                   | Slack の Incoming Webhook 設定画面                                                    |
 
 #### 重要な注意事項
 
