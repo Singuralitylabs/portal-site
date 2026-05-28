@@ -94,10 +94,10 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 機密ではないがワークフローから参照する設定値は GitHub の **Variables** に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions → Variables**
 
-| 名前 | 内容 | 使用ワークフロー | 備考 |
-| --- | --- | --- | --- |
-| `SUPABASE_PROJECT_ID` | 型生成対象の Supabase Project ID | [`db-types.yml`](../.github/workflows/db-types.yml) | |
-| `FORK_REPO` | フォーク同期先リポジトリ（`owner/repo` 形式） | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 同期先を切り替える際はこの値だけを変更すればよい |
+| 名前                  | 内容                                          | 使用ワークフロー                                      | 備考                                             |
+| --------------------- | --------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
+| `SUPABASE_PROJECT_ID` | 型生成対象の Supabase Project ID              | [`db-types.yml`](../.github/workflows/db-types.yml)   |                                                  |
+| `FORK_REPO`           | フォーク同期先リポジトリ（`owner/repo` 形式） | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 同期先を切り替える際はこの値だけを変更すればよい |
 
 ### 3.4 GitHub Environments
 
@@ -105,8 +105,8 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 **Required reviewers が未設定の場合、承認ゲートは事実上機能せずジョブが自動で進行する**ため、本番運用を開始する前に必ず設定する。
 
-| 名前 | 用途 | 使用ワークフロー | 必須の保護ルール |
-| --- | --- | --- | --- |
+| 名前                 | 用途                                        | 使用ワークフロー                                                | 必須の保護ルール                              |
+| -------------------- | ------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------- |
 | `production-release` | タグ作成・GitHub Release 公開前の承認ゲート | [`create-release.yml`](../.github/workflows/create-release.yml) | Required reviewers にリリース承認権限者を登録 |
 
 設定手順:
@@ -168,11 +168,11 @@ concurrency:
 
 [`create-release.yml`](../.github/workflows/create-release.yml) は「タグの push」と「GitHub Release の作成」を順次実行する。前段だけ成功して後段で失敗した場合、ワークフローを単純に再実行するとタグ重複チェックで停止するため、後段のみ手動で補完する必要がある。
 
-| 失敗パターン | 状態 | リカバリ手順 |
-| --- | --- | --- |
-| タグ push 前に失敗 | タグも Release も無い | バージョン番号を確認のうえ、`create-release.yml` を再実行する |
-| タグ push 成功 / Release 作成失敗 | タグのみ存在 | ワークフロー再実行は不可（タグ重複で停止）。**`gh release create vX.Y.Z --target release --title vX.Y.Z --generate-notes` を手動で実行**して Release のみ補完する |
-| Release 作成成功 / 後続失敗（理論上のみ） | タグも Release もある | 後続ステップが追加された場合のみ該当。当該ステップだけを手動で補完する |
+| 失敗パターン                              | 状態                  | リカバリ手順                                                                                                                                                      |
+| ----------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| タグ push 前に失敗                        | タグも Release も無い | バージョン番号を確認のうえ、`create-release.yml` を再実行する                                                                                                     |
+| タグ push 成功 / Release 作成失敗         | タグのみ存在          | ワークフロー再実行は不可（タグ重複で停止）。**`gh release create vX.Y.Z --target release --title vX.Y.Z --generate-notes` を手動で実行**して Release のみ補完する |
+| Release 作成成功 / 後続失敗（理論上のみ） | タグも Release もある | 後続ステップが追加された場合のみ該当。当該ステップだけを手動で補完する                                                                                            |
 
 タグそのものを誤って作ってしまった場合は、`git push --delete origin vX.Y.Z` でリモートタグを削除してから再実行する。**ローカルタグの削除（`git tag -d`）も併せて行わないと、ローカルから誤って再 push されるおそれがある**点に注意する。
 
