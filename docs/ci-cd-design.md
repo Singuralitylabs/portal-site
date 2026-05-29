@@ -77,31 +77,31 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 各ワークフローに自動で付与されるトークン。必要最小限の権限のみ許可し、各ワークフローでは `permissions` を明示してデフォルト権限に依存しない。
 
-| ワークフロー                                                    | 権限                                     | 理由                                                             |
-| --------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml)         | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)           | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
+| ワークフロー | 権限 | 理由 |
+| --- | --- | --- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml) | `contents: read`, `pull-requests: write` | リリース PR の作成に必要 |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | `contents: read` | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write` | タグのプッシュと GitHub Release の作成に必要 |
 | Wiki 更新通知ワークフロー（実装予定）                           | `contents: read`                         | Wiki リポジトリを読み取り、更新差分を Slack 通知するために必要   |
 
 **Secrets:**
 
 機密情報はソースコードに書かず、GitHub の **Secrets**（暗号化された秘密情報）に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions**
 
-| 名前                    | 内容                                                                       | 使用箇所                                              | 備考                                                                                                                    |
-| ----------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `FORK_SYNC_TOKEN`       | フォーク同期用トークン                                                     | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                              |
-| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン                                                    | [`db-types.yml`](../.github/workflows/db-types.yml)   |                                                                                                                         |
+| 名前 | 内容                                                    | 使用箇所         | 備考                                              |
+| --- | ------------------------------------------------------ | --- | ------------------------------------------------ |
+| `FORK_SYNC_TOKEN` | フォーク同期用トークン                                                    | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                              |
+| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン                                                    | [`db-types.yml`](../.github/workflows/db-types.yml) |                                               |
 | `SLACK_WEBHOOK_URL`     | Wiki 更新通知ワークフロー（実装予定）で利用する Slack Incoming Webhook URL | Wiki 更新通知ワークフロー（実装予定）                 | アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.local` / ホスティング環境変数） |
 
 **Variables:**
 
 機密ではないがワークフローから参照する設定値は GitHub の **Variables** に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions → Variables**
 
-| 名前                  | 内容                                          | 使用ワークフロー                                      | 備考                                             |
-| --------------------- | --------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
-| `SUPABASE_PROJECT_ID` | 型生成対象の Supabase Project ID              | [`db-types.yml`](../.github/workflows/db-types.yml)   |                                                  |
-| `FORK_REPO`           | フォーク同期先リポジトリ（`owner/repo` 形式） | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 同期先を切り替える際はこの値だけを変更すればよい |
+| 名前 | 内容 | 使用ワークフロー | 備考 |
+| --- | --- | --- | --- |
+| `SUPABASE_PROJECT_ID` | 型生成対象の Supabase Project ID | [`db-types.yml`](../.github/workflows/db-types.yml) |  |
+| `FORK_REPO` | フォーク同期先リポジトリ（`owner/repo` 形式） | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 同期先を切り替える際はこの値だけを変更すればよい |
 
 ### 3.4 GitHub Environments
 
@@ -109,8 +109,8 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 **Required reviewers が未設定の場合、承認ゲートは事実上機能せずジョブが自動で進行する**ため、本番運用を開始する前に必ず設定する。
 
-| 名前                 | 用途                                        | 使用ワークフロー                                                | 必須の保護ルール                              |
-| -------------------- | ------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------- |
+| 名前 | 用途 | 使用ワークフロー | 必須の保護ルール |
+| --- | --- | --- | --- |
 | `production-release` | タグ作成・GitHub Release 公開前の承認ゲート | [`create-release.yml`](../.github/workflows/create-release.yml) | Required reviewers にリリース承認権限者を登録 |
 
 設定手順:
@@ -128,11 +128,11 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 ### 4.1 ワークフロー一覧
 
-| ワークフロー                                                    | 内容                                                                                                                                                    | トリガー                                              |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml)         | 品質チェック（build / type-check / lint / test）を実行し、事前作業の検出結果（マイグレーションファイル・新規環境変数）を含む main→release PR を作成する | 手動起動（バージョン番号を入力）                      |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)           | フォークリポジトリの release ブランチを同期する                                                                                                         | release ブランチへの PR マージ後・自動 / 手動起動     |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | 承認ゲートを経て、Git タグと GitHub Release を作成する                                                                                                  | release ブランチへの PR マージ後・承認待ち / 手動起動 |
+| ワークフロー | 内容 | トリガー |
+| --- | --- | --- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml) | 品質チェック（build / type-check / lint / test）を実行し、事前作業の検出結果（マイグレーションファイル・新規環境変数）を含む main→release PR を作成する | 手動起動（バージョン番号を入力） |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | フォークリポジトリの release ブランチを同期する | release ブランチへの PR マージ後・自動 / 手動起動 |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | 承認ゲートを経て、Git タグと GitHub Release を作成する | release ブランチへの PR マージ後・承認待ち / 手動起動 |
 
 ### 4.2 ガード条件と同時実行制御
 
@@ -140,13 +140,13 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 [`create-release.yml`](../.github/workflows/create-release.yml) はタグ作成・Release 公開を行うため、誤実行を防ぐ複数のチェックを設定する。すべてのチェックを通過した場合のみ実行される。
 
-| ガード                 | 内容                                                                         |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| マージ済みチェック     | PR が実際にマージされた場合のみ動作する（PR をクローズしただけでは動かない） |
-| PR タイトルチェック    | タイトルが「リリース」で始まる PR のみ対象とする                             |
-| バージョン形式チェック | バージョン番号が `X.Y.Z` の形式でなければエラー終了する                      |
-| タグ重複チェック       | 同じバージョンのタグが既に存在する場合はエラー終了する                       |
-| 承認ゲート             | GitHub Environments で設定した承認者が承認するまで実行を保留する             |
+| ガード | 内容 |
+| --- | --- |
+| マージ済みチェック | PR が実際にマージされた場合のみ動作する（PR をクローズしただけでは動かない） |
+| PR タイトルチェック | タイトルが「リリース」で始まる PR のみ対象とする |
+| バージョン形式チェック | バージョン番号が `X.Y.Z` の形式でなければエラー終了する |
+| タグ重複チェック | 同じバージョンのタグが既に存在する場合はエラー終了する |
+| 承認ゲート | GitHub Environments で設定した承認者が承認するまで実行を保留する |
 
 #### 同時実行制御
 
@@ -162,21 +162,21 @@ concurrency:
 
 ### 4.3 失敗時の扱い
 
-| ワークフロー                                                    | 失敗した場合の影響                                           | 設計方針                                                   |
-| --------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml)         | PR が作成されない。リリースプロセスは開始されない            | 手動での再実行が可能                                       |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)           | フォークリポジトリが同期されない。本番デプロイには影響しない | リリース全体をブロックしない。ジョブサマリーに警告を出力   |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | タグ・Release が作成されない                                 | 手動での再実行が可能。タグ重複チェックにより二重作成を防止 |
+| ワークフロー | 失敗した場合の影響 | 設計方針 |
+| --- | --- | --- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml) | PR が作成されない。リリースプロセスは開始されない | 手動での再実行が可能 |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | フォークリポジトリが同期されない。本番デプロイには影響しない | リリース全体をブロックしない。ジョブサマリーに警告を出力 |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | タグ・Release が作成されない | 手動での再実行が可能。タグ重複チェックにより二重作成を防止 |
 
 #### `create-release.yml` 部分失敗時のリカバリ
 
 [`create-release.yml`](../.github/workflows/create-release.yml) は「タグの push」と「GitHub Release の作成」を順次実行する。前段だけ成功して後段で失敗した場合、ワークフローを単純に再実行するとタグ重複チェックで停止するため、後段のみ手動で補完する必要がある。
 
-| 失敗パターン                              | 状態                  | リカバリ手順                                                                                                                                                      |
-| ----------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| タグ push 前に失敗                        | タグも Release も無い | バージョン番号を確認のうえ、`create-release.yml` を再実行する                                                                                                     |
-| タグ push 成功 / Release 作成失敗         | タグのみ存在          | ワークフロー再実行は不可（タグ重複で停止）。**`gh release create vX.Y.Z --target release --title vX.Y.Z --generate-notes` を手動で実行**して Release のみ補完する |
-| Release 作成成功 / 後続失敗（理論上のみ） | タグも Release もある | 後続ステップが追加された場合のみ該当。当該ステップだけを手動で補完する                                                                                            |
+| 失敗パターン | 状態 | リカバリ手順 |
+| --- | --- | --- |
+| タグ push 前に失敗 | タグも Release も無い | バージョン番号を確認のうえ、`create-release.yml` を再実行する |
+| タグ push 成功 / Release 作成失敗 | タグのみ存在 | ワークフロー再実行は不可（タグ重複で停止）。**`gh release create vX.Y.Z --target release --title vX.Y.Z --generate-notes` を手動で実行**して Release のみ補完する |
+| Release 作成成功 / 後続失敗（理論上のみ） | タグも Release もある | 後続ステップが追加された場合のみ該当。当該ステップだけを手動で補完する |
 
 タグそのものを誤って作ってしまった場合は、`git push --delete origin vX.Y.Z` でリモートタグを削除してから再実行する。**ローカルタグの削除（`git tag -d`）も併せて行わないと、ローカルから誤って再 push されるおそれがある**点に注意する。
 
