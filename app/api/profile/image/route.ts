@@ -1,4 +1,7 @@
-import { createServerSupabaseClient, getServerCurrentUser } from "@/app/services/api/supabase-server";
+import {
+  createServerSupabaseClient,
+  getServerCurrentUser,
+} from "@/app/services/api/supabase-server";
 import { NextResponse } from "next/server";
 
 const BUCKET_NAME = "profile-images";
@@ -30,7 +33,10 @@ export async function POST(request: Request) {
   const file = formData.get("image") as File | null;
 
   if (!file) {
-    return NextResponse.json({ success: false, error: "画像ファイルを選択してください" }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "画像ファイルを選択してください" },
+      { status: 400 }
+    );
   }
 
   if (file.size > MAX_FILE_SIZE) {
@@ -56,7 +62,10 @@ export async function POST(request: Request) {
     );
   }
   if (!isActive) {
-    return NextResponse.json({ success: false, error: "この操作は許可されていません" }, { status: 403 });
+    return NextResponse.json(
+      { success: false, error: "この操作は許可されていません" },
+      { status: 403 }
+    );
   }
 
   const filePath = `${authId}/profile-image`;
@@ -110,7 +119,10 @@ export async function DELETE() {
     );
   }
   if (!isActive) {
-    return NextResponse.json({ success: false, error: "この操作は許可されていません" }, { status: 403 });
+    return NextResponse.json(
+      { success: false, error: "この操作は許可されていません" },
+      { status: 403 }
+    );
   }
 
   const filePath = `${authId}/profile-image`;
