@@ -82,6 +82,10 @@ export async function POST(request: Request) {
 
   if (updateError) {
     console.error("profile_image_path 更新エラー:", updateError.message);
+    const { error: rollbackError } = await supabase.storage.from(BUCKET_NAME).remove([filePath]);
+    if (rollbackError) {
+      console.error("Storage ロールバック失敗:", rollbackError.message);
+    }
     return NextResponse.json(
       { success: false, error: "プロフィール情報の更新に失敗しました" },
       { status: 500 }
@@ -111,16 +115,6 @@ export async function DELETE() {
 
   const filePath = `${authId}/profile-image`;
 
-  const { error: deleteError } = await supabase.storage.from(BUCKET_NAME).remove([filePath]);
-
-  if (deleteError) {
-    console.error("Storage 削除エラー:", deleteError.message);
-    return NextResponse.json(
-      { success: false, error: "画像の削除に失敗しました" },
-      { status: 500 }
-    );
-  }
-
   const { error: updateError } = await supabase
     .from("users")
     .update({ profile_image_path: null, updated_at: new Date().toISOString() })
@@ -133,6 +127,12 @@ export async function DELETE() {
       { success: false, error: "プロフィール情報の更新に失敗しました" },
       { status: 500 }
     );
+  }
+
+  const { error: deleteError } = await supabase.storage.from(BUCKET_NAME).remove([filePath]);
+
+  if (deleteError) {
+    console.error("Storage 削除エラー（DBは更新済み）:", deleteError.message);
   }
 
   return NextResponse.json({ success: true });
