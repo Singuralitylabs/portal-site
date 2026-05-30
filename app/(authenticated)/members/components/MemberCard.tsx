@@ -26,7 +26,9 @@ async function getSignedProfileImageUrl(path: string) {
 
   const requestPromise = (async () => {
     const supabase = createClientSupabaseClient();
-    const { data, error } = await supabase.storage.from("profile-images").createSignedUrl(path, 3600);
+    const { data, error } = await supabase.storage
+      .from("profile-images")
+      .createSignedUrl(path, 3600);
     if (error || !data?.signedUrl) {
       return null;
     }
