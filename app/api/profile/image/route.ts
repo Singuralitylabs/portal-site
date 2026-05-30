@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
   const { error: updateError } = await supabase
     .from("users")
-    .update({ profile_image_path: filePath, updated_at: new Date().toISOString() })
+    .update({ profile_image_path: filePath })
     .eq("auth_id", authId)
     .eq("is_deleted", false);
 
@@ -129,7 +129,7 @@ export async function DELETE() {
 
   const { error: updateError } = await supabase
     .from("users")
-    .update({ profile_image_path: null, updated_at: new Date().toISOString() })
+    .update({ profile_image_path: null })
     .eq("auth_id", authId)
     .eq("is_deleted", false);
 
