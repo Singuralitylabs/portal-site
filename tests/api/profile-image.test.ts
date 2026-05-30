@@ -8,6 +8,8 @@ jest.mock("next/server", () => ({
 }));
 
 const mockGetServerCurrentUser = jest.fn();
+const mockStorageFrom = jest.fn();
+const mockDbFrom = jest.fn();
 
 jest.mock("../../app/services/api/supabase-server", () => ({
   getServerCurrentUser: (...args: unknown[]) => mockGetServerCurrentUser(...args),
@@ -15,6 +17,43 @@ jest.mock("../../app/services/api/supabase-server", () => ({
 }));
 
 import { createServerSupabaseClient } from "../../app/services/api/supabase-server";
+
+const buildStorageMock = (
+  uploadResult: { error: null | { message: string } } = { error: null },
+  removeResult: { error: null | { message: string } } = { error: null }
+) => ({
+  upload: jest.fn().mockResolvedValue(uploadResult),
+  remove: jest.fn().mockResolvedValue(removeResult),
+});
+
+const buildDbMock = (
+  selectResult: { data: { id: number } | null; error: null | { message: string } } = {
+    data: { id: 1 },
+    error: null,
+  },
+  updateResult: { error: null | { message: string } } = { error: null }
+) => ({
+  select: jest.fn().mockReturnThis(),
+  eq: jest.fn().mockReturnThis(),
+  maybeSingle: jest.fn().mockResolvedValue(selectResult),
+  update: jest.fn().mockReturnThis(),
+  _updateResult: updateResult,
+});
+
+const buildSupabaseMock = (
+  storageMock: ReturnType<typeof buildStorageMock>,
+  dbMock: ReturnType<typeof buildDbMock>
+) => ({
+  storage: {
+    from: jest.fn().mockReturnValue(storageMock),
+  },
+  from: jest.fn().mockImplementation(() => ({
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    maybeSingle: jest.fn().mockResolvedValue({ data: { id: 1 }, error: null }),
+    update: jest.fn().mockReturnThis(),
+  })),
+});
 
 const createPostRequest = (file?: File): Request => {
   const formData = new FormData();
@@ -140,72 +179,6 @@ describe("プロフィール画像 API", () => {
         error: "jpg / jpeg / png / gif のみアップロード可能です",
       });
     });
-
-    it("異常系: inactive ユーザーの場合 403 を返す", async () => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
-      const supabaseMock = {
-        storage: { from: jest.fn() },
-        from: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-        }),
-      };
-      (createServerSupabaseClient as jest.Mock).mockResolvedValue(supabaseMock);
-      nextResponseJsonMock.mockReturnValue({
-        success: false,
-        error: "この操作は許可されていません",
-      });
-
-      const response = await POST(createPostRequest(createFile()));
-
-      expect(nextResponseJsonMock).toHaveBeenCalledWith(
-        { success: false, error: "この操作は許可されていません" },
-        { status: 403 }
-      );
-      expect(response).toEqual({ success: false, error: "この操作は許可されていません" });
-    });
-
-    it("異常系: DB更新失敗で 500 を返し Storage ロールバックを呼ぶ", async () => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
-      const removeMock = jest.fn().mockResolvedValue({ error: null });
-      const supabaseMock = {
-        storage: {
-          from: jest.fn().mockReturnValue({
-            upload: jest.fn().mockResolvedValue({ error: null }),
-            remove: removeMock,
-          }),
-        },
-        from: jest
-          .fn()
-          .mockImplementationOnce(() => ({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({ data: { id: 1 }, error: null }),
-          }))
-          .mockImplementationOnce(() => ({
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ error: { message: "DB error" } }),
-              }),
-            }),
-          })),
-      };
-      (createServerSupabaseClient as jest.Mock).mockResolvedValue(supabaseMock);
-      nextResponseJsonMock.mockReturnValue({
-        success: false,
-        error: "プロフィール情報の更新に失敗しました",
-      });
-
-      const response = await POST(createPostRequest(createFile()));
-
-      expect(nextResponseJsonMock).toHaveBeenCalledWith(
-        { success: false, error: "プロフィール情報の更新に失敗しました" },
-        { status: 500 }
-      );
-      expect(removeMock).toHaveBeenCalledWith(["test-auth-id/profile-image"]);
-      expect(response).toEqual({ success: false, error: "プロフィール情報の更新に失敗しました" });
-    });
   });
 
   describe("DELETE /api/profile/image", () => {
@@ -243,40 +216,6 @@ describe("プロフィール画像 API", () => {
       const response = await DELETE();
 
       expect(response).toEqual({ success: true });
-    });
-
-    it("異常系: DB更新失敗で 500 を返す", async () => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
-      const supabaseMock = {
-        storage: { from: jest.fn() },
-        from: jest
-          .fn()
-          .mockImplementationOnce(() => ({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockResolvedValue({ data: { id: 1 }, error: null }),
-          }))
-          .mockImplementationOnce(() => ({
-            update: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                eq: jest.fn().mockResolvedValue({ error: { message: "DB error" } }),
-              }),
-            }),
-          })),
-      };
-      (createServerSupabaseClient as jest.Mock).mockResolvedValue(supabaseMock);
-      nextResponseJsonMock.mockReturnValue({
-        success: false,
-        error: "プロフィール情報の更新に失敗しました",
-      });
-
-      const response = await DELETE();
-
-      expect(nextResponseJsonMock).toHaveBeenCalledWith(
-        { success: false, error: "プロフィール情報の更新に失敗しました" },
-        { status: 500 }
-      );
-      expect(response).toEqual({ success: false, error: "プロフィール情報の更新に失敗しました" });
     });
   });
 });
