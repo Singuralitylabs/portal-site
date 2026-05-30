@@ -92,57 +92,76 @@ export function ProfilePageTemplate({
     }
 
     setIsImageLoading(true);
-    const formData = new FormData();
-    formData.append("image", file);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
 
-    const response = await fetch("/api/profile/image", { method: "POST", body: formData });
-    const data = await response.json();
+      const response = await fetch("/api/profile/image", { method: "POST", body: formData });
+      const data = await response.json();
 
-    if (data.success) {
-      setProfileImagePath(data.profile_image_path);
-      await refreshProfileImage(data.profile_image_path);
-      notifications.show({
-        title: "成功",
-        message: "プロフィール画像を更新しました",
-        color: "green",
-        autoClose: 3000,
-      });
-    } else {
+      if (data.success) {
+        setProfileImagePath(data.profile_image_path);
+        await refreshProfileImage(data.profile_image_path);
+        notifications.show({
+          title: "成功",
+          message: "プロフィール画像を更新しました",
+          color: "green",
+          autoClose: 3000,
+        });
+      } else {
+        notifications.show({
+          title: "エラー",
+          message: data.error || "画像のアップロードに失敗しました",
+          color: "red",
+          autoClose: 3000,
+        });
+      }
+    } catch {
       notifications.show({
         title: "エラー",
-        message: data.error || "画像のアップロードに失敗しました",
+        message: "通信エラーが発生しました",
         color: "red",
         autoClose: 3000,
       });
+    } finally {
+      setIsImageLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-
-    setIsImageLoading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleImageDelete = async () => {
     setIsImageLoading(true);
-    const response = await fetch("/api/profile/image", { method: "DELETE" });
-    const data = await response.json();
+    try {
+      const response = await fetch("/api/profile/image", { method: "DELETE" });
+      const data = await response.json();
 
-    if (data.success) {
-      setProfileImagePath(null);
-      await refreshProfileImage(null);
-      notifications.show({
-        title: "成功",
-        message: "プロフィール画像を削除しました",
-        color: "green",
-        autoClose: 3000,
-      });
-    } else {
+      if (data.success) {
+        setProfileImagePath(null);
+        await refreshProfileImage(null);
+        notifications.show({
+          title: "成功",
+          message: "プロフィール画像を削除しました",
+          color: "green",
+          autoClose: 3000,
+        });
+      } else {
+        notifications.show({
+          title: "エラー",
+          message: data.error || "画像の削除に失敗しました",
+          color: "red",
+          autoClose: 3000,
+        });
+      }
+    } catch {
       notifications.show({
         title: "エラー",
-        message: data.error || "画像の削除に失敗しました",
+        message: "通信エラーが発生しました",
         color: "red",
         autoClose: 3000,
       });
+    } finally {
+      setIsImageLoading(false);
     }
-    setIsImageLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
