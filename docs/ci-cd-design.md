@@ -77,11 +77,11 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 各ワークフローに自動で付与されるトークン。必要最小限の権限のみ許可し、各ワークフローでは `permissions` を明示してデフォルト権限に依存しない。
 
-| ワークフロー                                                                                                       | 権限                                                                         | 理由                                                                                                                         |
-| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml)                 | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                                                                 |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                     | `contents: read`                                                 | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
-| [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write`                                               | タグのプッシュと GitHub Release の作成に必要                                         |
+| ワークフロー                                                    | 権限                                     | 理由                                                             |
+| --------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml)         | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)           | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
+| [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
 | Wiki 更新通知ワークフロー（実装予定）                           | `contents: read`                         | Wiki リポジトリを読み取り、更新差分を Slack 通知するために必要   |
 
 **Secrets:**
