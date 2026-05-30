@@ -104,6 +104,7 @@ export type MemberType = Pick<
       is_deleted: boolean;
     } | null;
   }[];
+  profile_image_url: string | null;
 };
 export type PendingUserType = Pick<UserType, "id" | "display_name" | "email">;
 export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;
