@@ -3,70 +3,16 @@
 import { MemberType } from "@/app/types";
 import { Card, Avatar, Text, Group, Badge } from "@mantine/core";
 import { MemberDetailModal } from "./MemberDetailModal";
-import { useState, useEffect } from "react";
-import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
+import { useState } from "react";
 
 interface MemberCardProps {
   member: MemberType;
 }
 
-const signedUrlCache = new Map<string, string>();
-const signedUrlPromiseCache = new Map<string, Promise<string | null>>();
-
-async function getSignedProfileImageUrl(path: string) {
-  const cachedSignedUrl = signedUrlCache.get(path);
-  if (cachedSignedUrl) {
-    return cachedSignedUrl;
-  }
-
-  const pendingPromise = signedUrlPromiseCache.get(path);
-  if (pendingPromise) {
-    return pendingPromise;
-  }
-
-  const requestPromise = (async () => {
-    const supabase = createClientSupabaseClient();
-    const { data, error } = await supabase.storage
-      .from("profile-images")
-      .createSignedUrl(path, 3600);
-    if (error || !data?.signedUrl) {
-      return null;
-    }
-
-    const signedUrl = `${data.signedUrl}&t=${Date.now()}`;
-    signedUrlCache.set(path, signedUrl);
-    return signedUrl;
-  })();
-
-  signedUrlPromiseCache.set(path, requestPromise);
-  requestPromise.finally(() => signedUrlPromiseCache.delete(path));
-
-  return requestPromise;
-}
-
 export function MemberCard({ member }: MemberCardProps) {
   const [modalOpened, setModalOpened] = useState(false);
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!member.profile_image_path) {
-      setProfileImageUrl(null);
-      return;
-    }
-
-    let isMounted = true;
-    getSignedProfileImageUrl(member.profile_image_path).then(signedUrl => {
-      if (isMounted) {
-        setProfileImageUrl(signedUrl);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [member.profile_image_path]);
-
-  const avatarSrc = profileImageUrl ?? member.avatar_url ?? null;
+  const avatarSrc = member.profile_image_url ?? member.avatar_url ?? null;
   const avatarContent = member.display_name.charAt(0).toUpperCase();
 
   return (
@@ -131,7 +77,7 @@ export function MemberCard({ member }: MemberCardProps) {
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
         memberInfo={member}
-        profileImageUrl={profileImageUrl}
+        profileImageUrl={member.profile_image_url}
       />
     </div>
   );

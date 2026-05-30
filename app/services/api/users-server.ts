@@ -88,7 +88,7 @@ export async function fetchActiveUsers(): Promise<{
     return { data: null, error: null };
   }
 
-  // Supabaseの型推論では positions が配列になるため、positions を単一オブジェクトに正規化
+  // Supabaseの型推論では positions が配列になるため、MemberType[] 型に変換
   const transformedData = data.map(user => ({
     id: user.id,
     display_name: user.display_name,
@@ -113,21 +113,17 @@ export async function fetchActiveUsers(): Promise<{
   // profile_image_path を持つユーザーの署名付きURLをサーバー側で一括生成（N+1対策）
   const uniquePaths = [
     ...new Set(
-      transformedData.map(u => u.profile_image_path).filter((p): p is string => p != null)
+      transformedData.map(u => u.profile_image_path).filter((p): p is string => p !== null)
     ),
   ];
   const signedUrlMap = new Map<string, string>();
   if (uniquePaths.length > 0) {
-    const { data: signedUrls, error: signedUrlsError } = await supabase.storage
+    const { data: signedUrls } = await supabase.storage
       .from("profile-images")
       .createSignedUrls(uniquePaths, 3600);
-    if (signedUrlsError) {
-      console.error("署名付きURL一括生成エラー:", signedUrlsError.message);
-    } else if (signedUrls) {
+    if (signedUrls) {
       signedUrls.forEach(({ path, signedUrl, error: urlError }) => {
-        if (urlError) {
-          console.error("署名付きURL生成エラー:", path, urlError);
-        } else if (path && signedUrl) {
+        if (!urlError && path && signedUrl) {
           signedUrlMap.set(path, `${signedUrl}&t=${Date.now()}`);
         }
       });
