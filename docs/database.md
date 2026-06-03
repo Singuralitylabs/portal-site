@@ -348,7 +348,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 ### 4.9. マスター管理画面のアクセス方針（設計）
 
-- 対象は `users` を除く全テーブルとする
+- 更新（CRUD）対象は `users` を除く全テーブルとする
 - `users` は参照専用とし、マスター管理画面からの登録・更新・削除は行わない
 - マスター管理画面からの `users` 参照は `admin` ロールのみに許可し、`maintainer`/`member` は参照不可とする
 - 会員一覧など既存機能で必要な `users` 参照は、各機能の既存仕様およびRLSポリシーに従う
@@ -356,7 +356,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - 物理削除を許可する場合は、アプリケーション側で多段確認（2段階以上）を必須化する
 - `position_tags` など物理削除を持つテーブルは、既存RLSポリシーに加えてマスター管理画面の権限条件を満たす場合のみ実行する
 - SQL文の直接実行機能は、今回のマスター管理画面設計から除外する
-- マスター管理画面のテーブル一覧・カラム操作可否・CSV可否は `app/constants/master.ts` の設定をホワイトリストとして判定する
+- マスター管理画面のテーブル一覧・カラム操作可否・CSV可否は、実装PRで新規追加予定の `app/constants/master.ts` の設定をホワイトリストとして判定する
 - `app/constants/master.ts` は `app/types/lib/database.types.ts` のテーブル名・カラム名を型として参照し、DBスキーマと設定の不整合を型チェックで検知できる構成にする
 - `app/constants/master.ts` の許可設定はRLSポリシーより広い権限を与えてはならない
 - DBテーブル・カラム・RLSポリシーを変更した場合は、`npm run db:types` による型更新と `app/constants/master.ts` の設定確認を必須とする
