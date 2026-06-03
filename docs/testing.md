@@ -159,7 +159,7 @@ TypeScript と型生成の運用によって、型の破綻を早期に検知す
 
 - **ユニットテスト対象**
   - テーブル定義設定から表示項目・編集可否・入力方式を解決する処理
-  - `app/constants/master.ts` の設定が `database.types.ts` のテーブル名・カラム名と整合していること
+  - 実装PRで新規追加予定の `app/constants/master.ts` の設定が `app/types/lib/database.types.ts` のテーブル名・カラム名と整合していること
   - 固定値選択肢が `app/types/index.ts` の型と整合していること
   - RLSポリシーより広い操作権限を `app/constants/master.ts` で許可していないこと
   - カラム型や許可値に応じた入力バリデーション
