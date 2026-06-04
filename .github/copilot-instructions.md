@@ -64,7 +64,7 @@
 
 - Issue / PR の目的・完了条件・非対象を明文化してから着手する
 - 要求範囲に対して最小差分で実装し、無関係な変更を混ぜない
-- 変更後は `npm run lint` → `npm run type-check` → `npm run build` → `npm run format:check` を順に実行する
+- 変更後は `npm run lint` → `npm run type-check` → `npm run format:check` → `npm run build` を順に実行する（ビルド前に整形差分を検知する）
 - `npm run format:check` で整形差分が検出された場合は、`npm run format` を実行して整形を適用し、整形差分を含めてコミットする
 
 ## レビュー観点
@@ -101,5 +101,5 @@ Copilot レビューは次の優先順位で指摘する。
 
 1. `npm run lint`
 2. `npm run type-check`
-3. `npm run build`
-4. `npm run format:check`
+3. `npm run format:check`
+4. `npm run build`
