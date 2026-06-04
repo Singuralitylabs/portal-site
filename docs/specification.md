@@ -1553,7 +1553,7 @@ sequenceDiagram
 - 設定に存在しないテーブル・カラムは、UIにもサーバーAPIにも露出しない
 
 ```text
-database.types.ts（自動生成型）
+app/types/lib/database.types.ts（自動生成型）
       ↓ テーブル名・カラム名・Row/Insert/Update型
 app/types/index.ts（既存アプリ型）
       ↓ ロール・ステータス・カテゴリー種別などの共通型
