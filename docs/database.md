@@ -348,7 +348,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 ### 4.9. マスター管理画面のアクセス方針（設計）
 
-- 更新（CRUD）対象は `users` を除く全テーブルとする
+- 更新（CRUD）対象は `users` を除くテーブルのうち、`app/constants/master.ts` の設定で明示したものとする
 - `users` は参照専用とし、マスター管理画面からの登録・更新・削除は行わない
 - マスター管理画面からの `users` 参照は `admin` ロールのみに許可し、`maintainer`/`member` は参照不可とする
 - 会員一覧など既存機能で必要な `users` 参照は、各機能の既存仕様およびRLSポリシーに従う
