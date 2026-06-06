@@ -82,17 +82,17 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | [`release-pr.yml`](../.github/workflows/release-pr.yml) | `contents: read`, `pull-requests: write` | リリース PR の作成に必要 |
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | `contents: read` | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
 | [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write` | タグのプッシュと GitHub Release の作成に必要 |
-| Wiki 更新通知ワークフロー（実装予定）                           | `contents: read`                         | Wiki リポジトリを読み取り、更新差分を Slack 通知するために必要   |
+| Wiki 更新通知ワークフロー（実装予定） | `contents: read` | Wiki リポジトリを読み取り、更新差分を Slack 通知するために必要 |
 
 **Secrets:**
 
 機密情報はソースコードに書かず、GitHub の **Secrets**（暗号化された秘密情報）に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions**
 
-| 名前 | 内容                                                    | 使用箇所         | 備考                                              |
-| --- | ------------------------------------------------------ | --- | ------------------------------------------------ |
-| `FORK_SYNC_TOKEN` | フォーク同期用トークン                                                    | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                              |
-| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン                                                    | [`db-types.yml`](../.github/workflows/db-types.yml) |                                               |
-| `SLACK_WEBHOOK_URL`     | Wiki 更新通知ワークフロー（実装予定）で利用する Slack Incoming Webhook URL | Wiki 更新通知ワークフロー（実装予定）                 | アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.local` / ホスティング環境変数） |
+| 名前 | 内容 | 使用箇所 | 備考 |
+| --- | --- | --- | --- |
+| `FORK_SYNC_TOKEN` | フォーク同期用トークン | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する |
+| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | [`db-types.yml`](../.github/workflows/db-types.yml) |  |
+| `SLACK_WEBHOOK_URL` | Wiki 更新通知ワークフロー（実装予定）で利用する Slack Incoming Webhook URL | Wiki 更新通知ワークフロー（実装予定） | アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.local` / ホスティング環境変数） |
 
 **Variables:**
 
