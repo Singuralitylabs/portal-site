@@ -82,17 +82,17 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | [`release-pr.yml`](../.github/workflows/release-pr.yml) | `contents: read`, `pull-requests: write` | リリース PR の作成に必要 |
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | `contents: read` | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
 | [`create-release.yml`](../.github/workflows/create-release.yml) | `contents: write` | タグのプッシュと GitHub Release の作成に必要 |
-| Wiki 更新通知ワークフロー（実装予定）                           | `contents: read`                         | Wiki リポジトリを読み取り、更新差分を Slack 通知するために必要   |
+| Wiki 更新通知ワークフロー（実装予定） | `contents: read` | Wiki リポジトリを読み取り、更新差分を Slack 通知するために必要 |
 
 **Secrets:**
 
 機密情報はソースコードに書かず、GitHub の **Secrets**（暗号化された秘密情報）に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions**
 
-| 名前 | 内容                                                    | 使用箇所         | 備考                                              |
-| --- | ------------------------------------------------------ | --- | ------------------------------------------------ |
-| `FORK_SYNC_TOKEN` | フォーク同期用トークン                                                    | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                              |
-| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン                                                    | [`db-types.yml`](../.github/workflows/db-types.yml) |                                               |
-| `SLACK_WEBHOOK_URL`     | Wiki 更新通知ワークフロー（実装予定）で利用する Slack Incoming Webhook URL | Wiki 更新通知ワークフロー（実装予定）                 | アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.local` / ホスティング環境変数） |
+| 名前 | 内容 | 使用箇所 | 備考 |
+| --- | --- | --- | --- |
+| `FORK_SYNC_TOKEN` | フォーク同期用トークン | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する |
+| `SUPABASE_ACCESS_TOKEN` | Supabase 接続用トークン | [`db-types.yml`](../.github/workflows/db-types.yml) |  |
+| `SLACK_WEBHOOK_URL` | Wiki 更新通知ワークフロー（実装予定）で利用する Slack Incoming Webhook URL | Wiki 更新通知ワークフロー（実装予定） | アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.local` / ホスティング環境変数） |
 
 **Variables:**
 
@@ -190,14 +190,14 @@ Slack の通知先は、既存のアプリケーション通知と同じ `SLACK_
 
 ### 5.1 ワークフローの動作
 
-| 項目         | 内容                                                                                                                    |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| トリガー     | Wiki ページの作成・更新・削除（`gollum`）、手動起動（`workflow_dispatch`）                                              |
+| 項目 | 内容 |
+| --- | --- |
+| トリガー | Wiki ページの作成・更新・削除（`gollum`）、手動起動（`workflow_dispatch`） |
 | 手動起動入力 | `updated_pages`（更新ページ、複数指定可）と `update_summary`（更新の概要）を入力する。コミット SHA の入力は必須にしない |
-| 通知単位     | 1 イベントを 1 件の Slack 通知にまとめる。複数ページ更新時もページごとの個別通知には分割しない                          |
-| 通知内容     | ページ名（リンク）、操作種別、更新者、差分抜粋、compare revisions へのリンク                                            |
-| 通知先       | `SLACK_WEBHOOK_URL` Secret に設定した Slack Incoming Webhook のチャンネル                                               |
-| 取得権限     | `portal-site.wiki.git` の read 権限のみを利用する。`GITHUB_TOKEN` の `contents: read` で取得する方針                    |
+| 通知単位 | 1 イベントを 1 件の Slack 通知にまとめる。複数ページ更新時もページごとの個別通知には分割しない |
+| 通知内容 | ページ名（リンク）、操作種別、更新者、差分抜粋、compare revisions へのリンク |
+| 通知先 | `SLACK_WEBHOOK_URL` Secret に設定した Slack Incoming Webhook のチャンネル |
+| 取得権限 | `portal-site.wiki.git` の read 権限のみを利用する。`GITHUB_TOKEN` の `contents: read` で取得する方針 |
 
 `gollum` イベントでは対象 Wiki ページの情報を受け取り、ワークフローは Wiki リポジトリ（`portal-site.wiki.git`）を取得して対象コミットの差分を生成する。Wiki リポジトリはパブリックリポジトリだが、GitHub Actions からの取得では `GITHUB_TOKEN` に `contents: read` を明示し、追加の専用トークンは発行しない。`GITHUB_TOKEN` で取得できない場合のみ、最小権限の追加トークン発行を別途検討する。
 
@@ -222,8 +222,8 @@ Wiki が更新されました
 
 ### 5.2 失敗時の扱い
 
-| 失敗パターン               | 影響                                           | リカバリ手順                                                                                |
-| -------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 失敗パターン | 影響 | リカバリ手順 |
+| --- | --- | --- |
 | `SLACK_WEBHOOK_URL` 未設定 | 設定不備としてジョブをエラー終了し、通知しない | GitHub Actions の Secrets に `SLACK_WEBHOOK_URL` を登録し、失敗したワークフローを再実行する |
-| Slack Webhook 送信失敗     | Slack 通知が送信されず、ジョブは失敗する       | Slack 側の Webhook 設定・チャンネル権限を確認し、ワークフローを再実行する                   |
-| Wiki リポジトリ取得失敗    | 差分を取得できず通知が送信されない             | GitHub の一時障害や権限設定を確認し、ワークフローを再実行する                               |
+| Slack Webhook 送信失敗 | Slack 通知が送信されず、ジョブは失敗する | Slack 側の Webhook 設定・チャンネル権限を確認し、ワークフローを再実行する |
+| Wiki リポジトリ取得失敗 | 差分を取得できず通知が送信されない | GitHub の一時障害や権限設定を確認し、ワークフローを再実行する |
