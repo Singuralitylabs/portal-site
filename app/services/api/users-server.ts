@@ -113,7 +113,7 @@ export async function fetchActiveUsers(): Promise<{
   // profile_image_path を持つユーザーの署名付きURLをサーバー側で一括生成（N+1対策）
   const uniquePaths = [
     ...new Set(
-      transformedData.map(u => u.profile_image_path).filter((p): p is string => p !== null)
+      transformedData.map(u => u.profile_image_path).filter((p): p is string => p != null)
     ),
   ];
   const signedUrlMap = new Map<string, string>();

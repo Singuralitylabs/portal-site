@@ -254,6 +254,7 @@ describe("server API services", () => {
             display_name: "user",
             bio: "bio",
             avatar_url: "a",
+            profile_image_path: null,
             x_url: null,
             facebook_url: null,
             instagram_url: null,
