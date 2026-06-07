@@ -328,7 +328,9 @@ describe("server API services", () => {
       expect(storageMock.from).toHaveBeenCalledWith("profile-images");
       expect(createSignedUrlsMock).toHaveBeenCalledWith(["auth-2/avatar.png"], 3600);
       // profile_image_url が 署名付きURL + タイムスタンプになることを確認
-      expect(response.data?.[0].profile_image_url).toMatch(/^https:\/\/signed\.url\/img&t=\d+$/);
+      expect(response.data?.[0].profile_image_url).toMatch(
+        /^https:\/\/signed\.url\/img&t=\d+$/
+      );
     });
 
     it("fetchApprovalUsers: 正常系/異常系", async () => {

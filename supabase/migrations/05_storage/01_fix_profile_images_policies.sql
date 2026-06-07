@@ -11,6 +11,7 @@ DROP POLICY IF EXISTS "Users can delete their own profile image vejz8c_0" ON sto
 DROP POLICY IF EXISTS "Users can delete their own profile image vejz8c_1" ON storage.objects;
 
 -- SELECT: active ユーザーのみ全プロフィール画像を閲覧可能
+DROP POLICY IF EXISTS "Authenticated users can view profile images" ON storage.objects;
 CREATE POLICY "Authenticated users can view profile images"
 ON storage.objects FOR SELECT
 TO authenticated
@@ -26,6 +27,7 @@ USING (
 );
 
 -- INSERT: active ユーザーは自身の auth_id フォルダにのみアップロード可能
+DROP POLICY IF EXISTS "Users can upload their own profile image" ON storage.objects;
 CREATE POLICY "Users can upload their own profile image"
 ON storage.objects FOR INSERT
 TO authenticated
@@ -42,6 +44,7 @@ WITH CHECK (
 );
 
 -- UPDATE: active ユーザーは自身の auth_id フォルダのファイルのみ更新可能
+DROP POLICY IF EXISTS "Users can update their own profile image" ON storage.objects;
 CREATE POLICY "Users can update their own profile image"
 ON storage.objects FOR UPDATE
 TO authenticated
@@ -69,6 +72,7 @@ WITH CHECK (
 );
 
 -- DELETE: active ユーザーは自身の auth_id フォルダのファイルのみ削除可能
+DROP POLICY IF EXISTS "Users can delete their own profile image" ON storage.objects;
 CREATE POLICY "Users can delete their own profile image"
 ON storage.objects FOR DELETE
 TO authenticated
