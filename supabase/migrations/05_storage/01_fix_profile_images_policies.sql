@@ -70,14 +70,14 @@ WITH CHECK (
   )
 );
 
--- DELETE: active ユーザーは自身の auth_id フォルダのファイルのみ削除可能
+-- DELETE: active ユーザーは {auth_id}/profile-image のみ削除可能
 DROP POLICY IF EXISTS "Users can delete their own profile image" ON storage.objects;
 CREATE POLICY "Users can delete their own profile image"
 ON storage.objects FOR DELETE
 TO authenticated
 USING (
   bucket_id = 'profile-images'
-  AND (storage.foldername(name))[1] = auth.uid()::text
+  AND name = auth.uid()::text || '/profile-image'
   AND EXISTS (
     SELECT 1
     FROM public.users
