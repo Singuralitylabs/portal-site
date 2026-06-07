@@ -69,7 +69,12 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
         } else {
           setProfileImageUrl(null);
         }
-        setGoogleAvatarUrl(data?.avatar_url ?? null);
+        // user_metadata はSupabase Authが保持する最新値のため優先して使用する。
+        // SIGNED_IN 直後はDBへのavatar_url同期がまだ完了していない場合があるため、
+        // DBのavatar_urlはメタデータが存在しない場合のフォールバックとして扱う。
+        const metadataAvatarUrl =
+          user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+        setGoogleAvatarUrl(metadataAvatarUrl ?? data?.avatar_url ?? null);
       });
   }, [user, fetchSignedUrl]);
 
