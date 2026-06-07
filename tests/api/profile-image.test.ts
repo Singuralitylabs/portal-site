@@ -16,42 +16,6 @@ jest.mock("../../app/services/api/supabase-server", () => ({
 
 import { createServerSupabaseClient } from "../../app/services/api/supabase-server";
 
-const buildStorageMock = (
-  uploadResult: { error: null | { message: string } } = { error: null },
-  removeResult: { error: null | { message: string } } = { error: null }
-) => ({
-  upload: jest.fn().mockResolvedValue(uploadResult),
-  remove: jest.fn().mockResolvedValue(removeResult),
-});
-
-const buildDbMock = (
-  selectResult: { data: { id: number } | null; error: null | { message: string } } = {
-    data: { id: 1 },
-    error: null,
-  },
-  updateResult: { error: null | { message: string } } = { error: null }
-) => ({
-  select: jest.fn().mockReturnThis(),
-  eq: jest.fn().mockReturnThis(),
-  maybeSingle: jest.fn().mockResolvedValue(selectResult),
-  update: jest.fn().mockReturnThis(),
-  _updateResult: updateResult,
-});
-
-const buildSupabaseMock = (
-  storageMock: ReturnType<typeof buildStorageMock>,
-  dbMock: ReturnType<typeof buildDbMock>
-) => ({
-  storage: {
-    from: jest.fn().mockReturnValue(storageMock),
-  },
-  from: jest.fn().mockImplementation(() => ({
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    maybeSingle: jest.fn().mockResolvedValue({ data: { id: 1 }, error: null }),
-    update: jest.fn().mockReturnThis(),
-  })),
-});
 
 const createPostRequest = (file?: File): Request => {
   const formData = new FormData();

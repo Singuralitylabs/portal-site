@@ -51,7 +51,7 @@ export function ProfilePageTemplate({
   );
   const [isImageLoading, setIsImageLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { profileImageUrl, refreshProfileImage } = useProfileImage();
+  const { profileImageUrl, googleAvatarUrl, refreshProfileImage } = useProfileImage();
 
   useEffect(() => {
     setUser(initialUser);
@@ -241,7 +241,7 @@ export function ProfilePageTemplate({
     });
   };
 
-  const avatarSrc = profileImageUrl ?? user.avatar_url ?? null;
+  const avatarSrc = profileImageUrl ?? googleAvatarUrl ?? user.avatar_url ?? null;
   const initial = user.display_name.charAt(0) || null;
 
   return (
