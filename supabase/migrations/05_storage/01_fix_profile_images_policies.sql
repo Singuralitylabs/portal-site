@@ -26,7 +26,7 @@ USING (
   )
 );
 
--- INSERT: active ユーザーは自身の auth_id フォルダにのみアップロード可能
+-- INSERT: active ユーザーは自身の auth_id フォルダの profile-image キーにのみアップロード可能
 DROP POLICY IF EXISTS "Users can upload their own profile image" ON storage.objects;
 CREATE POLICY "Users can upload their own profile image"
 ON storage.objects FOR INSERT
@@ -34,6 +34,7 @@ TO authenticated
 WITH CHECK (
   bucket_id = 'profile-images'
   AND (storage.foldername(name))[1] = auth.uid()::text
+  AND storage.filename(name) = 'profile-image'
   AND EXISTS (
     SELECT 1
     FROM public.users
@@ -43,7 +44,7 @@ WITH CHECK (
   )
 );
 
--- UPDATE: active ユーザーは自身の auth_id フォルダのファイルのみ更新可能
+-- UPDATE: active ユーザーは自身の auth_id フォルダの profile-image キーのみ更新可能
 DROP POLICY IF EXISTS "Users can update their own profile image" ON storage.objects;
 CREATE POLICY "Users can update their own profile image"
 ON storage.objects FOR UPDATE
@@ -51,6 +52,7 @@ TO authenticated
 USING (
   bucket_id = 'profile-images'
   AND (storage.foldername(name))[1] = auth.uid()::text
+  AND storage.filename(name) = 'profile-image'
   AND EXISTS (
     SELECT 1
     FROM public.users
@@ -62,6 +64,7 @@ USING (
 WITH CHECK (
   bucket_id = 'profile-images'
   AND (storage.foldername(name))[1] = auth.uid()::text
+  AND storage.filename(name) = 'profile-image'
   AND EXISTS (
     SELECT 1
     FROM public.users
