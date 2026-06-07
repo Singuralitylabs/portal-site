@@ -1569,7 +1569,6 @@ sequenceDiagram
 - 検索対象カラムは `master_admin_columns.is_searchable = true` のカラムに限定する
 - 検索条件はフィルター条件と併用でき、サーバーAPI側でも検索対象カラム・演算子・権限を検証する
 
-
 #### 運用ルール
 
 - マスター管理画面にテーブルを追加する場合は、`master_admin_tables` / `master_admin_columns` / `master_admin_permissions` に設定レコードを追加する
