@@ -7,6 +7,7 @@ import {
   FileText,
   FileVideo,
   House,
+  Link2,
   Settings,
   Users,
   Calendar,
@@ -51,6 +52,11 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
     title: "カレンダー",
     href: "/calendar",
     icon: <Calendar className="h-5 w-5" />,
+  },
+  {
+    title: "クイックリンク",
+    href: "/links",
+    icon: <Link2 className="h-5 w-5" />,
   },
 ];
 

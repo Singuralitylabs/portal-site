@@ -88,6 +88,14 @@ export default async function Home() {
             </h3>
             <p className="text-muted-foreground">シンラボ関連イベントや予定を確認できます。</p>
           </div>
+          <div className="bg-card p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">
+              <Link href="/links">クイックリンク</Link>
+            </h3>
+            <p className="text-muted-foreground">
+              Slack・ドライブ・SNS等のシンラボ関連リンクにすぐにアクセスできます。
+            </p>
+          </div>
         </div>
       </div>
     </div>
