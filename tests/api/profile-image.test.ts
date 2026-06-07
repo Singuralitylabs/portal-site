@@ -213,7 +213,8 @@ describe("プロフィール画像 API", () => {
             remove: removeMock,
           }),
         },
-        from: jest.fn()
+        from: jest
+          .fn()
           .mockImplementationOnce(() => ({
             select: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
@@ -285,7 +286,8 @@ describe("プロフィール画像 API", () => {
       mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
       const supabaseMock = {
         storage: { from: jest.fn() },
-        from: jest.fn()
+        from: jest
+          .fn()
           .mockImplementationOnce(() => ({
             select: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
