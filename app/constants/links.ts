@@ -37,6 +37,7 @@ export const QUICK_LINK_CATEGORIES: QuickLinkCategoryType[] = [
         url: "https://web-skillup-service.vercel.app/",
         description:
           "シンラボメンバー向けの学習支援サービスです。GASに関するコンテンツをレッスン形式で学べます。",
+        headerImagePath: "/links/sinlab-study.png",
         detailDescription:
           "Sinlab Studyは、シンラボメンバー向けの学習支援サービスです。現在はGAS（Google Apps Script）に関するコンテンツをレッスン形式で学ぶことができます。今後、AI開発やウェブ技術開発などのコンテンツも順次追加予定です。",
       },
@@ -45,6 +46,7 @@ export const QUICK_LINK_CATEGORIES: QuickLinkCategoryType[] = [
         url: "https://sinlab-knowledge.vercel.app/",
         description:
           "シンラボの知見を蓄積・共有するナレッジベースです。ウェブ技術・ウェブ開発・AI駆動開発のノウハウを閲覧できます。",
+        headerImagePath: "/links/sinlab-knowledge.png",
         detailDescription:
           "Sinlab Knowledgeは、シンラボの知見を蓄積・共有するナレッジベースです。マークダウンやGitなどのウェブ技術、HTML・CSS等のウェブ開発のための知見のほか、AI駆動開発のノウハウも収録されています。",
       },
