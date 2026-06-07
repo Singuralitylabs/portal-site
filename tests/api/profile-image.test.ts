@@ -16,7 +16,6 @@ jest.mock("../../app/services/api/supabase-server", () => ({
 
 import { createServerSupabaseClient } from "../../app/services/api/supabase-server";
 
-
 const createPostRequest = (file?: File): Request => {
   const formData = new FormData();
   if (file) formData.append("image", file);
