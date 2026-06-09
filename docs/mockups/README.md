@@ -17,46 +17,46 @@
 JSON 定義から SVG を生成する PoC スクリプトを用意しているため、Node.js があればどの環境でも同じ手順で生成できます。
 
 1. 生成元定義を編集する
-	- `docs/mockups/specs/*.json`
+   - `docs/mockups/specs/*.json`
 
 2. SVG を生成する
 
-	```bash
-	npm run mockup:svg
-	```
+   ```bash
+   npm run mockup:svg
+   ```
 
 3. 出力先を確認する
-	- `docs/mockups/svg/*.svg`
+   - `docs/mockups/svg/*.svg`
 
 ## ブラウザ描画 + Playwright で PNG 生成する手順
 
 実装済みの HTML モックをブラウザで描画し、描画結果を PNG 化する PoC パターンです。
 
 1. 前提
-	- 開発サーバーを起動していること（`npm run dev`）
-	- `playwright` パッケージがインストール済みであること
+   - 開発サーバーを起動していること（`npm run dev`）
+   - `playwright` パッケージがインストール済みであること
 
-	```bash
-	npm install -D playwright
-	```
+   ```bash
+   npm install -D playwright
+   ```
 
 2. 実行
 
-	```bash
-	npm run mockup:png:playwright
-	```
+   ```bash
+   npm run mockup:png:playwright
+   ```
 
 3. 出力先
-	- `docs/mockups/png/login.playwright.png`
+   - `docs/mockups/png/login.playwright.png`
 
 補足:
 
 - 既定では `http://127.0.0.1:3000/mockups/login` を対象にします
 - 必要に応じて `MOCKUP_BASE_URL` で対象ホストを変更できます
 
-	```bash
-	MOCKUP_BASE_URL="http://127.0.0.1:3001" npm run mockup:png:playwright
-	```
+  ```bash
+  MOCKUP_BASE_URL="http://127.0.0.1:3001" npm run mockup:png:playwright
+  ```
 
 ## 方針
 

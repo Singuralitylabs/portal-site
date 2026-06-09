@@ -1,8 +1,6 @@
 {
   "title": "シンギュラリティ・ラボ ポータルサイト",
-  "subtitleLines": [
-    "本サイトには、シンギュラリティ・ラボの会員のみアクセスできます。"
-  ],
+  "subtitleLines": ["本サイトには、シンギュラリティ・ラボの会員のみアクセスできます。"],
   "buttonLabel": "Googleでログイン",
   "noticeTitle": "ログイン時のご連絡",
   "noticeBodyLines": [

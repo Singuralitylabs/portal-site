@@ -128,20 +128,20 @@ npm install
 
 1. 開発サーバーを起動する
 
-  ```bash
-  npm run dev
-  ```
+```bash
+npm run dev
+```
 
 2. ブラウザで以下にアクセスする
 
-  - `/mockups`
-  - `/mockups/login`
+- `/mockups`
+- `/mockups/login`
 
 3. 確認観点
 
-  - 認証不要で表示できること
-  - 実画面に近いレイアウト確認ができること
-  - 仕様議論用のたたき台として利用できること
+- 認証不要で表示できること
+- 実画面に近いレイアウト確認ができること
+- 仕様議論用のたたき台として利用できること
 
 - ESLint: コードの静的解析
 - Prettier - Code formatter: コードフォーマッター
