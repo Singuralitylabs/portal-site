@@ -1,6 +1,7 @@
 "use client";
 
 import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
+import { ProfileImageProvider } from "@/app/providers/profile-image-provider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchUserStatusById } from "../services/api/users-client";
@@ -68,7 +69,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
   // 認証済みかつactiveな場合のみコンテンツを表示
   if (user && userStatus === USER_STATUS.ACTIVE) {
-    return <>{children}</>;
+    return <ProfileImageProvider>{children}</ProfileImageProvider>;
   }
 
   // その他の場合は何も表示しない（リダイレクト処理が実行される）

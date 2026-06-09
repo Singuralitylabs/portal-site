@@ -72,6 +72,7 @@ export type ProfileUserType = Pick<
   | "created_at"
   | "bio"
   | "avatar_url"
+  | "profile_image_path"
   | "x_url"
   | "facebook_url"
   | "instagram_url"
@@ -89,6 +90,7 @@ export type MemberType = Pick<
   | "display_name"
   | "bio"
   | "avatar_url"
+  | "profile_image_path"
   | "x_url"
   | "facebook_url"
   | "instagram_url"
@@ -102,6 +104,7 @@ export type MemberType = Pick<
       is_deleted: boolean;
     } | null;
   }[];
+  profile_image_url: string | null;
 };
 export type PendingUserType = Pick<UserType, "id" | "display_name" | "email">;
 export type SelectDeveloperType = Pick<UserType, "id" | "display_name">;

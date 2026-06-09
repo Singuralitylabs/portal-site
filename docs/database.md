@@ -343,8 +343,8 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 ### 4.8. profile-images Storage のRLSポリシー
 
-- 認証済みユーザーのみ全ファイルを閲覧可能
-- ユーザーは自身の `auth_id` フォルダのファイルのみアップロード・更新・削除可能
+- `status = 'active'` かつ未削除のユーザーのみ全プロフィール画像を閲覧可能
+- ユーザーは自身の `auth_id` フォルダの `profile-image`（固定キー）のみアップロード・更新・削除可能
 
 ## 5. Supabase Storage
 

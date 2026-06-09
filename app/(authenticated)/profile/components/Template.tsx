@@ -1,11 +1,16 @@
 "use client";
 
 import { PageTitle } from "@/app/components/PageTitle";
-import { Button, MultiSelect, TextInput, Textarea } from "@mantine/core";
+import { Avatar, Button, Group, MultiSelect, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { useState, useEffect, useTransition } from "react";
+import { User } from "lucide-react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import { PositionType, ProfileUserType } from "@/app/types";
 import { validateUrls } from "@/app/utils/url-validation";
+import { useProfileImage } from "@/app/providers/profile-image-provider";
+
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+const MAX_FILE_SIZE = 1024 * 1024;
 
 interface ProfilePageTemplateProps {
   initialUser: ProfileUserType;
@@ -38,54 +43,140 @@ export function ProfilePageTemplate({
   const [instagram_url, setInstagramUrl] = useState(initialUser.instagram_url || "");
   const [github_url, setGithubUrl] = useState(initialUser.github_url || "");
   const [portfolio_url, setPortfolioUrl] = useState(initialUser.portfolio_url || "");
-  // エラーメッセージ管理用のステートを追加
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
 
-  // 初期ユーザー情報が更新されたら、状態を更新
+  const [profileImagePath, setProfileImagePath] = useState<string | null>(
+    initialUser.profile_image_path ?? null
+  );
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { profileImageUrl, googleAvatarUrl, refreshProfileImage } = useProfileImage();
+
   useEffect(() => {
     setUser(initialUser);
     setName(initialUser.display_name);
     setBio(initialUser.bio || "");
+    setProfileImagePath(initialUser.profile_image_path ?? null);
     setSelectedPositionIds(initialPositionIds);
     setXUrl(initialUser.x_url || "");
     setFacebookUrl(initialUser.facebook_url || "");
     setInstagramUrl(initialUser.instagram_url || "");
     setGithubUrl(initialUser.github_url || "");
     setPortfolioUrl(initialUser.portfolio_url || "");
-    setErrors({}); // エラーもリセット
+    setErrors({});
   }, [initialUser, initialPositionIds]);
 
-  // URL形式チェック関数
-  const validateUrl = (url: string | null) => {
-    if (!url) return true;
-    return /^https?:\/\//.test(url);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      notifications.show({
+        title: "エラー",
+        message: "ファイルサイズは1MB以下にしてください",
+        color: "red",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      notifications.show({
+        title: "エラー",
+        message: "jpg / jpeg / png / gif のみアップロード可能です",
+        color: "red",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    setIsImageLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch("/api/profile/image", { method: "POST", body: formData });
+      const data = await response.json();
+
+      if (data.success) {
+        setProfileImagePath(data.profile_image_path);
+        await refreshProfileImage(data.profile_image_path);
+        notifications.show({
+          title: "成功",
+          message: "プロフィール画像を更新しました",
+          color: "green",
+          autoClose: 3000,
+        });
+      } else {
+        notifications.show({
+          title: "エラー",
+          message: data.error || "画像のアップロードに失敗しました",
+          color: "red",
+          autoClose: 3000,
+        });
+      }
+    } catch {
+      notifications.show({
+        title: "エラー",
+        message: "通信エラーが発生しました",
+        color: "red",
+        autoClose: 3000,
+      });
+    } finally {
+      setIsImageLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
-  // プロフィール更新処理
+  const handleImageDelete = async () => {
+    setIsImageLoading(true);
+    try {
+      const response = await fetch("/api/profile/image", { method: "DELETE" });
+      const data = await response.json();
+
+      if (data.success) {
+        setProfileImagePath(null);
+        await refreshProfileImage(null);
+        notifications.show({
+          title: "成功",
+          message: "プロフィール画像を削除しました",
+          color: "green",
+          autoClose: 3000,
+        });
+      } else {
+        notifications.show({
+          title: "エラー",
+          message: data.error || "画像の削除に失敗しました",
+          color: "red",
+          autoClose: 3000,
+        });
+      }
+    } catch {
+      notifications.show({
+        title: "エラー",
+        message: "通信エラーが発生しました",
+        color: "red",
+        autoClose: 3000,
+      });
+    } finally {
+      setIsImageLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // URLの形式チェック_url-validation.tsの共通関数に再修正_httpsのみ許容
-    const urlData = {
-      x_url,
-      facebook_url,
-      instagram_url,
-      github_url,
-      portfolio_url,
-    };
-
+    const urlData = { x_url, facebook_url, instagram_url, github_url, portfolio_url };
     const invalidFields = validateUrls(urlData);
 
     if (invalidFields.length > 0) {
       const newErrors: Record<string, string> = {};
       const urlErrorMessage =
         "URLは https:// から始まる正しい形式で入力してください。無ければ空欄にしてください。";
-
       invalidFields.forEach(field => {
         newErrors[field] = urlErrorMessage;
       });
-
       setErrors(newErrors);
 
       const fieldLabels: Record<string, string> = {
@@ -103,19 +194,13 @@ export function ProfilePageTemplate({
           {invalidLabels.join(", ")}
         </>
       );
-      notifications.show({
-        title: "入力エラー",
-        message: errorMessage,
-        color: "red",
-      });
+      notifications.show({ title: "入力エラー", message: errorMessage, color: "red" });
       return;
     }
 
-    // エラーがなければステートをクリアして送信開始
     setErrors({});
 
     startTransition(async () => {
-      // サーバーアクションを呼び出してプロフィールを更新
       const { success, message } = await updateProfile(
         name,
         bio,
@@ -128,7 +213,6 @@ export function ProfilePageTemplate({
       );
 
       if (success) {
-        // 更新成功時にユーザー情報を更新（実際のデータはサーバーから再取得される）
         setUser({
           ...user,
           display_name: name,
@@ -139,8 +223,6 @@ export function ProfilePageTemplate({
           github_url,
           portfolio_url,
         });
-
-        // 成功通知
         notifications.show({
           title: "成功",
           message: "プロフィールを更新しました",
@@ -148,7 +230,6 @@ export function ProfilePageTemplate({
           autoClose: 3000,
         });
       } else {
-        // エラー通知
         console.error("プロフィール更新エラー:", message);
         notifications.show({
           title: "エラー",
@@ -160,22 +241,37 @@ export function ProfilePageTemplate({
     });
   };
 
+  const avatarSrc = profileImageUrl ?? googleAvatarUrl ?? user.avatar_url ?? null;
+  const initial = user.display_name.charAt(0) || null;
+
   return (
     <>
       <PageTitle>プロフィール</PageTitle>
 
-      {/* プロフィール情報表示*/}
+      {/* プロフィール情報表示（表示専用） */}
       <div className="p-4 mb-4 bg-white rounded-lg shadow-sm">
-        <h2 className="text-2xl font-bold">{user.display_name}</h2>
-        <div className="flex items-center gap-4 mt-2">
-          <span className="bg-gray-200 px-3 py-1 rounded-full text-sm">{user.role}</span>
-          <span className="text-sm text-gray-600">
-            {(() => {
-              const date = new Date(user.created_at);
-              return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-            })()}{" "}
-            に参加
-          </span>
+        <div className="flex items-center gap-4">
+          <Avatar
+            src={avatarSrc}
+            size={80}
+            radius="xl"
+            imageProps={{ referrerPolicy: "no-referrer" }}
+          >
+            {initial ?? <User size={32} />}
+          </Avatar>
+          <div>
+            <h2 className="text-2xl font-bold">{user.display_name}</h2>
+            <div className="flex items-center gap-4 mt-2">
+              <span className="bg-gray-200 px-3 py-1 rounded-full text-sm">{user.role}</span>
+              <span className="text-sm text-gray-600">
+                {(() => {
+                  const date = new Date(user.created_at);
+                  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+                })()}{" "}
+                に参加
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -183,6 +279,48 @@ export function ProfilePageTemplate({
       <div className="p-4 mb-8 bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
+            {/* プロフィール画像 */}
+            <div>
+              <label className="block text-sm font-medium mb-2">プロフィール画像</label>
+              <div className="flex items-center gap-4">
+                <Avatar
+                  src={avatarSrc}
+                  size={64}
+                  radius="xl"
+                  imageProps={{ referrerPolicy: "no-referrer" }}
+                >
+                  {initial ?? <User size={24} />}
+                </Avatar>
+                <Group gap="xs">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif"
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    loading={isImageLoading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    画像を変更
+                  </Button>
+                  <Button
+                    variant="outline"
+                    color="red"
+                    size="xs"
+                    loading={isImageLoading}
+                    disabled={!profileImagePath}
+                    onClick={handleImageDelete}
+                  >
+                    画像を削除
+                  </Button>
+                </Group>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-1">
                 名前
@@ -209,9 +347,9 @@ export function ProfilePageTemplate({
                 id="bio"
                 value={bio}
                 onChange={e => setBio(e.target.value)}
-                autosize // ← これを追加して、サイズ自動調整を有効化
-                minRows={5} // ← 現実的な最小行数（例：5行）
-                maxRows={10} // maxRows を設定しなければ、入力に応じて無限に伸びます
+                autosize
+                minRows={5}
+                maxRows={10}
               />
             </div>
 
