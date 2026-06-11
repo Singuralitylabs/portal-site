@@ -47,7 +47,11 @@ export function LinksPageTemplate({ categories }: LinksPageTemplateProps) {
         ))}
       </div>
 
-      <LinkDetailModal link={selectedLink} opened={selectedLink !== null} onClose={handleModalClose} />
+      <LinkDetailModal
+        link={selectedLink}
+        opened={selectedLink !== null}
+        onClose={handleModalClose}
+      />
     </>
   );
 }
