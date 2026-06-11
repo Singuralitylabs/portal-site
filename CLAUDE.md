@@ -40,6 +40,8 @@ npm run dev        # 開発サーバー（Turbopack）
 npm run build      # 本番ビルド
 npm run lint       # ESLint
 npm run type-check # 型チェック（tsc --noEmit）
+npm run format:check # Prettierフォーマットチェック
+npm run format     # Prettierフォーマット適用
 npm run db:types   # Supabase型生成
 ```
 
@@ -97,9 +99,14 @@ npm run db:types   # Supabase型生成
 
 コード変更を行った後、以下のチェックを順番に実行し、すべて通ることを確認する。エラーがあれば修正してから完了とする。
 
+ビルド前にフォーマット起因の差分を解消するため、`npm run format:check` を `npm run build` より先に実行する。
+
 1. `npm run lint` - ESLintチェック
 2. `npm run type-check` - 型チェック
-3. `npm run build` - ビルドチェック
+3. `npm run format:check` - Prettierフォーマットチェック
+4. `npm run build` - ビルドチェック
+
+`npm run format:check` で整形差分が検出された場合は、`npm run format` を実行して整形を適用し、整形差分を含めてコミットする。
 
 ## 禁止事項
 
