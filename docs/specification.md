@@ -1546,7 +1546,7 @@ sequenceDiagram
 #### マスター管理用設定テーブル
 
 - マスター管理画面では、`master_admin_tables` / `master_admin_columns` / `master_admin_permissions` を設定の正本として利用する
-- `master_admin_tables` は対象テーブルの有効化、削除方式などテーブル単位の設定を管理する
+- `master_admin_tables` は対象テーブルの有効化、一覧/追加/更新/削除可否（`allow_*`）、削除方式などテーブル単位の設定を管理する
 - `master_admin_columns` は表示可否、編集可否、検索・フィルター可否、入力方式、固定値選択肢、外部キー参照などカラム単位の設定を管理する
 - `master_admin_permissions` は `admin` / `maintainer` / `member` のロール別に参照・追加・編集・削除可否を管理する
 - 設定に存在しないテーブル・カラムは、UIにもサーバーAPIにも露出しない
@@ -1561,6 +1561,7 @@ sequenceDiagram
   - 日時: 範囲指定、完全一致
   - 固定値選択肢: 完全一致、複数選択
   - 外部キー: 参照先レコードの完全一致、複数選択
+  - 共通: NULL判定（is null / is not null）
 - UIで受け付けたフィルター条件は、サーバーAPI側でも設定テーブルと照合し、許可されたカラム・演算子のみクエリへ変換する
 
 #### レコード検索
