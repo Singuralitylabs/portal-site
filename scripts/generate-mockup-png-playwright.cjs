@@ -1,69 +1,83 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const http = require("node:http");
+const { URL } = require("node:url");
 
 const projectRoot = path.resolve(__dirname, "..");
 const outDir = path.join(projectRoot, "docs/mockups/png");
-const baseUrl = process.env.MOCKUP_BASE_URL || "http://127.0.0.1:3000";
+const htmlRoot = path.join(projectRoot, "docs/mockups/html");
 const viewportWidth = Number(process.env.MOCKUP_VIEWPORT_WIDTH || 1280);
 const viewportHeight = Number(process.env.MOCKUP_VIEWPORT_HEIGHT || 720);
 
 const targets = [
   {
     name: "mockups-index.playwright",
-    url: `${baseUrl}/mockups`,
+    path: "/",
     selector: '[data-mockup-capture="mockups-index-content"]',
   },
   {
     name: "home.playwright",
-    url: `${baseUrl}/mockups/home`,
+    path: "/home/",
     selector: '[data-mockup-capture="home-content"]',
   },
   {
     name: "login.playwright",
-    url: `${baseUrl}/mockups/login`,
+    path: "/login/",
     selector: '[data-mockup-capture="login-content"]',
   },
   {
     name: "pending.playwright",
-    url: `${baseUrl}/mockups/pending`,
+    path: "/pending/",
     selector: '[data-mockup-capture="pending-content"]',
   },
   {
     name: "rejected.playwright",
-    url: `${baseUrl}/mockups/rejected`,
+    path: "/rejected/",
     selector: '[data-mockup-capture="rejected-content"]',
   },
   {
     name: "documents-layout.playwright",
-    url: `${baseUrl}/mockups/documents`,
+    path: "/documents/",
     selector: '[data-mockup-capture="documents-layout-content"]',
   },
   {
     name: "document-card.playwright",
-    url: `${baseUrl}/mockups/documents/card`,
+    path: "/documents/card/",
     selector: '[data-mockup-capture="document-card-content"]',
   },
   {
     name: "document-detail-modal.playwright",
-    url: `${baseUrl}/mockups/documents/detail-modal`,
+    path: "/documents/detail-modal/",
     selector: '[data-mockup-capture="document-detail-modal-content"]',
   },
   {
     name: "videos-layout.playwright",
-    url: `${baseUrl}/mockups/videos`,
+    path: "/videos/",
     selector: '[data-mockup-capture="videos-layout-content"]',
   },
   {
     name: "video-card.playwright",
-    url: `${baseUrl}/mockups/videos/card`,
+    path: "/videos/card/",
     selector: '[data-mockup-capture="video-card-content"]',
   },
   {
     name: "video-detail.playwright",
-    url: `${baseUrl}/mockups/videos/detail`,
+    path: "/videos/detail/",
     selector: '[data-mockup-capture="video-detail-content"]',
   },
 ];
+
+const MIME_TYPES = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+};
 
 function getPlaywrightModule() {
   try {
@@ -108,7 +122,66 @@ async function hideDevOverlayArtifacts(page) {
   });
 }
 
-async function captureAsPng({ browser, target }) {
+function resolveStaticFilePath(requestPathname) {
+  const decodedPath = decodeURIComponent(requestPathname);
+  let candidate = path.join(htmlRoot, decodedPath);
+
+  if (!path.extname(candidate)) {
+    if (decodedPath.endsWith("/")) {
+      candidate = path.join(candidate, "index.html");
+    } else {
+      candidate = `${candidate}.html`;
+    }
+  }
+
+  const normalizedRoot = path.resolve(htmlRoot);
+  const normalizedCandidate = path.resolve(candidate);
+  if (!normalizedCandidate.startsWith(normalizedRoot)) {
+    return null;
+  }
+
+  if (!fs.existsSync(normalizedCandidate)) {
+    return null;
+  }
+
+  return normalizedCandidate;
+}
+
+function startStaticServer() {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      const parsed = new URL(req.url || "/", "http://127.0.0.1");
+      const filePath = resolveStaticFilePath(parsed.pathname);
+
+      if (!filePath) {
+        res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+        res.end("Not Found");
+        return;
+      }
+
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeType = MIME_TYPES[ext] || "application/octet-stream";
+      res.writeHead(200, { "content-type": mimeType });
+      fs.createReadStream(filePath).pipe(res);
+    });
+
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        reject(new Error("Failed to acquire static server address"));
+        return;
+      }
+
+      resolve({
+        server,
+        baseUrl: `http://127.0.0.1:${address.port}`,
+      });
+    });
+  });
+}
+
+async function captureAsPng({ baseUrl, browser, target }) {
   const page = await browser.newPage({
     viewport: {
       width: viewportWidth,
@@ -116,7 +189,9 @@ async function captureAsPng({ browser, target }) {
     },
   });
 
-  await page.goto(target.url, { waitUntil: "networkidle" });
+  const targetUrl = new URL(target.path, `${baseUrl}/`).toString();
+
+  await page.goto(targetUrl, { waitUntil: "networkidle" });
   await page.waitForSelector(target.selector, { timeout: 15000 });
   await hideDevOverlayArtifacts(page);
 
@@ -140,19 +215,40 @@ async function run() {
 
   fs.mkdirSync(outDir, { recursive: true });
 
+  if (!fs.existsSync(htmlRoot)) {
+    console.error("mockup html root does not exist:", htmlRoot);
+    process.exitCode = 1;
+    return;
+  }
+
+  const manualBaseUrl = process.env.MOCKUP_BASE_URL;
+  let staticServer = null;
+  let baseUrl = manualBaseUrl;
+
+  if (!baseUrl) {
+    const started = await startStaticServer();
+    staticServer = started.server;
+    baseUrl = started.baseUrl;
+    console.log(`mockup static server started: ${baseUrl}`);
+  }
+
   const browser = await playwright.chromium.launch({
     headless: true,
   });
 
   try {
     for (const target of targets) {
-      const pngBuffer = await captureAsPng({ browser, target });
+      const pngBuffer = await captureAsPng({ baseUrl, browser, target });
       const outPath = path.join(outDir, `${target.name}.png`);
       fs.writeFileSync(outPath, pngBuffer);
       console.log(`generated: docs/mockups/png/${target.name}.png`);
     }
   } finally {
     await browser.close();
+    if (staticServer) {
+      await new Promise(resolve => staticServer.close(resolve));
+      console.log("mockup static server stopped");
+    }
   }
 }
 

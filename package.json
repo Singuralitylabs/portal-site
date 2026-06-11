@@ -10,8 +10,6 @@
     "type-check": "tsc --noEmit",
     "format:check": "prettier --check . --ignore-unknown",
     "format": "prettier --write . --ignore-unknown",
-    "mockup:svg": "node scripts/generate-mockup-svg.cjs",
-    "mockup:svg:playwright": "node scripts/generate-mockup-svg-playwright.cjs",
     "mockup:png:playwright": "node scripts/generate-mockup-png-playwright.cjs",
     "db:types": "node scripts/db-types.cjs",
     "lint:logs": "node scripts/lint-logs.cjs",
