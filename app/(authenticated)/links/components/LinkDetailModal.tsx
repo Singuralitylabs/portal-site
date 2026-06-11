@@ -61,7 +61,7 @@ export function LinkDetailModal({ link, opened, onClose }: LinkDetailModalProps)
         </div>
 
         <Button
-          color="#000"
+          color="dark"
           fullWidth
           component="a"
           href={link.url}

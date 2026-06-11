@@ -11,16 +11,14 @@ interface LinksPageTemplateProps {
 }
 
 export function LinksPageTemplate({ categories }: LinksPageTemplateProps) {
+  // selectedLink が null = モーダルを閉じた状態として扱う
   const [selectedLink, setSelectedLink] = useState<QuickLinkType | null>(null);
-  const [modalOpened, setModalOpened] = useState(false);
 
   const handleDetailClick = (link: QuickLinkType) => {
     setSelectedLink(link);
-    setModalOpened(true);
   };
 
   const handleModalClose = () => {
-    setModalOpened(false);
     setSelectedLink(null);
   };
 
@@ -33,10 +31,10 @@ export function LinksPageTemplate({ categories }: LinksPageTemplateProps) {
       <div className="mt-8">
         {categories.map(category => (
           <div key={category.id} className="mb-12">
-            <h2>{category.name}</h2>
+            <h2 className="text-xl font-semibold mb-4">{category.name}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 auto-rows-fr gap-6 mb-8 px-4">
               {category.links.map(link => (
-                <div key={link.name} className="w-full">
+                <div key={link.url} className="w-full">
                   <LinkCard
                     link={link}
                     displayMode={category.displayMode}
@@ -49,7 +47,7 @@ export function LinksPageTemplate({ categories }: LinksPageTemplateProps) {
         ))}
       </div>
 
-      <LinkDetailModal link={selectedLink} opened={modalOpened} onClose={handleModalClose} />
+      <LinkDetailModal link={selectedLink} opened={selectedLink !== null} onClose={handleModalClose} />
     </>
   );
 }

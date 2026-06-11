@@ -8,7 +8,7 @@ import { QuickLinkDisplayModeType, QuickLinkType } from "@/app/types";
 interface LinkCardProps {
   link: QuickLinkType;
   displayMode: QuickLinkDisplayModeType;
-  onDetailClick: (link: QuickLinkType) => void;
+  onDetailClick?: (link: QuickLinkType) => void;
 }
 
 export function LinkCard({ link, displayMode, onDetailClick }: LinkCardProps) {
@@ -64,7 +64,7 @@ export function LinkCard({ link, displayMode, onDetailClick }: LinkCardProps) {
     >
       {cardContent}
       <div className="p-4 pt-0">
-        <Button color="#000" fullWidth onClick={() => onDetailClick(link)}>
+        <Button color="dark" fullWidth onClick={() => onDetailClick?.(link)}>
           詳細
         </Button>
       </div>
