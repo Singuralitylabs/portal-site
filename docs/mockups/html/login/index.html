@@ -7,32 +7,18 @@
     <link rel="stylesheet" href="/assets/mockup.css" />
   </head>
   <body>
-    <main
-      class="page"
-      style="display: flex; align-items: center; justify-content: center; background: #fff"
-    >
-      <div
-        class="container"
-        data-mockup-capture="login-content"
-        style="max-width: 780px; text-align: center"
-      >
-        <h1 class="title">シンギュラリティ・ラボ ポータルサイト</h1>
-        <p style="margin: 16px 0 22px; color: #ef4444; font-size: 36px; font-weight: 700">
-          本サイトには、シンギュラリティ・ラボの会員のみアクセスできます。
+    <main class="page page-auth" style="background: #fff">
+      <div class="container login-wrap" data-mockup-capture="login-content">
+        <h1 class="login-title">
+          <span style="display: inline-block">シンギュラリティ・ラボ </span>
+          <span style="display: inline-block">ポータルサイト</span>
+        </h1>
+        <p class="login-warning">
+          <span style="display: inline-block">本サイトには、シンギュラリティ・ラボの </span>
+          <span style="display: inline-block">会員のみアクセスできます。</span>
         </p>
-        <div style="display: flex; justify-content: center; margin-bottom: 22px">
-          <div
-            class="card"
-            style="
-              padding: 14px 26px;
-              border-radius: 10px;
-              border-width: 2px;
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              font-size: 22px;
-            "
-          >
+        <div style="display: flex; justify-content: center; margin-bottom: 18px">
+          <div class="google-btn">
             <svg
               viewBox="0 0 24 24"
               width="28"
@@ -60,27 +46,12 @@
             <span>Googleでログイン</span>
           </div>
         </div>
-        <div style="display: flex; justify-content: center">
-          <div
-            class="card"
-            style="
-              max-width: 640px;
-              background: #eff6ff;
-              border-color: #bfdbfe;
-              padding: 18px;
-              text-align: left;
-            "
-          >
-            <p style="margin: 0 0 10px; font-weight: 700; font-size: 30px; color: #1e3a8a">
-              ログイン時のご連絡
-            </p>
-            <p style="margin: 0; color: #374151; font-size: 32px; line-height: 1.5">
+        <div class="login-note">
+          <p class="login-note-title">ログイン時のご連絡</p>
+          <p class="login-note-text">
               Googleアカウント選択画面では、Supabaseの認証システムを利用している仕様上、下記のURLが表示されます。<br />本URLはシンラボのポータルサイトへのアクセスページなので、安心してログインしてください。
-            </p>
-            <p style="margin: 12px 0 0; text-align: center; font-size: 38px; color: #374151">
-              anawnwhhsgragkcorecl.supabase.co
-            </p>
-          </div>
+          </p>
+          <p class="login-note-host">anawnwhhsgragkcorecl.supabase.co</p>
         </div>
       </div>
     </main>

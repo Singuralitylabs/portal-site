@@ -7,15 +7,20 @@
     <link rel="stylesheet" href="/assets/mockup.css" />
   </head>
   <body>
-    <main class="page" style="background: #fff">
+    <main class="page content-shell">
       <div class="container" data-mockup-capture="videos-layout-content">
         <div class="mock-header">
           <h1 class="section-title">動画一覧</h1>
-          <div class="category-links"><span>プログラミング学習</span><span>交流会</span></div>
+          <div style="margin-top: 16px; display: flex; justify-content: flex-end">
+            <div class="btn-black" style="padding: 9px 14px">新規登録</div>
+          </div>
+          <div class="category-links">
+            <span>GAS基礎講座</span><span>GASアプリ解説</span><span>Web開発講座</span><span>AIツール活用</span>
+          </div>
         </div>
 
-        <section style="margin-top: 16px">
-          <h2 style="margin: 0 0 12px; font-size: 26px">プログラミング学習</h2>
+        <section class="category-block" style="margin-top: 16px">
+          <h2>GAS基礎講座</h2>
           <div class="grid-3">
             <article class="video-card">
               <span style="position: absolute; right: 10px; top: 8px; z-index: 10; color: #6b7280"
@@ -23,24 +28,11 @@
               >
               <div class="thumb">
                 <div class="play"><span>▶</span></div>
-                <div class="duration">18:32</div>
+                <div class="duration">56:56</div>
               </div>
               <div class="video-body">
-                <h3>TypeScript入門</h3>
-                <p>シンラボ活動やスキルアップに関する動画です。概要文を2行程度で表示します。</p>
-              </div>
-            </article>
-            <article class="video-card">
-              <span style="position: absolute; right: 10px; top: 8px; z-index: 10; color: #6b7280"
-                >⋮</span
-              >
-              <div class="thumb">
-                <div class="play"><span>▶</span></div>
-                <div class="duration">27:10</div>
-              </div>
-              <div class="video-body">
-                <h3>Next.js実践</h3>
-                <p>シンラボ活動やスキルアップに関する動画です。概要文を2行程度で表示します。</p>
+                <h3>GAS基礎講座③：スプレッドシート操作1</h3>
+                <p>GASを使ってGoogleスプレッドシートを自動化するための基礎スキルを解説します。</p>
               </div>
             </article>
             <article class="video-card">
@@ -52,16 +44,10 @@
                 <div class="duration">12:45</div>
               </div>
               <div class="video-body">
-                <h3>Supabase連携</h3>
-                <p>シンラボ活動やスキルアップに関する動画です。概要文を2行程度で表示します。</p>
+                <h3>GAS基礎講座②：配列・ループ処理</h3>
+                <p>配列、オブジェクト、繰り返し文、関数の実践的な使い方を解説します。</p>
               </div>
             </article>
-          </div>
-        </section>
-
-        <section style="margin-top: 28px">
-          <h2 style="margin: 0 0 12px; font-size: 26px">交流会</h2>
-          <div class="grid-3">
             <article class="video-card">
               <span style="position: absolute; right: 10px; top: 8px; z-index: 10; color: #6b7280"
                 >⋮</span
@@ -71,8 +57,27 @@
                 <div class="duration">34:12</div>
               </div>
               <div class="video-body">
-                <h3>月例交流会</h3>
-                <p>シンラボ活動やスキルアップに関する動画です。概要文を2行程度で表示します。</p>
+                <h3>GAS機能紹介セミナー</h3>
+                <p>自動化、API連携、Webアプリ作成などGASの活用方法を紹介します。</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="category-block">
+          <h2>GASアプリ解説</h2>
+          <div class="grid-3">
+            <article class="video-card">
+              <span style="position: absolute; right: 10px; top: 8px; z-index: 10; color: #6b7280"
+                >⋮</span
+              >
+              <div class="thumb">
+                <div class="play"><span>▶</span></div>
+                <div class="duration">18:32</div>
+              </div>
+              <div class="video-body">
+                <h3>一括メール送信アプリ</h3>
+                <p>スプレッドシートから複数アドレスへメールを一括送信する実装方法を紹介します。</p>
               </div>
             </article>
             <article class="video-card">
@@ -84,8 +89,8 @@
                 <div class="duration">22:01</div>
               </div>
               <div class="video-body">
-                <h3>LT大会</h3>
-                <p>シンラボ活動やスキルアップに関する動画です。概要文を2行程度で表示します。</p>
+                <h3>GoogleAnalyticsデータ取得アプリ</h3>
+                <p>GoogleAnalytics APIを使って分析データをシートへ出力する方法を解説します。</p>
               </div>
             </article>
             <article class="video-card">
@@ -97,14 +102,14 @@
                 <div class="duration">16:20</div>
               </div>
               <div class="video-body">
-                <h3>もくもく会</h3>
-                <p>シンラボ活動やスキルアップに関する動画です。概要文を2行程度で表示します。</p>
+                <h3>複数シートデータ集計アプリ</h3>
+                <p>複数シートのデータを自動集計するアプリ開発方法を紹介します。</p>
               </div>
             </article>
           </div>
         </section>
 
-        <div style="margin-top: 16px" class="blue-link">TOPへ</div>
+        <div style="margin-top: 8px" class="blue-link">TOPへ</div>
       </div>
     </main>
   </body>
