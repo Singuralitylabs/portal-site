@@ -204,6 +204,10 @@ PNG モック（PoC / Playwright 生成）:
 
 #### 2.6.2 承認待ち画面
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/pending.playwright.png" width="400" alt="承認待ち画面モック" />
+
 ```text
 +----------------------------------+
 |                                  |
@@ -218,6 +222,10 @@ PNG モック（PoC / Playwright 生成）:
 ```
 
 #### 2.6.3 拒否時の画面
+
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/rejected.playwright.png" width="400" alt="拒否時の画面モック" />
 
 ```text
 +----------------------------------+
@@ -292,6 +300,10 @@ sequenceDiagram
    - 資料・動画・アプリ・会員・カレンダー・クイックリンクへのリンクカード
 
 ### 3.3 画面レイアウト
+
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/home.playwright.png" width="640" alt="ホーム画面モック" />
 
 ```
 +------------------------------------------+
@@ -370,6 +382,10 @@ sequenceDiagram
 
 ### 4.4 画面レイアウト
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/documents-layout.playwright.png" width="640" alt="資料画面レイアウトモック" />
+
 ```text
 +-------------------------------+
 |                               |
@@ -393,6 +409,10 @@ sequenceDiagram
 
 ### 4.5 カードデザイン
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/document-card.playwright.png" width="320" alt="資料カードモック" />
+
 ```text
 +--------------------------+
 |  資料名             [ ⋮ ] |
@@ -404,6 +424,10 @@ sequenceDiagram
 ```
 
 ### 4.6 資料詳細モーダル
+
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/document-detail-modal.playwright.png" width="480" alt="資料詳細モーダルモック" />
 
 ```text
 +------------------------------------------+
@@ -472,6 +496,10 @@ sequenceDiagram
 
 ### 5.4 画面レイアウト
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/videos-layout.playwright.png" width="640" alt="動画画面レイアウトモック" />
+
 ```text
 +-------------------------------+
 |                               |
@@ -495,6 +523,10 @@ sequenceDiagram
 
 ### 5.5 カードデザイン
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/video-card.playwright.png" width="320" alt="動画カードモック" />
+
 ```text
 +--------------------------+
 |                    [ ⋮ ]  |
@@ -509,6 +541,10 @@ sequenceDiagram
 ```
 
 ### 5.6 動画詳細デザイン
+
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/video-detail.playwright.png" width="560" alt="動画詳細画面モック" />
 
 ```text
 +------------------------------+

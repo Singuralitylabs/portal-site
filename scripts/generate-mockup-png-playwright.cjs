@@ -9,9 +9,59 @@ const viewportHeight = Number(process.env.MOCKUP_VIEWPORT_HEIGHT || 720);
 
 const targets = [
   {
+    name: "mockups-index.playwright",
+    url: `${baseUrl}/mockups`,
+    selector: '[data-mockup-capture="mockups-index-content"]',
+  },
+  {
+    name: "home.playwright",
+    url: `${baseUrl}/mockups/home`,
+    selector: '[data-mockup-capture="home-content"]',
+  },
+  {
     name: "login.playwright",
     url: `${baseUrl}/mockups/login`,
-    selector: "main",
+    selector: '[data-mockup-capture="login-content"]',
+  },
+  {
+    name: "pending.playwright",
+    url: `${baseUrl}/mockups/pending`,
+    selector: '[data-mockup-capture="pending-content"]',
+  },
+  {
+    name: "rejected.playwright",
+    url: `${baseUrl}/mockups/rejected`,
+    selector: '[data-mockup-capture="rejected-content"]',
+  },
+  {
+    name: "documents-layout.playwright",
+    url: `${baseUrl}/mockups/documents`,
+    selector: '[data-mockup-capture="documents-layout-content"]',
+  },
+  {
+    name: "document-card.playwright",
+    url: `${baseUrl}/mockups/documents/card`,
+    selector: '[data-mockup-capture="document-card-content"]',
+  },
+  {
+    name: "document-detail-modal.playwright",
+    url: `${baseUrl}/mockups/documents/detail-modal`,
+    selector: '[data-mockup-capture="document-detail-modal-content"]',
+  },
+  {
+    name: "videos-layout.playwright",
+    url: `${baseUrl}/mockups/videos`,
+    selector: '[data-mockup-capture="videos-layout-content"]',
+  },
+  {
+    name: "video-card.playwright",
+    url: `${baseUrl}/mockups/videos/card`,
+    selector: '[data-mockup-capture="video-card-content"]',
+  },
+  {
+    name: "video-detail.playwright",
+    url: `${baseUrl}/mockups/videos/detail`,
+    selector: '[data-mockup-capture="video-detail-content"]',
   },
 ];
 
@@ -21,6 +71,41 @@ function getPlaywrightModule() {
   } catch {
     return null;
   }
+}
+
+async function hideDevOverlayArtifacts(page) {
+  // Hide known Next.js dev overlay containers.
+  await page.addStyleTag({
+    content: `
+      nextjs-portal,
+      [data-nextjs-toast],
+      [data-next-badge-root],
+      #__next-build-watcher,
+      #nextjs__container,
+      #__nextjs-dev-overlay {
+        display: none !important;
+        visibility: hidden !important;
+      }
+    `,
+  });
+
+  // Remove remaining fixed issue badges that can appear in dev mode.
+  await page.evaluate(() => {
+    const nodes = Array.from(document.querySelectorAll("body *"));
+    for (const node of nodes) {
+      if (!(node instanceof HTMLElement)) {
+        continue;
+      }
+
+      const text = (node.textContent || "").toLowerCase();
+      const style = window.getComputedStyle(node);
+      const isBottomLeft =
+        style.position === "fixed" && style.left !== "auto" && style.bottom !== "auto";
+      if (isBottomLeft && text.includes("issue")) {
+        node.style.display = "none";
+      }
+    }
+  });
 }
 
 async function captureAsPng({ browser, target }) {
@@ -33,6 +118,7 @@ async function captureAsPng({ browser, target }) {
 
   await page.goto(target.url, { waitUntil: "networkidle" });
   await page.waitForSelector(target.selector, { timeout: 15000 });
+  await hideDevOverlayArtifacts(page);
 
   const locator = page.locator(target.selector).first();
   const pngBuffer = await locator.screenshot({

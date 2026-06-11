@@ -1,7 +1,7 @@
 export function LoginMockTemplate() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
-      <div className="w-full space-y-6">
+      <div data-mockup-capture="login-content" className="w-full max-w-3xl space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold">
             <span className="md:inline block">シンギュラリティ・ラボ </span>
