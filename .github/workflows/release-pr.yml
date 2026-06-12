@@ -53,12 +53,12 @@ jobs:
         task: [build, type-check, lint, test, lint:logs]
     steps:
       - name: Checkout main branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
 
       - name: Setup Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22.x
           cache: "npm"
@@ -91,7 +91,7 @@ jobs:
     steps:
       # release / main 両ブランチの履歴を遡るため全履歴を取得
       - name: Checkout repository (full history)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 

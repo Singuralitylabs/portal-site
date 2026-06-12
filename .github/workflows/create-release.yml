@@ -73,7 +73,7 @@ jobs:
 
       # タグ重複チェックのため release ブランチをチェックアウト（タグ情報も取得）
       - name: Checkout release branch with tags
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: release
           fetch-depth: 0
@@ -181,7 +181,7 @@ jobs:
     steps:
       # validate ジョブで確定した SHA をチェックアウト（release ブランチ HEAD ではなく固定 SHA）
       - name: Checkout target commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ needs.validate.outputs.target_sha }}
           fetch-depth: 0
