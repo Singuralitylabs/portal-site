@@ -147,3 +147,23 @@ export type PositionType = PositionsTable["Row"];
 // Positions tag types
 type PositionTagsTable = Database["public"]["Tables"]["position_tags"];
 export type PositionTagType = PositionTagsTable["Row"];
+
+// Quick links types
+// リンクへのアクセス方式（カテゴリー単位で定義。direct: 直リンク / modal: 詳細モーダル）
+export type QuickLinkDisplayModeType = "direct" | "modal";
+
+export type QuickLinkType = {
+  name: string;
+  url: string;
+  description: string;
+  logoPath?: string; // public/links/ 配下のロゴ画像。未設定時は /icon.png をフォールバック表示
+  headerImagePath?: string; // 詳細モーダルのヘッダー画像（詳細モーダル方式のみ）
+  detailDescription?: string; // 詳細説明文（詳細モーダル方式のみ）
+};
+
+export type QuickLinkCategoryType = {
+  id: string;
+  name: string;
+  displayMode: QuickLinkDisplayModeType;
+  links: QuickLinkType[];
+};
