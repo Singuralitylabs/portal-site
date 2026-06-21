@@ -8,6 +8,8 @@ import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 import { isValidUrl } from "@/app/utils/url-validation";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 
+const supabase = createClientSupabaseClient();
+
 interface DocumentFormModalProps {
   opened: boolean;
   onClose: () => void;
@@ -23,7 +25,6 @@ export function DocumentFormModal({
   userId,
   initialData,
 }: DocumentFormModalProps) {
-  const supabase = createClientSupabaseClient();
   const [form, setForm] = useState({
     name: "",
     category_id: 0,

@@ -6,24 +6,13 @@ CREATE POLICY "authenticated_users_can_read_applications" ON "applications"
   FOR SELECT
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE auth_id = auth.uid()
-      AND status = 'active'
-      AND is_deleted = FALSE
-    )
+    is_active_user()
     AND (
       -- 一般ユーザー: 削除されていないもののみ
       is_deleted = FALSE
       OR
       -- admin/maintainer: 削除済みも含めてすべて閲覧可能
-      EXISTS (
-        SELECT 1 FROM users
-        WHERE auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-      )
+      is_content_manager()
     )
   );
 
@@ -33,14 +22,7 @@ CREATE POLICY "content_managers_can_insert_applications" ON "applications"
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_active_user() AND is_content_manager()
   );
 
 -- UPDATE: adminまたはmaintainerがapplicationsを更新可能
@@ -49,25 +31,10 @@ CREATE POLICY "content_managers_can_update_applications" ON "applications"
   FOR UPDATE
   TO authenticated
   USING (
-    is_deleted = FALSE
-    AND EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_deleted = FALSE AND is_active_user() AND is_content_manager()
   )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_active_user() AND is_content_manager()
   );
 
 -- 物理削除の禁止（DELETEクエリを実行できないようにする）

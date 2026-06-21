@@ -6,9 +6,11 @@ import { User, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
 import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
+import { useProfileImage } from "@/app/providers/profile-image-provider";
 
 export function UserProfileMenu() {
   const { user, loading } = useSupabaseAuth();
+  const { profileImageUrl, googleAvatarUrl } = useProfileImage();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -25,7 +27,7 @@ export function UserProfileMenu() {
     router.push("/login");
   };
 
-  const avatarUrl = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
+  const avatarSrc = profileImageUrl ?? googleAvatarUrl;
   const displayName: string = user?.user_metadata?.full_name ?? "";
   const initial = displayName.charAt(0) || null;
 
@@ -38,7 +40,7 @@ export function UserProfileMenu() {
       <Menu.Target>
         <UnstyledButton aria-label="ユーザーメニュー">
           <Avatar
-            src={avatarUrl}
+            src={avatarSrc}
             size="sm"
             radius="xl"
             imageProps={{ referrerPolicy: "no-referrer" }}
@@ -48,10 +50,7 @@ export function UserProfileMenu() {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item
-          leftSection={<User size={14} />}
-          onClick={() => router.push("/profile")}
-        >
+        <Menu.Item leftSection={<User size={14} />} onClick={() => router.push("/profile")}>
           プロフィール
         </Menu.Item>
         <Menu.Divider />

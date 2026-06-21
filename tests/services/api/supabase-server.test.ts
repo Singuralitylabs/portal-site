@@ -1,5 +1,8 @@
 import { fetchApplications } from "../../../app/services/api/applications-server";
-import { fetchCategoriesByType } from "../../../app/services/api/categories-server";
+import {
+  fetchCategoriesByType,
+  fetchCategoriesForManagement,
+} from "../../../app/services/api/categories-server";
 import { fetchDocuments } from "../../../app/services/api/documents-server";
 import { createServerSupabaseClient } from "../../../app/services/api/supabase-server";
 import {
@@ -74,7 +77,8 @@ const createEqTerminatingBuilder = (eqCallCount: number, result: QueryResult) =>
 
 // update(...).eq(...).select().single() で終端する更新系クエリ用モック
 const createUpdateSelectSingleBuilder = (result: QueryResult) => {
-  const builder: { update?: jest.Mock; eq?: jest.Mock; select?: jest.Mock; single?: jest.Mock } = {};
+  const builder: { update?: jest.Mock; eq?: jest.Mock; select?: jest.Mock; single?: jest.Mock } =
+    {};
   builder.update = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.select = jest.fn(() => builder);
@@ -121,6 +125,44 @@ describe("server API services", () => {
       // 一覧取得失敗時に data=null とエラーが返ることを確認
       expect(response).toEqual({ data: null, error: result.error });
       // 失敗時にエラーログが出力されることを確認
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+  });
+
+  describe("fetchCategoriesForManagement", () => {
+    it("正常系: 管理画面向けカテゴリー一覧を返す", async () => {
+      const result = {
+        data: [
+          {
+            id: 1,
+            category_type: "documents",
+            name: "資料",
+            description: "desc",
+            display_order: 1,
+          },
+        ],
+        error: null,
+      };
+      const builder = createOrderBuilder(result);
+      const supabase = { from: jest.fn(() => builder) };
+      createServerSupabaseClientMock.mockResolvedValue(supabase);
+
+      const response = await fetchCategoriesForManagement("documents");
+
+      expect(response).toEqual({ data: result.data, error: null });
+    });
+
+    it("異常系: エラー時は data=null を返す", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      const result = { data: null, error: { message: "failed" } };
+      const builder = createOrderBuilder(result);
+      const supabase = { from: jest.fn(() => builder) };
+      createServerSupabaseClientMock.mockResolvedValue(supabase);
+
+      const response = await fetchCategoriesForManagement("videos");
+
+      expect(response).toEqual({ data: null, error: result.error });
       expect(consoleError).toHaveBeenCalled();
       consoleError.mockRestore();
     });
@@ -181,7 +223,10 @@ describe("server API services", () => {
     });
 
     it("fetchUserInfoByAuthId: 正常系/異常系", async () => {
-      const successBuilder = createMaybeSingleBuilder({ data: { id: 1, role: "admin" }, error: null });
+      const successBuilder = createMaybeSingleBuilder({
+        data: { id: 1, role: "admin" },
+        error: null,
+      });
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserInfoByAuthId({ authId: "auth-3" });
@@ -201,7 +246,7 @@ describe("server API services", () => {
       consoleError.mockRestore();
     });
 
-    it("fetchActiveUsers: 正常系で変換済みデータを返す", async () => {
+    it("fetchActiveUsers: 正常系で変換済みデータを返す（profile_image_path=null）", async () => {
       const result = {
         data: [
           {
@@ -209,6 +254,7 @@ describe("server API services", () => {
             display_name: "user",
             bio: "bio",
             avatar_url: "a",
+            profile_image_path: null,
             x_url: null,
             facebook_url: null,
             instagram_url: null,
@@ -223,20 +269,66 @@ describe("server API services", () => {
         error: null,
       };
       const builder = createOrderBuilder(result);
-      createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => builder) });
+      const storageMock = { from: jest.fn(() => ({ createSignedUrls: jest.fn() })) };
+      createServerSupabaseClientMock.mockResolvedValue({
+        from: jest.fn(() => builder),
+        storage: storageMock,
+      });
 
       const response = await fetchActiveUsers();
 
       // 非削除の position_tags のみを含む整形結果が返ることを確認
+      // profile_image_path が null の場合 profile_image_url も null になることを確認
       expect(response).toEqual({
         data: [
           expect.objectContaining({
             id: 1,
+            profile_image_url: null,
             position_tags: [{ positions: { id: 1, name: "dev", is_deleted: false } }],
           }),
         ],
         error: null,
       });
+      // profile_image_path が null のとき storage は呼ばれないことを確認
+      expect(storageMock.from).not.toHaveBeenCalled();
+    });
+
+    it("fetchActiveUsers: profile_image_path がある場合 profile_image_url に署名付きURLを付与する", async () => {
+      const result = {
+        data: [
+          {
+            id: 2,
+            display_name: "user2",
+            bio: "bio2",
+            avatar_url: "b",
+            profile_image_path: "auth-2/avatar.png",
+            x_url: null,
+            facebook_url: null,
+            instagram_url: null,
+            github_url: null,
+            portfolio_url: null,
+            position_tags: [],
+          },
+        ],
+        error: null,
+      };
+      const builder = createOrderBuilder(result);
+      const createSignedUrlsMock = jest.fn().mockResolvedValue({
+        data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
+      });
+      const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
+      createServerSupabaseClientMock.mockResolvedValue({
+        from: jest.fn(() => builder),
+        storage: storageMock,
+      });
+
+      const response = await fetchActiveUsers();
+
+      // storage.from("profile-images") が呼ばれることを確認
+      expect(storageMock.from).toHaveBeenCalledWith("profile-images");
+      expect(createSignedUrlsMock).toHaveBeenCalledWith(["auth-2/avatar.png"], 3600);
+      // profile_image_url が 署名付きURL + タイムスタンプになることを確認
+      expect(response.data?.[0].profile_image_url).toMatch(/^https:\/\/signed\.url\/img&t=\d+$/);
     });
 
     it("fetchApprovalUsers: 正常系/異常系", async () => {
@@ -267,7 +359,10 @@ describe("server API services", () => {
     });
 
     it("fetchUserByAuthIdInServer: 正常系/異常系", async () => {
-      const successBuilder = createMaybeSingleBuilder({ data: { id: 9, auth_id: "auth-9" }, error: null });
+      const successBuilder = createMaybeSingleBuilder({
+        data: { id: 9, auth_id: "auth-9" },
+        error: null,
+      });
       createServerSupabaseClientMock.mockResolvedValue({ from: jest.fn(() => successBuilder) });
 
       const success = await fetchUserByAuthIdInServer({ authId: "auth-9" });

@@ -55,7 +55,13 @@ export function VideoCard({ video, isContentMgr, categories, userId }: VideoCard
           <Text fw={700} size="lg" mb="xs" lineClamp={1}>
             {video.name}
           </Text>
-          <Text component="div" lineClamp={2} c="dimmed" mb="md" className="prose prose-sm max-w-none">
+          <Text
+            component="div"
+            lineClamp={2}
+            c="dimmed"
+            mb="md"
+            className="prose prose-sm max-w-none"
+          >
             {video.description}
           </Text>
         </div>

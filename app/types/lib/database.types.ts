@@ -4,7 +4,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)";
+    PostgrestVersion: "14.5";
   };
   public: {
     Tables: {
@@ -278,6 +278,7 @@ export type Database = {
           instagram_url: string | null;
           is_deleted: boolean;
           portfolio_url: string | null;
+          profile_image_path: string | null;
           role: string;
           status: string;
           updated_at: string;
@@ -296,6 +297,7 @@ export type Database = {
           instagram_url?: string | null;
           is_deleted?: boolean;
           portfolio_url?: string | null;
+          profile_image_path?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;
@@ -314,6 +316,7 @@ export type Database = {
           instagram_url?: string | null;
           is_deleted?: boolean;
           portfolio_url?: string | null;
+          profile_image_path?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;
@@ -413,7 +416,9 @@ export type Database = {
     };
     Functions: {
       get_clerk_user_id: { Args: never; Returns: string };
+      is_active_user: { Args: never; Returns: boolean };
       is_authenticated_user: { Args: never; Returns: boolean };
+      is_content_manager: { Args: never; Returns: boolean };
       is_registered_user: { Args: never; Returns: boolean };
       requesting_user_id: { Args: never; Returns: string };
       set_clerk_user_id: { Args: { clerk_id: string }; Returns: undefined };

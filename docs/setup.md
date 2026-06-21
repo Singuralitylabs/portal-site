@@ -21,7 +21,6 @@
   - [公式サイト](https://nodejs.org/)からダウンロード
   - インストール確認: `node -v`
 - Git: 最新版
-
   - [公式サイト](https://git-scm.com/)からダウンロード、又は下記コマンドによりインストール
 
     ```bash
@@ -53,19 +52,16 @@
 プロジェクトリーダーに以下のサービスへのメンバー登録を依頼してください。
 
 - GitHubリポジトリへの招待
-
   - 目的: コードの閲覧・編集・プルリクエストの作成
   - リポジトリ: `Singuralitylabs/portal-site`
   - 必要な情報: GitHubユーザー名、又はメールアドレス
 
 - Supabaseプロジェクトへの招待
-
   - 目的: データベースやポリシーの確認・更新・型定義の生成
   - プロジェクト: ポータルサイト開発用、データベース検証用
   - 必要な情報: メールアドレス
 
 - シンラボSlackの開発チャンネルの参加
-
   - 目的: チームコミュニケーション・質問・進捗共有
   - チャンネル: `201-club_チーム開発`
   - 必要な情報: なし
@@ -92,26 +88,24 @@ npm install
 
 ### 2.3 環境変数の設定
 
-1. `.env.local`ファイルをプロジェクトルートに作成する
+1. プロジェクトルートの `.env.example` をコピーして `.env.local` を作成する
 
-```bash
-touch .env.local
-```
+   ```bash
+   cp .env.example .env.local
+   ```
 
-2. 以下の環境変数を設定する **（各値は参画時に個別共有）**。
+   `.env.example` には本プロジェクトで使用する環境変数のキーがすべて記載されている。新しい環境変数を追加する際は `.env.example` も併せて更新すること（リリース PR の「新規環境変数の検出」が機能する前提となっている）。
 
-```bash
-# Supabase関連（認証・データベース）
-NEXT_PUBLIC_SUPABASE_URL=https://************.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ*********************************
-SUPABASE_PROJECT_ID=************
+2. 作成した `.env.local` の各値を実際のものに差し替える **（各値は参画時に個別共有）**。
 
-# 問い合わせ用メールアドレス
-NEXT_PUBLIC_ADMIN_EMAIL=info@future-tech-association.org
-
-# Slack通知先Webhook URL
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
-```
+   | 変数                            | 説明                                                                                                                                                                                                                                                                                                                                                                                                                        | 取得元                                                                                |
+   | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+   | `NEXT_PUBLIC_SUPABASE_URL`      | Supabase プロジェクトのエンドポイント URL。ブラウザ／サーバー双方から Supabase の認証・データベース API へ接続する際に使用する                                                                                                                                                                                                                                                                                              | Supabase Dashboard → Project Settings → API → Project URL                             |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の匿名 API キー。クライアント側から Supabase に接続する際の認証に使用される（実権限は RLS で制御される）                                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → API → anon public                             |
+   | `SUPABASE_PROJECT_ID`           | Supabase プロジェクトの一意 ID。`npm run db:types` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要）                                                                                                                                                                                                                                                                                                 | Supabase Dashboard → Project Settings → General → Reference ID                        |
+   | `GOOGLE_CALENDAR_IDS`           | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
+   | `GOOGLE_SERVICE_ACCOUNT_KEY`    | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する                                                                                                                                                                                                                                                                                                                           | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形）                           |
+   | `SLACK_WEBHOOK_URL`             | Slack に通知を送るための Incoming Webhook URL（任意設定）。申請・承認イベント等の通知送信先として使用する                                                                                                                                                                                                                                                                                                                   | Slack の Incoming Webhook 設定画面                                                    |
 
 #### 重要な注意事項
 
@@ -133,6 +127,25 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/***************
 2. 左サイドバーの拡張機能アイコンをクリック（またはCmd/Ctrl + Shift + X）
 3. 上記の拡張機能名で検索してインストール
 
+#### ワークスペース設定の反映方法
+
+- 本リポジトリには VS Code 用のワークスペース設定が
+  [.vscode/settings.json](../.vscode/settings.json) として含まれています。
+- リポジトリを VS Code で開くと、自動的にこの設定が適用されます。
+- 設定内容を確認したい場合は、コマンドパレットから
+  `Preferences: Open Workspace Settings (JSON)` を開くか、
+  `.vscode/settings.json` を直接確認してください。
+
+#### Markdown 整形に関する補足
+
+- Markdown の整形基準は Prettier の出力に統一します。
+- 通常のネスト箇条書きは 2 スペース、
+  番号付きリスト配下の箇条書きは 3 スペースになることがあります。
+- これは Prettier の Markdown 整形仕様によるもので、VS Code 側の不具合ではありません。
+- `.vscode/settings.json` では Markdown 編集時の入力補助として
+  2 スペース設定を入れていますが、
+  Prettier 実行時の 3 スペース出力自体は変わりません。
+
 ## 3. 開発環境の起動確認
 
 ### 3.1 開発サーバーの起動
@@ -143,7 +156,7 @@ npm run dev
 
 成功すると、以下のようなメッセージが表示されます。
 
-```
+```text
 ▲ Next.js 15.x.x
 - Local:        http://localhost:3000
 - Environments: .env.local
@@ -153,7 +166,7 @@ npm run dev
 
 ### 3.2 ブラウザでの動作確認
 
-1. ブラウザで http://localhost:3000 にアクセス
+1. ブラウザで `http://localhost:3000` にアクセス
 2. ログイン画面が表示されることを確認
 3. 「Googleでログイン」ボタンが表示されることを確認
 

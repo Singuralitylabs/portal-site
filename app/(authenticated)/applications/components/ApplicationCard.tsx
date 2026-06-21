@@ -1,6 +1,10 @@
 "use client";
 
-import { ApplicationWithCategoryAndDeveloperType, SelectCategoryType, SelectDeveloperType } from "@/app/types";
+import {
+  ApplicationWithCategoryAndDeveloperType,
+  SelectCategoryType,
+  SelectDeveloperType,
+} from "@/app/types";
 import { AppWindow } from "lucide-react";
 import { Badge, Button, Card, Flex, Text } from "@mantine/core";
 import ContentMgrMenu from "../../components/ContentMgrMenu";
@@ -51,7 +55,11 @@ export function ApplicationCard({
       </Card.Section>
 
       <div className="flex-1 p-4 overflow-hidden">
-        <Text component="div" lineClamp={2} className="overflow-hidden mb-2 prose prose-sm max-w-none">
+        <Text
+          component="div"
+          lineClamp={2}
+          className="overflow-hidden mb-2 prose prose-sm max-w-none"
+        >
           {application.description}
         </Text>
         <div className="mt-2">

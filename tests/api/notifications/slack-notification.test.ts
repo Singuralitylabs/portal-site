@@ -26,7 +26,7 @@ type FetchResponseMock = {
 const createRequest = (body: unknown): NextRequest =>
   ({
     json: jest.fn().mockResolvedValue(body),
-  } as unknown as NextRequest);
+  }) as unknown as NextRequest;
 
 describe("Slack 通知 API", () => {
   const nextResponseJsonMock = NextResponse.json as jest.Mock;

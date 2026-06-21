@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+desktop.ini
 *.pem
 
 # debug
@@ -32,6 +33,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example はコミット対象（リリース時の新規環境変数検出と新規メンバーのセットアップに使用）
+!.env.example
 
 # vercel
 .vercel

@@ -6,9 +6,15 @@ interface MemberDetailModalProps {
   opened: boolean;
   onClose: () => void;
   memberInfo: MemberType;
+  profileImageUrl: string | null;
 }
 
-export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailModalProps) {
+export function MemberDetailModal({
+  opened,
+  onClose,
+  memberInfo,
+  profileImageUrl,
+}: MemberDetailModalProps) {
   const hasLinks =
     memberInfo.x_url ||
     memberInfo.facebook_url ||
@@ -16,11 +22,13 @@ export function MemberDetailModal({ opened, onClose, memberInfo }: MemberDetailM
     memberInfo.github_url ||
     memberInfo.portfolio_url;
 
+  const avatarSrc = profileImageUrl ?? memberInfo.avatar_url ?? null;
+
   return (
     <Modal opened={opened} onClose={onClose} title={`メンバーのご紹介`} centered size="xl">
       <Stack gap="lg">
         <Group align="center" gap="md">
-          <Avatar src={memberInfo.avatar_url} size="lg" radius="md" alt={memberInfo.display_name} />
+          <Avatar src={avatarSrc} size="lg" radius="md" alt={memberInfo.display_name} />
           <Stack gap="xs">
             <Text size="xl" fw={600}>
               {memberInfo.display_name}
