@@ -6,7 +6,21 @@ import { NextResponse } from "next/server";
 
 const BUCKET_NAME = "profile-images";
 const MAX_FILE_SIZE = 1024 * 1024;
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif"];
+
+function detectMimeFromBuffer(buf: Buffer): string | null {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff)
+    return "image/jpeg";
+  if (
+    buf.length >= 8 &&
+    buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 &&
+    buf[4] === 0x0d && buf[5] === 0x0a && buf[6] === 0x1a && buf[7] === 0x0a
+  )
+    return "image/png";
+  if (buf.length >= 4 && buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38)
+    return "image/gif";
+  return null;
+}
 
 async function isActiveUser(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
@@ -46,9 +60,11 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+  const detectedMime = detectMimeFromBuffer(fileBuffer);
+  if (!detectedMime || !ALLOWED_MIME_TYPES.includes(detectedMime)) {
     return NextResponse.json(
-      { success: false, error: "jpg / jpeg / png / gif のみアップロード可能です" },
+      { success: false, error: "jpg / png / gif のみアップロード可能です" },
       { status: 400 }
     );
   }
@@ -69,11 +85,10 @@ export async function POST(request: Request) {
   }
 
   const filePath = `${authId}/profile-image`;
-  const fileBuffer = await file.arrayBuffer();
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(filePath, fileBuffer, { contentType: file.type, upsert: true });
+    .upload(filePath, fileBuffer, { contentType: detectedMime, upsert: true });
 
   if (uploadError) {
     console.error("Storage アップロードエラー:", uploadError.message);

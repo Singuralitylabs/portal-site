@@ -128,7 +128,7 @@ export async function fetchActiveUsers(): Promise<{
         if (urlError) {
           console.error("署名付きURL生成エラー:", path, urlError);
         } else if (path && signedUrl) {
-          signedUrlMap.set(path, `${signedUrl}&t=${Date.now()}`);
+          signedUrlMap.set(path, signedUrl);
         }
       });
     }
