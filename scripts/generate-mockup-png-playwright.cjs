@@ -65,6 +65,41 @@ const targets = [
     path: "/videos/detail/",
     selector: '[data-mockup-capture="video-detail-content"]',
   },
+  {
+    name: "profile-layout.playwright",
+    path: "/profile/",
+    selector: '[data-mockup-capture="profile-layout-content"]',
+  },
+  {
+    name: "members-layout.playwright",
+    path: "/members/",
+    selector: '[data-mockup-capture="members-layout-content"]',
+  },
+  {
+    name: "member-card.playwright",
+    path: "/members/card/",
+    selector: '[data-mockup-capture="member-card-content"]',
+  },
+  {
+    name: "member-detail-modal.playwright",
+    path: "/members/detail-modal/",
+    selector: '[data-mockup-capture="member-detail-modal-content"]',
+  },
+  {
+    name: "applications-layout.playwright",
+    path: "/applications/",
+    selector: '[data-mockup-capture="applications-layout-content"]',
+  },
+  {
+    name: "application-card.playwright",
+    path: "/applications/card/",
+    selector: '[data-mockup-capture="application-card-content"]',
+  },
+  {
+    name: "application-detail-modal.playwright",
+    path: "/applications/detail-modal/",
+    selector: '[data-mockup-capture="application-detail-modal-content"]',
+  },
 ];
 
 const MIME_TYPES = {

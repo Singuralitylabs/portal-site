@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>プロフィール画面モック</title>
+    <link rel="stylesheet" href="/assets/mockup.css" />
+  </head>
+  <body>
+    <main class="page content-shell">
+      <div class="profile-wrap" data-mockup-capture="profile-layout-content">
+        <h1 class="section-title">プロフィール</h1>
+
+        <section class="profile-card" style="margin-top: 16px">
+          <div class="profile-summary">
+            <div class="avatar-lg">山</div>
+            <div>
+              <h2 class="profile-name">山田太郎</h2>
+              <div class="profile-meta">
+                <span class="profile-role">admin</span>
+                <span class="profile-joined">2025-10-02 に参加</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="profile-card" style="margin-top: 16px; margin-bottom: 24px">
+          <form>
+            <div class="form-row" style="margin-top: 0">
+              <label class="form-label">プロフィール画像</label>
+              <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap">
+                <div class="avatar-md">山</div>
+                <div class="profile-actions">
+                  <button type="button" class="btn-outline">画像を変更</button>
+                  <button type="button" class="btn-outline btn-outline-danger" disabled>
+                    画像を削除
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">名前</label>
+              <input class="mock-input" type="text" value="山田太郎" />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">活動チーム、役割など</label>
+              <div class="chips-box">
+                <span class="chip">広報チーム <span class="chip-x">x</span></span>
+                <span class="chip">ハロスクチーム <span class="chip-x">x</span></span>
+                <span class="chips-placeholder">選択してください</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">自己紹介</label>
+              <textarea class="mock-textarea">
+山田太郎です。広報チーム、ハロスクチームに所属しています。</textarea
+              >
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">X URL</label>
+              <input class="mock-input" type="text" placeholder="https://x.com/..." />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">Facebook URL</label>
+              <input class="mock-input" type="text" placeholder="https://facebook.com/..." />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">Instagram URL</label>
+              <input class="mock-input" type="text" placeholder="https://instagram.com/..." />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">GitHub URL</label>
+              <input class="mock-input" type="text" placeholder="https://github.com/..." />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">ポートフォリオサイトのURL</label>
+              <input class="mock-input" type="text" placeholder="https://your-portfolio.com/..." />
+            </div>
+
+            <div class="form-row" style="margin-top: 18px">
+              <button type="button" class="btn-black" style="min-width: 120px">保存</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

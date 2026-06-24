@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>アプリ画面レイアウトモック</title>
+    <link rel="stylesheet" href="/assets/mockup.css" />
+  </head>
+  <body>
+    <main class="page content-shell">
+      <div
+        class="applications-wrap"
+        data-mockup-capture="applications-layout-content"
+        style="padding: 10px"
+      >
+        <header class="applications-top">
+          <h1 class="applications-title">アプリ紹介</h1>
+          <button type="button" class="applications-new">新規登録</button>
+        </header>
+
+        <nav class="applications-categories" aria-label="カテゴリーナビゲーション">
+          <a href="#category-game">ゲーム</a>
+          <a href="#category-productivity">業務効率化</a>
+          <a href="#category-learning">学習</a>
+        </nav>
+
+        <section id="category-game" class="app-section">
+          <h2>ゲーム</h2>
+          <div class="app-grid">
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Todo Quest</h3>
+                  <p class="app-card-meta">開発者: 青山 奏太</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  タスクを完了すると経験値が貯まる習慣化アプリ。毎日の継続をゲーム感覚で支援します。
+                </p>
+                <span class="member-tag">ゲーム</span>
+                <p class="app-card-url">例URL: https://example-app.local/todo-quest</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/todo-quest">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Code Arena</h3>
+                  <p class="app-card-meta">開発者: 橘 玲央</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  2人で問題を解いてスコアを競う学習ゲーム。短時間で反復練習できる設計です。
+                </p>
+                <span class="member-tag">ゲーム</span>
+                <p class="app-card-url">例URL: https://example-app.local/code-arena</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/code-arena">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Bug Hunter</h3>
+                  <p class="app-card-meta">開発者: 伊藤 颯真</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  サンプルコードからバグを探すトレーニングアプリ。レビュー力の向上を狙います。
+                </p>
+                <span class="member-tag">ゲーム</span>
+                <p class="app-card-url">例URL: https://example-app.local/bug-hunter</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/bug-hunter">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Sprint Hero</h3>
+                  <p class="app-card-meta">開発者: 中野 千紗</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  短期目標の達成を支える進捗可視化アプリ。達成率を色分けで確認できます。
+                </p>
+                <span class="member-tag">ゲーム</span>
+                <p class="app-card-url">例URL: https://example-app.local/sprint-hero</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/sprint-hero">詳細</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="category-productivity" class="app-section">
+          <h2>業務効率化</h2>
+          <div class="app-grid">
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Meeting Digest</h3>
+                  <p class="app-card-meta">開発者: 白石 結衣</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  議事録の要点を自動整理し、共有文面まで作成するミーティング補助ツールです。
+                </p>
+                <span class="member-tag">業務効率化</span>
+                <p class="app-card-url">例URL: https://example-app.local/meeting-digest</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/meeting-digest">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Flow Board</h3>
+                  <p class="app-card-meta">開発者: 森川 未来</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  チームのタスク状況を一画面で可視化。担当者ごとの負荷バランスを確認できます。
+                </p>
+                <span class="member-tag">業務効率化</span>
+                <p class="app-card-url">例URL: https://example-app.local/flow-board</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/flow-board">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Tiny CRM</h3>
+                  <p class="app-card-meta">開発者: 青山 奏太</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  問い合わせ対応の履歴を手軽に管理。必要な情報をすぐに検索できる設計です。
+                </p>
+                <span class="member-tag">業務効率化</span>
+                <p class="app-card-url">例URL: https://example-app.local/tiny-crm</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/tiny-crm">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Minute Keeper</h3>
+                  <p class="app-card-meta">開発者: 橘 玲央</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  作業時間の計測と振り返りをシンプルに。レポートをチームで共有できます。
+                </p>
+                <span class="member-tag">業務効率化</span>
+                <p class="app-card-url">例URL: https://example-app.local/minute-keeper</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/minute-keeper">詳細</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="category-learning" class="app-section">
+          <h2>学習</h2>
+          <div class="app-grid">
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Algo Note</h3>
+                  <p class="app-card-meta">開発者: 伊藤 颯真</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  学習メモをタグで整理し、復習タイミングを通知。継続学習をサポートします。
+                </p>
+                <span class="member-tag">学習</span>
+                <p class="app-card-url">例URL: https://example-app.local/algo-note</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/algo-note">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Flash Deck</h3>
+                  <p class="app-card-meta">開発者: 白石 結衣</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  暗記カードを短時間で回せる学習ツール。進捗に応じた出題で定着を高めます。
+                </p>
+                <span class="member-tag">学習</span>
+                <p class="app-card-url">例URL: https://example-app.local/flash-deck</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/flash-deck">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">SQL Lab</h3>
+                  <p class="app-card-meta">開発者: 中野 千紗</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  ブラウザ上でSQL演習ができる実践環境。課題と解説をセットで提供します。
+                </p>
+                <span class="member-tag">学習</span>
+                <p class="app-card-url">例URL: https://example-app.local/sql-lab</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/sql-lab">詳細</a>
+              </div>
+            </article>
+
+            <article class="app-card-mock">
+              <div class="app-card-head">
+                <div>
+                  <h3 class="app-card-title">Frontend Quest</h3>
+                  <p class="app-card-meta">開発者: 森川 未来</p>
+                </div>
+                <span>⋮</span>
+              </div>
+              <div class="app-card-body">
+                <p class="app-card-desc">
+                  UI実装の課題に挑戦しながら学べる教材アプリ。コード比較で改善点を確認できます。
+                </p>
+                <span class="member-tag">学習</span>
+                <p class="app-card-url">例URL: https://example-app.local/frontend-quest</p>
+              </div>
+              <div class="app-card-foot">
+                <a class="btn-black" href="https://example-app.local/frontend-quest">詳細</a>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

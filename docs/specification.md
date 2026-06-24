@@ -630,6 +630,10 @@ PNG モック（PoC / Playwright 生成）:
 
 ### 6.5 画面レイアウト
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/profile-layout.playwright.png" width="640" alt="プロフィール画面モック" />
+
 ```text
 +-------------------------------+
 |                               |
@@ -733,6 +737,10 @@ PNG モック（PoC / Playwright 生成）:
 
 #### 7.4.1 会員画面
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/members-layout.playwright.png" width="640" alt="会員画面モック" />
+
 ```text
 +-------------------------------+
 |                               |
@@ -751,6 +759,10 @@ PNG モック（PoC / Playwright 生成）:
 
 #### 7.4.2 メンバーカード
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/member-card.playwright.png" width="360" alt="会員カードモック" />
+
 ```text
 +------------------------------------+
 |  [プロフィール画像] 表示名            |
@@ -762,6 +774,10 @@ PNG モック（PoC / Playwright 生成）:
 ```
 
 #### 7.4.3 メンバー詳細モーダル
+
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/member-detail-modal.playwright.png" width="760" alt="会員詳細モーダルモック" />
 
 ```text
 +-----------------------------------------------------------------------------+
@@ -854,6 +870,10 @@ PNG モック（PoC / Playwright 生成）:
 
 ### 8.4 画面レイアウト
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/applications-layout.playwright.png" width="640" alt="アプリ画面レイアウトモック" />
+
 #### 8.4.1 アプリ画面
 
 ```text
@@ -884,6 +904,10 @@ PNG モック（PoC / Playwright 生成）:
 
 #### 8.4.2 アプリ詳細モーダル
 
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/application-detail-modal.playwright.png" width="760" alt="アプリ詳細モーダルモック" />
+
 ```text
 +------------------------------------------+
 |                                          |
@@ -910,6 +934,10 @@ PNG モック（PoC / Playwright 生成）:
 ```
 
 ### 8.5 カードデザイン
+
+PNG モック（PoC / Playwright 生成）:
+
+<img src="./mockups/png/application-card.playwright.png" width="320" alt="アプリカードモック" />
 
 ```text
 +--------------------------+
