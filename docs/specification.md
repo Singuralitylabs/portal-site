@@ -1161,7 +1161,6 @@ sequenceDiagram
    |  icon 会員             |
    |  icon カレンダー      |
    |  icon クイックリンク   |
-   |  icon カレンダー       |
    |  icon カテゴリー管理   |
    |  icon ゴミ箱           |
    |  icon 管理画面         |

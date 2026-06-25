@@ -87,9 +87,11 @@ export function RestoreModal({ opened, onClose, target, userId }: RestoreModalPr
   return (
     <Modal opened={opened} onClose={onClose} title="復活の確認" centered>
       <Text mb="xs">「{target?.item.name ?? ""}」を復活しますか？</Text>
-      <Text size="sm" c="dimmed" mb="xs">
-        ※元のカテゴリーに復活されます。
-      </Text>
+      {!isCategory && (
+        <Text size="sm" c="dimmed" mb="xs">
+          ※元のカテゴリーに復活されます。
+        </Text>
+      )}
       <Text size="sm" c="dimmed" mb="md">
         ※表示順は末尾に配置されます。
       </Text>

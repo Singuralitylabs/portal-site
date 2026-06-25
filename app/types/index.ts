@@ -183,5 +183,5 @@ export type TrashCategoryItem = {
   id: number;
   name: string;
   updated_at: string;
-  category_type: string;
+  category_type: CategoryTypeValue;
 };

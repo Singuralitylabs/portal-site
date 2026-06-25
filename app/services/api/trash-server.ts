@@ -16,9 +16,7 @@ function transformToTrashContentItem(items: RawTrashContentItem[]): TrashContent
     name: item.name,
     updated_at: item.updated_at,
     category_id: item.category_id,
-    category: Array.isArray(item.category)
-      ? item.category[0] ?? null
-      : item.category,
+    category: Array.isArray(item.category) ? (item.category[0] ?? null) : item.category,
   }));
 }
 
