@@ -22,8 +22,17 @@ const createPostRequest = (file?: File): Request => {
   return { formData: jest.fn().mockResolvedValue(formData) } as unknown as Request;
 };
 
+const MAGIC_BYTES: Record<string, number[]> = {
+  "image/jpeg": [0xff, 0xd8, 0xff],
+  "image/png": [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+  "image/gif": [0x47, 0x49, 0x46, 0x38],
+};
+
 const createFile = (name = "test.jpg", size = 1024, type = "image/jpeg"): File => {
-  const blob = new Blob([new Uint8Array(size)], { type });
+  const magic = MAGIC_BYTES[type] ?? [];
+  const buffer = new Uint8Array(size);
+  buffer.set(magic);
+  const blob = new Blob([buffer], { type });
   return new File([blob], name, { type });
 };
 
@@ -125,19 +134,19 @@ describe("プロフィール画像 API", () => {
       mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
       nextResponseJsonMock.mockReturnValue({
         success: false,
-        error: "jpg / jpeg / png / gif のみアップロード可能です",
+        error: "jpg / png / gif のみアップロード可能です",
       });
 
       const invalidFile = createFile("test.pdf", 1024, "application/pdf");
       const response = await POST(createPostRequest(invalidFile));
 
       expect(nextResponseJsonMock).toHaveBeenCalledWith(
-        { success: false, error: "jpg / jpeg / png / gif のみアップロード可能です" },
+        { success: false, error: "jpg / png / gif のみアップロード可能です" },
         { status: 400 }
       );
       expect(response).toEqual({
         success: false,
-        error: "jpg / jpeg / png / gif のみアップロード可能です",
+        error: "jpg / png / gif のみアップロード可能です",
       });
     });
 
