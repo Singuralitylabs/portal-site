@@ -4,7 +4,12 @@ import { useMemo, useState } from "react";
 import { Button, Paper, Table, Tabs, Text } from "@mantine/core";
 import { RotateCcw } from "lucide-react";
 import { PageTitle } from "@/app/components/PageTitle";
-import type { TrashTabType, TrashContentItem, TrashCategoryItem } from "@/app/types";
+import type {
+  CategoryTypeValue,
+  TrashTabType,
+  TrashContentItem,
+  TrashCategoryItem,
+} from "@/app/types";
 import { RestoreModal } from "./RestoreModal";
 
 interface TrashPageTemplateProps {
@@ -24,7 +29,7 @@ const TAB_LABELS: Record<TrashTabType, string> = {
   categories: "カテゴリー",
 };
 
-const CATEGORY_TYPE_LABELS: Record<string, string> = {
+const CATEGORY_TYPE_LABELS: Record<CategoryTypeValue, string> = {
   documents: "資料",
   videos: "動画",
   applications: "アプリ",
@@ -91,13 +96,11 @@ export function TrashPageTemplate({ userId, initialData }: TrashPageTemplateProp
                 <Table.Tr key={item.id}>
                   <Table.Td>{item.name}</Table.Td>
                   {isContentTab && (
-                    <Table.Td>
-                      {(item as TrashContentItem).category?.name ?? "未分類"}
-                    </Table.Td>
+                    <Table.Td>{(item as TrashContentItem).category?.name ?? "未分類"}</Table.Td>
                   )}
                   {!isContentTab && (
                     <Table.Td>
-                      {CATEGORY_TYPE_LABELS[(item as TrashCategoryItem).category_type]}
+                      {CATEGORY_TYPE_LABELS[(item as TrashCategoryItem).category_type] ?? "-"}
                     </Table.Td>
                   )}
                   <Table.Td>{formatDate(item.updated_at)}</Table.Td>
