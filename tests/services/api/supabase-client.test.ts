@@ -26,6 +26,7 @@ import {
   fetchUserRoleById,
   fetchUserStatusById,
   rejectUser,
+  updateUserAvatarUrl,
 } from "../../../app/services/api/users-client";
 import {
   calculateDisplayOrder,
@@ -102,6 +103,14 @@ const createMaybeSingleBuilder = (result: QueryResult) => {
   builder.select = jest.fn(() => builder);
   builder.eq = jest.fn(() => builder);
   builder.maybeSingle = jest.fn(() => Promise.resolve(result));
+  return builder as Required<typeof builder>;
+};
+
+// update(...).eq(...).eq(...) で完結するクエリ用モック（2連 eq）
+const createDoubleEqUpdateBuilder = (result: QueryResult) => {
+  const builder: { update?: jest.Mock; eq?: jest.Mock } = {};
+  builder.update = jest.fn(() => builder);
+  builder.eq = jest.fn().mockReturnValueOnce(builder).mockReturnValue(Promise.resolve(result));
   return builder as Required<typeof builder>;
 };
 
@@ -661,6 +670,39 @@ describe("users-client", () => {
     // 異常系では userId=null とエラーを返すことを確認
     expect(failed).toEqual({ userId: null, error });
     // 異常系でエラーログが出力されることを確認
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it("updateUserAvatarUrl 正常系: avatar_url を更新し error=null を返す", async () => {
+    const builder = createDoubleEqUpdateBuilder({ data: null, error: null });
+    const supabase = { from: jest.fn(() => builder) };
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateUserAvatarUrl({
+      authId: "auth-10",
+      avatarUrl: "https://example.com/new-avatar.png",
+    });
+
+    // 更新成功時に error=null を返すことを確認
+    expect(response).toEqual({ error: null });
+    expect(builder.update).toHaveBeenCalledWith({
+      avatar_url: "https://example.com/new-avatar.png",
+    });
+  });
+
+  it("updateUserAvatarUrl 異常系: エラー時はエラーを返しログを出力する", async () => {
+    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const error = { message: "update failed" };
+    const builder = createDoubleEqUpdateBuilder({ data: null, error });
+    const supabase = { from: jest.fn(() => builder) };
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await updateUserAvatarUrl({ authId: "auth-11", avatarUrl: null });
+
+    // 更新失敗時にエラーを返すことを確認
+    expect(response).toEqual({ error });
+    // 失敗時にエラーログが出力されることを確認
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
