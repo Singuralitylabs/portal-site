@@ -100,6 +100,26 @@ const targets = [
     path: "/applications/detail-modal/",
     selector: '[data-mockup-capture="application-detail-modal-content"]',
   },
+  {
+    name: "dashboard-sidebar.playwright",
+    path: "/dashboard/sidebar/",
+    selector: '[data-mockup-capture="dashboard-sidebar-content"]',
+  },
+  {
+    name: "dashboard-layout.playwright",
+    path: "/dashboard/",
+    selector: '[data-mockup-capture="dashboard-layout-content"]',
+  },
+  {
+    name: "dashboard-approve-modal.playwright",
+    path: "/dashboard/approve-modal/",
+    selector: '[data-mockup-capture="dashboard-approve-modal-content"]',
+  },
+  {
+    name: "dashboard-reject-modal.playwright",
+    path: "/dashboard/reject-modal/",
+    selector: '[data-mockup-capture="dashboard-reject-modal-content"]',
+  },
 ];
 
 const MIME_TYPES = {

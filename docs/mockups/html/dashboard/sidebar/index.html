@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理画面 サイドバーモック</title>
+    <link rel="stylesheet" href="/assets/mockup.css" />
+  </head>
+  <body>
+    <main class="page content-shell" style="display: flex; justify-content: center">
+      <aside class="admin-sidebar-mock" style="min-height: auto; padding-bottom: 14px">
+        <div data-mockup-capture="dashboard-sidebar-content">
+          <div class="admin-brand">
+            <img src="/icon.png" alt="Sinlab Logo" class="admin-brand-logo" />
+            <span>Sinlab Portal</span>
+          </div>
+          <ul class="admin-nav-list">
+            <li class="admin-nav-item"><i data-lucide="house"></i>ホーム</li>
+            <li class="admin-nav-item"><i data-lucide="file-video"></i>動画</li>
+            <li class="admin-nav-item"><i data-lucide="file-text"></i>資料</li>
+            <li class="admin-nav-item"><i data-lucide="app-window"></i>アプリ</li>
+            <li class="admin-nav-item"><i data-lucide="users"></i>会員</li>
+            <li class="admin-nav-item"><i data-lucide="calendar"></i>カレンダー</li>
+            <li class="admin-nav-item"><i data-lucide="link-2"></i>クイックリンク</li>
+            <li class="admin-nav-item"><i data-lucide="folder-tree"></i>カテゴリー管理</li>
+            <li class="admin-nav-item active"><i data-lucide="settings"></i>管理画面</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script>
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    </script>
+  </body>
+</html>

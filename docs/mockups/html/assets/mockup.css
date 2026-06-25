@@ -968,6 +968,292 @@ a {
   margin: 0 auto;
 }
 
+.admin-shell {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.admin-sidebar-mock {
+  width: 256px;
+  min-height: 720px;
+  border-right: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 24px 16px 16px;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.admin-brand-logo {
+  width: auto;
+  height: 1em;
+  display: block;
+}
+
+.admin-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.admin-nav-item.active {
+  color: #111827;
+  font-weight: 600;
+}
+
+.admin-nav-item svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.admin-grid-layout {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 256px 1fr;
+  gap: 20px;
+}
+
+.admin-main {
+  background: transparent;
+  padding: 8px 0 0;
+}
+
+.admin-main-title {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.admin-subtitle {
+  margin: 14px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.pending-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.pending-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+  padding: 16px;
+}
+
+.pending-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pending-mail {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.pending-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-solid-blue,
+.btn-solid-red,
+.btn-solid-gray {
+  border: 0;
+  border-radius: 4px;
+  padding: 4px 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-solid-blue {
+  background: #2563eb;
+}
+
+.btn-solid-red {
+  background: #dc2626;
+}
+
+.btn-solid-gray {
+  background: #6b7280;
+}
+
+.btn-outline-default {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: #fff;
+  color: #495057;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.confirm-stage {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-modal {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+}
+
+.confirm-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.confirm-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.confirm-close {
+  color: #6b7280;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.confirm-close-btn {
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.confirm-close-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.confirm-body {
+  padding: 14px 16px 16px;
+}
+
+.confirm-text {
+  margin: 0;
+  color: #374151;
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+.confirm-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.approve-modal-mock {
+  max-width: 440px;
+  border-radius: 4px;
+  border-color: #dee2e6;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+}
+
+.approve-modal-mock .confirm-head {
+  padding: 10px 14px;
+}
+
+.approve-modal-mock .confirm-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.approve-modal-mock .confirm-body {
+  padding: 12px 14px 14px;
+}
+
+.approve-modal-mock .confirm-text {
+  font-size: 18px;
+}
+
+.approve-modal-mock .btn-outline-default,
+.approve-modal-mock .btn-solid-blue {
+  min-height: 36px;
+  padding: 7px 14px;
+}
+
+.reject-modal-mock {
+  max-width: 440px;
+  border-radius: 4px;
+  border-color: #dee2e6;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+}
+
+.reject-modal-mock .confirm-head {
+  padding: 10px 14px;
+}
+
+.reject-modal-mock .confirm-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.reject-modal-mock .confirm-body {
+  padding: 12px 14px 14px;
+}
+
+.reject-modal-mock .confirm-text {
+  font-size: 18px;
+}
+
+.reject-modal-mock .btn-outline-default,
+.reject-modal-mock .btn-solid-red {
+  min-height: 36px;
+  padding: 7px 14px;
+}
+
 @media (max-width: 900px) {
   .grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -995,6 +1281,19 @@ a {
 
   .app-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pending-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-grid-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar-mock {
+    width: 100%;
+    min-height: auto;
   }
 }
 
@@ -1044,6 +1343,22 @@ a {
 
   .app-detail-modal-shell {
     padding: 16px;
+  }
+
+  .pending-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-main {
+    padding: 16px;
+  }
+
+  .admin-main-title {
+    font-size: 28px;
+  }
+
+  .admin-subtitle {
+    font-size: 22px;
   }
 
   .member-grid {

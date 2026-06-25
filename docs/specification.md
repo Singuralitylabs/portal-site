@@ -1199,6 +1199,10 @@ PNG モック（PoC / Playwright 生成）:
 
    - サイドバー（フル表示例）
 
+   PNG モック（PoC / Playwright 生成）:
+
+   <img src="./mockups/png/dashboard-sidebar.playwright.png" width="280" alt="管理画面サイドバーモック" />
+
    ```text
    +-----------------------+
    |                       |
@@ -1218,6 +1222,10 @@ PNG モック（PoC / Playwright 生成）:
    ```
 
    - 管理画面
+
+   PNG モック（PoC / Playwright 生成）:
+
+   <img src="./mockups/png/dashboard-layout.playwright.png" width="760" alt="管理画面モック" />
 
    ```text
    +-----------------------------------------+
@@ -1239,6 +1247,10 @@ PNG モック（PoC / Playwright 生成）:
 
    - 承認確認画面
 
+   PNG モック（PoC / Playwright 生成）:
+
+   <img src="./mockups/png/dashboard-approve-modal.playwright.png" width="420" alt="承認確認画面モック" />
+
    ```text
    +------------------------------+
    |  ユーザ「*****」を承認しますか？ |
@@ -1248,6 +1260,10 @@ PNG モック（PoC / Playwright 生成）:
    ```
 
    - 否認確認画面
+
+   PNG モック（PoC / Playwright 生成）:
+
+   <img src="./mockups/png/dashboard-reject-modal.playwright.png" width="420" alt="否認確認画面モック" />
 
    ```text
    +------------------------------+
