@@ -9,7 +9,7 @@ import { PositionType, ProfileUserType } from "@/app/types";
 import { validateUrls } from "@/app/utils/url-validation";
 import { useProfileImage } from "@/app/providers/profile-image-provider";
 
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif"];
 const MAX_FILE_SIZE = 1024 * 1024;
 
 interface ProfilePageTemplateProps {
@@ -84,7 +84,7 @@ export function ProfilePageTemplate({
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       notifications.show({
         title: "エラー",
-        message: "jpg / jpeg / png / gif のみアップロード可能です",
+        message: "jpeg / png / gif のみアップロード可能です",
         color: "red",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -295,7 +295,7 @@ export function ProfilePageTemplate({
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif"
+                    accept="image/jpeg,image/png,image/gif"
                     onChange={handleFileChange}
                     style={{ display: "none" }}
                   />
