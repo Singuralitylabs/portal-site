@@ -1,12 +1,15 @@
--- profile-images バケットの作成（非公開、最大1MB、jpg/jpeg/png/gifのみ）
+-- profile-images バケットの作成（非公開、最大1MB、jpeg/png/gifのみ）
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'profile-images',
   'profile-images',
   false,
   1048576,
-  ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-) ON CONFLICT (id) DO NOTHING;
+  ARRAY['image/jpeg', 'image/png', 'image/gif']
+) ON CONFLICT (id) DO UPDATE SET
+  public             = EXCLUDED.public,
+  file_size_limit    = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 -- active な認証済みユーザーは全ファイルを閲覧可能
 DROP POLICY IF EXISTS "Authenticated users can view profile images" ON storage.objects;
