@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   const detectedMime = detectMimeFromBuffer(fileBuffer);
   if (!detectedMime || !ALLOWED_MIME_TYPES.includes(detectedMime)) {
     return NextResponse.json(
-      { success: false, error: "jpg / png / gif のみアップロード可能です" },
+      { success: false, error: "jpeg / png / gif のみアップロード可能です" },
       { status: 400 }
     );
   }

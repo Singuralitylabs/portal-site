@@ -134,19 +134,19 @@ describe("プロフィール画像 API", () => {
       mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
       nextResponseJsonMock.mockReturnValue({
         success: false,
-        error: "jpg / png / gif のみアップロード可能です",
+        error: "jpeg / png / gif のみアップロード可能です",
       });
 
       const invalidFile = createFile("test.pdf", 1024, "application/pdf");
       const response = await POST(createPostRequest(invalidFile));
 
       expect(nextResponseJsonMock).toHaveBeenCalledWith(
-        { success: false, error: "jpg / png / gif のみアップロード可能です" },
+        { success: false, error: "jpeg / png / gif のみアップロード可能です" },
         { status: 400 }
       );
       expect(response).toEqual({
         success: false,
-        error: "jpg / png / gif のみアップロード可能です",
+        error: "jpeg / png / gif のみアップロード可能です",
       });
     });
 
