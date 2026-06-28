@@ -194,6 +194,24 @@ describe("trash-client", () => {
         expect(maxOrderBuilder.eq).toHaveBeenCalledWith("is_deleted", false);
       });
 
+      it("最大順序取得失敗時に success:false を返す", async () => {
+        // Step 1: 対象取得成功・最大順序取得失敗のモックを準備する
+        const targetBuilder = createTargetFetchBuilder({ data: targetRecord, error: null });
+        const maxOrderError = { message: "max order failed" };
+        const maxOrderBuilder = createMaxOrderBuilder({
+          data: null,
+          error: maxOrderError,
+        });
+        const supabase = buildSupabaseWithSequence([targetBuilder, maxOrderBuilder]);
+        createClientSupabaseClientMock.mockReturnValue(supabase);
+
+        // Step 2: 対象関数を実行する
+        const response = await execute(2);
+
+        // Step 3: 最大順序取得失敗がそのまま返ることを検証する
+        expect(response).toEqual({ success: false, error: maxOrderError });
+      });
+
       it("正常時に success:true を返し、display_order を末尾(MAX+1)で更新する", async () => {
         // Step 1: 対象取得・最大順序取得・更新成功のモックを準備する
         const targetBuilder = createTargetFetchBuilder({ data: targetRecord, error: null });
@@ -212,13 +230,14 @@ describe("trash-client", () => {
         expect(response).toEqual({ success: true, error: null });
 
         // Step 4: MAX+1 で更新されることを検証する
-        const expectedPayload: { is_deleted: boolean; display_order: number; updated_by?: number } =
-          {
-            is_deleted: false,
-            display_order: 8,
-          };
+        const expectedPayload: Record<string, unknown> = {
+          is_deleted: false,
+          display_order: 8,
+        };
         if (includeUpdatedBy) {
           expectedPayload.updated_by = expectedUpdatedBy as number;
+        } else {
+          expectedPayload.updated_at = expect.any(String);
         }
         expect(updateBuilder.update).toHaveBeenCalledWith(expectedPayload);
 
