@@ -6,22 +6,8 @@ CREATE POLICY "content_managers_can_update_videos" ON "videos"
   FOR UPDATE
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_active_user() AND is_content_manager()
   )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE
-        auth_id = auth.uid()
-        AND role IN ('admin', 'maintainer')
-        AND status = 'active'
-        AND is_deleted = FALSE
-    )
+    is_active_user() AND is_content_manager()
   );

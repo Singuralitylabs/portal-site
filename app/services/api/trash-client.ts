@@ -29,13 +29,17 @@ export async function restoreDocument(id: number, userId: number): Promise<Resto
     }
 
     // 2. 同カテゴリー内の最大display_orderを取得
-    const { data: maxOrderData } = await supabase
+    const { data: maxOrderData, error: maxOrderError } = await supabase
       .from("documents")
       .select("display_order")
       .eq("category_id", doc.category_id)
       .eq("is_deleted", false)
       .order("display_order", { ascending: false })
       .limit(1);
+
+    if (maxOrderError) {
+      return { success: false, error: maxOrderError };
+    }
 
     const newDisplayOrder = (maxOrderData?.[0]?.display_order ?? 0) + 1;
 
@@ -86,13 +90,17 @@ export async function restoreVideo(id: number, userId: number): Promise<RestoreR
     }
 
     // 2. 同カテゴリー内の最大display_orderを取得
-    const { data: maxOrderData } = await supabase
+    const { data: maxOrderData, error: maxOrderError } = await supabase
       .from("videos")
       .select("display_order")
       .eq("category_id", video.category_id)
       .eq("is_deleted", false)
       .order("display_order", { ascending: false })
       .limit(1);
+
+    if (maxOrderError) {
+      return { success: false, error: maxOrderError };
+    }
 
     const newDisplayOrder = (maxOrderData?.[0]?.display_order ?? 0) + 1;
 
@@ -143,13 +151,17 @@ export async function restoreApplication(id: number, userId: number): Promise<Re
     }
 
     // 2. 同カテゴリー内の最大display_orderを取得
-    const { data: maxOrderData } = await supabase
+    const { data: maxOrderData, error: maxOrderError } = await supabase
       .from("applications")
       .select("display_order")
       .eq("category_id", app.category_id)
       .eq("is_deleted", false)
       .order("display_order", { ascending: false })
       .limit(1);
+
+    if (maxOrderError) {
+      return { success: false, error: maxOrderError };
+    }
 
     const newDisplayOrder = (maxOrderData?.[0]?.display_order ?? 0) + 1;
 
@@ -199,13 +211,17 @@ export async function restoreCategory(id: number): Promise<RestoreResult> {
     }
 
     // 2. 同種別内の最大display_orderを取得
-    const { data: maxOrderData } = await supabase
+    const { data: maxOrderData, error: maxOrderError } = await supabase
       .from("categories")
       .select("display_order")
       .eq("category_type", category.category_type)
       .eq("is_deleted", false)
       .order("display_order", { ascending: false })
       .limit(1);
+
+    if (maxOrderError) {
+      return { success: false, error: maxOrderError };
+    }
 
     const newDisplayOrder = (maxOrderData?.[0]?.display_order ?? 0) + 1;
 
@@ -215,6 +231,7 @@ export async function restoreCategory(id: number): Promise<RestoreResult> {
       .update({
         is_deleted: false,
         display_order: newDisplayOrder,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", id)
       .eq("is_deleted", true);
