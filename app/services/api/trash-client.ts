@@ -231,7 +231,6 @@ export async function restoreCategory(id: number): Promise<RestoreResult> {
       .update({
         is_deleted: false,
         display_order: newDisplayOrder,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", id)
       .eq("is_deleted", true);

@@ -339,7 +339,6 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
       .from("categories")
       .update({
         is_deleted: true,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", id);
 

@@ -236,8 +236,6 @@ describe("trash-client", () => {
         };
         if (includeUpdatedBy) {
           expectedPayload.updated_by = expectedUpdatedBy as number;
-        } else {
-          expectedPayload.updated_at = expect.any(String);
         }
         expect(updateBuilder.update).toHaveBeenCalledWith(expectedPayload);
 
