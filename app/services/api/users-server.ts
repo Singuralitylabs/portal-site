@@ -147,7 +147,9 @@ export async function fetchActiveUsers(): Promise<{
   ].sort();
   const signedUrlMap = new Map<string, string>();
   if (uniquePaths.length > 0) {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const accessToken = session?.access_token;
     if (accessToken) {
       const cachedUrls = await getCachedSignedUrls(uniquePaths, accessToken);
