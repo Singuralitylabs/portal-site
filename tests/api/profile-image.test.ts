@@ -28,10 +28,14 @@ const MAGIC_BYTES: Record<string, number[]> = {
   "image/gif": [0x47, 0x49, 0x46, 0x38],
 };
 
-const createFile = (name = "test.jpg", size = 1024, type = "image/jpeg"): File => {
-  const magic = MAGIC_BYTES[type] ?? [];
+const createFile = (
+  name = "test.jpg",
+  size = 1024,
+  type = "image/jpeg",
+  header?: number[]
+): File => {
   const buffer = new Uint8Array(size);
-  buffer.set(magic);
+  buffer.set(header ?? MAGIC_BYTES[type] ?? []);
   const blob = new Blob([buffer], { type });
   return new File([blob], name, { type });
 };
@@ -139,6 +143,26 @@ describe("プロフィール画像 API", () => {
 
       const invalidFile = createFile("test.pdf", 1024, "application/pdf");
       const response = await POST(createPostRequest(invalidFile));
+
+      expect(nextResponseJsonMock).toHaveBeenCalledWith(
+        { success: false, error: "jpeg / png / gif のみアップロード可能です" },
+        { status: 400 }
+      );
+      expect(response).toEqual({
+        success: false,
+        error: "jpeg / png / gif のみアップロード可能です",
+      });
+    });
+
+    it("異常系: 許可MIMEを偽装した非画像ファイルは 400 を返す", async () => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      nextResponseJsonMock.mockReturnValue({
+        success: false,
+        error: "jpeg / png / gif のみアップロード可能です",
+      });
+
+      const spoofedFile = createFile("fake.jpg", 1024, "image/jpeg", [0x00, 0x11, 0x22, 0x33]);
+      const response = await POST(createPostRequest(spoofedFile));
 
       expect(nextResponseJsonMock).toHaveBeenCalledWith(
         { success: false, error: "jpeg / png / gif のみアップロード可能です" },
