@@ -38,6 +38,15 @@ jest.mock("@supabase/ssr", () => ({
   createServerClient: jest.fn(),
 }));
 
+jest.mock("next/cache", () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}));
+
+const createClientMock = jest.fn();
+jest.mock("@supabase/supabase-js", () => ({
+  createClient: (...args: unknown[]) => createClientMock(...args),
+}));
+
 jest.mock("next/headers", () => ({
   cookies: jest.fn(),
 }));
@@ -317,9 +326,16 @@ describe("server API services", () => {
         data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
       });
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
+      createClientMock.mockReturnValue({ storage: storageMock });
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
         storage: storageMock,
+        auth: {
+          getSession: jest.fn().mockResolvedValue({
+            data: { session: { access_token: "test-token" } },
+            error: null,
+          }),
+        },
       });
 
       const response = await fetchActiveUsers();
