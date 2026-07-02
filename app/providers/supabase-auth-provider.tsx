@@ -131,8 +131,8 @@ export function SupabaseAuthProvider({
             console.error("Slack通知の送信に失敗:", notificationError);
           }
         }
-      } else {
-        // 既存ユーザーの場合、最新のGoogle avatar_urlでDBを更新する
+      } else if (latestAvatarUrl) {
+        // 既存ユーザーの場合、最新の avatar_url でDBを更新する
         await updateUserAvatarUrl({ authId: user.id, avatarUrl: latestAvatarUrl });
       }
     } catch (error) {

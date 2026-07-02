@@ -1,8 +1,37 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
-import { PostgrestError } from "@supabase/supabase-js";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
+import { unstable_cache } from "next/cache";
+
+// 署名付きURLを50分キャッシュする。同一セッション（アクセストークン有効期限1時間）内のリロードで
+// 同一URLが返るため、ブラウザキャッシュが効いて304が返る。
+// revalidate=3000（50分）はトークン有効期限（3600秒）より短く設定し、期限切れURLの流通を防ぐ。
+const getCachedSignedUrls = unstable_cache(
+  async (paths: string[], accessToken: string) => {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+    );
+    const { data, error } = await supabase.storage
+      .from("profile-images")
+      .createSignedUrls(paths, 3600);
+    if (error) {
+      console.error("署名付きURL一括生成エラー:", error.message);
+      return [] as { path: string; signedUrl: string }[];
+    }
+    return (data ?? [])
+      .filter(
+        (item): item is { path: string; signedUrl: string; error: null } =>
+          !item.error && !!item.signedUrl && !!item.path
+      )
+      .map(({ path, signedUrl }) => ({ path, signedUrl }));
+  },
+  ["profile-images-signed-urls"],
+  { revalidate: 3000 }
+);
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -115,22 +144,14 @@ export async function fetchActiveUsers(): Promise<{
     ...new Set(
       transformedData.map(u => u.profile_image_path).filter((p): p is string => p != null)
     ),
-  ];
+  ].sort();
   const signedUrlMap = new Map<string, string>();
   if (uniquePaths.length > 0) {
-    const { data: signedUrls, error: signedUrlsError } = await supabase.storage
-      .from("profile-images")
-      .createSignedUrls(uniquePaths, 3600);
-    if (signedUrlsError) {
-      console.error("署名付きURL一括生成エラー:", signedUrlsError.message);
-    } else if (signedUrls) {
-      signedUrls.forEach(({ path, signedUrl, error: urlError }) => {
-        if (urlError) {
-          console.error("署名付きURL生成エラー:", path, urlError);
-        } else if (path && signedUrl) {
-          signedUrlMap.set(path, signedUrl);
-        }
-      });
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (accessToken) {
+      const cachedUrls = await getCachedSignedUrls(uniquePaths, accessToken);
+      cachedUrls.forEach(({ path, signedUrl }) => signedUrlMap.set(path, signedUrl));
     }
   }
 
