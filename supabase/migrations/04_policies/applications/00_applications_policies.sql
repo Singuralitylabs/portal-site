@@ -25,13 +25,13 @@ CREATE POLICY "content_managers_can_insert_applications" ON "applications"
     is_active_user() AND is_content_manager()
   );
 
--- UPDATE: adminまたはmaintainerがapplicationsを更新可能
+-- UPDATE: adminまたはmaintainerがapplicationsを更新可能（論理削除を含む）
 DROP POLICY IF EXISTS "content_managers_can_update_applications" ON "applications";
 CREATE POLICY "content_managers_can_update_applications" ON "applications"
   FOR UPDATE
   TO authenticated
   USING (
-    is_deleted = FALSE AND is_active_user() AND is_content_manager()
+    is_active_user() AND is_content_manager()
   )
   WITH CHECK (
     is_active_user() AND is_content_manager()
