@@ -106,7 +106,7 @@ npm run db:types   # Supabase型生成
 3. `npm run format:check` - Prettierフォーマットチェック
 4. `npm run build` - ビルドチェック
 
-`npm run format:check` で整形差分が検出された場合は、`npm run format` を実行して整形を適用し、整形差分を含めてコミットする。
+`npm run format:check` で整形差分が検出された場合は、`npm run format` を実行して整形を適用し、整形差分を含めてコミットする。5. docs を更新した場合は `npm run format:docs:check` を実行（差分がある場合は `npm run format:docs` を実行）
 
 ## 禁止事項
 
