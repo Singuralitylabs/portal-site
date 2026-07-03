@@ -1,0 +1,56 @@
+name: Wiki Slack Notification
+
+on:
+  gollum:
+  workflow_dispatch:
+    inputs:
+      updated_pages:
+        description: 更新した Wiki ページ名（改行またはカンマ区切り）
+        required: true
+        type: string
+      update_summary:
+        description: 手動実行時に通知へ含める更新概要
+        required: true
+        type: string
+      slack_channel:
+        description: 通知先の Slack チャネル名または ID（未設定時は既定値を使用）
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: Notify wiki updates
+    runs-on: ubuntu-latest
+
+    steps:
+      # 通知スクリプト本体を含む portal-site リポジトリを取得する。
+      - name: Checkout portal-site repository
+        uses: actions/checkout@v5
+
+      # 差分抽出に使う Wiki リポジトリを完全履歴付きで取得する。
+      - name: Checkout wiki repository
+        uses: actions/checkout@v5
+        with:
+          repository: Singuralitylabs/portal-site.wiki
+          path: wiki
+          fetch-depth: 0
+
+      # スクリプト実行に必要な Node.js 実行環境を用意する。
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
+      # イベント情報と Secret を渡して Slack 通知スクリプトを実行する。
+      - name: Send Slack notification
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          SLACK_CHANNEL: ${{ github.event.inputs.slack_channel || vars.SLACK_WIKI_NOTIFICATION_CHANNEL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WIKI_REPO_PATH: ${{ github.workspace }}/wiki
+        run: node scripts/wiki-slack-notification.cjs
