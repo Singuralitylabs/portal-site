@@ -193,18 +193,18 @@ GitHub Actions 側の設定値は `docs/setup.md` ではなく本ドキュメン
 
 ### 5.1 ワークフローの動作
 
-| 項目         | 内容                                                                                                                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| トリガー     | Wiki ページの作成・更新・削除（`gollum`）、手動起動（`workflow_dispatch`）                                                                                                           |
-| 手動起動入力 | `updated_pages`（更新ページ、複数指定可）と `update_summary`（更新の概要）を入力する。必要に応じて `slack_channel` で通知先チャネルを上書きできる。コミット SHA の入力は必須にしない |
-| 通知単位     | 1 イベントを 1 件の Slack 通知にまとめる。複数ページ更新時もページごとの個別通知には分割しない                                                                                       |
-| 通知内容     | ページ名（リンク）、操作種別、更新者、差分抜粋、compare revisions へのリンク                                                                                                         |
-| 通知先       | `SLACK_WEBHOOK_URL` Secret の既定チャネル、または `SLACK_WIKI_NOTIFICATION_CHANNEL` / `slack_channel` で指定したチャネル                                                             |
-| 取得権限     | `portal-site.wiki.git` の read 権限のみを利用する。`GITHUB_TOKEN` の `contents: read` で取得する方針                                                                                 |
+| 項目         | 内容                                                                                                                                                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| トリガー     | Wiki ページの作成・更新・削除（`gollum`）、手動起動（`workflow_dispatch`）                                                                                                                                              |
+| 手動起動入力 | `updated_pages`（更新ページ、複数指定可）を入力する。`update_summary`（更新の概要）は任意とし、未入力時は既定文言を使う。必要に応じて `slack_channel` で通知先チャネルを上書きできる。コミット SHA の入力は必須にしない |
+| 通知単位     | 1 イベントを 1 件の Slack 通知にまとめる。複数ページ更新時もページごとの個別通知には分割しない                                                                                                                          |
+| 通知内容     | ページ名（リンク）、操作種別、更新者、差分抜粋、compare revisions へのリンク                                                                                                                                            |
+| 通知先       | `SLACK_WEBHOOK_URL` Secret の既定チャネル、または `SLACK_WIKI_NOTIFICATION_CHANNEL` / `slack_channel` で指定したチャネル                                                                                                |
+| 取得権限     | `portal-site.wiki.git` の read 権限のみを利用する。`GITHUB_TOKEN` の `contents: read` で取得する方針                                                                                                                    |
 
 `gollum` イベントでは対象 Wiki ページの情報を受け取り、ワークフローは Wiki リポジトリ（`portal-site.wiki.git`）を取得して対象コミットの差分を生成する。Wiki リポジトリはパブリックリポジトリだが、GitHub Actions からの取得では `GITHUB_TOKEN` に `contents: read` を明示し、追加の専用トークンは発行しない。`GITHUB_TOKEN` で取得できない場合のみ、最小権限の追加トークン発行を別途検討する。
 
-`workflow_dispatch` による手動起動では、コミット SHA の特定を実行者に求めない。`updated_pages` と `update_summary` を入力し、その内容を Slack 通知へ利用する。`updated_pages` は複数ページの指定を許可する。必要に応じて `slack_channel` で通知先チャネルをその場で上書きできる。手動起動時に正確な差分や compare revisions が取得できない場合は、入力された概要を差分抜粋の代替として扱う。
+`workflow_dispatch` による手動起動では、コミット SHA の特定を実行者に求めない。`updated_pages` は必須、`update_summary` は任意とし、その内容を Slack 通知へ利用する。`updated_pages` は複数ページの指定を許可する。`update_summary` を省略した場合はスクリプト側の既定文言を使う。必要に応じて `slack_channel` で通知先チャネルをその場で上書きできる。手動起動時に正確な差分や compare revisions が取得できない場合は、入力された概要を差分抜粋の代替として扱う。
 
 複数ページが同一イベントで更新された場合は、1 件の Slack 通知にまとめる。ページ単位でページ名・操作種別を列挙し、更新した対象の見出しを特定できる場合は見出しも併記する。
 
@@ -247,7 +247,7 @@ Wiki が更新されました
 2. ワークフロー一覧から [`.github/workflows/wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) を選択する。
 3. **Run workflow** を押し、対象ブランチを選択する。
 4. `updated_pages` に更新対象の Wiki ページ名を改行またはカンマ区切りで入力する。
-5. `update_summary` に通知へ表示したい更新概要を入力する。
+5. `update_summary` に通知へ表示したい更新概要を必要に応じて入力する。未入力時は既定文言を使う。
 6. 必要に応じて `slack_channel` に通知先チャネル名または ID を入力する。未入力時は `SLACK_WIKI_NOTIFICATION_CHANNEL`、それも未設定なら Webhook 側の既定チャネルを使う。
 7. **Run workflow** を実行し、ジョブ完了後に Slack への投稿結果を確認する。
 
