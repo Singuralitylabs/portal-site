@@ -28,6 +28,21 @@ function buildWikiPageUrl(title) {
   return `https://github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/wiki/${normalizeWikiSlug(title)}`;
 }
 
+// Slack リンク記法で崩れる文字を表示用テキストから除去する。
+function escapeSlackLinkText(text) {
+  return String(text).replace(/[<>|]/g, character => {
+    if (character === "<") {
+      return "＜";
+    }
+
+    if (character === ">") {
+      return "＞";
+    }
+
+    return "｜";
+  });
+}
+
 // 比較画面へのリンクをコミット SHA から組み立てる。
 function buildCompareUrl(revision) {
   if (!revision) {
@@ -174,7 +189,7 @@ function buildSlackMessage({ actor, trigger, pages }) {
   ];
 
   for (const page of pages) {
-    lines.push(`- ページ: <${page.html_url}|${page.title}>`);
+    lines.push(`- ページ: <${page.html_url}|${escapeSlackLinkText(page.title)}>`);
     lines.push(`  操作: ${page.action}`);
     lines.push(`  差分抜粋: ${page.excerpt}`);
 

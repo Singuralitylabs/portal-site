@@ -10,7 +10,7 @@ on:
         type: string
       update_summary:
         description: 手動実行時に通知へ含める更新概要
-        required: true
+        required: false
         type: string
       slack_channel:
         description: 通知先の Slack チャネル名または ID（未設定時は既定値を使用）
