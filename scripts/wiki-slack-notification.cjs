@@ -43,6 +43,19 @@ function escapeSlackLinkText(text) {
   });
 }
 
+// Slack の mrkdwn で意図しないリンク化やメンションを防ぐ。
+function escapeSlackText(text) {
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// 複数行の抜粋を見やすく保つため、各行を同じインデントで整形する。
+function formatSlackExcerpt(text) {
+  return escapeSlackText(text)
+    .split("\n")
+    .map(line => `    ${line}`)
+    .join("\n");
+}
+
 // 比較画面へのリンクをコミット SHA から組み立てる。
 function buildCompareUrl(revision) {
   if (!revision) {
@@ -191,7 +204,8 @@ function buildSlackMessage({ actor, trigger, pages }) {
   for (const page of pages) {
     lines.push(`- ページ: <${page.html_url}|${escapeSlackLinkText(page.title)}>`);
     lines.push(`  操作: ${page.action}`);
-    lines.push(`  差分抜粋: ${page.excerpt}`);
+    lines.push("  差分抜粋:");
+    lines.push(formatSlackExcerpt(page.excerpt));
 
     if (page.compareUrl) {
       lines.push(`  Compare: ${page.compareUrl}`);

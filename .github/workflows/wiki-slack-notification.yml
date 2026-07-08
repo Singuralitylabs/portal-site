@@ -30,8 +30,9 @@ jobs:
       - name: Checkout portal-site repository
         uses: actions/checkout@v5
 
-      # 差分抽出に使う Wiki リポジトリを完全履歴付きで取得する。
+      # gollum 実行時だけ差分抽出に使う Wiki リポジトリを完全履歴付きで取得する。
       - name: Checkout wiki repository
+        if: ${{ github.event_name == 'gollum' }}
         uses: actions/checkout@v5
         with:
           repository: Singuralitylabs/portal-site.wiki
