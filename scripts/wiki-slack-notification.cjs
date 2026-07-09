@@ -25,7 +25,9 @@ function normalizeWikiSlug(title) {
 
 // GitHub Wiki の公開 URL をページタイトルから組み立てる。
 function buildWikiPageUrl(title) {
-  return `https://github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/wiki/${normalizeWikiSlug(title)}`;
+  const normalizedTitle = String(title).replace(/\.md$/i, "");
+
+  return `https://github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/wiki/${normalizeWikiSlug(normalizedTitle)}`;
 }
 
 // Slack リンク記法で崩れる文字を表示用テキストから除去する。
