@@ -86,32 +86,74 @@ cd portal-site
 npm install
 ```
 
-### 2.3 環境変数の設定
+### 2.3 環境変数の設定（dotenvx による暗号化管理）
 
-1. プロジェクトルートの `.env.example` をコピーして `.env.local` を作成する
+本プロジェクトはローカル開発の機密情報を [dotenvx](https://dotenvx.com) で暗号化して管理する。機密値は暗号化済みの `.env.development` としてリポジトリに含まれているため、**各自で `.env.local` を作成する必要はない**。復号に必要な秘密鍵（`DOTENV_PRIVATE_KEY_DEVELOPMENT`）だけを、各開発者が安全に保管する。
+
+> 依存パッケージ `@dotenvx/dotenvx` は §2.2 の `npm install` で導入される。
+
+1. **復号鍵を受け取る**
+
+   既存メンバーから dev 用の復号鍵を受け取る。受け渡しは One-Time Secret など**一度きりで失効する経路**を使う（Slack・メールの平文送信は禁止）。
+
+2. **復号鍵を保管する（OS のセキュアストア推奨）**
+
+   平文ファイルとして残さず、OS のセキュアストアに保管して環境変数 `DOTENV_PRIVATE_KEY_DEVELOPMENT` として供給する。
+   - **Mac（Keychain）**
+
+     ```bash
+     # 保存（値はプロンプトに貼り付け。コマンド履歴に残さない）
+     security add-generic-password -U -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w
+
+     # ~/.zshrc などに追記（鍵の値ではなく参照コマンドのみを書く）
+     export DOTENV_PRIVATE_KEY_DEVELOPMENT="$(security find-generic-password -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w)"
+     ```
+
+   - **Windows（PowerShell + DPAPI）**
+
+     ```powershell
+     # 保存（ユーザー＋マシンに紐づく暗号化ブロブとして保管）
+     New-Item -ItemType Directory -Force "$HOME\.dotenvx" | Out-Null
+     Read-Host "Enter private key" -AsSecureString | ConvertFrom-SecureString | Out-File "$HOME\.dotenvx\dev.key"
+
+     # PowerShell プロファイルに追記（起動時に復号して環境変数へ）
+     $sec = Get-Content "$HOME\.dotenvx\dev.key" | ConvertTo-SecureString
+     $env:DOTENV_PRIVATE_KEY_DEVELOPMENT = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
+     ```
+
+     WSL で開発する場合は Linux 扱いとし、`pass` などで保管する。
+
+   - **フォールバック（ファイル直置き）**: セキュアストアの運用が難しい場合は、受け取った鍵を `.env.keys` としてプロジェクトルートに置く。その際は必ず (1) gitignore 済みを確認（`git check-ignore .env.keys`）、(2) パーミッション制限（Mac/Linux: `chmod 600 .env.keys`）、(3) `.claude/settings.json` の deny 設定を有効化する。
+
+3. **動作確認**
 
    ```bash
-   cp .env.example .env.local
+   npm run dev
    ```
 
-   `.env.example` には本プロジェクトで使用する環境変数のキーがすべて記載されている。新しい環境変数を追加する際は `.env.example` も併せて更新すること（リリース PR の「新規環境変数の検出」が機能する前提となっている）。
+   dotenvx が `.env.development` を復号して環境変数を注入すれば成功。
 
-2. 作成した `.env.local` の各値を実際のものに差し替える **（各値は参画時に個別共有）**。
+各変数の概要は以下のとおり（値は `.env.development` に暗号化済みのため、通常は個別の取得・差し替えは不要。鍵のローテーションや新規追加時に参照する）。
 
-   | 変数                            | 説明                                                                                                                                                                                                                                                                                                                                                                                                                        | 取得元                                                                                |
-   | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-   | `NEXT_PUBLIC_SUPABASE_URL`      | Supabase プロジェクトのエンドポイント URL。ブラウザ／サーバー双方から Supabase の認証・データベース API へ接続する際に使用する                                                                                                                                                                                                                                                                                              | Supabase Dashboard → Project Settings → API → Project URL                             |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の匿名 API キー。クライアント側から Supabase に接続する際の認証に使用される（実権限は RLS で制御される）                                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → API → anon public                             |
-   | `SUPABASE_PROJECT_ID`           | Supabase プロジェクトの一意 ID。`npm run db:types` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要）                                                                                                                                                                                                                                                                                                 | Supabase Dashboard → Project Settings → General → Reference ID                        |
-   | `GOOGLE_CALENDAR_IDS`           | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
-   | `GOOGLE_SERVICE_ACCOUNT_KEY`    | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する                                                                                                                                                                                                                                                                                                                           | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形）                           |
-   | `SLACK_WEBHOOK_URL`             | Slack に通知を送るための Incoming Webhook URL（任意設定）。申請・承認イベント等の通知送信先として使用する                                                                                                                                                                                                                                                                                                                   | Slack の Incoming Webhook 設定画面                                                    |
+| 変数                            | 説明                                                                                                                                                                                                                                                                                                                                                                                                                        | 取得元                                                                                |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase プロジェクトのエンドポイント URL。ブラウザ／サーバー双方から Supabase の認証・データベース API へ接続する際に使用する                                                                                                                                                                                                                                                                                              | Supabase Dashboard → Project Settings → API → Project URL                             |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の匿名 API キー。クライアント側から Supabase に接続する際の認証に使用される（実権限は RLS で制御される）                                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → API → anon public                             |
+| `SUPABASE_PROJECT_ID`           | Supabase プロジェクトの一意 ID。`npm run db:types:local` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要）                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → General → Reference ID                        |
+| `GOOGLE_CALENDAR_IDS`           | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
+| `GOOGLE_SERVICE_ACCOUNT_KEY`    | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する                                                                                                                                                                                                                                                                                                                           | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形）                           |
+| `SLACK_WEBHOOK_URL`             | Slack に通知を送るための Incoming Webhook URL（任意設定）。申請・承認イベント等の通知送信先として使用する                                                                                                                                                                                                                                                                                                                   | Slack の Incoming Webhook 設定画面                                                    |
+
+#### 環境変数を追加・変更するとき
+
+`.env.development`（暗号化）・`.env.example`・Vercel ダッシュボードの**3か所を同期**する。`.env.example` はキー一覧の雛形であり、リリース PR の「新規環境変数の検出」の基準となるため必ず更新する。
 
 #### 重要な注意事項
 
-- `.env.local`ファイルは`.gitignore`に含まれており、Gitにコミットされません
+- 秘密鍵（`.env.keys` / `DOTENV_PRIVATE_KEY_DEVELOPMENT`）は Git にコミットしない。暗号化済みの `.env.development` はコミットされる（`.env*` を除外しつつ `.env.development` のみコミット許可）
+- 本番（Vercel）は dotenvx を使わず、環境変数はダッシュボードで設定する
 - 環境変数の値は機密情報のため、公開しないでください
-- 環境変数の値が不明な場合は、Slackの`201-club_チーム開発`チャンネルで質問してください
+- 復号鍵や値が不明な場合は、Slackの`201-club_チーム開発`チャンネルで質問してください
 
 ### 2.4 Visual Studio Code の推奨設定
 
@@ -157,12 +199,14 @@ npm run dev
 成功すると、以下のようなメッセージが表示されます。
 
 ```text
+[dotenvx@x.x.x] injected env (6) from .env.development
 ▲ Next.js 15.x.x
 - Local:        http://localhost:3000
-- Environments: .env.local
 
 ✓ Ready in Xms
 ```
+
+`injected env (...) from .env.development` の行が表示されれば、dotenvx による復号・注入が成功しています。
 
 ### 3.2 ブラウザでの動作確認
 
@@ -198,13 +242,14 @@ npm install
 
 ### 環境変数が読み込まれない
 
-症状： 開発サーバー起動時に環境変数関連のエラーが発生する
+症状： 開発サーバー起動時に環境変数関連のエラーが発生する（`missing DOTENV_PRIVATE_KEY_DEVELOPMENT` 等）
 
 解決方法：
 
-1. `.env.local` ファイルがルートディレクトリ（最上位のフォルダ）に存在することを確認
-2. 環境変数名が正確に一致していることを確認（大文字小文字を含む）
-3. 開発サーバーを再起動（Ctrl + C で停止後、`npm run dev` で再起動）
+1. 復号鍵が環境変数に設定されているか確認する（`echo $DOTENV_PRIVATE_KEY_DEVELOPMENT` が空でないこと）。未設定なら §2.3 の手順で設定する
+2. `next dev` を直接実行していないか確認する。暗号化された値は `npm run dev`（dotenvx 経由）でのみ復号される
+3. フォールバックでファイル運用している場合は `.env.keys` がプロジェクトルートに存在するか確認する
+4. 開発サーバーを再起動（Ctrl + C で停止後、`npm run dev` で再起動）
 
 ### TypeScript のエラー
 
@@ -213,8 +258,8 @@ npm install
 解決方法：
 
 ```bash
-# TypeScript の型定義を再生成
-npm run db:types
+# TypeScript の型定義を再生成（ローカルは dotenvx 経由の :local を使う）
+npm run db:types:local
 
 # または、既存のビルドキャッシュをクリア
 rm -rf .next
