@@ -160,7 +160,7 @@ TypeScript と型生成の運用によって、型の破綻を早期に検知す
 
 - **ユニットテスト対象**
   - `app/types/lib/database.types.ts` の参照結果から表示項目を解決する処理
-  - `db:types` の型定義が対象DBテーブル・カラム名と整合していること
+  - `db:types` の型定義差分は 4.1 の Supabase DB Types Consistency CI で検知すること
   - 外部キー参照表示が画面表示仕様と整合していること
   - RLSポリシーより広い参照権限をUIやサーバーAPIで許可していないこと
 
