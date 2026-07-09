@@ -126,7 +126,7 @@ function truncateExcerpt(text) {
 function getExcerptLines(diffText) {
   return diffText
     .split(/\r?\n/)
-    .filter(line => (/^[+-]/.test(line) ? !/^(\+\+\+|---)/.test(line) : false))
+    .filter(line => (/^[+-]/.test(line) ? !/^(\+\+\+\s|---\s)/.test(line) : false))
     .map(line => `${line.startsWith("+") ? "追加" : "削除"}: ${line.slice(1).trim()}`)
     .filter(line => line !== "追加: " && line !== "削除: ")
     .slice(0, MAX_DIFF_LINES);
