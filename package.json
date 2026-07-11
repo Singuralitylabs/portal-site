@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "dotenvx run --strict -f .env.development -- next dev --turbopack",
     "build": "next build",
-    "start": "dotenvx run --strict -f .env.development -- next start",
+    "build:local": "dotenvx run --strict -f .env.development -- next build",
+    "start": "next start",
+    "start:local": "dotenvx run --strict -f .env.development -- next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "format:check": "prettier --check . --ignore-unknown",
@@ -13,6 +15,7 @@
     "db:types": "node scripts/db-types.cjs",
     "db:types:local": "dotenvx run --strict -f .env.development -- node scripts/db-types.cjs",
     "lint:logs": "node scripts/lint-logs.cjs",
+    "lint:env": "node scripts/check-env-encrypted.cjs",
     "test": "jest --verbose --coverage"
   },
   "dependencies": {

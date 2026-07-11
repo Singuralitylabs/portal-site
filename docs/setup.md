@@ -140,6 +140,7 @@ npm install
 | `NEXT_PUBLIC_SUPABASE_URL`      | Supabase プロジェクトのエンドポイント URL。ブラウザ／サーバー双方から Supabase の認証・データベース API へ接続する際に使用する                                                                                                                                                                                                                                                                                              | Supabase Dashboard → Project Settings → API → Project URL                             |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の匿名 API キー。クライアント側から Supabase に接続する際の認証に使用される（実権限は RLS で制御される）                                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → API → anon public                             |
 | `SUPABASE_PROJECT_ID`           | Supabase プロジェクトの一意 ID。`npm run db:types:local` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要）                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → General → Reference ID                        |
+| `NEXT_PUBLIC_ADMIN_EMAIL`       | 管理者のメールアドレス。`NEXT_PUBLIC_` プレフィックスのためクライアントバンドルにも露出する。現状アプリ内では未参照で、将来の管理者関連機能向けに保持している（機微な個人メールは設定しない）                                                                                                                                                                                                                               | 運用で定める管理者アカウントのメールアドレス                                          |
 | `GOOGLE_CALENDAR_IDS`           | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
 | `GOOGLE_SERVICE_ACCOUNT_KEY`    | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する                                                                                                                                                                                                                                                                                                                           | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形）                           |
 | `SLACK_WEBHOOK_URL`             | Slack に通知を送るための Incoming Webhook URL（任意設定）。申請・承認イベント等の通知送信先として使用する                                                                                                                                                                                                                                                                                                                   | Slack の Incoming Webhook 設定画面                                                    |
@@ -154,6 +155,34 @@ npm install
 - 本番（Vercel）は dotenvx を使わず、環境変数はダッシュボードで設定する
 - 環境変数の値は機密情報のため、公開しないでください
 - 復号鍵や値が不明な場合は、Slackの`201-club_チーム開発`チャンネルで質問してください
+
+#### 鍵・秘密情報のローテーション
+
+本リポジトリは公開リポジトリだが、暗号化済みの `.env.development`（サーバー秘密である Google サービスアカウント鍵・Slack Webhook を含む）をコミットする方針を採る。暗号文自体は復号鍵なしには解けないが、**一度コミットした暗号文は Git 履歴に永久に残る**ため、安全性は最終的に「復号鍵の秘匿」に依存する。したがって以下を守る。
+
+- **鍵配布の最小化**: 復号鍵（`DOTENV_PRIVATE_KEY_DEVELOPMENT`）を渡すのは、実際に開発中の現行メンバーのみに限る。受け渡しは One-Time Secret 等の一度きりで失効する経路を使う（§2.3 参照）。
+- **メンバー離脱・予防的ローテ（鍵ペアの入れ替え）**: 復号鍵を持つメンバーが抜けたとき等に実施する。現行の復号鍵が手元にある状態で、プロジェクトルートで以下を行う。
+
+  ```bash
+  # 1) 現行の鍵で復号（平文に戻す）
+  npx dotenvx decrypt -f .env.development
+
+  # 2) 旧鍵ペアを破棄（.env.development から DOTENV_PUBLIC_KEY_DEVELOPMENT の行を削除し、旧秘密鍵ファイルも削除）
+  rm -f .env.keys
+
+  # 3) 新しい鍵ペアで再暗号化（新しい .env.development と .env.keys が生成される）
+  npx dotenvx encrypt -f .env.development
+  ```
+
+  生成された新しい秘密鍵（`.env.keys` の `DOTENV_PRIVATE_KEY_DEVELOPMENT`）を現行メンバーへ配布し、再暗号化済みの `.env.development` をコミットする（`.env.keys` はコミットしない）。
+  なお、この鍵入れ替えだけでは**過去にコミットした暗号文（履歴）は保護されない**点に注意する。旧鍵が漏れていれば履歴の値は復号され得るため、鍵漏洩が疑われる場合は次の緊急対応を行う。
+
+- **鍵・秘密情報の漏洩時（緊急対応）**: 復号鍵の漏洩が疑われる場合、鍵の入れ替えだけでは不十分で、**暗号化していた秘密情報そのものを上流で無効化・再発行**する必要がある。
+  1. Supabase: Dashboard → Project Settings → API で API キーをローテーションする（必要に応じて anon / service キーを再発行）。
+  2. Google サービスアカウント: Google Cloud Console で対象の鍵を削除し、新しい JSON 鍵を発行する。
+  3. Slack: 対象の Incoming Webhook を無効化し、新しい Webhook を発行する。
+  4. 新しい値で `.env.development` を再暗号化し（`npx dotenvx set <KEY> <値> -f .env.development`）、上記「予防的ローテ」の手順で dev 鍵も入れ替える。
+  5. Vercel ダッシュボードの本番環境変数も同じ新しい値へ更新する。
 
 ### 2.4 Visual Studio Code の推奨設定
 
@@ -221,10 +250,16 @@ npm run dev
 本番環境と同じビルドプロセスが正常に動作するか確認します。
 
 ```bash
+# コンパイル確認（CI・Vercel と同じ、環境変数を注入しない素のビルド）
 npm run build
+
+# 実際の環境変数を注入したローカル本番ビルド（復号鍵が必要）
+npm run build:local
 ```
 
 エラーなくビルドが完了すれば OK です。
+
+`NEXT_PUBLIC_*` はビルド時にバンドルへ焼き込まれるため、実際の値でクライアント動作まで確認したい場合は `npm run build:local`（実 env でビルド）→ `npm run start:local`（実 env で本番サーバー起動）を使う。素の `npm run build` / `npm run start` は環境変数を注入しないため、Vercel（ダッシュボードの環境変数を使用）や CI と同じ挙動になる。
 
 ## 4. トラブルシューティング
 
