@@ -123,7 +123,7 @@ npm install
 
      WSL で開発する場合は Linux 扱いとし、`pass` などで保管する。
 
-   - **フォールバック（ファイル直置き）**: セキュアストアの運用が難しい場合は、受け取った鍵を `.env.keys` としてプロジェクトルートに置く。その際は必ず (1) gitignore 済みを確認（`git check-ignore .env.keys`）、(2) パーミッション制限（Mac/Linux: `chmod 600 .env.keys`）、(3) `.claude/settings.json` の deny 設定を有効化する。
+   - **フォールバック（ファイル直置き）**: セキュアストアの運用が難しい場合は、受け取った鍵を `.env.keys` としてプロジェクトルートに置く。その際は必ず (1) gitignore 済みを確認（`git check-ignore .env.keys`）、(2) パーミッション制限（Mac/Linux: `chmod 600 .env.keys`）を行う。加えて `.claude/settings.json` の deny に `.env.keys` の読み取り拒否が入っていることを確認する。ただし deny は Claude Code の Read ツールを制限するのみで、postinstall スクリプトや他プロセスからの読み取りは防げないため、平文鍵の直置きは最終手段とし、可能な限りセキュアストア運用を推奨する。
 
 3. **動作確認**
 
@@ -199,7 +199,7 @@ npm run dev
 成功すると、以下のようなメッセージが表示されます。
 
 ```text
-[dotenvx@x.x.x] injected env (6) from .env.development
+[dotenvx@x.x.x] injected env (8) from .env.development
 ▲ Next.js 15.x.x
 - Local:        http://localhost:3000
 

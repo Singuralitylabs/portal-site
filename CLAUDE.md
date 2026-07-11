@@ -42,7 +42,7 @@ npm run lint       # ESLint
 npm run type-check # 型チェック（tsc --noEmit）
 npm run format:check # Prettierフォーマットチェック
 npm run format     # Prettierフォーマット適用
-npm run db:types   # Supabase型生成
+npm run db:types:local   # Supabase型生成
 ```
 
 ## ディレクトリ構造
@@ -80,7 +80,7 @@ npm run db:types   # Supabase型生成
 
 ### 型定義パターン
 
-- `database.types.ts` は Supabase 自動生成（手動編集禁止、`npm run db:types` で更新）
+- `database.types.ts` は Supabase 自動生成（手動編集禁止、`npm run db:types:local` で更新）
 - アプリケーション型は `app/types/index.ts` に集約
 - `Database["public"]["Tables"]["xxx"]["Row"]` から `Omit` で派生型を作成（参考: `app/types/index.ts`）
 
@@ -113,4 +113,4 @@ npm run db:types   # Supabase型生成
 - `console.log` / `console.info` はデバッグ目的で一時的に使用可。ただしコミット前に必ず削除する（CIで検出・ブロックされる）
 - `debugger` の使用禁止
 - `database.types.ts` の手動編集禁止
-- `.env.local` の内容をコードにハードコードしない
+- `.env.development` / `.env.keys` 等の機密情報をコードにハードコードしない
