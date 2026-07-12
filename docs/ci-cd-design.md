@@ -82,7 +82,7 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | [`release-pr.yml`](../.github/workflows/release-pr.yml)                           | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
 | [`create-release.yml`](../.github/workflows/create-release.yml)                   | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
-| [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | `contents: read`                         | Wiki リポジトリを読み取り、更新差分を Slack 通知するために必要   |
+| [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | `contents: read`                         | Wiki 更新イベントを受けて Slack 通知するために必要               |
 
 **Secrets:**
 
@@ -98,11 +98,10 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 機密ではないがワークフローから参照する設定値は GitHub の **Variables** に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions → Variables**
 
-| 名前                              | 内容                                            | 使用ワークフロー                                                                  | 備考                                                |
-| --------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `SUPABASE_PROJECT_ID`             | 型生成対象の Supabase Project ID                | [`db-types.yml`](../.github/workflows/db-types.yml)                               |                                                     |
-| `FORK_REPO`                       | フォーク同期先リポジトリ（`owner/repo` 形式）   | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | 同期先を切り替える際はこの値だけを変更すればよい    |
-| `SLACK_WIKI_NOTIFICATION_CHANNEL` | Wiki 更新通知の通知先 Slack チャネル名または ID | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | 未設定時は Slack Webhook 側の既定チャネルへ通知する |
+| 名前                  | 内容                                          | 使用ワークフロー                                      | 備考                                             |
+| --------------------- | --------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
+| `SUPABASE_PROJECT_ID` | 型生成対象の Supabase Project ID              | [`db-types.yml`](../.github/workflows/db-types.yml)   |                                                  |
+| `FORK_REPO`           | フォーク同期先リポジトリ（`owner/repo` 形式） | [`fork-sync.yml`](../.github/workflows/fork-sync.yml) | 同期先を切り替える際はこの値だけを変更すればよい |
 
 ### 3.4 GitHub Environments
 
@@ -189,26 +188,21 @@ Wiki ページの更新内容をチームへ自動連携するため、[`.github
 
 Slack の通知先は、既存のアプリケーション通知と同じ `SLACK_WEBHOOK_URL` を共通利用する。Wiki 通知専用の Webhook URL は発行しない。
 
-GitHub Actions 側の設定値は `docs/setup.md` ではなく本ドキュメントで管理する。Wiki 更新通知に必要な `SLACK_WEBHOOK_URL` は、GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。通知先チャネルを固定で指定したい場合は `SLACK_WIKI_NOTIFICATION_CHANNEL` を **Settings → Secrets and variables → Actions → Variables** に登録する。
+GitHub Actions 側の設定値は `docs/setup.md` ではなく本ドキュメントで管理する。Wiki 更新通知に必要な `SLACK_WEBHOOK_URL` は、GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。
 
 ### 5.1 ワークフローの動作
 
-| 項目         | 内容                                                                                                                                                                                                                    |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| トリガー     | Wiki ページの作成・更新・削除（`gollum`）、手動起動（`workflow_dispatch`）                                                                                                                                              |
-| 手動起動入力 | `updated_pages`（更新ページ、複数指定可）を入力する。`update_summary`（更新の概要）は任意とし、未入力時は既定文言を使う。必要に応じて `slack_channel` で通知先チャネルを上書きできる。コミット SHA の入力は必須にしない |
-| 通知単位     | 1 イベントを 1 件の Slack 通知にまとめる。複数ページ更新時もページごとの個別通知には分割しない                                                                                                                          |
-| 通知内容     | ページ名（リンク）、操作種別、更新者、差分抜粋、取得できる場合は compare revisions へのリンク                                                                                                                           |
-| 通知先       | `SLACK_WEBHOOK_URL` Secret の既定チャネル、または `SLACK_WIKI_NOTIFICATION_CHANNEL` / `slack_channel` で指定したチャネル                                                                                                |
-| 取得権限     | `portal-site.wiki.git` の read 権限のみを利用する。`GITHUB_TOKEN` の `contents: read` で取得する方針                                                                                                                    |
+| 項目     | 内容                                                                                                |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| トリガー | Wiki ページの作成・更新・削除（`gollum`）                                                           |
+| 通知単位 | 1 イベントを 1 件の Slack 通知にまとめる。複数ページ更新時もページごとの個別通知には分割しない      |
+| 通知内容 | ページ名（リンク）、操作種別、更新者、取得できる場合は compare revisions へのリンク                 |
+| 通知先   | `SLACK_WEBHOOK_URL` Secret の既定チャネル                                                           |
+| 取得権限 | `GITHUB_TOKEN` の `contents: read` を利用する。ワークフロー内で追加のリポジトリ checkout は行わない |
 
-`gollum` イベントでは対象 Wiki ページの情報を受け取り、ワークフローは Wiki リポジトリ（`portal-site.wiki.git`）を取得して対象コミットの差分を生成する。Wiki リポジトリはパブリックリポジトリだが、GitHub Actions からの取得では `GITHUB_TOKEN` に `contents: read` を明示し、追加の専用トークンは発行しない。`GITHUB_TOKEN` で取得できない場合のみ、最小権限の追加トークン発行を別途検討する。
+`gollum` イベントでは対象 Wiki ページの情報を受け取り、ワークフローはその payload をもとに通知本文を組み立てる。ページ単位でページ名と操作種別を列挙し、取得できる場合は compare revisions へのリンクも併記する。
 
-`workflow_dispatch` による手動起動では、コミット SHA の特定を実行者に求めない。`updated_pages` は必須、`update_summary` は任意とし、その内容を Slack 通知へ利用する。`updated_pages` は複数ページの指定を許可する。`update_summary` を省略した場合はスクリプト側の既定文言を使う。必要に応じて `slack_channel` で通知先チャネルをその場で上書きできる。手動起動時は git diff を使わないため compare revisions リンクは付与されず、入力された概要を差分抜粋の代替として扱う。
-
-複数ページが同一イベントで更新された場合は、1 件の Slack 通知にまとめる。ページ単位でページ名・操作種別を列挙し、更新した対象の見出しを特定できる場合は見出しも併記する。
-
-差分が長い場合は、ページ単位で見出し抽出を優先する。差分抜粋はページごとに先頭 5 行まで、かつ 100 字を超える場合は先頭 100 字で打ち切る。省略した場合は、詳細確認用に compare revisions へのリンクを併記する。
+複数ページが同一イベントで更新された場合は、1 件の Slack 通知にまとめる。ページ単位でページ名・操作種別を列挙し、詳細確認は GitHub Wiki の compare revisions を参照する。
 
 Slack 通知本文は Incoming Webhook の通常テキストとして送信し、最低限以下の情報を含める。
 
@@ -218,8 +212,6 @@ Wiki が更新されました
 - ページ: <ページ名とリンク>
 - 操作: <created / edited / deleted>
 - 更新者: <GitHub ユーザー名>
-- 差分抜粋:
-   <ページ単位の見出しまたは差分先頭 5 行 / 100 字以内>
 - Compare: https://github.com/Singuralitylabs/portal-site/wiki/_compare/<revision>
 ```
 
@@ -229,31 +221,3 @@ Wiki が更新されました
 | -------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `SLACK_WEBHOOK_URL` 未設定 | 設定不備としてジョブをエラー終了し、通知しない | GitHub Actions の Secrets に `SLACK_WEBHOOK_URL` を登録し、失敗したワークフローを再実行する |
 | Slack Webhook 送信失敗     | Slack 通知が送信されず、ジョブは失敗する       | Slack 側の Webhook 設定・チャンネル権限を確認し、ワークフローを再実行する                   |
-| Wiki リポジトリ取得失敗    | 差分を取得できず通知が送信されない             | GitHub の一時障害や権限設定を確認し、ワークフローを再実行する                               |
-
-### 5.3 Actions 手動実行手順
-
-`workflow_dispatch` による手動実行は、Wiki 更新通知の設定確認や通知文面の事前確認に利用する。
-
-#### 事前設定
-
-1. GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** で `SLACK_WEBHOOK_URL` を登録する。
-2. 既定の通知先チャネルを固定したい場合は、**Settings → Secrets and variables → Actions → Variables** で `SLACK_WIKI_NOTIFICATION_CHANNEL` を登録する。
-3. 必要に応じて、Slack Incoming Webhook 側で指定したチャネルへの投稿権限を確認する。
-
-#### 実行手順
-
-1. GitHub リポジトリの **Actions** タブを開く。
-2. ワークフロー一覧から [`.github/workflows/wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) を選択する。
-3. **Run workflow** を押し、対象ブランチを選択する。
-4. `updated_pages` に更新対象の Wiki ページ名を改行またはカンマ区切りで入力する。
-5. `update_summary` に通知へ表示したい更新概要を必要に応じて入力する。未入力時は既定文言を使う。
-6. 必要に応じて `slack_channel` に通知先チャネル名または ID を入力する。未入力時は `SLACK_WIKI_NOTIFICATION_CHANNEL`、それも未設定なら Webhook 側の既定チャネルを使う。
-7. **Run workflow** を実行し、ジョブ完了後に Slack への投稿結果を確認する。
-
-#### 確認観点
-
-1. 通知本文にページ名、操作種別、更新者、差分抜粋が含まれていること。`gollum` 実行時は compare revisions リンクも含まれること。
-2. `slack_channel` を指定した場合に、そのチャネルへ通知されること。
-3. `slack_channel` 未指定時に `SLACK_WIKI_NOTIFICATION_CHANNEL` または Webhook 既定チャネルへ通知されること。
-4. `SLACK_WEBHOOK_URL` 未設定時にジョブがエラー終了すること。

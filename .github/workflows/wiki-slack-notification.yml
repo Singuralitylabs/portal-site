@@ -2,20 +2,6 @@ name: Wiki Slack Notification
 
 on:
   gollum:
-  workflow_dispatch:
-    inputs:
-      updated_pages:
-        description: 更新した Wiki ページ名（改行またはカンマ区切り）
-        required: true
-        type: string
-      update_summary:
-        description: 手動実行時に通知へ含める更新概要
-        required: false
-        type: string
-      slack_channel:
-        description: 通知先の Slack チャネル名または ID（未設定時は既定値を使用）
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -30,15 +16,6 @@ jobs:
       - name: Checkout portal-site repository
         uses: actions/checkout@v5
 
-      # gollum 実行時だけ差分抽出に使う Wiki リポジトリを完全履歴付きで取得する。
-      - name: Checkout wiki repository
-        if: ${{ github.event_name == 'gollum' }}
-        uses: actions/checkout@v5
-        with:
-          repository: Singuralitylabs/portal-site.wiki
-          path: wiki
-          fetch-depth: 0
-
       # スクリプト実行に必要な Node.js 実行環境を用意する。
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v5
@@ -51,7 +28,5 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
-          SLACK_CHANNEL: ${{ github.event.inputs.slack_channel || vars.SLACK_WIKI_NOTIFICATION_CHANNEL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          WIKI_REPO_PATH: ${{ github.workspace }}/wiki
         run: node scripts/wiki-slack-notification.cjs
