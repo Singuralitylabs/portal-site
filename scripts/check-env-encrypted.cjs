@@ -54,7 +54,7 @@ function main() {
 
   if (violations.length > 0) {
     console.error(
-      `NG! ${rel} に暗号化されていない値があります。` +
+      `NG! ${rel} に暗号化されていない値があります。\n` +
         `\`npx dotenvx encrypt -f .env.development\` で暗号化してからコミットしてください。`
     );
     violations.forEach(({ line, key }) => {
