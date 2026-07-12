@@ -33,7 +33,8 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null);
 
   // 指定パスの署名付きURLを取得して state に反映する。
-  // &t=... を末尾に付与することで、同一パスへの再アップロード後もブラウザキャッシュを回避する。
+  // 署名付きURLはSupabase側で呼び出しごとに新しいトークンが発行されるため、
+  // 同一パスへの再アップロード後も文字列が変わりブラウザキャッシュは自然に回避される。
   const fetchSignedUrl = useCallback(async (path: string) => {
     const supabase = createClientSupabaseClient();
     const { data, error } = await supabase.storage
@@ -43,7 +44,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
       setProfileImageUrl(null);
       return;
     }
-    setProfileImageUrl(`${data.signedUrl}&t=${Date.now()}`);
+    setProfileImageUrl(data.signedUrl);
   }, []);
 
   // ログイン・ログアウト時にDBから profile_image_path と avatar_url を取得して初期化する
