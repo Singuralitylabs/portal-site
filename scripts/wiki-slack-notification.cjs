@@ -1,6 +1,16 @@
-const fs = require("fs");
-const REPOSITORY_OWNER = "Singuralitylabs";
-const REPOSITORY_NAME = "portal-site";
+const fs = require("node:fs");
+
+const DEFAULT_REPOSITORY_OWNER = "Singuralitylabs";
+const DEFAULT_REPOSITORY_NAME = "portal-site";
+
+function getRepositoryInfo() {
+  const [owner, name] = (process.env.GITHUB_REPOSITORY || "").split("/", 2);
+
+  return {
+    owner: owner || DEFAULT_REPOSITORY_OWNER,
+    name: name || DEFAULT_REPOSITORY_NAME,
+  };
+}
 
 // Slack リンク記法で崩れる文字を表示用テキストから除去する。
 function escapeSlackLinkText(text) {
@@ -23,7 +33,9 @@ function buildCompareUrl(revision) {
     return null;
   }
 
-  return `https://github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/wiki/_compare/${revision}`;
+  const { owner, name } = getRepositoryInfo();
+
+  return `https://github.com/${owner}/${name}/wiki/_compare/${revision}`;
 }
 
 // gollum 実行時はイベント payload から通知情報を組み立てる。
