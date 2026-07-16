@@ -92,7 +92,7 @@ jobs:
         run: |
           if ! git diff --quiet app/types/lib/database.types.ts; then
             echo "::error::database.types.ts がsupabaseスキーマの型定義と一致していません。"
-            echo "::error::npm run db:types を実行後、再度コミット・プッシュしてください。"
+            echo "::error::ローカルで npm run db:types:local を実行後、再度コミット・プッシュしてください。"
             git diff -- app/types/lib/database.types.ts
             exit 1
           fi
