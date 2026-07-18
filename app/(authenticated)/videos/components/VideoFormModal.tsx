@@ -8,8 +8,6 @@ import type { VideoWithCategoryType, SelectCategoryType } from "@/app/types";
 import { useDisplayOrderForm } from "@/app/hooks/useDisplayOrderForm";
 import { isValidUrl } from "@/app/utils/url-validation";
 
-const supabase = createClientSupabaseClient();
-
 interface VideoFormModalProps {
   opened: boolean;
   onClose: () => void;
@@ -66,6 +64,7 @@ export function VideoFormModal({
   }, [opened, initialData, setPosition]);
 
   useEffect(() => {
+    const supabase = createClientSupabaseClient();
     const fetchUsers = async () => {
       const { data } = await supabase
         .from("users")
