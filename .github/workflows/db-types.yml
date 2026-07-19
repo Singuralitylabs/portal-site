@@ -36,11 +36,11 @@ jobs:
     steps:
       # リポジトリのソースコードをワークフロー実行環境へ取得
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Supabase CLI実行に必要なNode.js実行環境を準備
       - name: Setup Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22.x
           cache: "npm"
@@ -92,7 +92,7 @@ jobs:
         run: |
           if ! git diff --quiet app/types/lib/database.types.ts; then
             echo "::error::database.types.ts がsupabaseスキーマの型定義と一致していません。"
-            echo "::error::npm run db:types を実行後、再度コミット・プッシュしてください。"
+            echo "::error::ローカルで npm run db:types:local を実行後、再度コミット・プッシュしてください。"
             git diff -- app/types/lib/database.types.ts
             exit 1
           fi

@@ -12,11 +12,8 @@ interface MemberCardProps {
 export function MemberCard({ member }: MemberCardProps) {
   const [modalOpened, setModalOpened] = useState(false);
 
+  const avatarSrc = member.profile_image_url ?? member.avatar_url ?? null;
   const avatarContent = member.display_name.charAt(0).toUpperCase();
-
-  const handleOpenModal = () => {
-    setModalOpened(true);
-  };
 
   return (
     <div>
@@ -25,12 +22,12 @@ export function MemberCard({ member }: MemberCardProps) {
         padding="lg"
         radius="md"
         withBorder
-        onClick={handleOpenModal}
+        onClick={() => setModalOpened(true)}
         style={{ cursor: "pointer" }}
       >
         <Group align="flex-start" gap="sm">
-          <Avatar src={member.avatar_url} color="blue" radius="xl">
-            {!member.avatar_url && avatarContent}
+          <Avatar src={avatarSrc} color="blue" radius="xl">
+            {!avatarSrc && avatarContent}
           </Avatar>
           <div style={{ flex: 1 }}>
             <Group
@@ -80,6 +77,7 @@ export function MemberCard({ member }: MemberCardProps) {
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
         memberInfo={member}
+        profileImageUrl={member.profile_image_url}
       />
     </div>
   );

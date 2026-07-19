@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+desktop.ini
 *.pem
 
 # debug
@@ -34,6 +35,8 @@ yarn-error.log*
 .env*
 # .env.example はコミット対象（リリース時の新規環境変数検出と新規メンバーのセットアップに使用）
 !.env.example
+# .env.development は dotenvx で暗号化済みのためコミット対象（復号鍵 .env.keys は除外のまま）
+!.env.development
 
 # vercel
 .vercel

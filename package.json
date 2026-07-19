@@ -3,15 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "dotenvx run --strict -f .env.development -- next dev --turbopack",
     "build": "next build",
+    "build:local": "dotenvx run --strict -f .env.development -- next build",
     "start": "next start",
+    "start:local": "dotenvx run --strict -f .env.development -- next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "format:check": "prettier --check . --ignore-unknown",
     "format": "prettier --write . --ignore-unknown",
     "db:types": "node scripts/db-types.cjs",
+    "db:types:local": "dotenvx run --strict -f .env.development -- node scripts/db-types.cjs",
     "lint:logs": "node scripts/lint-logs.cjs",
+    "lint:env": "node scripts/check-env-encrypted.cjs",
     "test": "jest --verbose --coverage"
   },
   "dependencies": {
@@ -37,6 +41,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@dotenvx/dotenvx": "^2.3.4",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.19.30",

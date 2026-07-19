@@ -40,7 +40,9 @@ npm run dev        # 開発サーバー（Turbopack）
 npm run build      # 本番ビルド
 npm run lint       # ESLint
 npm run type-check # 型チェック（tsc --noEmit）
-npm run db:types   # Supabase型生成
+npm run format:check # Prettierフォーマットチェック
+npm run format     # Prettierフォーマット適用
+npm run db:types:local   # Supabase型生成
 ```
 
 ## ディレクトリ構造
@@ -78,7 +80,7 @@ npm run db:types   # Supabase型生成
 
 ### 型定義パターン
 
-- `database.types.ts` は Supabase 自動生成（手動編集禁止、`npm run db:types` で更新）
+- `database.types.ts` は Supabase 自動生成（手動編集禁止、`npm run db:types:local` で更新）
 - アプリケーション型は `app/types/index.ts` に集約
 - `Database["public"]["Tables"]["xxx"]["Row"]` から `Omit` で派生型を作成（参考: `app/types/index.ts`）
 
@@ -97,13 +99,18 @@ npm run db:types   # Supabase型生成
 
 コード変更を行った後、以下のチェックを順番に実行し、すべて通ることを確認する。エラーがあれば修正してから完了とする。
 
+ビルド前にフォーマット起因の差分を解消するため、`npm run format:check` を `npm run build` より先に実行する。
+
 1. `npm run lint` - ESLintチェック
 2. `npm run type-check` - 型チェック
-3. `npm run build` - ビルドチェック
+3. `npm run format:check` - Prettierフォーマットチェック
+4. `npm run build` - ビルドチェック
+
+`npm run format:check` で整形差分が検出された場合は、`npm run format` を実行して整形を適用し、整形差分を含めてコミットする。
 
 ## 禁止事項
 
 - `console.log` / `console.info` はデバッグ目的で一時的に使用可。ただしコミット前に必ず削除する（CIで検出・ブロックされる）
 - `debugger` の使用禁止
 - `database.types.ts` の手動編集禁止
-- `.env.local` の内容をコードにハードコードしない
+- `.env.development` / `.env.keys` 等の機密情報をコードにハードコードしない

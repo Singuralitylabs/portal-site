@@ -1,7 +1,7 @@
 import colors from "tailwindcss/colors";
 
 // カレンダーエイリアスごとの色定義（固定色）
-// エイリアス名は .env.local の GOOGLE_CALENDAR_IDS で定義
+// エイリアス名は環境変数 GOOGLE_CALENDAR_IDS（.env.development で暗号化管理）で定義
 export const CALENDAR_COLORS: {
   [key: string]: { backgroundColor: string; borderColor: string };
 } = {
