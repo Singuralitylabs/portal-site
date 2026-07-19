@@ -88,6 +88,7 @@ export type MemberType = Pick<
   UserType,
   | "id"
   | "display_name"
+  | "role"
   | "bio"
   | "avatar_url"
   | "profile_image_path"
@@ -96,6 +97,7 @@ export type MemberType = Pick<
   | "instagram_url"
   | "github_url"
   | "portfolio_url"
+  | "created_at"
 > & {
   position_tags: {
     positions: {
