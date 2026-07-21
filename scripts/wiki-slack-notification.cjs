@@ -12,7 +12,7 @@ function getRepositoryInfo() {
   };
 }
 
-// Slack リンク記法で崩れる文字を表示用テキストから除去する。
+// Slack リンク記法で崩れる文字を表示用テキストで安全な全角文字へ置き換える。
 function escapeSlackLinkText(text) {
   return String(text).replace(/[<>|]/g, character => {
     if (character === "<") {
