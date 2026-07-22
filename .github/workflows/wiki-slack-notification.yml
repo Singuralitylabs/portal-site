@@ -1,0 +1,32 @@
+name: Wiki Slack Notification
+
+on:
+  gollum:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: Notify wiki updates
+    runs-on: ubuntu-latest
+
+    steps:
+      # 通知スクリプト本体を含む portal-site リポジトリを取得する。
+      - name: Checkout portal-site repository
+        uses: actions/checkout@v5
+
+      # スクリプト実行に必要な Node.js 実行環境を用意する。
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
+      # イベント情報と Secret を渡して Slack 通知スクリプトを実行する。
+      - name: Send Slack notification
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: node scripts/wiki-slack-notification.cjs
