@@ -108,7 +108,7 @@ async function main() {
     throw new Error("GITHUB_EVENT_PATH が見つかりません。");
   }
 
-  // 実行トリガーに応じて通知対象ページの組み立て方法を切り替える。
+  // gollum イベント payload から通知対象ページ一覧を組み立てる。
   const event = JSON.parse(fs.readFileSync(eventPath, "utf8"));
   const eventName = process.env.GITHUB_EVENT_NAME || "gollum";
   const pages = createPages(event);
