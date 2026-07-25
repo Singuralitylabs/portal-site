@@ -402,9 +402,9 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 | `is_content_manager()` | `BOOLEAN` | 現在のユーザーが `admin` または `maintainer` ロールを持つかを判定する。コンテンツの閲覧（削除済み含む）・登録・更新・削除権限の確認に使用。必ず `is_active_user()` と組み合わせて使用すること。                              |
 | `is_admin()`           | `BOOLEAN` | 現在のユーザーがDB上の `users.role` で `admin` ロールを持つかを判定する（JWTのクレームは参照しない）。ユーザーの承認・権限変更・利用停止など管理者専用操作の確認に使用。必ず `is_active_user()` と組み合わせて使用すること。 |
 
-いずれも `SECURITY DEFINER` で定義しており、関数内の `SELECT` はRLSを経由しない。このため `users` テーブル自身のポリシーからこれらの関数（内部で `users` を参照する）を呼び出しても再帰は発生しない。
+いずれも `SECURITY DEFINER` で定義しており、**後述の前提条件を満たす場合に限り**関数内の `SELECT` はRLSを経由しない。このため `users` テーブル自身のポリシーからこれらの関数（内部で `users` を参照する）を呼び出しても再帰は発生しない。
 
-ただし `SECURITY DEFINER` それ自体がRLSを無効化するわけではなく、関数の実行ユーザーが所有者に切り替わることで結果的にRLSを免除される仕組みである。**関数の所有者が `users` の所有者と一致し、かつ `users` に `FORCE ROW LEVEL SECURITY` が設定されていないこと**が前提となる。この前提が崩れると `42P17 infinite recursion detected in policy for relation "users"` が発生し、`users` へのSELECTが全面的に失敗する。前提はSupabaseのSQLエディタ経由（`postgres` 所有）であれば既定で成立するが、ポリシー適用前に確認しておくとよい。
+`SECURITY DEFINER` それ自体がRLSを無効化するわけではなく、関数の実行ユーザーが所有者に切り替わることで結果的にRLSを免除される仕組みである。**関数の所有者が `users` の所有者と一致し、かつ `users` に `FORCE ROW LEVEL SECURITY` が設定されていないこと**が前提となる。この前提が崩れると `42P17 infinite recursion detected in policy for relation "users"` が発生し、`users` へのSELECTが全面的に失敗する。前提はSupabaseのSQLエディタ経由（`postgres` 所有）であれば既定で成立するが、ポリシー適用前に確認しておくとよい。
 
 ```sql
 SELECT p.proname,
