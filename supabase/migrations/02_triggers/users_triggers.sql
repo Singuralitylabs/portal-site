@@ -5,3 +5,38 @@ BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- role / status の書き換えを管理者操作に限定するトリガー関数
+-- RLSは行単位の制御のためカラム単位の制限ができない。一般ユーザーが自身の行を
+-- 更新できる以上、role / status の保護はトリガーで行う必要がある。
+-- auth.uid() が NULL のコンテキスト（SQLエディタ・service_roleキー）はDB管理操作と
+-- みなして対象外とする。初期管理者の設定はこの経路で行う。
+CREATE OR REPLACE FUNCTION enforce_users_role_and_status()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    -- 明示指定があってもDEFAULTと同じ値に固定する（自己登録でのadmin/active指定を防止）
+    NEW.role := 'member';
+    NEW.status := 'pending';
+  ELSE
+    -- 一般ユーザーの更新では旧値を維持する（承認バイパス・権限昇格を防止）
+    NEW.role := OLD.role;
+    NEW.status := OLD.status;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- usersテーブルのrole/status保護トリガー
+DROP TRIGGER IF EXISTS enforce_users_role_and_status ON users;
+CREATE TRIGGER enforce_users_role_and_status
+BEFORE INSERT OR UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION enforce_users_role_and_status();
+
