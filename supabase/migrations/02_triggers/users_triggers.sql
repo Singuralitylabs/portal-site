@@ -10,12 +10,17 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 更新できる以上、role / status の保護はトリガーで行う必要がある。
 -- auth.uid() が NULL のコンテキスト（SQLエディタ・service_roleキー）はDB管理操作と
 -- みなして対象外とする。初期管理者の設定はこの経路で行う。
+-- 注: 本関数は is_admin() を参照するため、03_functions/rls_helper_functions.sql を
+-- 先に適用しておくこと（未適用のままだとusersへの全INSERT/UPDATEが失敗する）。
 CREATE OR REPLACE FUNCTION enforce_users_role_and_status()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SET search_path = public, pg_catalog
 AS $$
 BEGIN
-  IF auth.uid() IS NULL OR is_admin() THEN
+  -- is_admin() は role のみを判定するため、承認済み・未削除の担保として
+  -- is_active_user() と組み合わせる（否認済み管理者による自己復帰を防ぐ）
+  IF auth.uid() IS NULL OR (is_active_user() AND is_admin()) THEN
     RETURN NEW;
   END IF;
 

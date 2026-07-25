@@ -404,11 +404,15 @@ RLSは行単位の制御であり、カラム単位の制限ができません�
 
 以下のいずれかに該当する場合はトリガーによる固定を行いません。
 
-- `is_admin()` が真（管理者による承認・権限変更・利用停止）
+- `is_active_user() AND is_admin()` が真（承認済み管理者による承認・権限変更・利用停止）
+  - `is_admin()` は role のみを判定するため、必ず `is_active_user()` と組み合わせる。単独で使用すると、`status` が `pending` / `rejected` の管理者が自身の `status` を `active` に戻せてしまう
 - `auth.uid()` が `NULL`（SQLエディタや service_role キーによるDB管理操作。初期管理者の `role` 設定はこの経路で行う）
 
 > **`DEFAULT` 制約では防げない理由**
 > カラムの `DEFAULT` は値が明示指定されなかった場合にのみ適用されるため、クライアントが `insert({ role: 'admin', status: 'active' })` のように値を明示すると効きません。値の明示指定を含めて固定するにはトリガーが必要です。
+
+> **適用順の制約**
+> 本トリガー関数は `03_functions/rls_helper_functions.sql` の `is_active_user()` / `is_admin()` を参照します。ディレクトリの番号順（`02_triggers` → `03_functions`）とは逆の依存関係になるため、**必ず `03_functions/rls_helper_functions.sql` を先に適用してください**。関数の作成自体は遅延解決のため成功しますが、関数が未定義のまま `users` へ INSERT / UPDATE が発生すると `function is_admin() does not exist` で失敗します。`updateUserAvatarUrl` は全ログイン時に実行されるため、順序を誤ると `users` への書き込みが全面的に失敗します。
 
 ## 7. データアクセス制御の実現
 
