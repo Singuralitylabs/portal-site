@@ -39,9 +39,12 @@ END;
 $$;
 
 -- usersテーブルのrole/status保護トリガー
+-- UPDATE は列指定（UPDATE OF）とし、role / status がSET句に含まれる場合のみ発火させる。
+-- UPDATE文はSET句にないカラムを変更できないため、これで保護対象を取りこぼすことはない。
+-- プロフィール更新やavatar_url更新では発火せず、不要なヘルパー関数の評価を避けられる。
 DROP TRIGGER IF EXISTS enforce_users_role_and_status ON users;
 CREATE TRIGGER enforce_users_role_and_status
-BEFORE INSERT OR UPDATE ON users
+BEFORE INSERT OR UPDATE OF role, status ON users
 FOR EACH ROW
 EXECUTE FUNCTION enforce_users_role_and_status();
 

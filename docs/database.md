@@ -397,10 +397,12 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 RLSは行単位の制御であり、カラム単位の制限ができません。`users` テーブルは「ユーザーは自身のデータのみ更新可能」というポリシーを持つため、RLSだけでは自身の `role` / `status` の書き換え（権限昇格・承認バイパス）を防げません。これを `enforce_users_role_and_status()` トリガー関数で補います。
 
-| 契機            | 挙動                                                     |
-| --------------- | -------------------------------------------------------- |
-| `BEFORE INSERT` | `role` を `'member'`、`status` を `'pending'` に固定する |
-| `BEFORE UPDATE` | `role` / `status` を更新前の値のまま維持する             |
+| 契機                            | 挙動                                                     |
+| ------------------------------- | -------------------------------------------------------- |
+| `BEFORE INSERT`                 | `role` を `'member'`、`status` を `'pending'` に固定する |
+| `BEFORE UPDATE OF role, status` | `role` / `status` を更新前の値のまま維持する             |
+
+UPDATE は列指定トリガー（`UPDATE OF role, status`）とし、`role` / `status` が SET 句に含まれる場合のみ発火させています。UPDATE 文は SET 句にないカラムを変更できないため保護対象を取りこぼすことはなく、プロフィール更新や `avatar_url` 更新では発火しないため不要なヘルパー関数の評価を避けられます。
 
 以下のいずれかに該当する場合はトリガーによる固定を行いません。
 
@@ -412,7 +414,7 @@ RLSは行単位の制御であり、カラム単位の制限ができません�
 > カラムの `DEFAULT` は値が明示指定されなかった場合にのみ適用されるため、クライアントが `insert({ role: 'admin', status: 'active' })` のように値を明示すると効きません。値の明示指定を含めて固定するにはトリガーが必要です。
 
 > **適用順の制約**
-> 本トリガー関数は `03_functions/rls_helper_functions.sql` の `is_active_user()` / `is_admin()` を参照します。ディレクトリの番号順（`02_triggers` → `03_functions`）とは逆の依存関係になるため、**必ず `03_functions/rls_helper_functions.sql` を先に適用してください**。関数の作成自体は遅延解決のため成功しますが、関数が未定義のまま `users` へ INSERT / UPDATE が発生すると `function is_admin() does not exist` で失敗します。`updateUserAvatarUrl` は全ログイン時に実行されるため、順序を誤ると `users` への書き込みが全面的に失敗します。
+> 本トリガー関数は `03_functions/rls_helper_functions.sql` の `is_active_user()` / `is_admin()` を参照します。ディレクトリの番号順（`02_triggers` → `03_functions`）とは逆の依存関係になるため、**必ず `03_functions/rls_helper_functions.sql` を先に適用してください**。関数の作成自体は遅延解決のため成功しますが、関数が未定義のままトリガーが発火すると `function is_admin() does not exist` で失敗します。影響を受けるのは新規ユーザー登録（INSERT）と `role` / `status` を含む UPDATE で、承認・否認が行えなくなります。
 
 ## 7. データアクセス制御の実現
 
