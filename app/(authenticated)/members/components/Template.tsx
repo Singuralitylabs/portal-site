@@ -1,23 +1,17 @@
 import { MemberCard } from "./MemberCard";
 import { PageTitle } from "@/app/components/PageTitle";
-import { MemberType } from "@/app/types";
+import { MemberType, PositionType } from "@/app/types";
 import { Title } from "@mantine/core";
 import { LEADERSHIP_POSITIONS_IDS } from "@/app/constants/positions";
 
 interface MembersPageTemplateProps {
   members: MemberType[];
+  positions: PositionType[];
 }
-
-// UI表示専用のラベル。仕様書で固定されている見出し文字列のため、DBやpropsからは取得せずTemplate内に直接保持する
-const LEADERSHIP_LABELS: Record<(typeof LEADERSHIP_POSITIONS_IDS)[number]["id"], string> = {
-  8: "代表",
-  9: "副代表",
-  10: "シンラボ管理人",
-};
 
 const isLeadershipMember = (member: MemberType) =>
   member.position_tags.some(
-    tag => tag.positions != null && LEADERSHIP_POSITIONS_IDS.some(p => p.id === tag.positions?.id)
+    tag => tag.positions != null && LEADERSHIP_POSITIONS_IDS.some(id => id === tag.positions?.id)
   );
 
 // role昇順 → 名前の昇順（日本語）→ 作成日時昇順
@@ -31,7 +25,7 @@ const compareGeneralMembers = (a: MemberType, b: MemberType) => {
   return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 };
 
-export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
+export function MembersPageTemplate({ members, positions }: MembersPageTemplateProps) {
   const generalMembers = members
     .filter(member => !isLeadershipMember(member))
     .sort(compareGeneralMembers);
@@ -43,14 +37,15 @@ export function MembersPageTemplate({ members }: MembersPageTemplateProps) {
       </div>
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-16 px-4">
-          {LEADERSHIP_POSITIONS_IDS.map(({ id }) => {
+          {LEADERSHIP_POSITIONS_IDS.map(id => {
             const positionMembers = members.filter(member =>
               member.position_tags.some(tag => tag.positions?.id === id)
             );
+            const label = positions.find(position => position.id === id)?.name ?? "";
 
             return (
               <div key={id}>
-                <Title order={3}>{LEADERSHIP_LABELS[id]}</Title>
+                <Title order={3}>{label}</Title>
                 <div className="flex flex-col gap-4 mt-4">
                   {positionMembers.map(member => (
                     <MemberCard key={member.id} member={member} />
