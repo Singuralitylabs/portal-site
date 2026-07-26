@@ -245,6 +245,7 @@ chmod 600 .env.keys   # Mac/Linux
 
 #### 重要な注意事項
 
+- 復号鍵はセキュアストアで保管し、平文の `.env.keys` は原則として作らない（例外は最終手段のフォールバックと、ローテーション作業での一時生成。後者は作業後に削除する）
 - 秘密鍵（`.env.keys` / `DOTENV_PRIVATE_KEY_DEVELOPMENT`）は Git にコミットしない。暗号化済みの `.env.development` はコミットされる（`.env*` を除外しつつ `.env.development` のみコミット許可）
 - 本番（Vercel）は dotenvx を使わず、環境変数はダッシュボードで設定する
 - 環境変数の値は機密情報のため、公開しないでください
@@ -268,7 +269,7 @@ chmod 600 .env.keys   # Mac/Linux
   npx dotenvx encrypt -f .env.development
   ```
 
-  生成された新しい秘密鍵（`.env.keys` の `DOTENV_PRIVATE_KEY_DEVELOPMENT`）を現行メンバーへ配布し、再暗号化済みの `.env.development` をコミットする（`.env.keys` はコミットしない）。
+  生成された新しい秘密鍵（`.env.keys` の `DOTENV_PRIVATE_KEY_DEVELOPMENT`）を現行メンバーへ配布し、再暗号化済みの `.env.development` をコミットする。**配布後は自分の鍵を Step 2 の手順でセキュアストアへ保存し、`rm -f .env.keys` で削除する**（ローテーション作業以外で `.env.keys` を残さない）。
   なお、この鍵入れ替えだけでは**過去にコミットした暗号文（履歴）は保護されない**点に注意する。旧鍵が漏れていれば履歴の値は復号され得るため、鍵漏洩が疑われる場合は次の緊急対応を行う。
 
 - **鍵・秘密情報の漏洩時（緊急対応）**: 復号鍵の漏洩が疑われる場合、鍵の入れ替えだけでは不十分で、**暗号化していた秘密情報そのものを上流で無効化・再発行**する必要がある。
