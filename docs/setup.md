@@ -217,14 +217,13 @@ dotenvx は **鍵が未設定のときも、鍵が間違っているときも同
 DOTENV_PRIVATE_KEY_DEVELOPMENT="（受け取った64桁の鍵）"
 ```
 
-作成したら、必ず次の 2 つを実施する。
+作成したら、パーミッションを制限する。新規ファイルは既定で同じマシンの他ユーザーからも読める状態のため、これは各自で実施する必要がある。
 
 ```bash
-git check-ignore .env.keys   # → .env.keys と表示されること（gitignore 済みの確認）
-chmod 600 .env.keys          # パーミッション制限（Mac/Linux）
+chmod 600 .env.keys   # Mac/Linux
 ```
 
-加えて `.claude/settings.json` の deny に `.env.keys` の読み取り拒否が入っていることを確認する。ただし deny は Claude Code の Read ツールを制限するのみで、postinstall スクリプトや他プロセスからの読み取りは防げない。平文鍵の直置きは最終手段とし、可能な限りセキュアストア運用を推奨する。
+gitignore（`.gitignore` の `.env*`）と Claude Code の読み取り拒否（`.claude/settings.json` の deny）はリポジトリ側で設定済みのため、個別の対応は不要。ただし deny は Claude Code の Read ツールを制限するのみで、postinstall スクリプトや他プロセスからの読み取りは防げない。平文鍵の直置きは最終手段とし、可能な限りセキュアストア運用を推奨する。
 
 #### 参考: 各環境変数の内容
 
