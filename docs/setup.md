@@ -98,12 +98,12 @@ npm install
 
 この状態で `npm run dev` を実行すると、dotenvx が鍵で `.env.development` を復号し、環境変数として注入する。
 
-| Step   | やること                                     | 完了の目安                                                                  |
-| ------ | -------------------------------------------- | --------------------------------------------------------------------------- |
-| Step 1 | 復号鍵を受け取る                             | 64 桁の16進文字列が手元にある                                               |
-| Step 2 | 鍵を OS のセキュアストアに保存する           | 保存内容の確認コマンドが `64` を返す                                        |
-| Step 3 | シェル起動時に環境変数へ供給する設定を入れる | 新しいターミナルで `echo ${#DOTENV_PRIVATE_KEY_DEVELOPMENT}` が `64` を返す |
-| Step 4 | 復号できることを確認する                     | `npm run dev` が起動する                                                    |
+| Step   | やること                                     | 完了の目安                                             |
+| ------ | -------------------------------------------- | ------------------------------------------------------ |
+| Step 1 | 復号鍵を受け取る                             | 64 桁の16進文字列が手元にある                          |
+| Step 2 | 鍵を OS のセキュアストアに保存する           | 保存の確認コマンドが `64`（Windows は `True`）を返す   |
+| Step 3 | シェル起動時に環境変数へ供給する設定を入れる | 新しいターミナルで鍵の長さが `64` になる（Step 4 (1)） |
+| Step 4 | 復号できることを確認する                     | `npm run dev` が起動する                               |
 
 > 依存パッケージ `@dotenvx/dotenvx` は §2.2 の `npm install` で導入済み。
 
@@ -131,7 +131,7 @@ security add-generic-password -U -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w
 保存できたかを確認する。鍵の値は表示せず、長さだけを見る。
 
 ```bash
-security find-generic-password -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w | tr -d '\n' | wc -c
+security find-generic-password -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w | tr -d '\n' | wc -c | tr -d ' '
 # → 64 と表示されれば OK
 ```
 
@@ -143,6 +143,9 @@ security find-generic-password -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w |
 # 保存（ユーザー＋マシンに紐づく暗号化ブロブとして保管）
 New-Item -ItemType Directory -Force "$HOME\.dotenvx" | Out-Null
 Read-Host "Enter private key" -AsSecureString | ConvertFrom-SecureString | Out-File "$HOME\.dotenvx\dev.key"
+
+# 保存できたかの確認
+Test-Path "$HOME\.dotenvx\dev.key"   # → True と表示されれば OK
 ```
 
 WSL で開発する場合は Linux 扱いとし、`pass` などで保管する。
@@ -168,9 +171,11 @@ $env:DOTENV_PRIVATE_KEY_DEVELOPMENT = [Runtime.InteropServices.Marshal]::PtrToSt
 
 **追記しただけでは、すでに開いているターミナルには反映されない。** 新しいターミナルを開くか、`source ~/.zshrc`（PowerShell は `. $PROFILE`）を実行する。VS Code の内蔵ターミナルも同じで、反映されない場合は VS Code 自体を再起動する。
 
-#### Step 4. 設定できたことを確認する
+#### Step 4. 復号できることを確認する
 
 **新しいターミナルを開いて**、プロジェクトルートで次の 2 つを実行する。
+
+**Mac**
 
 ```bash
 # (1) 環境変数に鍵が届いているか（期待値: 64）
@@ -180,7 +185,17 @@ echo ${#DOTENV_PRIVATE_KEY_DEVELOPMENT}
 npx dotenvx get NEXT_PUBLIC_SUPABASE_URL -f .env.development
 ```
 
-- 鍵そのものを `echo $DOTENV_PRIVATE_KEY_DEVELOPMENT` で画面に出さない（画面共有・スクリーンショット・シェル履歴から漏れる）。長さだけを確認する
+**Windows（PowerShell）**
+
+```powershell
+# (1) 環境変数に鍵が届いているか（期待値: 64）
+$env:DOTENV_PRIVATE_KEY_DEVELOPMENT.Length
+
+# (2) 実際に復号できるか（期待値: https://xxxxx.supabase.co のような URL）
+npx dotenvx get NEXT_PUBLIC_SUPABASE_URL -f .env.development
+```
+
+- 鍵そのものを画面に出さない（画面共有・スクリーンショット・シェル履歴から漏れる）。長さだけを確認する
 - (2) で `encrypted:BDw2...` のような文字列や `[DECRYPTION_FAILED]` が表示された場合は鍵が効いていない。下の「うまくいかないとき」へ進む
 
 両方 OK なら開発サーバーを起動する。
@@ -197,13 +212,13 @@ dotenvx は **鍵が未設定のときも、鍵が間違っているときも同
 ☠ [DECRYPTION_FAILED] could not decrypt NEXT_PUBLIC_SUPABASE_URL, ... fix: [https://github.com/dotenvx/dotenvx/issues/757]
 ```
 
-切り分けには `echo ${#DOTENV_PRIVATE_KEY_DEVELOPMENT}`（PowerShell は `$env:DOTENV_PRIVATE_KEY_DEVELOPMENT.Length`）の結果を使う。
+切り分けには Step 4 (1) の結果を使う。ただし `.env.keys` でのフォールバック運用中はこの表の対象外で（環境変数を使わないため常に `0` になる）、`.env.keys` の中身（変数名 + 64 桁の鍵が 1 行）と配置場所（プロジェクトルート）を確認する。
 
-| 結果                | 原因                         | 対処                                                                                                                                                                                                                                         |
-| ------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`（空）           | 環境変数が供給されていない   | 次の順に確認する。(1) 起動ファイルに export 行があるか（`grep DOTENV ~/.zshrc`）、(2) ターミナルを開き直したか（Step 3）、(3) セキュアストアに鍵があるか（Step 2 の確認コマンド）、(4) Keychain のアクセス許可を「許可しない」にしていないか |
-| `64` 以外の数値     | 鍵に余計な文字が混入している | `DOTENV_PRIVATE_KEY_DEVELOPMENT=`・引用符・空白・改行を取り除いた 64 桁だけを、Step 2 で保存し直す                                                                                                                                           |
-| `64` だが復号に失敗 | 別の鍵ペアの鍵を使っている   | `.env.development` 冒頭の `DOTENV_PUBLIC_KEY_DEVELOPMENT` に対応する鍵かどうかを配布元に確認する（鍵のローテーション後に旧鍵を使っている場合など）                                                                                           |
+| 結果                | 原因                         | 対処                                                                                                                                                                                                                                      |
+| ------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`（空）           | 環境変数が供給されていない   | 次の順に確認する。(1) 起動ファイル（`~/.zshrc` / `$PROFILE`）に設定行があるか、(2) ターミナルを開き直したか（Step 3）、(3) セキュアストアに鍵があるか（Step 2 の確認コマンド）、(4) Keychain のアクセス許可を「許可しない」にしていないか |
+| `64` 以外の数値     | 鍵に余計な文字が混入している | `DOTENV_PRIVATE_KEY_DEVELOPMENT=`・引用符・空白・改行を取り除いた 64 桁だけを、Step 2 で保存し直す                                                                                                                                        |
+| `64` だが復号に失敗 | 別の鍵ペアの鍵を使っている   | `.env.development` 冒頭の `DOTENV_PUBLIC_KEY_DEVELOPMENT` に対応する鍵かどうかを配布元に確認する（鍵のローテーション後に旧鍵を使っている場合など）                                                                                        |
 
 上記で解決しない場合は、`next dev` を直接実行していないかも確認する。暗号化された値は dotenvx 経由（`npm run dev`）でのみ復号される。
 
