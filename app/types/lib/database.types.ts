@@ -417,6 +417,7 @@ export type Database = {
     Functions: {
       get_clerk_user_id: { Args: never; Returns: string };
       is_active_user: { Args: never; Returns: boolean };
+      is_admin: { Args: never; Returns: boolean };
       is_authenticated_user: { Args: never; Returns: boolean };
       is_content_manager: { Args: never; Returns: boolean };
       is_registered_user: { Args: never; Returns: boolean };
