@@ -188,8 +188,8 @@ npx dotenvx get NEXT_PUBLIC_SUPABASE_URL -f .env.development
 **Windows（PowerShell）**
 
 ```powershell
-# (1) 環境変数に鍵が届いているか（期待値: 64）
-$env:DOTENV_PRIVATE_KEY_DEVELOPMENT.Length
+# (1) 環境変数に鍵が届いているか（期待値: 64。未設定なら 0）
+"$env:DOTENV_PRIVATE_KEY_DEVELOPMENT".Length
 
 # (2) 実際に復号できるか（期待値: https://xxxxx.supabase.co のような URL）
 npx dotenvx get NEXT_PUBLIC_SUPABASE_URL -f .env.development
@@ -393,7 +393,7 @@ npm install
 ☠ [DECRYPTION_FAILED] could not decrypt NEXT_PUBLIC_SUPABASE_URL, ... fix: [https://github.com/dotenvx/dotenvx/issues/757]
 ```
 
-解決方法： このエラーは **復号鍵が未設定のときと、鍵が間違っているときの両方で同じ文言**が出るため、メッセージからは原因を判別できない。[§2.3 の「うまくいかないとき（症状別）」](#うまくいかないとき症状別)の表に従い、`echo ${#DOTENV_PRIVATE_KEY_DEVELOPMENT}`（期待値 `64`）の結果から切り分ける。
+解決方法： このエラーは **復号鍵が未設定のときと、鍵が間違っているときの両方で同じ文言**が出るため、メッセージからは原因を判別できない。[§2.3 の「うまくいかないとき（症状別）」](#うまくいかないとき症状別)の表に従い、Step 4 (1) の結果（期待値 `64`）から切り分ける。
 
 とくに多いのは次の 2 つ。
 
