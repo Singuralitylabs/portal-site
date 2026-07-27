@@ -10,6 +10,7 @@ jobs:
   notify:
     name: Notify wiki updates
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       # 通知スクリプト本体を含む portal-site リポジトリを取得する。
