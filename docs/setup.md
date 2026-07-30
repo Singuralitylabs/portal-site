@@ -88,50 +88,159 @@ npm install
 
 ### 2.3 環境変数の設定（dotenvx による暗号化管理）
 
-本プロジェクトはローカル開発の機密情報を [dotenvx](https://dotenvx.com) で暗号化して管理する。機密値は暗号化済みの `.env.development` としてリポジトリに含まれているため、**各自で `.env.local` を作成する必要はない**。復号に必要な秘密鍵（`DOTENV_PRIVATE_KEY_DEVELOPMENT`）だけを、各開発者が安全に保管する。
+#### この節でやること
 
-> 依存パッケージ `@dotenvx/dotenvx` は §2.2 の `npm install` で導入される。
+ローカル開発の機密情報は [dotenvx](https://dotenvx.com) で暗号化し、暗号化済みの `.env.development` をリポジトリに含めている。そのため **各自で `.env.local` を作成する必要はなく、値を 1 つずつ集める作業も不要**。
 
-1. **復号鍵を受け取る**
+各開発者がやることは、次の 1 点だけ。
 
-   既存メンバーから dev 用の復号鍵を受け取る。
+> 復号鍵を受け取り、環境変数 `DOTENV_PRIVATE_KEY_DEVELOPMENT` として供給できる状態にする
 
-2. **復号鍵を保管する（OS のセキュアストア推奨）**
+この状態で `npm run dev` を実行すると、dotenvx が鍵で `.env.development` を復号し、環境変数として注入する。
 
-   平文ファイルとして残さず、OS のセキュアストアに保管して環境変数 `DOTENV_PRIVATE_KEY_DEVELOPMENT` として供給する。
-   - **Mac（Keychain）**
+| Step   | やること                                     | 完了の目安                                             |
+| ------ | -------------------------------------------- | ------------------------------------------------------ |
+| Step 1 | 復号鍵を受け取る                             | 64 桁の16進文字列が手元にある                          |
+| Step 2 | 鍵を OS のセキュアストアに保存する           | 保存の確認コマンドが `64`（Windows は `True`）を返す   |
+| Step 3 | シェル起動時に環境変数へ供給する設定を入れる | 新しいターミナルで鍵の長さが `64` になる（Step 4 (1)） |
+| Step 4 | 復号できることを確認する                     | `npm run dev` が起動する                               |
 
-     ```bash
-     # 保存（値はプロンプトに貼り付け。コマンド履歴に残さない）
-     security add-generic-password -U -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w
+> 依存パッケージ `@dotenvx/dotenvx` は §2.2 の `npm install` で導入済み。
 
-     # ~/.zshrc などに追記（鍵の値ではなく参照コマンドのみを書く）
-     export DOTENV_PRIVATE_KEY_DEVELOPMENT="$(security find-generic-password -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w)"
-     ```
+#### Step 1. 復号鍵を受け取る
 
-   - **Windows（PowerShell + DPAPI）**
+既存メンバーから dev 用の復号鍵を受け取る。配布元が分からない場合は Slack の `201-club_チーム開発` チャンネルで依頼する。
 
-     ```powershell
-     # 保存（ユーザー＋マシンに紐づく暗号化ブロブとして保管）
-     New-Item -ItemType Directory -Force "$HOME\.dotenvx" | Out-Null
-     Read-Host "Enter private key" -AsSecureString | ConvertFrom-SecureString | Out-File "$HOME\.dotenvx\dev.key"
+- 鍵は **64 桁の16進文字列**（`0`〜`9` と `a`〜`f` のみ）
+- 受け取ったテキストに `DOTENV_PRIVATE_KEY_DEVELOPMENT=` という変数名や引用符が付いている場合、**それらは鍵の一部ではない**。64 桁の値だけを取り出して次へ進む（この混入が設定失敗の典型例）
 
-     # PowerShell プロファイルに追記（起動時に復号して環境変数へ）
-     $sec = Get-Content "$HOME\.dotenvx\dev.key" | ConvertTo-SecureString
-     $env:DOTENV_PRIVATE_KEY_DEVELOPMENT = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
-     ```
+#### Step 2. 鍵を OS のセキュアストアに保存する
 
-     WSL で開発する場合は Linux 扱いとし、`pass` などで保管する。
+鍵は平文ファイルとして残さず、OS のセキュアストアに保管する。
 
-   - **フォールバック（ファイル直置き）**: セキュアストアの運用が難しい場合は、受け取った鍵を `.env.keys` としてプロジェクトルートに置く。その際は必ず (1) gitignore 済みを確認（`git check-ignore .env.keys`）、(2) パーミッション制限（Mac/Linux: `chmod 600 .env.keys`）を行う。加えて `.claude/settings.json` の deny に `.env.keys` の読み取り拒否が入っていることを確認する。ただし deny は Claude Code の Read ツールを制限するのみで、postinstall スクリプトや他プロセスからの読み取りは防げないため、平文鍵の直置きは最終手段とし、可能な限りセキュアストア運用を推奨する。
+**Mac（Keychain）**
 
-3. **動作確認**
+```bash
+security add-generic-password -U -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w
+```
 
-   ```bash
-   npm run dev
-   ```
+- 実行するとプロンプトが表示されるので、鍵を貼り付けて Enter（確認のため再入力を求められた場合は同じ値をもう一度入力する）。入力内容は画面に表示されない
+- 鍵をコマンドの引数に直接書かない。シェル履歴に残るため、必ず `-w` のプロンプト経由で入力する
+- `-U` は既存項目の上書き。鍵のローテーション時も同じコマンドでよい
 
-   dotenvx が `.env.development` を復号して環境変数を注入すれば成功。
+保存できたかを確認する。鍵の値は表示せず、長さだけを見る。
+
+```bash
+security find-generic-password -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w | tr -d '\n' | wc -c | tr -d ' '
+# → 64 と表示されれば OK
+```
+
+- アクセス許可のダイアログが表示された場合は「常に許可」を選ぶ。「許可しない」を選ぶとこのコマンドが失敗し、Step 3 で鍵が空文字になる
+
+**Windows（PowerShell + DPAPI）**
+
+```powershell
+# 保存（ユーザー＋マシンに紐づく暗号化ブロブとして保管）
+New-Item -ItemType Directory -Force "$HOME\.dotenvx" | Out-Null
+Read-Host "Enter private key" -AsSecureString | ConvertFrom-SecureString | Out-File "$HOME\.dotenvx\dev.key"
+
+# 保存できたかの確認
+Test-Path "$HOME\.dotenvx\dev.key"   # → True と表示されれば OK
+```
+
+WSL で開発する場合は Linux 扱いとし、`pass` などで保管する。
+
+#### Step 3. シェル起動時に環境変数へ供給する
+
+シェルの起動ファイルには、**鍵の値ではなく鍵を取り出すコマンド**を書く。
+
+**Mac（zsh の場合は `~/.zshrc` の末尾に追記）**
+
+```bash
+export DOTENV_PRIVATE_KEY_DEVELOPMENT="$(security find-generic-password -a "$USER" -s DOTENV_PRIVATE_KEY_DEVELOPMENT -w)"
+```
+
+- 使用中のシェルは `echo $SHELL` で確認する。bash の場合は `~/.bash_profile` に追記する
+
+**Windows（PowerShell プロファイル `$PROFILE` に追記）**
+
+```powershell
+$sec = Get-Content "$HOME\.dotenvx\dev.key" | ConvertTo-SecureString
+$env:DOTENV_PRIVATE_KEY_DEVELOPMENT = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
+```
+
+**追記しただけでは、すでに開いているターミナルには反映されない。** 新しいターミナルを開くか、`source ~/.zshrc`（PowerShell は `. $PROFILE`）を実行する。VS Code の内蔵ターミナルも同じで、反映されない場合は VS Code 自体を再起動する。
+
+#### Step 4. 復号できることを確認する
+
+**新しいターミナルを開いて**、プロジェクトルートで次の 2 つを実行する。
+
+**Mac**
+
+```bash
+# (1) 環境変数に鍵が届いているか（期待値: 64）
+echo ${#DOTENV_PRIVATE_KEY_DEVELOPMENT}
+
+# (2) 実際に復号できるか（期待値: https://xxxxx.supabase.co のような URL）
+npx dotenvx get NEXT_PUBLIC_SUPABASE_URL -f .env.development
+```
+
+**Windows（PowerShell）**
+
+```powershell
+# (1) 環境変数に鍵が届いているか（期待値: 64。未設定なら 0）
+"$env:DOTENV_PRIVATE_KEY_DEVELOPMENT".Length
+
+# (2) 実際に復号できるか（期待値: https://xxxxx.supabase.co のような URL）
+npx dotenvx get NEXT_PUBLIC_SUPABASE_URL -f .env.development
+```
+
+- 鍵そのものを画面に出さない（画面共有・スクリーンショット・シェル履歴から漏れる）。長さだけを確認する
+- (2) で `encrypted:BDw2...` のような文字列や `[DECRYPTION_FAILED]` が表示された場合は鍵が効いていない。下の「うまくいかないとき」へ進む
+
+両方 OK なら開発サーバーを起動する。
+
+```bash
+npm run dev
+```
+
+#### うまくいかないとき（症状別）
+
+dotenvx は **鍵が未設定のときも、鍵が間違っているときも同じエラー**を出す（v2.3.4 で確認）。メッセージだけでは原因を判別できないため、下表の順に切り分ける。
+
+```text
+☠ [DECRYPTION_FAILED] could not decrypt NEXT_PUBLIC_SUPABASE_URL, ... fix: [https://github.com/dotenvx/dotenvx/issues/757]
+```
+
+切り分けには Step 4 (1) の結果を使う。ただし `.env.keys` でのフォールバック運用中はこの表の対象外で（環境変数を使わないため常に `0` になる）、`.env.keys` の中身（変数名 + 64 桁の鍵が 1 行）と配置場所（プロジェクトルート）を確認する。
+
+| 結果                | 原因                         | 対処                                                                                                                                                                                                                                      |
+| ------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`（空）           | 環境変数が供給されていない   | 次の順に確認する。(1) 起動ファイル（`~/.zshrc` / `$PROFILE`）に設定行があるか、(2) ターミナルを開き直したか（Step 3）、(3) セキュアストアに鍵があるか（Step 2 の確認コマンド）、(4) Keychain のアクセス許可を「許可しない」にしていないか |
+| `64` 以外の数値     | 鍵に余計な文字が混入している | `DOTENV_PRIVATE_KEY_DEVELOPMENT=`・引用符・空白・改行を取り除いた 64 桁だけを、Step 2 で保存し直す                                                                                                                                        |
+| `64` だが復号に失敗 | 別の鍵ペアの鍵を使っている   | `.env.development` 冒頭の `DOTENV_PUBLIC_KEY_DEVELOPMENT` に対応する鍵かどうかを配布元に確認する（鍵のローテーション後に旧鍵を使っている場合など）                                                                                        |
+
+上記で解決しない場合は、`next dev` を直接実行していないかも確認する。暗号化された値は dotenvx 経由（`npm run dev`）でのみ復号される。
+
+#### （最終手段）セキュアストアが使えない場合のフォールバック
+
+セキュアストアの運用がどうしても難しい場合に限り、受け取った鍵をプロジェクトルートの `.env.keys` に置く方法もある。この場合 Step 2・Step 3 は不要（dotenvx が `.env.keys` を自動的に読む）。
+
+`.env.keys` を作成し、次の 1 行だけを書く（ターミナルで実行するコマンドではない）。
+
+```text
+DOTENV_PRIVATE_KEY_DEVELOPMENT="（受け取った64桁の鍵）"
+```
+
+新規ファイルは既定で同じマシンの他ユーザーからも読めるため、パーミッションを制限する。
+
+```bash
+chmod 600 .env.keys   # Mac/Linux
+```
+
+この方法は平文の鍵がディスクに残り、ローカルで動く他プロセス（postinstall スクリプト等）からも読める。最終手段とし、可能な限りセキュアストア運用を推奨する。
+
+#### 参考: 各環境変数の内容
 
 各変数の概要は以下のとおり（値は `.env.development` に暗号化済みのため、通常は個別の取得・差し替えは不要。鍵のローテーションや新規追加時に参照する）。
 
@@ -151,6 +260,7 @@ npm install
 
 #### 重要な注意事項
 
+- 復号鍵はセキュアストアで保管し、平文の `.env.keys` は原則として作らない（例外は最終手段のフォールバックと、ローテーション作業での一時生成。後者は作業後に削除する）
 - 秘密鍵（`.env.keys` / `DOTENV_PRIVATE_KEY_DEVELOPMENT`）は Git にコミットしない。暗号化済みの `.env.development` はコミットされる（`.env*` を除外しつつ `.env.development` のみコミット許可）
 - 本番（Vercel）は dotenvx を使わず、環境変数はダッシュボードで設定する
 - 環境変数の値は機密情報のため、公開しないでください
@@ -174,7 +284,7 @@ npm install
   npx dotenvx encrypt -f .env.development
   ```
 
-  生成された新しい秘密鍵（`.env.keys` の `DOTENV_PRIVATE_KEY_DEVELOPMENT`）を現行メンバーへ配布し、再暗号化済みの `.env.development` をコミットする（`.env.keys` はコミットしない）。
+  生成された新しい秘密鍵（`.env.keys` の `DOTENV_PRIVATE_KEY_DEVELOPMENT`）を現行メンバーへ配布し、再暗号化済みの `.env.development` をコミットする。**配布後は自分の鍵を Step 2 の手順でセキュアストアへ保存し、`rm -f .env.keys` で削除する**（ローテーション作業以外で `.env.keys` を残さない）。
   なお、この鍵入れ替えだけでは**過去にコミットした暗号文（履歴）は保護されない**点に注意する。旧鍵が漏れていれば履歴の値は復号され得るため、鍵漏洩が疑われる場合は次の緊急対応を行う。
 
 - **鍵・秘密情報の漏洩時（緊急対応）**: 復号鍵の漏洩が疑われる場合、鍵の入れ替えだけでは不十分で、**暗号化していた秘密情報そのものを上流で無効化・再発行**する必要がある。
@@ -277,14 +387,20 @@ npm install
 
 ### 環境変数が読み込まれない
 
-症状： 開発サーバー起動時に環境変数関連のエラーが発生する（`missing DOTENV_PRIVATE_KEY_DEVELOPMENT` 等）
+症状： 開発サーバー起動時に復号エラーが発生し、起動に失敗する
 
-解決方法：
+```text
+☠ [DECRYPTION_FAILED] could not decrypt NEXT_PUBLIC_SUPABASE_URL, ... fix: [https://github.com/dotenvx/dotenvx/issues/757]
+```
 
-1. 復号鍵が環境変数に設定されているか確認する（`echo $DOTENV_PRIVATE_KEY_DEVELOPMENT` が空でないこと）。未設定なら §2.3 の手順で設定する
-2. `next dev` を直接実行していないか確認する。暗号化された値は `npm run dev`（dotenvx 経由）でのみ復号される
-3. フォールバックでファイル運用している場合は `.env.keys` がプロジェクトルートに存在するか確認する
-4. 開発サーバーを再起動（Ctrl + C で停止後、`npm run dev` で再起動）
+解決方法： このエラーは **復号鍵が未設定のときと、鍵が間違っているときの両方で同じ文言**が出るため、メッセージからは原因を判別できない。[§2.3 の「うまくいかないとき（症状別）」](#うまくいかないとき症状別)の表に従い、Step 4 (1) の結果（期待値 `64`）から切り分ける。
+
+とくに多いのは次の 2 つ。
+
+1. 起動ファイル（`~/.zshrc` 等）に export 行を追記した後、ターミナルを開き直していない
+2. Keychain に保存した鍵に、変数名や引用符などの余計な文字が混入している
+
+上記に該当しない場合は、開発サーバーを再起動（Ctrl + C で停止後、`npm run dev`）して再確認する。
 
 ### TypeScript のエラー
 
