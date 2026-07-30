@@ -14,21 +14,10 @@ const isLeadershipMember = (member: MemberType) =>
     tag => tag.positions != null && LEADERSHIP_POSITIONS_IDS.some(id => id === tag.positions?.id)
   );
 
-// role昇順 → 名前の昇順（日本語）→ 作成日時昇順
-const compareGeneralMembers = (a: MemberType, b: MemberType) => {
-  const roleDiff = a.role.localeCompare(b.role);
-  if (roleDiff !== 0) return roleDiff;
-
-  const nameDiff = a.display_name.localeCompare(b.display_name, "ja");
-  if (nameDiff !== 0) return nameDiff;
-
-  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-};
-
 export function MembersPageTemplate({ members, positions }: MembersPageTemplateProps) {
-  const generalMembers = members
-    .filter(member => !isLeadershipMember(member))
-    .sort(compareGeneralMembers);
+  // 日本語の名前順にソート
+  const sortedMembers = members.sort((a, b) => a.display_name.localeCompare(b.display_name, "ja"));
+  const generalMembers = sortedMembers.filter(member => !isLeadershipMember(member));
 
   return (
     <>
