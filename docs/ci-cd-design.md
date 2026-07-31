@@ -210,7 +210,7 @@ Slack 通知本文は Incoming Webhook の通常テキストとして送信し�
 Wiki が更新されました
 
 - ページ: <ページ名とリンク>
-- 操作: <created / edited / deleted>
+- 操作: <created / edited>
 - 更新者: <GitHub ユーザー名>
 - Compare: https://github.com/Singuralitylabs/portal-site/wiki/_compare/<revision>
 ```
