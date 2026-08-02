@@ -97,7 +97,6 @@ export type MemberType = Pick<
   | "instagram_url"
   | "github_url"
   | "portfolio_url"
-  | "created_at"
 > & {
   position_tags: {
     positions: {
