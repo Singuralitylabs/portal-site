@@ -98,12 +98,12 @@ npm install
 
 この状態で `npm run dev` を実行すると、dotenvx が鍵で `.env.development` を復号し、環境変数として注入する。
 
-| Step   | やること                                     | 完了の目安                                             |
-| ------ | -------------------------------------------- | ------------------------------------------------------ |
-| Step 1 | 復号鍵を受け取る                             | 64 桁の16進文字列が手元にある                          |
-| Step 2 | 鍵を OS のセキュアストアに保存する           | 保存の確認コマンドが `64`（Windows は `True`）を返す   |
+| Step | やること | 完了の目安 |
+| --- | --- | --- |
+| Step 1 | 復号鍵を受け取る | 64 桁の16進文字列が手元にある |
+| Step 2 | 鍵を OS のセキュアストアに保存する | 保存の確認コマンドが `64`（Windows は `True`）を返す |
 | Step 3 | シェル起動時に環境変数へ供給する設定を入れる | 新しいターミナルで鍵の長さが `64` になる（Step 4 (1)） |
-| Step 4 | 復号できることを確認する                     | `npm run dev` が起動する                               |
+| Step 4 | 復号できることを確認する | `npm run dev` が起動する |
 
 > 依存パッケージ `@dotenvx/dotenvx` は §2.2 の `npm install` で導入済み。
 
@@ -214,11 +214,11 @@ dotenvx は **鍵が未設定のときも、鍵が間違っているときも同
 
 切り分けには Step 4 (1) の結果を使う。ただし `.env.keys` でのフォールバック運用中はこの表の対象外で（環境変数を使わないため常に `0` になる）、`.env.keys` の中身（変数名 + 64 桁の鍵が 1 行）と配置場所（プロジェクトルート）を確認する。
 
-| 結果                | 原因                         | 対処                                                                                                                                                                                                                                      |
-| ------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`（空）           | 環境変数が供給されていない   | 次の順に確認する。(1) 起動ファイル（`~/.zshrc` / `$PROFILE`）に設定行があるか、(2) ターミナルを開き直したか（Step 3）、(3) セキュアストアに鍵があるか（Step 2 の確認コマンド）、(4) Keychain のアクセス許可を「許可しない」にしていないか |
-| `64` 以外の数値     | 鍵に余計な文字が混入している | `DOTENV_PRIVATE_KEY_DEVELOPMENT=`・引用符・空白・改行を取り除いた 64 桁だけを、Step 2 で保存し直す                                                                                                                                        |
-| `64` だが復号に失敗 | 別の鍵ペアの鍵を使っている   | `.env.development` 冒頭の `DOTENV_PUBLIC_KEY_DEVELOPMENT` に対応する鍵かどうかを配布元に確認する（鍵のローテーション後に旧鍵を使っている場合など）                                                                                        |
+| 結果 | 原因 | 対処 |
+| --- | --- | --- |
+| `0`（空） | 環境変数が供給されていない | 次の順に確認する。(1) 起動ファイル（`~/.zshrc` / `$PROFILE`）に設定行があるか、(2) ターミナルを開き直したか（Step 3）、(3) セキュアストアに鍵があるか（Step 2 の確認コマンド）、(4) Keychain のアクセス許可を「許可しない」にしていないか |
+| `64` 以外の数値 | 鍵に余計な文字が混入している | `DOTENV_PRIVATE_KEY_DEVELOPMENT=`・引用符・空白・改行を取り除いた 64 桁だけを、Step 2 で保存し直す |
+| `64` だが復号に失敗 | 別の鍵ペアの鍵を使っている | `.env.development` 冒頭の `DOTENV_PUBLIC_KEY_DEVELOPMENT` に対応する鍵かどうかを配布元に確認する（鍵のローテーション後に旧鍵を使っている場合など） |
 
 上記で解決しない場合は、`next dev` を直接実行していないかも確認する。暗号化された値は dotenvx 経由（`npm run dev`）でのみ復号される。
 
@@ -244,15 +244,15 @@ chmod 600 .env.keys   # Mac/Linux
 
 各変数の概要は以下のとおり（値は `.env.development` に暗号化済みのため、通常は個別の取得・差し替えは不要。鍵のローテーションや新規追加時に参照する）。
 
-| 変数                            | 説明                                                                                                                                                                                                                                                                                                                                                                                                                        | 取得元                                                                                |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase プロジェクトのエンドポイント URL。ブラウザ／サーバー双方から Supabase の認証・データベース API へ接続する際に使用する                                                                                                                                                                                                                                                                                              | Supabase Dashboard → Project Settings → API → Project URL                             |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の匿名 API キー。クライアント側から Supabase に接続する際の認証に使用される（実権限は RLS で制御される）                                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → API → anon public                             |
-| `SUPABASE_PROJECT_ID`           | Supabase プロジェクトの一意 ID。`npm run db:types:local` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要）                                                                                                                                                                                                                                                                                           | Supabase Dashboard → Project Settings → General → Reference ID                        |
-| `NEXT_PUBLIC_ADMIN_EMAIL`       | 管理者のメールアドレス。`NEXT_PUBLIC_` プレフィックスのためクライアントバンドルにも露出する。現状アプリ内では未参照で、将来の管理者関連機能向けに保持している（機微な個人メールは設定しない）                                                                                                                                                                                                                               | 運用で定める管理者アカウントのメールアドレス                                          |
-| `GOOGLE_CALENDAR_IDS`           | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
-| `GOOGLE_SERVICE_ACCOUNT_KEY`    | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する                                                                                                                                                                                                                                                                                                                           | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形）                           |
-| `SLACK_WEBHOOK_URL`             | Slack に通知を送るための Incoming Webhook URL（任意設定）。申請・承認イベント等の通知送信先として使用する                                                                                                                                                                                                                                                                                                                   | Slack の Incoming Webhook 設定画面                                                    |
+| 変数 | 説明 | 取得元 |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクトのエンドポイント URL。ブラウザ／サーバー双方から Supabase の認証・データベース API へ接続する際に使用する | Supabase Dashboard → Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の匿名 API キー。クライアント側から Supabase に接続する際の認証に使用される（実権限は RLS で制御される） | Supabase Dashboard → Project Settings → API → anon public |
+| `SUPABASE_PROJECT_ID` | Supabase プロジェクトの一意 ID。`npm run db:types:local` でデータベース型定義を自動生成する際に使用する（ローカル開発でのみ必要） | Supabase Dashboard → Project Settings → General → Reference ID |
+| `NEXT_PUBLIC_ADMIN_EMAIL` | 管理者のメールアドレス。`NEXT_PUBLIC_` プレフィックスのためクライアントバンドルにも露出する。現状アプリ内では未参照で、将来の管理者関連機能向けに保持している（機微な個人メールは設定しない） | 運用で定める管理者アカウントのメールアドレス |
+| `GOOGLE_CALENDAR_IDS` | 取得対象の Google Calendar の `alias:calendarId` ペアをカンマ区切りで指定する。`alias` は `app/constants/calendar.ts` の `CALENDAR_COLORS` で定義されたキー（例: `singularity-mtg` / `singularity-event` / `holiday` / `test-calendar`）。`calendarId` に `#` を含む場合は `%23` に URL エンコードする必要がある（実装で `decodeURIComponent` されるため）。例: `holiday:ja.japanese%23holiday@group.v.calendar.google.com` | Google Calendar の各カレンダー設定画面で取得した ID を、対応する alias と組み合わせる |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | Google API を呼び出すためのサービスアカウント鍵（JSON 文字列）。カレンダー API への認証に使用する | Google Cloud Console で発行した JSON 鍵の中身（1 行に整形） |
+| `SLACK_WEBHOOK_URL` | Slack に通知を送るための Incoming Webhook URL（任意設定）。申請・承認イベント等の通知送信先として使用する | Slack の Incoming Webhook 設定画面 |
 
 #### 環境変数を追加・変更するとき
 
