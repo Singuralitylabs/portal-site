@@ -1550,11 +1550,15 @@ sequenceDiagram
 
 #### スコープ
 
-- 初回実装では、`categories` / `documents` / `videos` / `applications` を一覧参照できることを目的とする
+- 初回実装では、DB設計書に定義されている `users` 以外のテーブル（`documents` / `videos` / `categories` / `applications` / `positions` / `position_tags`）を一覧参照できることを目的とする
+- `users` テーブルはマスター管理画面の対象外とする
 
 #### 前提
 
-- 対象テーブルのデータ参照は各テーブルのRLSに従い、`/master` へのアクセスとAPI呼び出しはUIとサーバーAPIの双方で `admin` / `maintainer` に制限する
+- 対象テーブルのデータ参照は各テーブルのRLSに従う
+- `RLS` はテーブルデータに対する参照可否を制御するものであり、`/master` 画面そのものへのアクセス可否は制御しない
+- `member` の `/master` アクセス除外は、UIでのメニュー非表示と、サーバーAPIでの `admin` / `maintainer` 判定の双方で実施する
+- `member` がURLを直書きした場合でも、サーバーAPI側でロール判定を行い、`/master` 向けのデータ取得を拒否する
 - 個別のデータ編集機能でカバーしにくい、横断的な一覧参照導線を優先して提供する
 - 対象テーブル・カラム・型情報は `app/types/lib/database.types.ts` を参照して解決する
 
@@ -1615,6 +1619,8 @@ sequenceDiagram
 | | - documents    |  |                              | |
 | | - videos       |  |  一覧テーブル                  | |
 | | - applications |  |  ...                         | |
+| | - positions    |  |                              | |
+| | - position_tags|  |                              | |
 | +----------------+  +------------------------------+ |
 +------------------------------------------------------+
 ```
