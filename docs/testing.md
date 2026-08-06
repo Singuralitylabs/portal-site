@@ -155,7 +155,7 @@ TypeScript と型生成の運用によって、型の破綻を早期に検知す
   - ログイン → コンテンツ（資料）閲覧 → ログアウト
   - admin/maintainer による更新操作 → 一覧/詳細への反映
   - pending/rejected ユーザーが保護ページへアクセス → 適切な誘導
-  - admin/maintainer による対象テーブル参照 → 論理削除済みレコードを含む一覧/詳細表示 → Supabase 管理画面の Table Editor 表示との照合
+  - admin/maintainer による `documents` / `videos` / `categories` / `applications` / `positions` / `position_tags` の参照 → 論理削除済みレコードを含む一覧/詳細表示 → Supabase 管理画面の Table Editor 表示との照合
   - ゴミ箱機能で論理削除済みレコードを復活 → 対象レコードの内容更新と画面表示への反映確認
 
 - **実行タイミング**: リリース前のみ（[2.2 実行タイミング](#22-実行タイミングpr--リリース前) に従う）。
