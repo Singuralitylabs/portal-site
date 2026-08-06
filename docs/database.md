@@ -300,6 +300,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - 新規登録は、Supabase Authからの自動登録のみ許可
   - OAuth認証後のコールバック処理で、ユーザー自身のデータを登録する際に使用する
 - ユーザーは自身のデータのみ更新可能
+  - ただし `role` / `status` の書き換えはトリガーで禁止する（詳細は「6.4. users テーブルの role / status 保護トリガー」を参照）
 - 管理者は全ユーザー情報を更新可能
   - 管理者判定は `is_active_user() AND is_admin()` で行う
 - ユーザーは自分自身の論理削除のみ可能
@@ -423,6 +424,31 @@ WHERE p.proname IN ('is_active_user', 'is_admin', 'is_content_manager')
 ### 6.3. ポリシー構文の補足
 
 - `USING` は更新対象の行を選択する条件、`WITH CHECK` は更新後の値をチェックする条件を指定している
+
+### 6.4. users テーブルの role / status 保護トリガー
+
+定義ファイル: `supabase/migrations/02_triggers/users_triggers.sql`
+
+RLSは行単位の制御であり、カラム単位の制限ができません。`users` テーブルは「ユーザーは自身のデータのみ更新可能」というポリシーを持つため、RLSだけでは自身の `role` / `status` の書き換え（権限昇格・承認バイパス）を防げません。これを `enforce_users_role_and_status()` トリガー関数で補います。
+
+| 契機                            | 挙動                                                     |
+| ------------------------------- | -------------------------------------------------------- |
+| `BEFORE INSERT`                 | `role` を `'member'`、`status` を `'pending'` に固定する |
+| `BEFORE UPDATE OF role, status` | `role` / `status` を更新前の値のまま維持する             |
+
+UPDATE は列指定トリガー（`UPDATE OF role, status`）とし、`role` / `status` が SET 句に含まれる場合のみ発火させています。UPDATE 文は SET 句にないカラムを変更できないため保護対象を取りこぼすことはなく、プロフィール更新や `avatar_url` 更新では発火しないため不要なヘルパー関数の評価を避けられます。
+
+以下のいずれかに該当する場合はトリガーによる固定を行いません。
+
+- `is_active_user() AND is_admin()` が真（承認済み管理者による承認・権限変更・利用停止）
+  - `is_admin()` は role のみを判定するため、必ず `is_active_user()` と組み合わせる。単独で使用すると、`status` が `pending` / `rejected` の管理者が自身の `status` を `active` に戻せてしまう
+- `auth.uid()` が `NULL`（SQLエディタや service_role キーによるDB管理操作。初期管理者の `role` 設定はこの経路で行う）
+
+> **`DEFAULT` 制約では防げない理由**
+> カラムの `DEFAULT` は値が明示指定されなかった場合にのみ適用されるため、クライアントが `insert({ role: 'admin', status: 'active' })` のように値を明示すると効きません。値の明示指定を含めて固定するにはトリガーが必要です。
+
+> **適用順の制約**
+> 本トリガー関数は `03_functions/rls_helper_functions.sql` の `is_active_user()` / `is_admin()` を参照します。ディレクトリの番号順（`02_triggers` → `03_functions`）とは逆の依存関係になるため、**必ず `03_functions/rls_helper_functions.sql` を先に適用してください**。関数の作成自体は遅延解決のため成功しますが、関数が未定義のままトリガーが発火すると `function is_admin() does not exist` で失敗します。影響を受けるのは新規ユーザー登録（INSERT）と `role` / `status` を含む UPDATE で、承認・否認が行えなくなります。
 
 ## 7. データアクセス制御の実現
 
