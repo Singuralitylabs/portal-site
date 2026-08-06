@@ -278,15 +278,30 @@ erDiagram
 
 Supabaseでは、Row Level Security（RLS）を使用してデータアクセスを制御しています。以下に各テーブルのRLSポリシーを説明します。
 
-尚、各ポリシーで繰り返し使用されるユーザー条件判定は、共通ヘルパー関数（`is_active_user()`・`is_content_manager()`）として切り出し、`supabase/migrations/03_functions/rls_helper_functions.sql` で定義しています。
+尚、各ポリシーで繰り返し使用されるユーザー条件判定は、共通ヘルパー関数（`is_active_user()`・`is_content_manager()`・`is_admin()`）として切り出し、`supabase/migrations/03_functions/rls_helper_functions.sql` で定義しています。
 
 ### 4.1. users テーブルのRLSポリシー
 
-- 認証済ユーザーは削除されていないデータのみ閲覧可能
+定義ファイル:
+
+| ポリシー                                 | 定義ファイル                                     |
+| ---------------------------------------- | ------------------------------------------------ |
+| SELECT・管理者によるUPDATE（現行定義）   | `04_policies/users/01_update_users_policies.sql` |
+| INSERT・本人によるUPDATE・物理削除の禁止 | `04_policies/users/00_users_policies.sql`        |
+
+> **`00_users_policies.sql` を単独で再実行しないこと**
+> 同ファイルには旧定義（全認証ユーザーへのSELECT許可・`user_metadata` 依存の管理者判定）が残っています。permissive ポリシーはOR結合されるため、単独で再実行すると条件の緩い旧定義が復活し、修正が無効化されます。再実行する場合は必ず `01_update_users_policies.sql` も続けて実行してください。
+
+- ユーザーは自身のデータを閲覧可能
+  - 承認前（pending）・否認済み（rejected）のユーザーが自身のステータスを確認するために必要
+- アクティブユーザーは削除されていない全データを閲覧可能
+  - 会員一覧・承認待ち一覧・担当者選択など、他ユーザーを参照する機能で使用する
+  - 承認前・否認済みのユーザーは他ユーザーのデータを閲覧できない
 - 新規登録は、Supabase Authからの自動登録のみ許可
   - OAuth認証後のコールバック処理で、ユーザー自身のデータを登録する際に使用する
 - ユーザーは自身のデータのみ更新可能
 - 管理者は全ユーザー情報を更新可能
+  - 管理者判定は `is_active_user() AND is_admin()` で行う
 - ユーザーは自分自身の論理削除のみ可能
   - 退会処理に相当する
 - 管理者は全ユーザーの論理削除が可能
@@ -381,10 +396,29 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 各テーブルのRLSポリシーで共通して使用されるユーザー条件判定を関数化します。ポリシー内で同じ `EXISTS (SELECT 1 FROM users ...)` の記述が何度も繰り返されるのを防ぎ、可読性と保守性を高めます。
 
-| 関数名                 | 戻り値    | 概要                                                                                                                                                                                            |
-| ---------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `is_active_user()`     | `BOOLEAN` | 現在のユーザーが `status = 'active'` かつ未削除のユーザーかを判定する。承認前・退会済みユーザーのアクセスを弾く用途で使用。                                                                     |
-| `is_content_manager()` | `BOOLEAN` | 現在のユーザーが `admin` または `maintainer` ロールを持つかを判定する。コンテンツの閲覧（削除済み含む）・登録・更新・削除権限の確認に使用。必ず `is_active_user()` と組み合わせて使用すること。 |
+| 関数名                 | 戻り値    | 概要                                                                                                                                                                                                                         |
+| ---------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `is_active_user()`     | `BOOLEAN` | 現在のユーザーが `status = 'active'` かつ未削除のユーザーかを判定する。承認前・退会済みユーザーのアクセスを弾く用途で使用。                                                                                                  |
+| `is_content_manager()` | `BOOLEAN` | 現在のユーザーが `admin` または `maintainer` ロールを持つかを判定する。コンテンツの閲覧（削除済み含む）・登録・更新・削除権限の確認に使用。必ず `is_active_user()` と組み合わせて使用すること。                              |
+| `is_admin()`           | `BOOLEAN` | 現在のユーザーがDB上の `users.role` で `admin` ロールを持つかを判定する（JWTのクレームは参照しない）。ユーザーの承認・権限変更・利用停止など管理者専用操作の確認に使用。必ず `is_active_user()` と組み合わせて使用すること。 |
+
+いずれも `SECURITY DEFINER` で定義しており、**後述の前提条件を満たす場合に限り**関数内の `SELECT` はRLSを経由しない。このため `users` テーブル自身のポリシーからこれらの関数（内部で `users` を参照する）を呼び出しても再帰は発生しない。
+
+`SECURITY DEFINER` それ自体がRLSを無効化するわけではなく、関数の実行ユーザーが所有者に切り替わることで結果的にRLSを免除される仕組みである。**関数の所有者が `users` の所有者と一致し、かつ `users` に `FORCE ROW LEVEL SECURITY` が設定されていないこと**が前提となる。この前提が崩れると `42P17 infinite recursion detected in policy for relation "users"` が発生し、`users` へのSELECTが全面的に失敗する。前提はSupabaseのSQLエディタ経由（`postgres` 所有）であれば既定で成立するが、ポリシー適用前に確認しておくとよい。
+
+```sql
+SELECT p.proname,
+       pg_get_userbyid(p.proowner) AS func_owner,
+       pg_get_userbyid(c.relowner) AS table_owner,
+       c.relforcerowsecurity
+FROM pg_proc p
+CROSS JOIN pg_class c
+WHERE p.proname IN ('is_active_user', 'is_admin', 'is_content_manager')
+  AND p.pronamespace = 'public'::regnamespace
+  AND c.oid = 'public.users'::regclass;
+```
+
+なお `users` テーブルのポリシーではこれらの関数呼び出しを `(SELECT is_active_user())` のようにサブクエリでラップしている。相関のないスカラサブクエリはInitPlanとして評価されるため、候補行ごとではなくステートメントあたり1回の評価で済む。
 
 ### 6.3. ポリシー構文の補足
 
