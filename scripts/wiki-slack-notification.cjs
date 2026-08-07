@@ -114,7 +114,8 @@ async function main() {
   const pages = createPages(event);
 
   if (pages.length === 0) {
-    throw new Error("通知対象の Wiki ページが見つかりませんでした。");
+    process.stdout.write("通知対象の Wiki ページがありません。処理をスキップします。\n");
+    return;
   }
 
   // ページ一覧を 1 件の通知本文にまとめて Slack へ送る。
@@ -129,7 +130,7 @@ async function main() {
 
 if (require.main === module) {
   main().catch(error => {
-    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-    process.exit(1);
+    console.error(error);
+    process.exitCode = 1;
   });
 }

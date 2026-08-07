@@ -188,7 +188,7 @@ Wiki ページの更新内容をチームへ自動連携するため、[`.github
 
 Slack の通知先は、既存のアプリケーション通知と同じ `SLACK_WEBHOOK_URL` を共通利用する。Wiki 通知専用の Webhook URL は発行しない。
 
-GitHub Actions 側の設定値は `docs/setup.md` ではなく本ドキュメントで管理する。Wiki 更新通知に必要な `SLACK_WEBHOOK_URL` は、GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。
+Wiki 更新通知に必要な `SLACK_WEBHOOK_URL` は、GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。
 
 ### 5.1 ワークフローの動作
 
@@ -209,9 +209,11 @@ Slack 通知本文は Incoming Webhook の通常テキストとして送信し�
 ```text
 Wiki が更新されました
 
-- ページ: <ページ名とリンク>
-- 操作: <created / edited>
 - 更新者: <GitHub ユーザー名>
+- トリガー: gollum
+
+- ページ: <ページ名とリンク>
+   操作: <created / edited>
 - Compare: https://github.com/Singuralitylabs/portal-site/wiki/_compare/<revision>
 ```
 
