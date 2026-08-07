@@ -214,7 +214,7 @@ Wiki が更新されました
 
 - ページ: <ページ名とリンク>
    操作: <created / edited>
-- Compare: https://github.com/Singuralitylabs/portal-site/wiki/_compare/<revision>
+   Compare: https://github.com/Singuralitylabs/portal-site/wiki/_compare/<revision>
 ```
 
 ### 5.2 失敗時の扱い
