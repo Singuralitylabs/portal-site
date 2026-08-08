@@ -1,6 +1,6 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
-import { createServerSupabaseClient } from "./supabase-server";
-import { createClient, PostgrestError } from "@supabase/supabase-js";
+import { createServerSupabaseClient, createServerSupabaseClientWithToken } from "./supabase-server";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
 import { unstable_cache } from "next/cache";
@@ -10,11 +10,7 @@ import { unstable_cache } from "next/cache";
 // revalidate=3000（50分）はトークン有効期限（3600秒）より短く設定し、期限切れURLの流通を防ぐ。
 const getCachedSignedUrls = unstable_cache(
   async (paths: string[], accessToken: string) => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
-    );
+    const supabase = createServerSupabaseClientWithToken(accessToken);
     const { data, error } = await supabase.storage
       .from("profile-images")
       .createSignedUrls(paths, 3600);

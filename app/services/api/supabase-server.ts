@@ -1,6 +1,6 @@
 import { CookieOptions, createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, createClient } from "@supabase/supabase-js";
 
 // サーバーサイド用Supabaseクライアント（認証付き）
 export async function createServerSupabaseClient() {
@@ -25,6 +25,20 @@ export async function createServerSupabaseClient() {
         },
       },
     }
+  );
+}
+
+/**
+ * アクセストークンを指定してサーバーサイド用Supabaseクライアントを生成する
+ * （unstable_cache配下などcookieストアにアクセスできない箇所で使用）
+ * @param accessToken - Authorizationヘッダーに使用するアクセストークン
+ * @returns Supabaseクライアント
+ */
+export function createServerSupabaseClientWithToken(accessToken: string) {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
   );
 }
 
