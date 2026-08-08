@@ -38,6 +38,15 @@ jest.mock("@supabase/ssr", () => ({
   createServerClient: jest.fn(),
 }));
 
+jest.mock("next/cache", () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}));
+
+const createClientMock = jest.fn();
+jest.mock("@supabase/supabase-js", () => ({
+  createClient: (...args: unknown[]) => createClientMock(...args),
+}));
+
 jest.mock("next/headers", () => ({
   cookies: jest.fn(),
 }));
@@ -317,9 +326,16 @@ describe("server API services", () => {
         data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
       });
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
+      createClientMock.mockReturnValue({ storage: storageMock });
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
         storage: storageMock,
+        auth: {
+          getSession: jest.fn().mockResolvedValue({
+            data: { session: { access_token: "test-token" } },
+            error: null,
+          }),
+        },
       });
 
       const response = await fetchActiveUsers();
@@ -327,8 +343,8 @@ describe("server API services", () => {
       // storage.from("profile-images") が呼ばれることを確認
       expect(storageMock.from).toHaveBeenCalledWith("profile-images");
       expect(createSignedUrlsMock).toHaveBeenCalledWith(["auth-2/avatar.png"], 3600);
-      // profile_image_url が 署名付きURL + タイムスタンプになることを確認
-      expect(response.data?.[0].profile_image_url).toMatch(/^https:\/\/signed\.url\/img&t=\d+$/);
+      // profile_image_url が署名付きURLそのままになることを確認（キャッシュバスティングは付与しない）
+      expect(response.data?.[0].profile_image_url).toBe("https://signed.url/img");
     });
 
     it("fetchApprovalUsers: 正常系/異常系", async () => {
