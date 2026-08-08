@@ -72,12 +72,11 @@ export async function fetchActiveUsers(): Promise<{
   const { data, error } = await supabase
     .from("users")
     .select(
-      "id, display_name, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+      "id, display_name, role, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
     )
     .eq("status", "active")
     .eq("is_deleted", false)
-    .eq("position_tags.positions.is_deleted", false)
-    .order("created_at", { ascending: true });
+    .eq("position_tags.positions.is_deleted", false);
 
   if (error) {
     console.error("Supabase 会員一覧取得エラー:", error.message);
@@ -92,6 +91,7 @@ export async function fetchActiveUsers(): Promise<{
   const transformedData = data.map(user => ({
     id: user.id,
     display_name: user.display_name,
+    role: user.role,
     bio: user.bio,
     avatar_url: user.avatar_url,
     profile_image_path: user.profile_image_path,

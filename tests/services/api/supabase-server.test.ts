@@ -268,7 +268,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: jest.fn() })) };
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
@@ -312,7 +312,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
       });
