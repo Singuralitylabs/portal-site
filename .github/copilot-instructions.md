@@ -66,6 +66,8 @@
 - 要求範囲に対して最小差分で実装し、無関係な変更を混ぜない
 - 変更後は `npm run lint` → `npm run type-check` → `npm run format:check` → `npm run build` を順に実行する（ビルド前に整形差分を検知する）
 - `npm run format:check` で整形差分が検出された場合は、`npm run format` を実行して整形を適用し、整形差分を含めてコミットする
+- docs を更新した場合は `npm run format:docs:check` を実行し、差分がある場合は `npm run format:docs` を実行する
+- PR 作成前は `npm run format:check` を実行し、差分がある場合は `npm run format` を実行して整形差分をコミットする
 
 ## レビュー観点
 
@@ -101,5 +103,6 @@ Copilot レビューは次の優先順位で指摘する。
 
 1. `npm run lint`
 2. `npm run type-check`
-3. `npm run format:check`
-4. `npm run build`
+3. docs を更新した場合は `npm run format:docs:check`（必要に応じて `npm run format:docs`）
+4. `npm run format:check`
+5. `npm run build`
