@@ -37,3 +37,21 @@ BEGIN
 END;
 $$;
 
+-- 現在のユーザーがadminロールを持つかを判定する
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_catalog
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM users
+    WHERE
+      auth_id = auth.uid()
+      AND role = 'admin'
+  );
+END;
+$$;
+
