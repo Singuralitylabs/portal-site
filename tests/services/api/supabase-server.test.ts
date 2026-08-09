@@ -347,6 +347,52 @@ describe("server API services", () => {
       expect(response.data?.[0].profile_image_url).toBe("https://signed.url/img");
     });
 
+    it("fetchActiveUsers: 署名付きURL生成が失敗しても画像なしでフォールバックする", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      const result = {
+        data: [
+          {
+            id: 3,
+            display_name: "user3",
+            bio: "bio3",
+            avatar_url: "c",
+            profile_image_path: "auth-3/avatar.png",
+            x_url: null,
+            facebook_url: null,
+            instagram_url: null,
+            github_url: null,
+            portfolio_url: null,
+            position_tags: [],
+          },
+        ],
+        error: null,
+      };
+      const builder = createOrderBuilder(result);
+      const createSignedUrlsMock = jest
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: "Storage一時障害" } });
+      const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
+      createClientMock.mockReturnValue({ storage: storageMock });
+      createServerSupabaseClientMock.mockResolvedValue({
+        from: jest.fn(() => builder),
+        storage: storageMock,
+        auth: {
+          getSession: jest.fn().mockResolvedValue({
+            data: { session: { access_token: "test-token" } },
+            error: null,
+          }),
+        },
+      });
+
+      const response = await fetchActiveUsers();
+
+      // 署名付きURL生成失敗時は例外を握りつぶし、画像なし（null）で一覧を返すことを確認
+      expect(response.data?.[0].profile_image_url).toBeNull();
+      expect(response.error).toBeNull();
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
     it("fetchApprovalUsers: 正常系/異常系", async () => {
       const successBuilder = createEqTerminatingBuilder(2, {
         data: [{ id: 1, display_name: "pending", email: "p@example.com" }],

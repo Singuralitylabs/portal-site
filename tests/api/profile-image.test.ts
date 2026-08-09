@@ -174,6 +174,27 @@ describe("プロフィール画像 API", () => {
       });
     });
 
+    it("異常系: file.type と実バイト列のMIMEが不一致の場合 400 を返す", async () => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      nextResponseJsonMock.mockReturnValue({
+        success: false,
+        error: "jpeg / png / gif のみアップロード可能です",
+      });
+
+      // 実バイト列はPNGだが file.type は image/jpeg と偽って申告
+      const mismatchedFile = createFile("fake.jpg", 1024, "image/jpeg", MAGIC_BYTES["image/png"]);
+      const response = await POST(createPostRequest(mismatchedFile));
+
+      expect(nextResponseJsonMock).toHaveBeenCalledWith(
+        { success: false, error: "jpeg / png / gif のみアップロード可能です" },
+        { status: 400 }
+      );
+      expect(response).toEqual({
+        success: false,
+        error: "jpeg / png / gif のみアップロード可能です",
+      });
+    });
+
     it("異常系: inactive ユーザーの場合 403 を返す", async () => {
       mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
       const supabaseMock = {

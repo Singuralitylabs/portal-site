@@ -8,6 +8,8 @@ import { unstable_cache } from "next/cache";
 // 署名付きURLを50分キャッシュする。同一セッション（アクセストークン有効期限1時間）内のリロードで
 // 同一URLが返るため、ブラウザキャッシュが効いて304が返る。
 // revalidate=3000（50分）はトークン有効期限（3600秒）より短く設定し、期限切れURLの流通を防ぐ。
+// Storage側の一時的な失敗を空配列として返すとその失敗結果がキャッシュされてしまうため、
+// エラー時は throw して unstable_cache に結果を保存させず、呼び出し側でフォールバックする。
 const getCachedSignedUrls = unstable_cache(
   async (paths: string[], accessToken: string) => {
     const supabase = createServerSupabaseClientWithToken(accessToken);
@@ -15,8 +17,7 @@ const getCachedSignedUrls = unstable_cache(
       .from("profile-images")
       .createSignedUrls(paths, 3600);
     if (error) {
-      console.error("署名付きURL一括生成エラー:", error.message);
-      return [] as { path: string; signedUrl: string }[];
+      throw new Error(`署名付きURL一括生成エラー: ${error.message}`);
     }
     return (data ?? [])
       .filter(
@@ -148,8 +149,12 @@ export async function fetchActiveUsers(): Promise<{
     } = await supabase.auth.getSession();
     const accessToken = session?.access_token;
     if (accessToken) {
-      const cachedUrls = await getCachedSignedUrls(uniquePaths, accessToken);
-      cachedUrls.forEach(({ path, signedUrl }) => signedUrlMap.set(path, signedUrl));
+      try {
+        const cachedUrls = await getCachedSignedUrls(uniquePaths, accessToken);
+        cachedUrls.forEach(({ path, signedUrl }) => signedUrlMap.set(path, signedUrl));
+      } catch (signedUrlError) {
+        console.error("署名付きURL一括生成エラー:", signedUrlError);
+      }
     }
   }
 
