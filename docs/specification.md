@@ -1563,6 +1563,8 @@ sequenceDiagram
 
 1. 一覧画面
    - 管理者またはメンテナーにのみ、マスター管理ページへアクセス可能
+   - 権限制御は UI 表示だけでなくサーバー API 側でも実施し、`admin` / `maintainer` のみ参照可能とする
+   - データ参照は Row Level Security（RLS）を前提とし、UI とサーバー API の双方で `member` を除外する
    - `documents` / `videos` / `categories` / `applications` / `positions` を一覧表示する
    - 表示するテーブル・カラム・型・リレーションは `app/types/lib/database.types.ts` を正本として解決する
    - `users` および `position_tags` は対象外とする
