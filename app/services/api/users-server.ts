@@ -5,30 +5,32 @@ import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
 import { unstable_cache } from "next/cache";
 
-// 署名付きURLを50分キャッシュする。同一セッション（アクセストークン有効期限1時間）内のリロードで
-// 同一URLが返るため、ブラウザキャッシュが効いて304が返る。
+// 署名付きURLを50分キャッシュする。ユーザー間でパスが同じであればキャッシュを共有できるよう、
+// キャッシュキーには accessToken を含めず paths のみを使う（トークンをキー/Data Cacheに流出させない）。
 // revalidate=3000（50分）はトークン有効期限（3600秒）より短く設定し、期限切れURLの流通を防ぐ。
 // Storage側の一時的な失敗を空配列として返すとその失敗結果がキャッシュされてしまうため、
 // エラー時は throw して unstable_cache に結果を保存させず、呼び出し側でフォールバックする。
-const getCachedSignedUrls = unstable_cache(
-  async (paths: string[], accessToken: string) => {
-    const supabase = createServerSupabaseClientWithToken(accessToken);
-    const { data, error } = await supabase.storage
-      .from("profile-images")
-      .createSignedUrls(paths, 3600);
-    if (error) {
-      throw new Error(`署名付きURL一括生成エラー: ${error.message}`);
-    }
-    return (data ?? [])
-      .filter(
-        (item): item is { path: string; signedUrl: string; error: null } =>
-          !item.error && !!item.signedUrl && !!item.path
-      )
-      .map(({ path, signedUrl }) => ({ path, signedUrl }));
-  },
-  ["profile-images-signed-urls"],
-  { revalidate: 3000 }
-);
+function getCachedSignedUrls(paths: string[], accessToken: string) {
+  return unstable_cache(
+    async () => {
+      const supabase = createServerSupabaseClientWithToken(accessToken);
+      const { data, error } = await supabase.storage
+        .from("profile-images")
+        .createSignedUrls(paths, 3600);
+      if (error) {
+        throw new Error(`署名付きURL一括生成エラー: ${error.message}`);
+      }
+      return (data ?? [])
+        .filter(
+          (item): item is { path: string; signedUrl: string; error: null } =>
+            !item.error && !!item.signedUrl && !!item.path
+        )
+        .map(({ path, signedUrl }) => ({ path, signedUrl }));
+    },
+    ["profile-images-signed-urls", paths.join(",")],
+    { revalidate: 3000 }
+  )();
+}
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）

@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
   const fileBuffer = Buffer.from(await file.arrayBuffer());
   const detectedMime = detectMimeFromBuffer(fileBuffer);
-  if (!detectedMime || !ALLOWED_MIME_TYPES.includes(detectedMime) || file.type !== detectedMime) {
+  if (!detectedMime || !ALLOWED_MIME_TYPES.includes(detectedMime)) {
     return NextResponse.json(
       { success: false, error: "jpeg / png / gif のみアップロード可能です" },
       { status: 400 }
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(filePath, fileBuffer, { contentType: detectedMime, upsert: true });
+    .upload(filePath, fileBuffer, { contentType: detectedMime, upsert: true, cacheControl: "0" });
 
   if (uploadError) {
     console.error("Storage アップロードエラー:", uploadError.message);

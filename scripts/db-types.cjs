@@ -35,7 +35,6 @@ function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     stdio: ["inherit", "pipe", "pipe"],
     encoding: "utf8",
-    shell: process.platform === "win32",
     ...options,
   });
 
