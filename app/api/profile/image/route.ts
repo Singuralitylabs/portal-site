@@ -22,7 +22,15 @@ function detectMimeFromBuffer(buf: Buffer): string | null {
     buf[7] === 0x0a
   )
     return "image/png";
-  if (buf.length >= 4 && buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38)
+  if (
+    buf.length >= 6 &&
+    buf[0] === 0x47 &&
+    buf[1] === 0x49 &&
+    buf[2] === 0x46 &&
+    buf[3] === 0x38 &&
+    (buf[4] === 0x37 || buf[4] === 0x39) &&
+    buf[5] === 0x61
+  )
     return "image/gif";
   return null;
 }

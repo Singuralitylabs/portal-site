@@ -25,7 +25,7 @@ const createPostRequest = (file?: File): Request => {
 const MAGIC_BYTES: Record<string, number[]> = {
   "image/jpeg": [0xff, 0xd8, 0xff],
   "image/png": [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
-  "image/gif": [0x47, 0x49, 0x46, 0x38],
+  "image/gif": [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
 };
 
 const createFile = (
@@ -163,6 +163,31 @@ describe("プロフィール画像 API", () => {
 
       const spoofedFile = createFile("fake.jpg", 1024, "image/jpeg", [0x00, 0x11, 0x22, 0x33]);
       const response = await POST(createPostRequest(spoofedFile));
+
+      expect(nextResponseJsonMock).toHaveBeenCalledWith(
+        { success: false, error: "jpeg / png / gif のみアップロード可能です" },
+        { status: 400 }
+      );
+      expect(response).toEqual({
+        success: false,
+        error: "jpeg / png / gif のみアップロード可能です",
+      });
+    });
+
+    it("異常系: GIFシグネチャが不完全な偽装ファイルは 400 を返す", async () => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      nextResponseJsonMock.mockReturnValue({
+        success: false,
+        error: "jpeg / png / gif のみアップロード可能です",
+      });
+
+      const truncatedGifFile = createFile(
+        "fake.gif",
+        1024,
+        "image/gif",
+        [0x47, 0x49, 0x46, 0x38, 0x00, 0x00]
+      );
+      const response = await POST(createPostRequest(truncatedGifFile));
 
       expect(nextResponseJsonMock).toHaveBeenCalledWith(
         { success: false, error: "jpeg / png / gif のみアップロード可能です" },
