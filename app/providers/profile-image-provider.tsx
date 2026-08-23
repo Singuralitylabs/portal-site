@@ -11,6 +11,11 @@ import { useSupabaseAuth } from "./supabase-auth-provider";
 interface ProfileImageContextType {
   // Supabase Storage の署名付きURL（有効期限1時間）。未設定なら null
   profileImageUrl: string | null;
+  // profileImageUrl の更新世代（取得のたびにインクリメント）。
+  // 署名付きURLの iat/exp は秒単位のため、同一パスを同一秒内に再取得すると
+  // URL文字列が変わらない場合がある。その場合でも Avatar 側で key として使うことで
+  // 強制的に再描画させ、更新直後の画像を確実に反映させるために使う。
+  profileImageVersion: number;
   // DBに保存されたGoogle OAuth の avatar_url（ログイン時に最新化）
   googleAvatarUrl: string | null;
   // 画像のパスを受け取り、署名付きURLを再取得してコンテキストを更新する。
@@ -21,6 +26,7 @@ interface ProfileImageContextType {
 
 const ProfileImageContext = createContext<ProfileImageContextType>({
   profileImageUrl: null,
+  profileImageVersion: 0,
   googleAvatarUrl: null,
   refreshProfileImage: async () => {},
 });
@@ -30,11 +36,14 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   // Storage上のファイルパス（例: "user-id/profile-image"）。署名付きURL再生成に使用
   const [profileImagePath, setProfileImagePath] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [profileImageVersion, setProfileImageVersion] = useState(0);
   const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null);
 
   // 指定パスの署名付きURLを取得して state に反映する。
-  // 署名付きURLはSupabase側で呼び出しごとに新しいトークンが発行されるため、
-  // 同一パスへの再アップロード後も文字列が変わりブラウザキャッシュは自然に回避される。
+  // 署名付きURLの iat/exp は秒単位のため、同一パスを同一秒内に再取得すると
+  // URL文字列が変わらないことがある。URL文字列の変化だけに頼ると、その場合
+  // state更新が同値とみなされ画像が再読込されないため、取得のたびに
+  // profileImageVersion をインクリメントし、Avatar側のkeyで強制再描画させる。
   const fetchSignedUrl = useCallback(async (path: string) => {
     const supabase = createClientSupabaseClient();
     const { data, error } = await supabase.storage
@@ -45,6 +54,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
       return;
     }
     setProfileImageUrl(data.signedUrl);
+    setProfileImageVersion(v => v + 1);
   }, []);
 
   // ログイン・ログアウト時にDBから profile_image_path と avatar_url を取得して初期化する
@@ -100,7 +110,9 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   );
 
   return (
-    <ProfileImageContext.Provider value={{ profileImageUrl, googleAvatarUrl, refreshProfileImage }}>
+    <ProfileImageContext.Provider
+      value={{ profileImageUrl, profileImageVersion, googleAvatarUrl, refreshProfileImage }}
+    >
       {children}
     </ProfileImageContext.Provider>
   );

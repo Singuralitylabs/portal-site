@@ -10,7 +10,7 @@ import { useProfileImage } from "@/app/providers/profile-image-provider";
 
 export function UserProfileMenu() {
   const { user, loading } = useSupabaseAuth();
-  const { profileImageUrl, googleAvatarUrl } = useProfileImage();
+  const { profileImageUrl, profileImageVersion, googleAvatarUrl } = useProfileImage();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -40,6 +40,7 @@ export function UserProfileMenu() {
       <Menu.Target>
         <UnstyledButton aria-label="ユーザーメニュー">
           <Avatar
+            key={profileImageVersion}
             src={avatarSrc}
             size="sm"
             radius="xl"
