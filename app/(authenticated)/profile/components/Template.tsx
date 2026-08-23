@@ -84,7 +84,7 @@ export function ProfilePageTemplate({
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       notifications.show({
         title: "エラー",
-        message: "jpeg / png / gif のみアップロード可能です",
+        message: "jpg / jpeg / png / gif のみアップロード可能です",
         color: "red",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";

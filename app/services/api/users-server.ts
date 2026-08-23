@@ -8,8 +8,10 @@ import { unstable_cache } from "next/cache";
 // 署名付きURLを50分キャッシュする。ユーザー間でパスが同じであればキャッシュを共有できるよう、
 // キャッシュキーには accessToken を含めず paths のみを使う（トークンをキー/Data Cacheに流出させない）。
 // revalidate=3000（50分）はトークン有効期限（3600秒）より短く設定し、期限切れURLの流通を防ぐ。
-// Storage側の一時的な失敗を空配列として返すとその失敗結果がキャッシュされてしまうため、
-// エラー時は throw して unstable_cache に結果を保存させず、呼び出し側でフォールバックする。
+// Storage側の一時的な失敗（バッチ全体のエラーだけでなく、createSignedUrls が個々のpathに対して
+// 返す要素単位のエラーも含む）をそのまま結果として返すと、欠落・不完全な結果がキャッシュされてしまう。
+// そのため、いずれかの形でエラーが起きた場合は throw して unstable_cache に結果を保存させず、
+// 呼び出し側でフォールバックする。
 function getCachedSignedUrls(paths: string[], accessToken: string) {
   return unstable_cache(
     async () => {
@@ -20,10 +22,19 @@ function getCachedSignedUrls(paths: string[], accessToken: string) {
       if (error) {
         throw new Error(`署名付きURL一括生成エラー: ${error.message}`);
       }
-      return (data ?? [])
+      const results = data ?? [];
+      const failedItems = results.filter(item => item.error);
+      if (failedItems.length > 0) {
+        console.error(
+          "署名付きURL個別生成エラー:",
+          failedItems.map(item => ({ path: item.path, message: item.error }))
+        );
+        throw new Error(`署名付きURL個別生成エラー: ${failedItems.length}件失敗`);
+      }
+      return results
         .filter(
           (item): item is { path: string; signedUrl: string; error: null } =>
-            !item.error && !!item.signedUrl && !!item.path
+            !!item.signedUrl && !!item.path
         )
         .map(({ path, signedUrl }) => ({ path, signedUrl }));
     },

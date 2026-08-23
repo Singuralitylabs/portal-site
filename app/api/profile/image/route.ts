@@ -57,9 +57,9 @@ export async function POST(request: Request) {
   }
 
   const formData = await request.formData();
-  const file = formData.get("image") as File | null;
+  const file = formData.get("image");
 
-  if (!file) {
+  if (!file || !(file instanceof File)) {
     return NextResponse.json(
       { success: false, error: "画像ファイルを選択してください" },
       { status: 400 }
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   const detectedMime = detectMimeFromBuffer(fileBuffer);
   if (!detectedMime || !ALLOWED_MIME_TYPES.includes(detectedMime)) {
     return NextResponse.json(
-      { success: false, error: "jpeg / png / gif のみアップロード可能です" },
+      { success: false, error: "jpg / jpeg / png / gif のみアップロード可能です" },
       { status: 400 }
     );
   }
