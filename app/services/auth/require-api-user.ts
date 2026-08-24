@@ -40,6 +40,16 @@ export async function requireApiUser(
     };
   }
 
+  if (auth.error) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { success: false, error: "ユーザー情報の確認に失敗しました" },
+        { status: 500 }
+      ),
+    };
+  }
+
   if (!auth.userStatus || !allowedStatuses.includes(auth.userStatus)) {
     return {
       ok: false,

@@ -12,14 +12,13 @@ describe("claimRegistrationSlackNotification", () => {
     jest.clearAllMocks();
   });
 
-  it("created_at と updated_at が同じなら通知権を取得する", async () => {
-    const timestamp = "2024-01-01T00:00:00.000Z";
+  it("registration_notified_at が null なら通知権を取得する", async () => {
     const maybeSingle = jest.fn().mockResolvedValue({
-      data: { display_name: "太郎", created_at: timestamp, updated_at: timestamp },
+      data: { display_name: "太郎", registration_notified_at: null },
       error: null,
     });
     const updateMaybeSingle = jest.fn().mockResolvedValue({
-      data: { display_name: "太郎" },
+      data: { display_name: "太郎", registration_notified_at: "2024-01-01T00:00:00.000Z" },
       error: null,
     });
     const supabase = {
@@ -33,6 +32,7 @@ describe("claimRegistrationSlackNotification", () => {
         .mockReturnValueOnce({
           update: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
+          is: jest.fn().mockReturnThis(),
           select: jest.fn().mockReturnThis(),
           maybeSingle: updateMaybeSingle,
         }),
@@ -45,17 +45,15 @@ describe("claimRegistrationSlackNotification", () => {
       claimed: true,
       alreadyNotified: false,
       displayName: "太郎",
-      createdAt: timestamp,
       error: null,
     });
   });
 
-  it("updated_at が進んでいれば既通知として扱う", async () => {
+  it("registration_notified_at が入っていれば既通知として扱う", async () => {
     const maybeSingle = jest.fn().mockResolvedValue({
       data: {
         display_name: "太郎",
-        created_at: "2024-01-01T00:00:00.000Z",
-        updated_at: "2024-01-01T00:01:00.000Z",
+        registration_notified_at: "2024-01-01T00:00:00.000Z",
       },
       error: null,
     });

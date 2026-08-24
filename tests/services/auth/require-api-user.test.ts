@@ -37,6 +37,26 @@ describe("requireApiUser", () => {
     }
   });
 
+  it("ユーザー行の取得失敗は 500 を返す", async () => {
+    getServerAuthMock.mockResolvedValue({
+      user: { id: "auth-1" },
+      userStatus: null,
+      error: "ユーザー情報が見つかりません",
+    });
+    const serverError = { success: false, error: "ユーザー情報の確認に失敗しました" };
+    nextResponseJsonMock.mockReturnValue(serverError);
+
+    const result = await requireApiUser(["active"]);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(nextResponseJsonMock).toHaveBeenCalledWith(
+        { success: false, error: "ユーザー情報の確認に失敗しました" },
+        { status: 500 }
+      );
+    }
+  });
+
   it("サーバーエラーの場合 500 を返す", async () => {
     getServerAuthMock.mockResolvedValue({
       user: null,

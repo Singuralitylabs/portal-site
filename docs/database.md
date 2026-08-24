@@ -42,25 +42,26 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.1. users テーブル
 
-| カラム名             | データ型       | 制約                                | 説明                                               |
-| -------------------- | -------------- | ----------------------------------- | -------------------------------------------------- |
-| `id`                 | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                     |
-| `auth_id`            | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                         |
-| `email`              | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）    |
-| `display_name`       | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                           |
-| `role`               | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）.   |
-| `status`             | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）    |
-| `bio`                | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                               |
-| `avatar_url`         | `TEXT`         |                                     | Googleプロフィール画像のURL                        |
-| `profile_image_path` | `TEXT`         |                                     | カスタムプロフィール画像のパス（Supabase Storage） |
-| `x_url`              | `TEXT`         |                                     | XアカウントのURL                                   |
-| `facebook_url`       | `TEXT`         |                                     | FacebookアカウントのURL                            |
-| `instagram_url`      | `TEXT`         |                                     | InstagramアカウントのURL                           |
-| `github_url`         | `TEXT`         |                                     | GitHubアカウントのURL                              |
-| `portfolio_url`      | `TEXT`         |                                     | ポートフォリオサイトのURL                          |
-| `is_deleted`         | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                     |
-| `created_at`         | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                           |
-| `updated_at`         | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                           |
+| カラム名                   | データ型       | 制約                                | 説明                                               |
+| -------------------------- | -------------- | ----------------------------------- | -------------------------------------------------- |
+| `id`                       | `SERIAL`       | PRIMARY KEY                         | レコードの一意な識別子（連番）                     |
+| `auth_id`                  | `UUID`         | UNIQUE, NOT NULL, FK(auth.users.id) | Supabase Authのユーザー ID                         |
+| `email`                    | `VARCHAR(255)` | UNIQUE, NOT NULL                    | Googleアカウントのメールアドレス（最大255文字）    |
+| `display_name`             | `VARCHAR(100)` | NOT NULL                            | Googleアカウントの表示名                           |
+| `role`                     | `VARCHAR(50)`  | DEFAULT 'member' NOT NULL           | ユーザーの役割（例: member, maintainer, admin）.   |
+| `status`                   | `VARCHAR(50)`  | DEFAULT 'pending' NOT NULL          | ユーザーの状態（例: pending, active, rejected）    |
+| `bio`                      | `VARCHAR(500)` |                                     | ユーザーの自己紹介文                               |
+| `avatar_url`               | `TEXT`         |                                     | Googleプロフィール画像のURL                        |
+| `profile_image_path`       | `TEXT`         |                                     | カスタムプロフィール画像のパス（Supabase Storage） |
+| `x_url`                    | `TEXT`         |                                     | XアカウントのURL                                   |
+| `facebook_url`             | `TEXT`         |                                     | FacebookアカウントのURL                            |
+| `instagram_url`            | `TEXT`         |                                     | InstagramアカウントのURL                           |
+| `github_url`               | `TEXT`         |                                     | GitHubアカウントのURL                              |
+| `portfolio_url`            | `TEXT`         |                                     | ポートフォリオサイトのURL                          |
+| `is_deleted`               | `BOOLEAN`      | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                     |
+| `registration_notified_at` | `TIMESTAMPTZ`  |                                     | 新規登録 Slack 通知の送信日時（未送信は NULL）     |
+| `created_at`               | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                           |
+| `updated_at`               | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                           |
 
 ---
 
@@ -179,6 +180,7 @@ erDiagram
         TEXT github_url "GitHubアカウントURL"
         TEXT portfolio_url "ポートフォリオサイトURL"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
+        TIMESTAMPTZ registration_notified_at "新規登録 Slack 通知の送信日時"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
     }

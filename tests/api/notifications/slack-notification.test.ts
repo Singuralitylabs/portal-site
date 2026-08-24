@@ -49,7 +49,6 @@ describe("Slack 通知 API", () => {
       claimed: true,
       alreadyNotified: false,
       displayName: "DB太郎",
-      createdAt: "2024-01-01T00:00:00.000Z",
       error: null,
     });
   });
@@ -129,7 +128,6 @@ describe("Slack 通知 API", () => {
       claimed: false,
       alreadyNotified: true,
       displayName: "DB太郎",
-      createdAt: "2024-01-01T00:00:00.000Z",
       error: null,
     });
     const expectedResponse = { success: true, message: "既に通知済みです" };

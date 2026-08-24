@@ -79,12 +79,7 @@ export async function POST() {
     });
 
     if (!response.ok) {
-      if (claim.createdAt) {
-        await releaseRegistrationSlackNotification({
-          authId: auth.user.id,
-          createdAt: claim.createdAt,
-        });
-      }
+      await releaseRegistrationSlackNotification({ authId: auth.user.id });
       const errorText = await response.text();
       console.error("Slack通知の送信に失敗:", response.status, errorText);
       return NextResponse.json(
@@ -98,12 +93,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (claim.createdAt) {
-      await releaseRegistrationSlackNotification({
-        authId: auth.user.id,
-        createdAt: claim.createdAt,
-      });
-    }
+    await releaseRegistrationSlackNotification({ authId: auth.user.id });
     console.error("Slack通知の送信エラー:", error);
     return NextResponse.json(
       {
