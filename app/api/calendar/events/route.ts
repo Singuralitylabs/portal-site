@@ -1,6 +1,9 @@
 import { google, calendar_v3 } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
 import * as path from "path";
+import { USER_STATUS } from "@/app/constants/user";
+import { getServerCurrentUser } from "@/app/services/api/supabase-server";
+import { fetchUserStatusByIdInServer } from "@/app/services/api/users-server";
 
 // カレンダーIDとエイリアスのマッピング
 interface CalendarConfig {
@@ -39,6 +42,25 @@ const getCalendarConfigs = (): CalendarConfig[] => {
 const CALENDAR_CONFIGS = getCalendarConfigs();
 
 export async function GET(request: NextRequest) {
+  const { authId, error: authError } = await getServerCurrentUser();
+  if (authError || !authId) {
+    return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+  }
+
+  const { status, error: statusError } = await fetchUserStatusByIdInServer({ authId });
+  if (statusError) {
+    return NextResponse.json(
+      { success: false, error: "ユーザー情報の確認に失敗しました" },
+      { status: 500 }
+    );
+  }
+  if (status !== USER_STATUS.ACTIVE) {
+    return NextResponse.json(
+      { success: false, error: "この操作は許可されていません" },
+      { status: 403 }
+    );
+  }
+
   try {
     // 環境変数からサービスアカウントキーを取得、なければローカルファイルを使用
     let auth;

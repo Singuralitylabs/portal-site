@@ -71,7 +71,7 @@ https://www.googleapis.com/auth/calendar.readonly
 
 **説明**: 複数のGoogleカレンダーからイベントを取得します。
 
-**認証**: 不要（サーバーサイドでサービスアカウント認証を実行）
+**認証**: 必須（active ユーザーのみ）。未認証は 401 JSON、pending/rejected は 403 JSON を返す。Google Calendar API へのアクセスはサーバーサイドのサービスアカウント認証で行う。
 
 **クエリパラメータ**:
 
@@ -170,6 +170,32 @@ interface FetchCalendarEventsResult {
 }
 ```
 
+#### 認証エラー時のレスポンス
+
+**ステータスコード**: `401 Unauthorized`
+
+**レスポンスボディ**:
+
+```json
+{
+  "success": false,
+  "error": "認証が必要です"
+}
+```
+
+#### 認可エラー時のレスポンス
+
+**ステータスコード**: `403 Forbidden`
+
+**レスポンスボディ**:
+
+```json
+{
+  "success": false,
+  "error": "この操作は許可されていません"
+}
+```
+
 #### エラー時のレスポンス
 
 **ステータスコード**: `500 Internal Server Error`
@@ -188,10 +214,12 @@ interface FetchCalendarEventsResult {
 
 #### エラーの種類
 
-1. **認証エラー**: サービスアカウントキーが無効または設定されていない
-2. **権限エラー**: サービスアカウントにカレンダーへのアクセス権限がない
-3. **APIエラー**: Google Calendar APIへの接続に失敗
-4. **個別カレンダーエラー**: 特定のカレンダーでエラーが発生（他のカレンダーは正常に取得）
+1. **未認証**: セッションが無い、または無効
+2. **認可エラー**: ログイン済みだが active ではない
+3. **認証エラー**: サービスアカウントキーが無効または設定されていない
+4. **権限エラー**: サービスアカウントにカレンダーへのアクセス権限がない
+5. **APIエラー**: Google Calendar APIへの接続に失敗
+6. **個別カレンダーエラー**: 特定のカレンダーでエラーが発生（他のカレンダーは正常に取得）
 
 #### エラー処理の動作
 
@@ -265,7 +293,7 @@ GOOGLE_CALENDAR_IDS="singularity-mtg:calendar_id_1,holiday:ja.japanese%23holiday
 
 **説明**: 新規ユーザー登録時にSlackへ通知を送信します。
 
-**認証**: 不要（サーバーサイドで実行）
+**認証**: 必須（新規登録直後の pending ユーザーのみ）。未認証は 401 JSON、pending 以外は 403 JSON を返す。`displayName` は長さ（最大100文字）と文字種を検証する。
 
 **リクエストボディ**:
 
@@ -304,6 +332,45 @@ GOOGLE_CALENDAR_IDS="singularity-mtg:calendar_id_1,holiday:ja.japanese%23holiday
 }
 ```
 
+#### バリデーションエラー時のレスポンス
+
+**ステータスコード**: `400 Bad Request`
+
+**レスポンスボディ**:
+
+```json
+{
+  "success": false,
+  "error": "リクエストが不正です"
+}
+```
+
+#### 認証エラー時のレスポンス
+
+**ステータスコード**: `401 Unauthorized`
+
+**レスポンスボディ**:
+
+```json
+{
+  "success": false,
+  "error": "認証が必要です"
+}
+```
+
+#### 認可エラー時のレスポンス
+
+**ステータスコード**: `403 Forbidden`
+
+**レスポンスボディ**:
+
+```json
+{
+  "success": false,
+  "error": "この操作は許可されていません"
+}
+```
+
 #### エラー時のレスポンス
 
 **ステータスコード**: `500 Internal Server Error`
@@ -330,7 +397,7 @@ SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
 ### 3.5 使用例
 
 ```typescript
-// サーバーサイドから呼び出す
+// 新規ユーザー登録直後（pending）のクライアントから呼び出す
 const response = await fetch("/api/notifications/slack", {
   method: "POST",
   headers: {

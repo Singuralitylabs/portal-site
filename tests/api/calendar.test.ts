@@ -32,6 +32,17 @@ jest.mock("next/server", () => ({
   },
 }));
 
+const mockGetServerCurrentUser = jest.fn();
+const mockFetchUserStatusByIdInServer = jest.fn();
+
+jest.mock("../../app/services/api/supabase-server", () => ({
+  getServerCurrentUser: (...args: unknown[]) => mockGetServerCurrentUser(...args),
+}));
+
+jest.mock("../../app/services/api/users-server", () => ({
+  fetchUserStatusByIdInServer: (...args: unknown[]) => mockFetchUserStatusByIdInServer(...args),
+}));
+
 const ORIGINAL_ENV = { ...process.env };
 
 type RouteModule = typeof import("../../app/api/calendar/events/route");
@@ -93,6 +104,8 @@ beforeEach(() => {
     },
   }));
   googleAuthMock.mockImplementation(() => ({}));
+  mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+  mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "active", error: null });
 });
 
 afterAll(() => {
@@ -197,6 +210,44 @@ describe("calendar events route GET", () => {
         })
       );
       // GET の戻り値が NextResponse.json の返却値と一致することを確認
+      expect(response).toBe(payload);
+    });
+  });
+
+  it("異常系: 未認証の場合 401 を返す", async () => {
+    mockGetServerCurrentUser.mockResolvedValue({ authId: "", error: new Error("unauth") });
+
+    await runWithCalendarRouteModule(async ({ GET }, responseMock) => {
+      const request = createRequest();
+      const payload = { success: false, error: "認証が必要です" };
+      responseMock.mockReturnValue(payload);
+
+      const response = await GET(request);
+
+      expect(responseMock).toHaveBeenCalledWith(
+        { success: false, error: "認証が必要です" },
+        { status: 401 }
+      );
+      expect(googleAuthMock).not.toHaveBeenCalled();
+      expect(response).toBe(payload);
+    });
+  });
+
+  it("異常系: inactive ユーザーの場合 403 を返す", async () => {
+    mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "pending", error: null });
+
+    await runWithCalendarRouteModule(async ({ GET }, responseMock) => {
+      const request = createRequest();
+      const payload = { success: false, error: "この操作は許可されていません" };
+      responseMock.mockReturnValue(payload);
+
+      const response = await GET(request);
+
+      expect(responseMock).toHaveBeenCalledWith(
+        { success: false, error: "この操作は許可されていません" },
+        { status: 403 }
+      );
+      expect(googleAuthMock).not.toHaveBeenCalled();
       expect(response).toBe(payload);
     });
   });

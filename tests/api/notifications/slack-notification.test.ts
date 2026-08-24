@@ -9,6 +9,17 @@ jest.mock("next/server", () => ({
   },
 }));
 
+const mockGetServerCurrentUser = jest.fn();
+const mockFetchUserStatusByIdInServer = jest.fn();
+
+jest.mock("../../../app/services/api/supabase-server", () => ({
+  getServerCurrentUser: (...args: unknown[]) => mockGetServerCurrentUser(...args),
+}));
+
+jest.mock("../../../app/services/api/users-server", () => ({
+  fetchUserStatusByIdInServer: (...args: unknown[]) => mockFetchUserStatusByIdInServer(...args),
+}));
+
 const ORIGINAL_ENV = { ...process.env };
 let fetchSpy: jest.SpyInstance;
 
@@ -35,6 +46,8 @@ describe("Slack 通知 API", () => {
     jest.clearAllMocks();
     process.env = { ...ORIGINAL_ENV };
     fetchSpy = jest.spyOn(global, "fetch");
+    mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+    mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "pending", error: null });
   });
 
   afterEach(() => {
@@ -90,5 +103,52 @@ describe("Slack 通知 API", () => {
     expect(response).toBe(expectedResponse); // POST の戻り値がスキップレスポンスであることを確認
     expect(consoleWarn).toHaveBeenCalled(); // 環境変数未設定の警告ログが出力されることを確認
     consoleWarn.mockRestore();
+  });
+
+  it("異常系: 未認証の場合 401 を返す", async () => {
+    mockGetServerCurrentUser.mockResolvedValue({ authId: "", error: new Error("unauth") });
+    const request = createRequest({ displayName: "未認証太郎" });
+    const expectedResponse = { success: false, error: "認証が必要です" };
+    nextResponseJsonMock.mockReturnValue(expectedResponse);
+
+    const response = await POST(request);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(nextResponseJsonMock).toHaveBeenCalledWith(
+      { success: false, error: "認証が必要です" },
+      { status: 401 }
+    );
+    expect(response).toBe(expectedResponse);
+  });
+
+  it("異常系: pending 以外のユーザーは 403 を返す", async () => {
+    mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "active", error: null });
+    const request = createRequest({ displayName: "承認済み太郎" });
+    const expectedResponse = { success: false, error: "この操作は許可されていません" };
+    nextResponseJsonMock.mockReturnValue(expectedResponse);
+
+    const response = await POST(request);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(nextResponseJsonMock).toHaveBeenCalledWith(
+      { success: false, error: "この操作は許可されていません" },
+      { status: 403 }
+    );
+    expect(response).toBe(expectedResponse);
+  });
+
+  it("異常系: displayName が不正な場合 400 を返す", async () => {
+    const request = createRequest({ displayName: "<script>alert(1)</script>" });
+    const expectedResponse = { success: false, error: "リクエストが不正です" };
+    nextResponseJsonMock.mockReturnValue(expectedResponse);
+
+    const response = await POST(request);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(nextResponseJsonMock).toHaveBeenCalledWith(
+      { success: false, error: "リクエストが不正です" },
+      { status: 400 }
+    );
+    expect(response).toBe(expectedResponse);
   });
 });

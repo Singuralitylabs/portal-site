@@ -2,17 +2,12 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { USER_STATUS } from "./app/constants/user";
 import { fetchUserStatusByIdInServer } from "./app/services/api/users-server";
-
-const publicRoutes = ["/login", "/callback", "/pending", "/rejected"];
-
-function shouldSkipMiddleware(pathname: string): boolean {
-  return (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.includes(".") ||
-    pathname === "/favicon.ico"
-  );
-}
+import {
+  isApiPath,
+  isPublicApiRoute,
+  isPublicPageRoute,
+  shouldSkipMiddleware,
+} from "./app/utils/middleware-path";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -22,8 +17,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 公開ルートはそのまま通す
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  // 公開ページルートはそのまま通す
+  if (isPublicPageRoute(pathname)) {
+    return NextResponse.next();
+  }
+
+  // 公開が必要な API のみホワイトリストでスキップする
+  if (isPublicApiRoute(pathname)) {
     return NextResponse.next();
   }
 
@@ -57,10 +57,18 @@ export async function middleware(request: NextRequest) {
     error,
   } = await supabase.auth.getUser();
 
-  // 未認証の場合はログインページにリダイレクト
   if (error || !user) {
+    // API は呼び出し側の response.json() を壊さないよう 401 JSON を返す
+    if (isApiPath(pathname)) {
+      return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+    }
     const redirectUrl = new URL("/login", request.url);
     return NextResponse.redirect(redirectUrl);
+  }
+
+  // API のステータス判定は各ルートに委譲する（pending ユーザーの Slack 通知を通すため）
+  if (isApiPath(pathname)) {
+    return response;
   }
 
   // 認証済みユーザーとして自分のユーザー情報を確認
