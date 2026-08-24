@@ -340,3 +340,114 @@ export async function updateUserPositionTagsInServer(
 
   return null;
 }
+
+export type ClaimRegistrationSlackResult = {
+  claimed: boolean;
+  alreadyNotified: boolean;
+  displayName: string;
+  createdAt: string | null;
+  error: PostgrestError | null;
+};
+
+/**
+ * 新規登録 Slack 通知を1回に制限する。
+ * insert 直後は created_at と updated_at が同一である前提で、
+ * 同じ updated_at の行だけを楽観ロック更新して通知権を取得する。
+ */
+export async function claimRegistrationSlackNotification({
+  authId,
+}: {
+  authId: string;
+}): Promise<ClaimRegistrationSlackResult> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("display_name, created_at, updated_at")
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Slack通知の通知権確認エラー:", error.message);
+    return { claimed: false, alreadyNotified: false, displayName: "", createdAt: null, error };
+  }
+  if (!data) {
+    return {
+      claimed: false,
+      alreadyNotified: false,
+      displayName: "",
+      createdAt: null,
+      error: null,
+    };
+  }
+
+  if (new Date(data.updated_at).getTime() !== new Date(data.created_at).getTime()) {
+    return {
+      claimed: false,
+      alreadyNotified: true,
+      displayName: data.display_name,
+      createdAt: data.created_at,
+      error: null,
+    };
+  }
+
+  const { data: claimed, error: updateError } = await supabase
+    .from("users")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .eq("updated_at", data.updated_at)
+    .select("display_name")
+    .maybeSingle();
+
+  if (updateError) {
+    console.error("Slack通知の通知権取得エラー:", updateError.message);
+    return {
+      claimed: false,
+      alreadyNotified: false,
+      displayName: data.display_name,
+      createdAt: data.created_at,
+      error: updateError,
+    };
+  }
+  if (!claimed) {
+    return {
+      claimed: false,
+      alreadyNotified: true,
+      displayName: data.display_name,
+      createdAt: data.created_at,
+      error: null,
+    };
+  }
+
+  return {
+    claimed: true,
+    alreadyNotified: false,
+    displayName: claimed.display_name,
+    createdAt: data.created_at,
+    error: null,
+  };
+}
+
+/**
+ * Slack 通知の送信に失敗したとき、通知権の楽観ロックを戻す。
+ */
+export async function releaseRegistrationSlackNotification({
+  authId,
+  createdAt,
+}: {
+  authId: string;
+  createdAt: string;
+}): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ updated_at: createdAt })
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING);
+
+  if (error) {
+    console.error("Slack通知の通知権ロールバックエラー:", error.message);
+  }
+}

@@ -19,6 +19,11 @@ describe("shouldSkipMiddleware", () => {
     expect(shouldSkipMiddleware("/api/profile/image")).toBe(false);
     expect(shouldSkipMiddleware("/api/foo.bar")).toBe(false);
   });
+
+  it("ドットを含むページパスはスキップしない", () => {
+    expect(shouldSkipMiddleware("/members/john.doe")).toBe(false);
+    expect(shouldSkipMiddleware("/docs/v1.2")).toBe(false);
+  });
 });
 
 describe("isApiPath", () => {
@@ -39,6 +44,8 @@ describe("isPublicPageRoute", () => {
     expect(isPublicPageRoute("/pending")).toBe(true);
     expect(isPublicPageRoute("/rejected")).toBe(true);
     expect(isPublicPageRoute("/calendar")).toBe(false);
+    expect(isPublicPageRoute("/pending-approvals")).toBe(false);
+    expect(isPublicPageRoute("/loginfoo")).toBe(false);
   });
 });
 

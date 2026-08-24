@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { NextResponse } from "next/server";
 import { USER_STATUS } from "@/app/constants/user";
-import { getServerCurrentUser } from "@/app/services/api/supabase-server";
-import { fetchUserStatusByIdInServer } from "@/app/services/api/users-server";
+import {
+  claimRegistrationSlackNotification,
+  releaseRegistrationSlackNotification,
+} from "@/app/services/api/users-server";
+import { requireApiUser } from "@/app/services/auth/require-api-user";
+import { sanitizeSlackDisplayName } from "@/app/utils/slack-display-name";
 
 interface SlackNotificationPayloadType {
   text: string;
@@ -15,61 +18,38 @@ interface SlackNotificationPayloadType {
   }>;
 }
 
-const DISPLAY_NAME_MAX_LENGTH = 100;
-
-/**
- * Google 表示名で使われる括弧・カンマ・中点等は許可し、
- * 制御文字（改行含む）と Slack リンク記法の `<>` のみ拒否する。
- */
-const slackNotificationSchema = z.object({
-  displayName: z
-    .string()
-    .max(DISPLAY_NAME_MAX_LENGTH)
-    .refine(value => !/[\p{C}<>]/u.test(value), { message: "表示名の形式が不正です" }),
-});
-
-export async function POST(request: NextRequest) {
-  const { authId, error: authError } = await getServerCurrentUser();
-  if (authError || !authId) {
-    return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+export async function POST() {
+  const auth = await requireApiUser([USER_STATUS.PENDING]);
+  if (!auth.ok) {
+    return auth.response;
   }
 
-  const { status, error: statusError } = await fetchUserStatusByIdInServer({ authId });
-  if (statusError) {
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+  if (!webhookUrl) {
+    console.warn("SLACK_WEBHOOK_URL環境変数が設定されていないため、Slack通知をスキップします");
+    return NextResponse.json({ success: true, message: "環境変数未設定のためスキップ" });
+  }
+
+  const claim = await claimRegistrationSlackNotification({ authId: auth.user.id });
+  if (claim.error) {
     return NextResponse.json(
       { success: false, error: "ユーザー情報の確認に失敗しました" },
       { status: 500 }
     );
   }
-  // 新規登録直後の pending ユーザーのみ許可する（active 限定にすると通知が届かない）
-  if (status !== USER_STATUS.PENDING) {
+  if (!claim.claimed) {
+    if (claim.alreadyNotified) {
+      return NextResponse.json({ success: true, message: "既に通知済みです" });
+    }
     return NextResponse.json(
       { success: false, error: "この操作は許可されていません" },
       { status: 403 }
     );
   }
 
+  const displayName = sanitizeSlackDisplayName(claim.displayName);
+
   try {
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ success: false, error: "リクエストが不正です" }, { status: 400 });
-    }
-
-    const parsed = slackNotificationSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ success: false, error: "リクエストが不正です" }, { status: 400 });
-    }
-
-    const { displayName } = parsed.data;
-    const webhookUrl = process.env.SLACK_WEBHOOK_URL;
-
-    if (!webhookUrl) {
-      console.warn("SLACK_WEBHOOK_URL環境変数が設定されていないため、Slack通知をスキップします");
-      return NextResponse.json({ success: true, message: "環境変数未設定のためスキップ" });
-    }
-
     const payload: SlackNotificationPayloadType = {
       text: "新規ユーザー登録の承認依頼",
       blocks: [
@@ -99,6 +79,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
+      if (claim.createdAt) {
+        await releaseRegistrationSlackNotification({
+          authId: auth.user.id,
+          createdAt: claim.createdAt,
+        });
+      }
       const errorText = await response.text();
       console.error("Slack通知の送信に失敗:", response.status, errorText);
       return NextResponse.json(
@@ -112,6 +98,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (claim.createdAt) {
+      await releaseRegistrationSlackNotification({
+        authId: auth.user.id,
+        createdAt: claim.createdAt,
+      });
+    }
     console.error("Slack通知の送信エラー:", error);
     return NextResponse.json(
       {

@@ -1,7 +1,6 @@
-import {
-  createServerSupabaseClient,
-  getServerCurrentUser,
-} from "@/app/services/api/supabase-server";
+import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
+import { requireApiUser } from "@/app/services/auth/require-api-user";
+import { USER_STATUS } from "@/app/constants/user";
 import { NextResponse } from "next/server";
 
 const BUCKET_NAME = "profile-images";
@@ -35,26 +34,12 @@ function detectMimeFromBuffer(buf: Buffer): string | null {
   return null;
 }
 
-async function isActiveUser(
-  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
-  authId: string
-) {
-  const { data, error } = await supabase
-    .from("users")
-    .select("id")
-    .eq("auth_id", authId)
-    .eq("status", "active")
-    .eq("is_deleted", false)
-    .maybeSingle();
-
-  return { isActive: !!data, error };
-}
-
 export async function POST(request: Request) {
-  const { authId, error: authError } = await getServerCurrentUser();
-  if (authError || !authId) {
-    return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+  const auth = await requireApiUser([USER_STATUS.ACTIVE]);
+  if (!auth.ok) {
+    return auth.response;
   }
+  const authId = auth.user.id;
 
   const formData = await request.formData();
   const file = formData.get("image");
@@ -83,19 +68,6 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { isActive, error: activeUserError } = await isActiveUser(supabase, authId);
-  if (activeUserError) {
-    return NextResponse.json(
-      { success: false, error: "ユーザー情報の確認に失敗しました" },
-      { status: 500 }
-    );
-  }
-  if (!isActive) {
-    return NextResponse.json(
-      { success: false, error: "この操作は許可されていません" },
-      { status: 403 }
-    );
-  }
 
   const filePath = `${authId}/profile-image`;
 
@@ -133,26 +105,13 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
-  const { authId, error: authError } = await getServerCurrentUser();
-  if (authError || !authId) {
-    return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+  const auth = await requireApiUser([USER_STATUS.ACTIVE]);
+  if (!auth.ok) {
+    return auth.response;
   }
+  const authId = auth.user.id;
 
   const supabase = await createServerSupabaseClient();
-  const { isActive, error: activeUserError } = await isActiveUser(supabase, authId);
-  if (activeUserError) {
-    return NextResponse.json(
-      { success: false, error: "ユーザー情報の確認に失敗しました" },
-      { status: 500 }
-    );
-  }
-  if (!isActive) {
-    return NextResponse.json(
-      { success: false, error: "この操作は許可されていません" },
-      { status: 403 }
-    );
-  }
-
   const filePath = `${authId}/profile-image`;
 
   const { error: updateError } = await supabase

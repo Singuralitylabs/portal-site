@@ -66,7 +66,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // API のステータス判定は各ルートに委譲する（pending ユーザーの Slack 通知を通すため）
+  // 多層防御: middleware はセッション有無のみ確認する。
+  // status 判定は各ルートの requireApiUser に委譲する（pending の Slack 通知を通すため）。
   if (isApiPath(pathname)) {
     return response;
   }

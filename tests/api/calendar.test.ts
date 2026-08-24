@@ -32,15 +32,10 @@ jest.mock("next/server", () => ({
   },
 }));
 
-const mockGetServerCurrentUser = jest.fn();
-const mockFetchUserStatusByIdInServer = jest.fn();
+const mockRequireApiUser = jest.fn();
 
-jest.mock("../../app/services/api/supabase-server", () => ({
-  getServerCurrentUser: (...args: unknown[]) => mockGetServerCurrentUser(...args),
-}));
-
-jest.mock("../../app/services/api/users-server", () => ({
-  fetchUserStatusByIdInServer: (...args: unknown[]) => mockFetchUserStatusByIdInServer(...args),
+jest.mock("../../app/services/auth/require-api-user", () => ({
+  requireApiUser: (...args: unknown[]) => mockRequireApiUser(...args),
 }));
 
 const ORIGINAL_ENV = { ...process.env };
@@ -104,8 +99,12 @@ beforeEach(() => {
     },
   }));
   googleAuthMock.mockImplementation(() => ({}));
-  mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
-  mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "active", error: null });
+  mockRequireApiUser.mockResolvedValue({
+    ok: true,
+    user: { id: "test-auth-id" },
+    userStatus: "active",
+    displayName: "太郎",
+  });
 });
 
 afterAll(() => {
@@ -215,38 +214,26 @@ describe("calendar events route GET", () => {
   });
 
   it("異常系: 未認証の場合 401 を返す", async () => {
-    mockGetServerCurrentUser.mockResolvedValue({ authId: "", error: new Error("unauth") });
+    const payload = { success: false, error: "認証が必要です" };
+    mockRequireApiUser.mockResolvedValue({ ok: false, response: payload });
 
-    await runWithCalendarRouteModule(async ({ GET }, responseMock) => {
+    await runWithCalendarRouteModule(async ({ GET }) => {
       const request = createRequest();
-      const payload = { success: false, error: "認証が必要です" };
-      responseMock.mockReturnValue(payload);
-
       const response = await GET(request);
 
-      expect(responseMock).toHaveBeenCalledWith(
-        { success: false, error: "認証が必要です" },
-        { status: 401 }
-      );
       expect(googleAuthMock).not.toHaveBeenCalled();
       expect(response).toBe(payload);
     });
   });
 
   it("異常系: inactive ユーザーの場合 403 を返す", async () => {
-    mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "pending", error: null });
+    const payload = { success: false, error: "この操作は許可されていません" };
+    mockRequireApiUser.mockResolvedValue({ ok: false, response: payload });
 
-    await runWithCalendarRouteModule(async ({ GET }, responseMock) => {
+    await runWithCalendarRouteModule(async ({ GET }) => {
       const request = createRequest();
-      const payload = { success: false, error: "この操作は許可されていません" };
-      responseMock.mockReturnValue(payload);
-
       const response = await GET(request);
 
-      expect(responseMock).toHaveBeenCalledWith(
-        { success: false, error: "この操作は許可されていません" },
-        { status: 403 }
-      );
       expect(googleAuthMock).not.toHaveBeenCalled();
       expect(response).toBe(payload);
     });

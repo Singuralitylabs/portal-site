@@ -293,15 +293,9 @@ GOOGLE_CALENDAR_IDS="singularity-mtg:calendar_id_1,holiday:ja.japanese%23holiday
 
 **説明**: 新規ユーザー登録時にSlackへ通知を送信します。
 
-**認証**: 必須（新規登録直後の pending ユーザーのみ）。未認証は 401 JSON、pending 以外は 403 JSON を返す。`displayName` は長さ（最大100文字）と文字種を検証する。
+**認証**: 必須（新規登録直後の pending ユーザーのみ）。未認証は 401 JSON、pending 以外は 403 JSON を返す。表示名はリクエストボディではなく `users.display_name` を使う。同一ユーザーへの通知は1回限り。
 
-**リクエストボディ**:
-
-```json
-{
-  "displayName": "ユーザー名"
-}
-```
+**リクエストボディ**: なし（表示名は DB から取得する）
 
 **レスポンス**: JSON形式
 
@@ -332,16 +326,16 @@ GOOGLE_CALENDAR_IDS="singularity-mtg:calendar_id_1,holiday:ja.japanese%23holiday
 }
 ```
 
-#### バリデーションエラー時のレスポンス
+#### 既に通知済みのレスポンス
 
-**ステータスコード**: `400 Bad Request`
+**ステータスコード**: `200 OK`
 
 **レスポンスボディ**:
 
 ```json
 {
-  "success": false,
-  "error": "リクエストが不正です"
+  "success": true,
+  "message": "既に通知済みです"
 }
 ```
 
@@ -400,12 +394,6 @@ SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
 // 新規ユーザー登録直後（pending）のクライアントから呼び出す
 const response = await fetch("/api/notifications/slack", {
   method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    displayName: "山田太郎",
-  }),
 });
 
 const data = await response.json();

@@ -2,12 +2,14 @@
  * middleware が静的ファイル等をスキップすべきかを判定する。
  * `/api` は認証ゲートの対象のため、ここではスキップしない。
  */
+const STATIC_FILE_PATTERN =
+  /\.(?:html?|css|js|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)$/i;
+
 export function shouldSkipMiddleware(pathname: string): boolean {
-  // API はドットを含んでいても認証ゲートの対象にする
   if (isApiPath(pathname)) {
     return false;
   }
-  return pathname.startsWith("/_next") || pathname.includes(".") || pathname === "/favicon.ico";
+  return pathname.startsWith("/_next") || STATIC_FILE_PATTERN.test(pathname);
 }
 
 const publicPageRoutes = ["/login", "/callback", "/pending", "/rejected"];
@@ -16,7 +18,7 @@ const publicPageRoutes = ["/login", "/callback", "/pending", "/rejected"];
  * 認証なしでアクセス可能なページルートかを判定する。
  */
 export function isPublicPageRoute(pathname: string): boolean {
-  return publicPageRoutes.some(route => pathname.startsWith(route));
+  return publicPageRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`));
 }
 
 /**

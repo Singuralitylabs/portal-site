@@ -110,7 +110,7 @@ describe("getServerAuth", () => {
    */
   it.each(["pending", "active", "rejected"])("userStatus=%s を返す", async status => {
     const user = { id: "auth-3" };
-    const result = { data: { status }, error: null };
+    const result = { data: { status, display_name: "テスト太郎" }, error: null };
     const builder = createQueryBuilder(result);
     const supabase = {
       auth: {
@@ -129,6 +129,7 @@ describe("getServerAuth", () => {
     expect(response).toEqual({
       user,
       userStatus: status,
+      displayName: "テスト太郎",
     });
   });
 
