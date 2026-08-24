@@ -3,6 +3,10 @@
  * `/api` は認証ゲートの対象のため、ここではスキップしない。
  */
 export function shouldSkipMiddleware(pathname: string): boolean {
+  // API はドットを含んでいても認証ゲートの対象にする
+  if (isApiPath(pathname)) {
+    return false;
+  }
   return pathname.startsWith("/_next") || pathname.includes(".") || pathname === "/favicon.ico";
 }
 

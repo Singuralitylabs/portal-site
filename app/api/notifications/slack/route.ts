@@ -16,13 +16,16 @@ interface SlackNotificationPayloadType {
 }
 
 const DISPLAY_NAME_MAX_LENGTH = 100;
-const DISPLAY_NAME_PATTERN = /^[\p{L}\p{N}\p{M} 　・･'’.\-ー]*$/u;
 
+/**
+ * Google 表示名で使われる括弧・カンマ・中点等は許可し、
+ * 制御文字（改行含む）と Slack リンク記法の `<>` のみ拒否する。
+ */
 const slackNotificationSchema = z.object({
   displayName: z
     .string()
     .max(DISPLAY_NAME_MAX_LENGTH)
-    .regex(DISPLAY_NAME_PATTERN, "表示名の形式が不正です"),
+    .refine(value => !/[\p{C}<>]/u.test(value), { message: "表示名の形式が不正です" }),
 });
 
 export async function POST(request: NextRequest) {

@@ -17,6 +17,7 @@ describe("shouldSkipMiddleware", () => {
     expect(shouldSkipMiddleware("/api/calendar/events")).toBe(false);
     expect(shouldSkipMiddleware("/api/notifications/slack")).toBe(false);
     expect(shouldSkipMiddleware("/api/profile/image")).toBe(false);
+    expect(shouldSkipMiddleware("/api/foo.bar")).toBe(false);
   });
 });
 

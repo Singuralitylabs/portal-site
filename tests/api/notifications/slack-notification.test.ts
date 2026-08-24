@@ -151,4 +151,20 @@ describe("Slack 通知 API", () => {
     );
     expect(response).toBe(expectedResponse);
   });
+
+  it("正常系: 括弧やカンマを含む Google 表示名でも通知できる", async () => {
+    process.env.SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/test";
+    const request = createRequest({ displayName: "Taro Yamada (山田), テスト" });
+    const expectedResponse = { success: true };
+    nextResponseJsonMock.mockReturnValue(expectedResponse);
+    fetchSpy.mockResolvedValue({ ok: true } as FetchResponseMock);
+
+    const response = await POST(request);
+
+    expect(fetchSpy).toHaveBeenCalled();
+    expect(JSON.parse(fetchSpy.mock.calls[0][1].body as string).blocks[1].text.text).toContain(
+      "Taro Yamada (山田), テスト"
+    );
+    expect(response).toBe(expectedResponse);
+  });
 });
