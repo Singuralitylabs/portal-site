@@ -31,8 +31,13 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   const [profileImagePath, setProfileImagePath] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null);
-  // 直前に生成した blob: URL。差し替え・解除のたびに解放してメモリリークを防ぐ
+  // 現在表示中の blob: URL。差し替え・解除のたびに解放してメモリリークを防ぐ
   const objectUrlRef = useRef<string | null>(null);
+  // fetchSignedUrl の実行世代。取得は createSignedUrl → fetch → blob と複数の await を挟むため、
+  // 初期化時の取得とアップロード後の再取得などが重なると、先に開始した古いリクエストが
+  // 後から完了して新しい結果を上書きしうる。取得開始・状態リセット・アンマウントのたびに +1 し、
+  // 各 await の後で「自分が最新か」を確認して、古いリクエストの結果は破棄する。
+  const requestIdRef = useRef(0);
 
   const releaseObjectUrl = useCallback(() => {
     if (objectUrlRef.current) {
@@ -41,20 +46,30 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  // 進行中の fetchSignedUrl を無効化する（結果が届いても state / objectUrlRef には反映されない）
+  const invalidatePendingFetch = useCallback(() => {
+    requestIdRef.current += 1;
+  }, []);
+
   // 指定パスの署名付きURLを取得し、画像実体を no-store で取得したうえで
   // blob: URL を生成して state に反映する。
-  // 署名付きURLの iat/exp は秒単位のため、同一パスを同一秒内に再取得すると
-  // URL文字列が変わらず、ブラウザのHTTPキャッシュ上でも同一キーとして扱われうる
-  // （その場合 cacheControl: "0" は新しいレスポンスのヘッダーであり、
-  // 既にブラウザ側へ保存済みの応答を書き換えることはできない）。
-  // blob: URL は生成のたびに必ずユニークになるため、React側の同値判定にも
-  // ブラウザのHTTPキャッシュにも依存せず、確実に最新の画像を反映できる。
+  // 署名付きURLの iat/exp は秒単位のため、同一パスを同一秒内に再取得すると URL文字列が変わらず、
+  // ブラウザのHTTPキャッシュ上でも同一キーとして扱われうる（その場合 cacheControl: "0" は
+  // 新しいレスポンスのヘッダーであり、既にブラウザ側へ保存済みの応答を書き換えることはできない）。
+  // 生成のたびに必ずユニークになる blob: URL を使うことで、React側の同値判定にもブラウザの
+  // HTTPキャッシュにも依存せず、更新直後の最新画像を反映する（CDN/edge 側の stale リスクは
+  // 別途 issue #431 で整理）。
   const fetchSignedUrl = useCallback(
     async (path: string) => {
+      const requestId = (requestIdRef.current += 1);
+      // await の後で、より新しい取得・リセット・アンマウントに追い越されていないか確認する
+      const isStale = () => requestId !== requestIdRef.current;
+
       const supabase = createClientSupabaseClient();
       const { data, error } = await supabase.storage
         .from("profile-images")
         .createSignedUrl(path, 3600);
+      if (isStale()) return;
       if (error || !data?.signedUrl) {
         releaseObjectUrl();
         setProfileImageUrl(null);
@@ -66,11 +81,14 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
           throw new Error(`画像の取得に失敗しました: ${response.status}`);
         }
         const blob = await response.blob();
+        // 追い越されていた場合は blob: URL を生成せずに破棄する
+        if (isStale()) return;
         const objectUrl = URL.createObjectURL(blob);
         releaseObjectUrl();
         objectUrlRef.current = objectUrl;
         setProfileImageUrl(objectUrl);
       } catch (fetchError) {
+        if (isStale()) return;
         // 画像実体の取得に失敗した場合は、表示できないよりはましなので署名付きURLを直接使う
         console.error("プロフィール画像の取得エラー:", fetchError);
         releaseObjectUrl();
@@ -80,20 +98,25 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
     [releaseObjectUrl]
   );
 
-  // アンマウント時に最後の blob: URL を解放する
+  // アンマウント時に進行中の取得を無効化し、最後の blob: URL を解放する
   useEffect(() => {
-    return () => releaseObjectUrl();
+    return () => {
+      requestIdRef.current += 1;
+      releaseObjectUrl();
+    };
   }, [releaseObjectUrl]);
 
   // ログイン・ログアウト時にDBから profile_image_path と avatar_url を取得して初期化する
   useEffect(() => {
     if (!user) {
+      invalidatePendingFetch();
       setProfileImagePath(null);
       releaseObjectUrl();
       setProfileImageUrl(null);
       setGoogleAvatarUrl(null);
       return;
     }
+    let cancelled = false;
     const supabase = createClientSupabaseClient();
     supabase
       .from("users")
@@ -102,11 +125,14 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
       .eq("is_deleted", false)
       .maybeSingle()
       .then(({ data }) => {
+        // ユーザーが切り替わった / アンマウントされた後の結果は反映しない
+        if (cancelled) return;
         const path = data?.profile_image_path ?? null;
         setProfileImagePath(path);
         if (path) {
           fetchSignedUrl(path);
         } else {
+          invalidatePendingFetch();
           releaseObjectUrl();
           setProfileImageUrl(null);
         }
@@ -117,7 +143,10 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
           user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
         setGoogleAvatarUrl(metadataAvatarUrl ?? data?.avatar_url ?? null);
       });
-  }, [user, fetchSignedUrl, releaseObjectUrl]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, fetchSignedUrl, releaseObjectUrl, invalidatePendingFetch]);
 
   // 画像アップロード・削除後に呼び出す更新関数。
   // ProfilePageTemplate から呼ばれると、UserProfileMenu 側の表示も同時に更新される。
@@ -127,6 +156,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
         // 新しいパス（または null）が渡された場合はパスごと更新
         setProfileImagePath(newPath);
         if (!newPath) {
+          invalidatePendingFetch();
           releaseObjectUrl();
           setProfileImageUrl(null);
           return;
@@ -137,7 +167,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
         await fetchSignedUrl(profileImagePath);
       }
     },
-    [profileImagePath, fetchSignedUrl, releaseObjectUrl]
+    [profileImagePath, fetchSignedUrl, releaseObjectUrl, invalidatePendingFetch]
   );
 
   return (
