@@ -112,6 +112,7 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
     // これにより、ログアウトを挟まず別ユーザーへ直接切り替わった場合でも、
     // 前ユーザーの取得結果が新ユーザーの画面に反映されることを防ぐ。
     invalidatePendingFetch();
+    const initializationRequestId = requestIdRef.current;
     if (!user) {
       setProfileImagePath(null);
       releaseObjectUrl();
@@ -130,6 +131,18 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
       .then(({ data }) => {
         // ユーザーが切り替わった / アンマウントされた後の結果は反映しない
         if (cancelled) return;
+
+        // user_metadata はSupabase Authが保持する最新値のため優先して使用する。
+        // SIGNED_IN 直後はDBへのavatar_url同期がまだ完了していない場合があるため、
+        // DBのavatar_urlはメタデータが存在しない場合のフォールバックとして扱う。
+        const metadataAvatarUrl =
+          user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+        setGoogleAvatarUrl(metadataAvatarUrl ?? data?.avatar_url ?? null);
+
+        // 初期化クエリ開始後に画像が更新された場合、古いパスを反映しない。
+        // Googleアバターの初期化は画像状態とは独立して維持する。
+        if (initializationRequestId !== requestIdRef.current) return;
+
         const path = data?.profile_image_path ?? null;
         setProfileImagePath(path);
         if (path) {
@@ -139,12 +152,6 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
           releaseObjectUrl();
           setProfileImageUrl(null);
         }
-        // user_metadata はSupabase Authが保持する最新値のため優先して使用する。
-        // SIGNED_IN 直後はDBへのavatar_url同期がまだ完了していない場合があるため、
-        // DBのavatar_urlはメタデータが存在しない場合のフォールバックとして扱う。
-        const metadataAvatarUrl =
-          user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
-        setGoogleAvatarUrl(metadataAvatarUrl ?? data?.avatar_url ?? null);
       });
     return () => {
       cancelled = true;
