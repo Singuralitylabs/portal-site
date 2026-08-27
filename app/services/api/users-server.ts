@@ -1,47 +1,8 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
-import { createServerSupabaseClient, createServerSupabaseClientWithToken } from "./supabase-server";
+import { createServerSupabaseClient } from "./supabase-server";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
-import { unstable_cache } from "next/cache";
-
-// 署名付きURLを50分キャッシュする。ユーザー間でパスが同じであればキャッシュを共有できるよう、
-// キャッシュキーには accessToken を含めず paths のみを使う（トークンをキー/Data Cacheに流出させない）。
-// revalidate=3000（50分）はトークン有効期限（3600秒）より短く設定し、期限切れURLの流通を防ぐ。
-// Storage側の一時的な失敗（バッチ全体のエラーだけでなく、createSignedUrls が個々のpathに対して
-// 返す要素単位のエラーも含む）をそのまま結果として返すと、欠落・不完全な結果がキャッシュされてしまう。
-// そのため、いずれかの形でエラーが起きた場合は throw して unstable_cache に結果を保存させず、
-// 呼び出し側でフォールバックする。
-function getCachedSignedUrls(paths: string[], accessToken: string) {
-  return unstable_cache(
-    async () => {
-      const supabase = createServerSupabaseClientWithToken(accessToken);
-      const { data, error } = await supabase.storage
-        .from("profile-images")
-        .createSignedUrls(paths, 3600);
-      if (error) {
-        throw new Error(`署名付きURL一括生成エラー: ${error.message}`);
-      }
-      const results = data ?? [];
-      const failedItems = results.filter(item => item.error);
-      if (failedItems.length > 0) {
-        console.error(
-          "署名付きURL個別生成エラー:",
-          failedItems.map(item => ({ path: item.path, message: item.error }))
-        );
-        throw new Error(`署名付きURL個別生成エラー: ${failedItems.length}件失敗`);
-      }
-      return results
-        .filter(
-          (item): item is { path: string; signedUrl: string; error: null } =>
-            !!item.signedUrl && !!item.path
-        )
-        .map(({ path, signedUrl }) => ({ path, signedUrl }));
-    },
-    ["profile-images-signed-urls", paths.join(",")],
-    { revalidate: 3000 }
-  )();
-}
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -157,16 +118,20 @@ export async function fetchActiveUsers(): Promise<{
   ].sort();
   const signedUrlMap = new Map<string, string>();
   if (uniquePaths.length > 0) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const accessToken = session?.access_token;
-    if (accessToken) {
-      try {
-        const cachedUrls = await getCachedSignedUrls(uniquePaths, accessToken);
-        cachedUrls.forEach(({ path, signedUrl }) => signedUrlMap.set(path, signedUrl));
-      } catch (signedUrlError) {
-        console.error("署名付きURL一括生成エラー:", signedUrlError);
+    const { data: signedUrls, error: signedUrlError } = await supabase.storage
+      .from("profile-images")
+      .createSignedUrls(uniquePaths, 3600);
+    if (signedUrlError) {
+      // バッチ全体の失敗時は画像なしでフォールバックする
+      console.error("署名付きURL一括生成エラー:", signedUrlError.message);
+    } else {
+      for (const item of signedUrls ?? []) {
+        if (item.error || !item.signedUrl || !item.path) {
+          // 個別要素の失敗はパスとエラー内容を記録したうえで、その画像だけ除外する
+          console.error("署名付きURL個別生成エラー:", { path: item.path, message: item.error });
+          continue;
+        }
+        signedUrlMap.set(item.path, item.signedUrl);
       }
     }
   }

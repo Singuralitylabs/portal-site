@@ -38,27 +38,7 @@ jest.mock("@supabase/ssr", () => ({
   createServerClient: jest.fn(),
 }));
 
-// getCachedSignedUrls のキャッシュ再利用/再取得の挙動を検証できるよう、
-// unstable_cache を単なる恒等関数にせず、キー単位で結果を保持する簡易キャッシュとしてモックする。
-const signedUrlCacheStore = new Map<string, unknown>();
-jest.mock("next/cache", () => ({
-  unstable_cache:
-    (fn: (...args: unknown[]) => Promise<unknown>, keyParts: string[] = []) =>
-    async (...args: unknown[]) => {
-      const key = keyParts.join("|");
-      if (signedUrlCacheStore.has(key)) {
-        return signedUrlCacheStore.get(key);
-      }
-      const value = await fn(...args);
-      signedUrlCacheStore.set(key, value);
-      return value;
-    },
-}));
-
-const createClientMock = jest.fn();
-jest.mock("@supabase/supabase-js", () => ({
-  createClient: (...args: unknown[]) => createClientMock(...args),
-}));
+jest.mock("@supabase/supabase-js", () => ({}));
 
 jest.mock("next/headers", () => ({
   cookies: jest.fn(),
@@ -114,7 +94,6 @@ describe("server API services", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    signedUrlCacheStore.clear();
   });
 
   describe.each([
@@ -340,16 +319,9 @@ describe("server API services", () => {
         data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
       });
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
-      createClientMock.mockReturnValue({ storage: storageMock });
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
         storage: storageMock,
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: { access_token: "test-token" } },
-            error: null,
-          }),
-        },
       });
 
       const response = await fetchActiveUsers();
@@ -386,21 +358,14 @@ describe("server API services", () => {
         .fn()
         .mockResolvedValue({ data: null, error: { message: "Storage一時障害" } });
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
-      createClientMock.mockReturnValue({ storage: storageMock });
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
         storage: storageMock,
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: { access_token: "test-token" } },
-            error: null,
-          }),
-        },
       });
 
       const response = await fetchActiveUsers();
 
-      // 署名付きURL生成失敗時は例外を握りつぶし、画像なし（null）で一覧を返すことを確認
+      // 署名付きURL生成失敗時はエラーを握りつぶし、画像なし（null）で一覧を返すことを確認
       expect(response.data?.[0].profile_image_url).toBeNull();
       expect(response.error).toBeNull();
       expect(consoleError).toHaveBeenCalled();
@@ -440,122 +405,21 @@ describe("server API services", () => {
         error: null,
       });
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
-      createClientMock.mockReturnValue({ storage: storageMock });
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
         storage: storageMock,
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: { access_token: "test-token" } },
-            error: null,
-          }),
-        },
       });
 
       const response = await fetchActiveUsers();
 
-      // 個別要素エラーを黙って除外せず例外として扱い、画像なし（null）で一覧を返すことを確認
+      // 個別要素エラーは黙って除外せず、パスとエラー内容をログに残したうえで画像なし（null）にする
       expect(response.data?.[0].profile_image_url).toBeNull();
       expect(response.error).toBeNull();
-      expect(consoleError).toHaveBeenCalled();
-      consoleError.mockRestore();
-    });
-
-    it("fetchActiveUsers: 同一パス集合であれば署名付きURLキャッシュが再利用される（createSignedUrlsは1回のみ）", async () => {
-      const result = {
-        data: [
-          {
-            id: 5,
-            display_name: "user5",
-            bio: "bio5",
-            avatar_url: "e",
-            profile_image_path: "auth-5/avatar.png",
-            x_url: null,
-            facebook_url: null,
-            instagram_url: null,
-            github_url: null,
-            portfolio_url: null,
-            position_tags: [],
-          },
-        ],
-        error: null,
-      };
-      const createSignedUrlsMock = jest.fn().mockResolvedValue({
-        data: [
-          { path: "auth-5/avatar.png", signedUrl: "https://signed.url/cache-test", error: null },
-        ],
-        error: null,
-      });
-      const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
-      createClientMock.mockReturnValue({ storage: storageMock });
-      createServerSupabaseClientMock.mockResolvedValue({
-        from: jest.fn(() => createOrderBuilder(result)),
-        storage: storageMock,
-        auth: {
-          getSession: jest.fn().mockResolvedValue({
-            data: { session: { access_token: "test-token" } },
-            error: null,
-          }),
-        },
-      });
-
-      await fetchActiveUsers();
-      await fetchActiveUsers();
-
-      // 同一パス集合での2回目の呼び出しはキャッシュが再利用され、createSignedUrls は1回のみ呼ばれることを確認
-      expect(createSignedUrlsMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("fetchActiveUsers: パス集合が変わるとキャッシュキーも変わり署名付きURLが再取得される", async () => {
-      const createSignedUrlsMock = jest.fn().mockImplementation((paths: string[]) =>
-        Promise.resolve({
-          data: paths.map(path => ({ path, signedUrl: `https://signed.url/${path}`, error: null })),
-          error: null,
-        })
+      expect(consoleError).toHaveBeenCalledWith(
+        "署名付きURL個別生成エラー:",
+        expect.objectContaining({ path: "auth-4/avatar.png" })
       );
-      const storageMock = { from: jest.fn(() => ({ createSignedUrls: createSignedUrlsMock })) };
-      createClientMock.mockReturnValue({ storage: storageMock });
-
-      const buildResult = (path: string) => ({
-        data: [
-          {
-            id: 6,
-            display_name: "user6",
-            bio: "bio6",
-            avatar_url: "f",
-            profile_image_path: path,
-            x_url: null,
-            facebook_url: null,
-            instagram_url: null,
-            github_url: null,
-            portfolio_url: null,
-            position_tags: [],
-          },
-        ],
-        error: null,
-      });
-      const authMock = {
-        getSession: jest
-          .fn()
-          .mockResolvedValue({ data: { session: { access_token: "test-token" } }, error: null }),
-      };
-
-      createServerSupabaseClientMock.mockResolvedValueOnce({
-        from: jest.fn(() => createOrderBuilder(buildResult("auth-6a/avatar.png"))),
-        storage: storageMock,
-        auth: authMock,
-      });
-      await fetchActiveUsers();
-
-      createServerSupabaseClientMock.mockResolvedValueOnce({
-        from: jest.fn(() => createOrderBuilder(buildResult("auth-6b/avatar.png"))),
-        storage: storageMock,
-        auth: authMock,
-      });
-      await fetchActiveUsers();
-
-      // 異なるパス集合ではキャッシュキーも変わるため、createSignedUrls が再度呼ばれることを確認
-      expect(createSignedUrlsMock).toHaveBeenCalledTimes(2);
+      consoleError.mockRestore();
     });
 
     it("fetchApprovalUsers: 正常系/異常系", async () => {

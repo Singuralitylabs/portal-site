@@ -51,8 +51,7 @@ export function ProfilePageTemplate({
   );
   const [isImageLoading, setIsImageLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { profileImageUrl, profileImageVersion, googleAvatarUrl, refreshProfileImage } =
-    useProfileImage();
+  const { profileImageUrl, googleAvatarUrl, refreshProfileImage } = useProfileImage();
 
   useEffect(() => {
     setUser(initialUser);
@@ -253,7 +252,6 @@ export function ProfilePageTemplate({
       <div className="p-4 mb-4 bg-white rounded-lg shadow-sm">
         <div className="flex items-center gap-4">
           <Avatar
-            key={profileImageVersion}
             src={avatarSrc}
             size={80}
             radius="xl"
@@ -286,7 +284,6 @@ export function ProfilePageTemplate({
               <label className="block text-sm font-medium mb-2">プロフィール画像</label>
               <div className="flex items-center gap-4">
                 <Avatar
-                  key={profileImageVersion}
                   src={avatarSrc}
                   size={64}
                   radius="xl"
