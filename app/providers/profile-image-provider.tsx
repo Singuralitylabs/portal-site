@@ -38,6 +38,9 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
   // 後から完了して新しい結果を上書きしうる。取得開始・状態リセット・アンマウントのたびに +1 し、
   // 各 await の後で「自分が最新か」を確認して、古いリクエストの結果は破棄する。
   const requestIdRef = useRef(0);
+  // 直前に処理した user.id（未ログイン時は null）。
+  // user 参照が変わっても user.id が同じ（トークンリフレッシュ等）なら「切り替え」とはみなさない。
+  const prevUserIdRef = useRef<string | null>(null);
 
   const releaseObjectUrl = useCallback(() => {
     if (objectUrlRef.current) {
@@ -113,11 +116,22 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
     // 前ユーザーの取得結果が新ユーザーの画面に反映されることを防ぐ。
     invalidatePendingFetch();
     const initializationRequestId = requestIdRef.current;
-    if (!user) {
+
+    // 別アカウントへの切り替え / ログアウトを検知した時だけ、前ユーザーの表示状態を即座にクリアする。
+    // これをやらないと、新ユーザーのDB取得が完了するまで前ユーザーのアバターが表示され続ける。
+    // 一方、トークンリフレッシュ（同一 user.id で user 参照だけが変わるケース）ではクリアしない
+    // （毎回クリアするとリフレッシュのたびにアバターが一瞬消える）。
+    const currentUserId = user?.id ?? null;
+    const userChanged = currentUserId !== prevUserIdRef.current;
+    prevUserIdRef.current = currentUserId;
+    if (userChanged) {
       setProfileImagePath(null);
       releaseObjectUrl();
       setProfileImageUrl(null);
       setGoogleAvatarUrl(null);
+    }
+
+    if (!user) {
       return;
     }
     let cancelled = false;

@@ -130,6 +130,48 @@ describe("プロフィール画像 API", () => {
       expect(response).toEqual({ success: true, profile_image_path: "test-auth-id/profile-image" });
     });
 
+    it.each([
+      ["GIF87a", [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]],
+      ["GIF89a", [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]],
+    ])("正常系: 有効なGIF（%s）は image/gif としてアップロードされる", async (_label, header) => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      const uploadMock = jest.fn().mockResolvedValue({ error: null });
+      const supabaseMock = {
+        storage: {
+          from: jest.fn().mockReturnValue({ upload: uploadMock }),
+        },
+        from: jest.fn().mockImplementation((table: string) => {
+          if (table === "users") {
+            return {
+              select: jest.fn().mockReturnThis(),
+              eq: jest.fn().mockReturnThis(),
+              maybeSingle: jest.fn().mockResolvedValue({ data: { id: 1 }, error: null }),
+              update: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({ eq: jest.fn().mockResolvedValue({ error: null }) }),
+              }),
+            };
+          }
+          return {};
+        }),
+      };
+      (createServerSupabaseClient as jest.Mock).mockResolvedValue(supabaseMock);
+
+      nextResponseJsonMock.mockReturnValue({
+        success: true,
+        profile_image_path: "test-auth-id/profile-image",
+      });
+
+      const gifFile = createFile("valid.gif", 1024, "image/gif", header);
+      const response = await POST(createPostRequest(gifFile));
+
+      expect(uploadMock).toHaveBeenCalledWith("test-auth-id/profile-image", expect.any(Buffer), {
+        contentType: "image/gif",
+        upsert: true,
+        cacheControl: "0",
+      });
+      expect(response).toEqual({ success: true, profile_image_path: "test-auth-id/profile-image" });
+    });
+
     it("異常系: 未認証の場合 401 を返す", async () => {
       mockGetServerCurrentUser.mockResolvedValue({ authId: null, error: new Error("unauth") });
       nextResponseJsonMock.mockReturnValue({ success: false, error: "認証が必要です" });
