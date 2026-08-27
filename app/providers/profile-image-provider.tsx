@@ -106,10 +106,13 @@ export function ProfileImageProvider({ children }: { children: React.ReactNode }
     };
   }, [releaseObjectUrl]);
 
-  // ログイン・ログアウト時にDBから profile_image_path と avatar_url を取得して初期化する
+  // ログイン・ログアウト・ユーザー切り替え時にDBから profile_image_path と avatar_url を取得して初期化する
   useEffect(() => {
+    // user が変わった時点で、前の user 向けに進行中の fetchSignedUrl を無効化する。
+    // これにより、ログアウトを挟まず別ユーザーへ直接切り替わった場合でも、
+    // 前ユーザーの取得結果が新ユーザーの画面に反映されることを防ぐ。
+    invalidatePendingFetch();
     if (!user) {
-      invalidatePendingFetch();
       setProfileImagePath(null);
       releaseObjectUrl();
       setProfileImageUrl(null);
