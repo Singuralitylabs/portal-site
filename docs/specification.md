@@ -1827,13 +1827,13 @@ sequenceDiagram
    - `member` が URL を直接入力した場合でも、サーバー API 側でロール判定を行い、マスター管理向けのデータ取得を拒否する
 
 2. 一覧表示
-   - `documents` / `videos` / `categories` / `applications` / `positions` を一覧表示する
+   - 対象テーブルは `documents` / `videos` / `categories` / `applications` / `positions` とし、各テーブルを一覧表示する
    - `users` および `position_tags` はマスター管理画面の対象外とする
    - 表示するテーブル・カラム・型・リレーションは `app/types/lib/database.types.ts` を正本として解決する
    - 論理削除済みレコードも表示対象とし、`is_deleted` によるフィルタリングは行わない
    - データ参照は対象テーブルの Row Level Security（RLS）に従う
    - RLS はテーブルデータに対する参照可否を制御するものであり、マスター管理画面そのものへのアクセス可否は UI とサーバー API のロール判定で制御する
-   - 一覧画面には、対象テーブル名（`documents` / `videos` / `categories` / `applications` / `positions`）とレコード一覧を表示する
+   - 一覧画面には、対象テーブルのレコード一覧を表示する
 
 3. 詳細表示
    - 一覧の行を選択すると、対象レコードの詳細情報を参照できる
