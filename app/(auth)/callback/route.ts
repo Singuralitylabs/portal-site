@@ -29,10 +29,6 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.session) {
-      console.log("認証成功:", data.session.user.email);
-
-      console.log("認証セッション確立完了");
-
       // middlewareで適切なページにリダイレクトされるため、一律でホームページへ
       return NextResponse.redirect(`${origin}/`);
     } else {
@@ -41,6 +37,5 @@ export async function GET(request: NextRequest) {
   }
 
   // エラーが発生した場合はログインページにリダイレクト
-  console.log("認証コードなしまたはエラー");
   return NextResponse.redirect(`${origin}/login`);
 }
