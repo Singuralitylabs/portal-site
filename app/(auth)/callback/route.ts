@@ -32,8 +32,10 @@ export async function GET(request: NextRequest) {
       // middlewareで適切なページにリダイレクトされるため、一律でホームページへ
       return NextResponse.redirect(`${origin}/`);
     } else {
-      console.error("認証エラー:", error);
+      console.error("認証エラー:", error ?? "セッションを確立できませんでした");
     }
+  } else {
+    console.error("認証エラー: codeパラメータが存在しません");
   }
 
   // エラーが発生した場合はログインページにリダイレクト
