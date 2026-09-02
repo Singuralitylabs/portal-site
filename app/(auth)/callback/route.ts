@@ -35,7 +35,11 @@ export async function GET(request: NextRequest) {
       console.error("認証エラー:", error ?? "セッションを確立できませんでした");
     }
   } else {
-    console.error("認証エラー: codeパラメータが存在しません");
+    console.error("認証エラー: codeパラメータが存在しません", {
+      error: searchParams.get("error"),
+      errorCode: searchParams.get("error_code"),
+      errorDescription: searchParams.get("error_description"),
+    });
   }
 
   // エラーが発生した場合はログインページにリダイレクト
