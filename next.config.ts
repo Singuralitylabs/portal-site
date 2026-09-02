@@ -27,8 +27,9 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://${YOUTUBE_HOSTNAME} ${previewSources}`,
   `style-src 'self' 'unsafe-inline' ${previewSources}`,
-  // thumbnail_path/avatar_url はnext/imageを経由しない任意ホストのURLを許容する仕様のため、
-  // imgに限りhttps全般を許可する(Supabaseのhttp運用時に備え明示的にも追加)
+  // applications.thumbnail_path・avatar_url は生の<img>(next/imageのremotePatternsを経由しない)で
+  // 任意ホストのURLを許容する仕様のため、imgに限りhttps全般を許可する
+  // (videos.thumbnail_pathはnext/image経由でremotePatternsの制約を別途受ける。Supabaseのhttp運用時に備え明示的にも追加)
   `img-src 'self' data: blob: https: ${supabaseHttpOrigin}`,
   `connect-src 'self' ${supabaseHttpOrigin} ${supabaseWsOrigin} ${previewSources}`,
   `frame-src https://${YOUTUBE_HOSTNAME} ${previewSources}`,
