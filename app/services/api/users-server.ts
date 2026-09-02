@@ -1,6 +1,6 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
-import { PostgrestError } from "@supabase/supabase-js";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
 
@@ -115,22 +115,24 @@ export async function fetchActiveUsers(): Promise<{
     ...new Set(
       transformedData.map(u => u.profile_image_path).filter((p): p is string => p != null)
     ),
-  ];
+  ].sort();
   const signedUrlMap = new Map<string, string>();
   if (uniquePaths.length > 0) {
-    const { data: signedUrls, error: signedUrlsError } = await supabase.storage
+    const { data: signedUrls, error: signedUrlError } = await supabase.storage
       .from("profile-images")
       .createSignedUrls(uniquePaths, 3600);
-    if (signedUrlsError) {
-      console.error("署名付きURL一括生成エラー:", signedUrlsError.message);
-    } else if (signedUrls) {
-      signedUrls.forEach(({ path, signedUrl, error: urlError }) => {
-        if (urlError) {
-          console.error("署名付きURL生成エラー:", path, urlError);
-        } else if (path && signedUrl) {
-          signedUrlMap.set(path, `${signedUrl}&t=${Date.now()}`);
+    if (signedUrlError) {
+      // バッチ全体の失敗時は画像なしでフォールバックする
+      console.error("署名付きURL一括生成エラー:", signedUrlError.message);
+    } else {
+      for (const item of signedUrls ?? []) {
+        if (item.error || !item.signedUrl || !item.path) {
+          // 個別要素の失敗はパスとエラー内容を記録したうえで、その画像だけ除外する
+          console.error("署名付きURL個別生成エラー:", { path: item.path, message: item.error });
+          continue;
         }
-      });
+        signedUrlMap.set(item.path, item.signedUrl);
+      }
     }
   }
 

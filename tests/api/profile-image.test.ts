@@ -22,8 +22,21 @@ const createPostRequest = (file?: File): Request => {
   return { formData: jest.fn().mockResolvedValue(formData) } as unknown as Request;
 };
 
-const createFile = (name = "test.jpg", size = 1024, type = "image/jpeg"): File => {
-  const blob = new Blob([new Uint8Array(size)], { type });
+const MAGIC_BYTES: Record<string, number[]> = {
+  "image/jpeg": [0xff, 0xd8, 0xff],
+  "image/png": [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+  "image/gif": [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
+};
+
+const createFile = (
+  name = "test.jpg",
+  size = 1024,
+  type = "image/jpeg",
+  header?: number[]
+): File => {
+  const buffer = new Uint8Array(size);
+  buffer.set(header ?? MAGIC_BYTES[type] ?? []);
+  const blob = new Blob([buffer], { type });
   return new File([blob], name, { type });
 };
 
@@ -75,6 +88,90 @@ describe("プロフィール画像 API", () => {
       expect(response).toEqual({ success: true, profile_image_path: "test-auth-id/profile-image" });
     });
 
+    it("正常系: 申告MIMEと実バイト列が異なっても検出結果でアップロードする", async () => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      const uploadMock = jest.fn().mockResolvedValue({ error: null });
+      const supabaseMock = {
+        storage: {
+          from: jest.fn().mockReturnValue({ upload: uploadMock }),
+        },
+        from: jest.fn().mockReturnValue({}),
+      };
+      (createServerSupabaseClient as jest.Mock).mockResolvedValue(supabaseMock);
+
+      const updateSpy = jest.fn().mockResolvedValue({ error: null });
+      supabaseMock.from.mockImplementation((table: string) => {
+        if (table === "users") {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: { id: 1 }, error: null }),
+            update: jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ eq: updateSpy }) }),
+          };
+        }
+        return {};
+      });
+
+      nextResponseJsonMock.mockReturnValue({
+        success: true,
+        profile_image_path: "test-auth-id/profile-image",
+      });
+
+      // 申告MIMEは image/jpeg だが、実バイト列はPNGのマジックバイト
+      const mismatchedFile = createFile("fake.jpg", 1024, "image/jpeg", MAGIC_BYTES["image/png"]);
+      const response = await POST(createPostRequest(mismatchedFile));
+
+      // file.type（申告MIME）ではなく、マジックバイトから検出したMIME（image/png）でアップロードされることを確認
+      expect(uploadMock).toHaveBeenCalledWith("test-auth-id/profile-image", expect.any(Buffer), {
+        contentType: "image/png",
+        upsert: true,
+        cacheControl: "0",
+      });
+      expect(response).toEqual({ success: true, profile_image_path: "test-auth-id/profile-image" });
+    });
+
+    it.each([
+      ["GIF87a", [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]],
+      ["GIF89a", [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]],
+    ])("正常系: 有効なGIF（%s）は image/gif としてアップロードされる", async (_label, header) => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      const uploadMock = jest.fn().mockResolvedValue({ error: null });
+      const supabaseMock = {
+        storage: {
+          from: jest.fn().mockReturnValue({ upload: uploadMock }),
+        },
+        from: jest.fn().mockImplementation((table: string) => {
+          if (table === "users") {
+            return {
+              select: jest.fn().mockReturnThis(),
+              eq: jest.fn().mockReturnThis(),
+              maybeSingle: jest.fn().mockResolvedValue({ data: { id: 1 }, error: null }),
+              update: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({ eq: jest.fn().mockResolvedValue({ error: null }) }),
+              }),
+            };
+          }
+          return {};
+        }),
+      };
+      (createServerSupabaseClient as jest.Mock).mockResolvedValue(supabaseMock);
+
+      nextResponseJsonMock.mockReturnValue({
+        success: true,
+        profile_image_path: "test-auth-id/profile-image",
+      });
+
+      const gifFile = createFile("valid.gif", 1024, "image/gif", header);
+      const response = await POST(createPostRequest(gifFile));
+
+      expect(uploadMock).toHaveBeenCalledWith("test-auth-id/profile-image", expect.any(Buffer), {
+        contentType: "image/gif",
+        upsert: true,
+        cacheControl: "0",
+      });
+      expect(response).toEqual({ success: true, profile_image_path: "test-auth-id/profile-image" });
+    });
+
     it("異常系: 未認証の場合 401 を返す", async () => {
       mockGetServerCurrentUser.mockResolvedValue({ authId: null, error: new Error("unauth") });
       nextResponseJsonMock.mockReturnValue({ success: false, error: "認証が必要です" });
@@ -96,6 +193,26 @@ describe("プロフィール画像 API", () => {
       });
 
       const response = await POST(createPostRequest());
+
+      expect(nextResponseJsonMock).toHaveBeenCalledWith(
+        { success: false, error: "画像ファイルを選択してください" },
+        { status: 400 }
+      );
+      expect(response).toEqual({ success: false, error: "画像ファイルを選択してください" });
+    });
+
+    it("異常系: image フィールドが File 以外（文字列）の場合 400 を返す", async () => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      nextResponseJsonMock.mockReturnValue({
+        success: false,
+        error: "画像ファイルを選択してください",
+      });
+
+      const formData = new FormData();
+      formData.append("image", "not-a-file");
+      const request = { formData: jest.fn().mockResolvedValue(formData) } as unknown as Request;
+
+      const response = await POST(request);
 
       expect(nextResponseJsonMock).toHaveBeenCalledWith(
         { success: false, error: "画像ファイルを選択してください" },
@@ -130,6 +247,51 @@ describe("プロフィール画像 API", () => {
 
       const invalidFile = createFile("test.pdf", 1024, "application/pdf");
       const response = await POST(createPostRequest(invalidFile));
+
+      expect(nextResponseJsonMock).toHaveBeenCalledWith(
+        { success: false, error: "jpg / jpeg / png / gif のみアップロード可能です" },
+        { status: 400 }
+      );
+      expect(response).toEqual({
+        success: false,
+        error: "jpg / jpeg / png / gif のみアップロード可能です",
+      });
+    });
+
+    it("異常系: 許可MIMEを偽装した非画像ファイルは 400 を返す", async () => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      nextResponseJsonMock.mockReturnValue({
+        success: false,
+        error: "jpg / jpeg / png / gif のみアップロード可能です",
+      });
+
+      const spoofedFile = createFile("fake.jpg", 1024, "image/jpeg", [0x00, 0x11, 0x22, 0x33]);
+      const response = await POST(createPostRequest(spoofedFile));
+
+      expect(nextResponseJsonMock).toHaveBeenCalledWith(
+        { success: false, error: "jpg / jpeg / png / gif のみアップロード可能です" },
+        { status: 400 }
+      );
+      expect(response).toEqual({
+        success: false,
+        error: "jpg / jpeg / png / gif のみアップロード可能です",
+      });
+    });
+
+    it("異常系: GIFシグネチャが不完全な偽装ファイルは 400 を返す", async () => {
+      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      nextResponseJsonMock.mockReturnValue({
+        success: false,
+        error: "jpg / jpeg / png / gif のみアップロード可能です",
+      });
+
+      const truncatedGifFile = createFile(
+        "fake.gif",
+        1024,
+        "image/gif",
+        [0x47, 0x49, 0x46, 0x38, 0x00, 0x00]
+      );
+      const response = await POST(createPostRequest(truncatedGifFile));
 
       expect(nextResponseJsonMock).toHaveBeenCalledWith(
         { success: false, error: "jpg / jpeg / png / gif のみアップロード可能です" },
