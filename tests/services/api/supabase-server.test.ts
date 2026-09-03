@@ -353,7 +353,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       const createSignedUrlsMock = jest
         .fn()
         .mockResolvedValue({ data: null, error: { message: "Storage一時障害" } });
@@ -392,7 +392,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       // トップレベルの error は null だが、要素単位で error が返るケース
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [
