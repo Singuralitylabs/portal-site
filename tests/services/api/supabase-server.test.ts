@@ -270,7 +270,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: jest.fn() })) };
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
@@ -314,7 +314,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
       });
@@ -353,7 +353,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       const createSignedUrlsMock = jest
         .fn()
         .mockResolvedValue({ data: null, error: { message: "Storage一時障害" } });
@@ -392,7 +392,7 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createOrderBuilder(result);
+      const builder = createEqTerminatingBuilder(3, result);
       // トップレベルの error は null だが、要素単位で error が返るケース
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [
