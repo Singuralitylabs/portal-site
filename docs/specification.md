@@ -1829,7 +1829,8 @@ sequenceDiagram
 2. 一覧表示
    - 対象テーブルは `documents` / `videos` / `categories` / `applications` / `positions` とし、各テーブルを一覧表示する
    - `users` および `position_tags` はマスター管理画面の対象外とする
-   - 表示するテーブル・カラム・型・リレーションは `app/types/lib/database.types.ts` を正本として解決する
+   - 表示するテーブル・カラム・型・リレーションは `app/types/lib/database.types.ts` を正本とし、型検証済みの静的設定またはビルド時生成物として解決する
+   - 実行時に `app/types/lib/database.types.ts` を読み取って、テーブル・カラム・型・リレーションを動的解決する実装にはしない
    - 論理削除済みレコードも表示対象とし、`is_deleted` によるフィルタリングは行わない
    - データ参照は対象テーブルの Row Level Security（RLS）に従う
    - RLS はテーブルデータに対する参照可否を制御するものであり、マスター管理画面そのものへのアクセス可否は UI とサーバー API のロール判定で制御する
