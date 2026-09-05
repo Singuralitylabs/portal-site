@@ -97,7 +97,12 @@ describe("プロフィール画像 API", () => {
     });
 
     it("正常系: 申告MIMEと実バイト列が異なっても検出結果でアップロードする", async () => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      mockRequireApiUser.mockResolvedValue({
+        ok: true,
+        user: { id: "test-auth-id" },
+        userStatus: "active",
+        displayName: "太郎",
+      });
       const uploadMock = jest.fn().mockResolvedValue({ error: null });
       const supabaseMock = {
         storage: {
@@ -142,7 +147,12 @@ describe("プロフィール画像 API", () => {
       ["GIF87a", [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]],
       ["GIF89a", [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]],
     ])("正常系: 有効なGIF（%s）は image/gif としてアップロードされる", async (_label, header) => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      mockRequireApiUser.mockResolvedValue({
+        ok: true,
+        user: { id: "test-auth-id" },
+        userStatus: "active",
+        displayName: "太郎",
+      });
       const uploadMock = jest.fn().mockResolvedValue({ error: null });
       const supabaseMock = {
         storage: {
@@ -211,7 +221,12 @@ describe("プロフィール画像 API", () => {
     });
 
     it("異常系: image フィールドが File 以外（文字列）の場合 400 を返す", async () => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      mockRequireApiUser.mockResolvedValue({
+        ok: true,
+        user: { id: "test-auth-id" },
+        userStatus: "active",
+        displayName: "太郎",
+      });
       nextResponseJsonMock.mockReturnValue({
         success: false,
         error: "画像ファイルを選択してください",
@@ -278,7 +293,12 @@ describe("プロフィール画像 API", () => {
     });
 
     it("異常系: 許可MIMEを偽装した非画像ファイルは 400 を返す", async () => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      mockRequireApiUser.mockResolvedValue({
+        ok: true,
+        user: { id: "test-auth-id" },
+        userStatus: "active",
+        displayName: "太郎",
+      });
       nextResponseJsonMock.mockReturnValue({
         success: false,
         error: "jpg / jpeg / png / gif のみアップロード可能です",
@@ -298,7 +318,12 @@ describe("プロフィール画像 API", () => {
     });
 
     it("異常系: GIFシグネチャが不完全な偽装ファイルは 400 を返す", async () => {
-      mockGetServerCurrentUser.mockResolvedValue({ authId: "test-auth-id", error: null });
+      mockRequireApiUser.mockResolvedValue({
+        ok: true,
+        user: { id: "test-auth-id" },
+        userStatus: "active",
+        displayName: "太郎",
+      });
       nextResponseJsonMock.mockReturnValue({
         success: false,
         error: "jpg / jpeg / png / gif のみアップロード可能です",
