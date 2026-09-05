@@ -2,6 +2,11 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
+function getSafeErrorIdentifier(value: string | null): string | null {
+  if (!value) return null;
+  return /^[A-Za-z0-9_.-]{1,64}$/.test(value) ? value : "invalid_error_identifier";
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -36,9 +41,8 @@ export async function GET(request: NextRequest) {
     }
   } else {
     console.error("認証エラー: codeパラメータが存在しません", {
-      error: searchParams.get("error"),
-      errorCode: searchParams.get("error_code"),
-      errorDescription: searchParams.get("error_description"),
+      error: getSafeErrorIdentifier(searchParams.get("error")),
+      errorCode: getSafeErrorIdentifier(searchParams.get("error_code")),
     });
   }
 
