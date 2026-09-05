@@ -4,6 +4,7 @@ import { User } from "@supabase/supabase-js";
 export interface ServerAuthResult {
   user: User | null;
   userStatus: "pending" | "active" | "rejected" | null;
+  displayName?: string | null;
   error?: string;
 }
 
@@ -25,7 +26,7 @@ export async function getServerAuth(): Promise<ServerAuthResult> {
     // ユーザーステータス確認
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .select("status")
+      .select("status, display_name")
       .eq("auth_id", user.id)
       .eq("is_deleted", false)
       .single();
@@ -41,6 +42,7 @@ export async function getServerAuth(): Promise<ServerAuthResult> {
     return {
       user,
       userStatus: userData.status as "pending" | "active" | "rejected",
+      displayName: userData.display_name,
     };
   } catch (error) {
     console.error("サーバー認証エラー:", error);

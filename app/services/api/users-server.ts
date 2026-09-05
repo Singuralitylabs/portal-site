@@ -340,3 +340,119 @@ export async function updateUserPositionTagsInServer(
 
   return null;
 }
+
+export type ClaimRegistrationSlackResult = {
+  claimed: boolean;
+  alreadyNotified: boolean;
+  displayName: string;
+  error: PostgrestError | null;
+};
+
+type RegistrationNotificationRow = {
+  display_name: string;
+  registration_notified_at: string | null;
+};
+
+type UsersNotificationQuery = {
+  select: (columns: string) => UsersNotificationQuery;
+  update: (values: { registration_notified_at: string | null }) => UsersNotificationQuery;
+  eq: (column: string, value: string | boolean) => UsersNotificationQuery;
+  is: (column: string, value: null) => UsersNotificationQuery;
+  maybeSingle: () => Promise<{
+    data: RegistrationNotificationRow | null;
+    error: PostgrestError | null;
+  }>;
+};
+
+/**
+ * 新規登録 Slack 通知を1回に制限する。
+ * `registration_notified_at` が NULL の行だけを原子的に更新して通知権を取得する。
+ * カラム追加: supabase/migrations/01_tables/users/07_add_registration_notified_at_to_users.sql
+ */
+export async function claimRegistrationSlackNotification({
+  authId,
+}: {
+  authId: string;
+}): Promise<ClaimRegistrationSlackResult> {
+  const supabase = await createServerSupabaseClient();
+  const users = supabase.from("users") as unknown as UsersNotificationQuery;
+  const { data, error } = await users
+    .select("display_name, registration_notified_at")
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Slack通知の通知権確認エラー:", error.message);
+    return { claimed: false, alreadyNotified: false, displayName: "", error };
+  }
+  if (!data) {
+    return { claimed: false, alreadyNotified: false, displayName: "", error: null };
+  }
+
+  if (data.registration_notified_at) {
+    return {
+      claimed: false,
+      alreadyNotified: true,
+      displayName: data.display_name,
+      error: null,
+    };
+  }
+
+  const { data: claimed, error: updateError } = await (
+    supabase.from("users") as unknown as UsersNotificationQuery
+  )
+    .update({ registration_notified_at: new Date().toISOString() })
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .is("registration_notified_at", null)
+    .select("display_name, registration_notified_at")
+    .maybeSingle();
+
+  if (updateError) {
+    console.error("Slack通知の通知権取得エラー:", updateError.message);
+    return {
+      claimed: false,
+      alreadyNotified: false,
+      displayName: data.display_name,
+      error: updateError,
+    };
+  }
+  if (!claimed) {
+    return {
+      claimed: false,
+      alreadyNotified: true,
+      displayName: data.display_name,
+      error: null,
+    };
+  }
+
+  return {
+    claimed: true,
+    alreadyNotified: false,
+    displayName: claimed.display_name,
+    error: null,
+  };
+}
+
+/**
+ * Slack 通知の送信に失敗したとき、通知権を戻す。
+ */
+export async function releaseRegistrationSlackNotification({
+  authId,
+}: {
+  authId: string;
+}): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const users = supabase.from("users") as unknown as UsersNotificationQuery;
+  const { error } = await users
+    .update({ registration_notified_at: null })
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Slack通知の通知権ロールバックエラー:", error.message);
+  }
+}

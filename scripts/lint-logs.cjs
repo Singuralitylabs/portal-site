@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..", "app");
+const EXTRA_FILES = [path.resolve(__dirname, "..", "middleware.ts")];
 const TARGET_EXTENSIONS = new Set([".ts", ".tsx"]);
 const IGNORE_DIRS = new Set(["node_modules", ".next", "dist"]);
 const ALLOW_LIST = [
@@ -43,6 +44,11 @@ function main() {
 
   const files = [];
   walk(ROOT, files);
+  for (const extra of EXTRA_FILES) {
+    if (fs.existsSync(extra)) {
+      files.push(extra);
+    }
+  }
 
   const violations = [];
   const patterns = [/console\.(log|info)\s*\(/, /debugger/];

@@ -32,6 +32,12 @@ jest.mock("next/server", () => ({
   },
 }));
 
+const mockRequireApiUser = jest.fn();
+
+jest.mock("../../app/services/auth/require-api-user", () => ({
+  requireApiUser: (...args: unknown[]) => mockRequireApiUser(...args),
+}));
+
 const ORIGINAL_ENV = { ...process.env };
 
 type RouteModule = typeof import("../../app/api/calendar/events/route");
@@ -93,6 +99,12 @@ beforeEach(() => {
     },
   }));
   googleAuthMock.mockImplementation(() => ({}));
+  mockRequireApiUser.mockResolvedValue({
+    ok: true,
+    user: { id: "test-auth-id" },
+    userStatus: "active",
+    displayName: "太郎",
+  });
 });
 
 afterAll(() => {
@@ -197,6 +209,32 @@ describe("calendar events route GET", () => {
         })
       );
       // GET の戻り値が NextResponse.json の返却値と一致することを確認
+      expect(response).toBe(payload);
+    });
+  });
+
+  it("異常系: 未認証の場合 401 を返す", async () => {
+    const payload = { success: false, error: "認証が必要です" };
+    mockRequireApiUser.mockResolvedValue({ ok: false, response: payload });
+
+    await runWithCalendarRouteModule(async ({ GET }) => {
+      const request = createRequest();
+      const response = await GET(request);
+
+      expect(googleAuthMock).not.toHaveBeenCalled();
+      expect(response).toBe(payload);
+    });
+  });
+
+  it("異常系: inactive ユーザーの場合 403 を返す", async () => {
+    const payload = { success: false, error: "この操作は許可されていません" };
+    mockRequireApiUser.mockResolvedValue({ ok: false, response: payload });
+
+    await runWithCalendarRouteModule(async ({ GET }) => {
+      const request = createRequest();
+      const response = await GET(request);
+
+      expect(googleAuthMock).not.toHaveBeenCalled();
       expect(response).toBe(payload);
     });
   });

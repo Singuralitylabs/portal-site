@@ -221,6 +221,7 @@ sequenceDiagram
 #### 2.7.1 概要
 
 新規ユーザー登録時に、管理者への承認依頼としてSlack通知を自動送信する機能。
+`POST /api/notifications/slack` は認証必須で、新規登録直後の pending ユーザーのみが呼べる。表示名は `users.display_name` を使い、同一ユーザーへの通知は1回限り。
 
 #### 2.7.2 処理フロー
 
@@ -234,8 +235,9 @@ sequenceDiagram
 
     User->>Provider: 初回Googleログイン
     Provider->>Provider: usersテーブルにINSERT
-    Note over Provider: ユーザー作成成功後
-    Provider->>API: fetch('/api/notifications/slack')
+    Note over Provider: ユーザー作成成功後（status=pending）
+    Provider->>API: fetch('/api/notifications/slack')（セッション付き）
+    Note over API: pending ユーザーのみ許可。表示名は DB から取得。1回限り
     API->>Slack: Webhook経由で通知送信
     Slack->>Channel: 承認依頼メッセージ表示
     Note over API,Channel: 通知失敗時でもユーザー作成は継続
