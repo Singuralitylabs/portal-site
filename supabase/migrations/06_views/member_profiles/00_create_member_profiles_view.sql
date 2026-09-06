@@ -15,7 +15,7 @@
 --   Supabase の security lint はこの構成を `security_definer_view` として
 --   警告するが、ビュー内のガードと anon への REVOKE により実質的な
 --   RLS 迂回は発生しない（詳細は Wiki のナレッジ共有ページを参照）。
-CREATE VIEW member_profiles
+CREATE OR REPLACE VIEW member_profiles
 WITH (security_invoker = false)
 AS
 SELECT

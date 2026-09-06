@@ -25,13 +25,13 @@ export async function getItemsByCategory(
     query = supabase
       .from("documents")
       .select(
-        "id,name,display_order,assignee_id,assignee:member_profiles!documents_assignee_fk(display_name)"
+        "id,name,display_order,assignee_id,assignee:member_profiles!documents_assignee_fk(id,display_name)"
       );
   } else if (table === "videos") {
     query = supabase
       .from("videos")
       .select(
-        "id,name,display_order,assignee_id,assignee:member_profiles!videos_assignee_fk(display_name)"
+        "id,name,display_order,assignee_id,assignee:member_profiles!videos_assignee_fk(id,display_name)"
       );
   } else {
     query = supabase.from("applications").select("id,name,display_order");
