@@ -14,7 +14,7 @@ export async function fetchApplications(): Promise<{
   const { data, error } = await supabase
     .from("applications")
     .select(
-      `*, category:categories (name), developer:users!applications_developer_id_fkey (display_name)`
+      `*, category:categories (name), developer:member_profiles!applications_developer_id_fkey (display_name)`
     )
     .eq("is_deleted", false)
     .order("display_order");
