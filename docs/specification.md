@@ -643,9 +643,10 @@ sequenceDiagram
      - 論理削除されていないメンバー
    - ページタイトルはページスクロール時も固定表示
    - 役職者セクション（代表・副代表・シンラボ管理人）
-     - 代表、副代表、シンラボ管理人のいずれかの役職を持つメンバーを対象とする。`position_id`を引用。
-     - 「シンラボ会員一覧」タイトルの直下に「代表」「副代表」「シンラボ管理人」の3タイトルを横並びで表示
+     - `positions.is_leadership = TRUE` の役職を持つメンバーを対象とする
+     - 「シンラボ会員一覧」タイトルの直下に、対象役職を`id`昇順（代表・副代表・シンラボ管理人の順）で横並びタイトル表示
      - 各タイトルの直下に、該当するメンバーカードを縦に並べて表示
+     - 該当メンバーが0件の役職は、タイトルごと非表示にする
    - メンバーセクション
      - 前述の役職者以外のメンバーを対象とする
      - 役職者セクションの下に「メンバー」タイトルを表示
@@ -751,14 +752,15 @@ sequenceDiagram
 - usersテーブルから以下のカラムを取得：
   - ユーザー基本情報: `id, display_name, role, bio, avatar_url, profile_image_path`
   - 関連URL情報: `x_url, facebook_url, instagram_url, github_url, portfolio_url`
-  - 関連テーブル: `position_tags（position_id, positions（id, name, is_deleted））`
+  - 関連テーブル: `position_tags（position_id, positions（id, name, is_leadership, is_deleted））`
 - 取得条件：
   - `status = 'active'`（承認済みメンバーのみ）
   - `is_deleted = FALSE`（論理削除されていないメンバーのみ）
 - 表示分類（フロントエンド側で分類）：
   - 役職者セクション：
-    - 代表・副代表・シンラボ管理人の役職を持つメンバー
-    - 表示順序：左から代表・副代表・シンラボ管理人の順に一列に表示する。`position_id`を用いて抽出表示
+    - `is_leadership = TRUE` の役職を持つメンバー
+    - 表示順序：`positions.is_leadership = TRUE` の役職を`id`昇順でループし、各役職ごとに列を生成。列内のメンバーは名前の昇順（日本語名順）でソート済みの配列から抽出する
+    - 該当メンバーが0件、または役職名が空の列は描画しない
   - メンバーセクション：
     - 前述の役職者以外のメンバー
     - 表示順序：名前の昇順（日本語名順）
