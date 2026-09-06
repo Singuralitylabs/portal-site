@@ -12,6 +12,7 @@
 -- 非管理者には 0 件が返る（DB層での多層防御）。
 
 DROP POLICY IF EXISTS "active_users_can_read_all" ON "users";
+DROP POLICY IF EXISTS "admins_can_read_all_users" ON "users";
 CREATE POLICY "admins_can_read_all_users" ON "users"
   FOR SELECT
   TO authenticated
