@@ -32,7 +32,7 @@ SELECT
 FROM users
 WHERE status = 'active'
   AND is_deleted = FALSE
-  AND is_active_user();
+  AND (SELECT is_active_user());
 
 -- anon には公開しない（未承認の匿名アクセスから会員一覧を隠す）
 REVOKE ALL ON member_profiles FROM PUBLIC;
