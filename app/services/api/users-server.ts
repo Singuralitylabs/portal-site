@@ -61,6 +61,8 @@ export async function fetchUserInfoByAuthId({
 
 /**
  * 会員一覧を取得する
+ * member_profiles ビュー（公開列のみ・active会員限定）経由で取得するため、
+ * status/is_deleted のフィルタはビュー定義側に組み込み済み（issue #424）。
  * @returns { data: MemberType[] | null, error: PostgrestError | null } - 会員一覧とエラー
  */
 export async function fetchActiveUsers(): Promise<{
@@ -70,12 +72,10 @@ export async function fetchActiveUsers(): Promise<{
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase
-    .from("users")
+    .from("member_profiles")
     .select(
-      "id, display_name, role, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+      "id, display_name, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
     )
-    .eq("status", "active")
-    .eq("is_deleted", false)
     .eq("position_tags.positions.is_deleted", false);
 
   if (error) {
@@ -91,7 +91,6 @@ export async function fetchActiveUsers(): Promise<{
   const transformedData = data.map(user => ({
     id: user.id,
     display_name: user.display_name,
-    role: user.role,
     bio: user.bio,
     avatar_url: user.avatar_url,
     profile_image_path: user.profile_image_path,

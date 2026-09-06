@@ -30,7 +30,7 @@ export async function fetchVideoById(videoId: number): Promise<{
     .from("videos")
     .select(
       `*, category:categories (name),
-      assignee:users!videos_assignee_fk (display_name)`
+      assignee:member_profiles!videos_assignee_fk (display_name)`
     )
     .eq("id", videoId)
     .eq("is_deleted", false)

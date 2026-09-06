@@ -84,11 +84,13 @@ export type UserStatusType = "pending" | "active" | "rejected";
 export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
-export type MemberType = Pick<
+// member_profiles ビュー（公開列のみ・email/auth_id/role/status非公開）のRow型。
+// `npm run db:types:local` 実行後は database.types.ts の
+// `Database["public"]["Views"]["member_profiles"]["Row"]` に置き換えること（手動編集不可のため暫定定義）。
+export type MemberProfileType = Pick<
   UserType,
   | "id"
   | "display_name"
-  | "role"
   | "bio"
   | "avatar_url"
   | "profile_image_path"
@@ -97,7 +99,9 @@ export type MemberType = Pick<
   | "instagram_url"
   | "github_url"
   | "portfolio_url"
-> & {
+>;
+
+export type MemberType = MemberProfileType & {
   position_tags: {
     positions: {
       id: number;
