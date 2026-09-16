@@ -25,7 +25,7 @@ const previewSources = process.env.VERCEL_ENV === "preview" ? "https://vercel.li
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://${YOUTUBE_HOSTNAME} ${previewSources}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? ` 'unsafe-eval' http://${YOUTUBE_HOSTNAME}` : ""} https://${YOUTUBE_HOSTNAME} ${previewSources}`,
   `style-src 'self' 'unsafe-inline' ${previewSources}`,
   // applications.thumbnail_path・avatar_url は生の<img>(next/imageのremotePatternsを経由しない)で
   // 任意ホストのURLを許容する仕様のため、imgに限りhttps全般を許可する
