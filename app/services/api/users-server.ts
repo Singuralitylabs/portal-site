@@ -74,7 +74,7 @@ export async function fetchActiveUsers(): Promise<{
   const { data, error } = await supabase
     .from("member_profiles")
     .select(
-      "id, display_name, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+    "id, display_name, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted, is_leadership))"
     )
     .eq("position_tags.positions.is_deleted", false);
 

@@ -114,6 +114,7 @@ export type Database = {
           display_order: number;
           id: number;
           is_deleted: boolean;
+          is_leadership: boolean;
           name: string;
           updated_at: string;
         };
@@ -124,6 +125,7 @@ export type Database = {
           display_order?: number;
           id?: number;
           is_deleted?: boolean;
+          is_leadership?: boolean;
           name: string;
           updated_at?: string;
         };
@@ -134,6 +136,7 @@ export type Database = {
           display_order?: number;
           id?: number;
           is_deleted?: boolean;
+          is_leadership?: boolean;
           name?: string;
           updated_at?: string;
         };

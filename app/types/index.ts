@@ -97,6 +97,7 @@ export type MemberType = MemberProfileType & {
   position_tags: {
     positions: {
       id: number;
+      is_leadership: boolean;
       name: string;
       is_deleted: boolean;
     } | null;
