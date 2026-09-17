@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import type { CategoryItemType, ContentTableType, PlacementPositionType } from "@/app/types";
 import { getItemsByCategory } from "@/app/services/api/utils/display-order";
 
@@ -24,13 +24,22 @@ export function useDisplayOrderForm(
   const [items, setItems] = useState<CategoryItemType[]>([]);
   const [position, setPosition] = useState<string>(isEdit ? "current" : "last");
 
+  // モーダルオープン時の再取得とカテゴリー変更時の再取得が短時間に連続すると、
+  // 後発のリクエストより先発のリクエストが遅れて解決し古い結果で上書きする
+  // 可能性がある。リクエストごとに採番し、最新の呼び出し以外の結果は捨てる。
+  const latestRequestId = useRef(0);
+
   // カテゴリー変更ハンドラー
   const handleCategoryChange = useCallback(
     async (newCategoryId: number) => {
+      const requestId = ++latestRequestId.current;
+
       if (newCategoryId > 0) {
         const fetchedItems = await getItemsByCategory(contentType, newCategoryId, itemId);
-        setItems(fetchedItems);
-      } else {
+        if (requestId === latestRequestId.current) {
+          setItems(fetchedItems);
+        }
+      } else if (requestId === latestRequestId.current) {
         setItems([]);
       }
     },
