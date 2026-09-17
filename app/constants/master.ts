@@ -145,12 +145,13 @@ const POSITIONS_MASTER_TABLE = {
     { key: "id", label: "ID" },
     { key: "name", label: "役職名" },
     { key: "description", label: "説明" },
+    { key: "is_leadership", label: "役職者フラグ" },
     { key: "display_order", label: "表示順" },
     { key: "is_deleted", label: "削除状態" },
     { key: "created_at", label: "作成日時" },
     { key: "updated_at", label: "更新日時" },
   ],
-  listColumnKeys: ["id", "name", "is_deleted", "updated_at"],
+  listColumnKeys: ["id", "name", "is_leadership", "is_deleted", "updated_at"],
   references: [],
 } satisfies MasterTableDefinition<"positions">;
 
