@@ -286,19 +286,23 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 定義ファイル:
 
-| ポリシー                                 | 定義ファイル                                     |
-| ---------------------------------------- | ------------------------------------------------ |
-| SELECT・管理者によるUPDATE（現行定義）   | `04_policies/users/01_update_users_policies.sql` |
-| INSERT・本人によるUPDATE・物理削除の禁止 | `04_policies/users/00_users_policies.sql`        |
+| ポリシー                                         | 定義ファイル                                              |
+| ------------------------------------------------ | --------------------------------------------------------- |
+| SELECT（本人行）・管理者によるUPDATE（現行定義） | `04_policies/users/01_update_users_policies.sql`          |
+| SELECT（管理者による全行閲覧、現行定義）         | `04_policies/users/02_restrict_active_users_read_all.sql` |
+| INSERT・本人によるUPDATE・物理削除の禁止         | `04_policies/users/00_users_policies.sql`                 |
 
 > **`00_users_policies.sql` を単独で再実行しないこと**
-> 同ファイルには旧定義（全認証ユーザーへのSELECT許可・`user_metadata` 依存の管理者判定）が残っています。permissive ポリシーはOR結合されるため、単独で再実行すると条件の緩い旧定義が復活し、修正が無効化されます。再実行する場合は必ず `01_update_users_policies.sql` も続けて実行してください。
+> 同ファイルには旧定義（全認証ユーザーへのSELECT許可・`user_metadata` 依存の管理者判定）が残っています。permissive ポリシーはOR結合されるため、単独で再実行すると条件の緩い旧定義が復活し、修正が無効化されます。再実行する場合は必ず `01_update_users_policies.sql` → `02_restrict_active_users_read_all.sql` の順に続けて実行してください。
 
 - ユーザーは自身のデータを閲覧可能
   - 承認前（pending）・否認済み（rejected）のユーザーが自身のステータスを確認するために必要
-- アクティブユーザーは削除されていない全データを閲覧可能
-  - 会員一覧・承認待ち一覧・担当者選択など、他ユーザーを参照する機能で使用する
-  - 承認前・否認済みのユーザーは他ユーザーのデータを閲覧できない
+- **管理者は削除されていない全ユーザーデータを閲覧可能**（`admins_can_read_all_users`）
+  - 承認待ち一覧（`email` を含む）の取得や、管理者による会員管理に使用する
+  - 一般会員（承認前・否認済み・非管理者のactive会員）は、他ユーザーの行を`users`テーブルから直接閲覧できない
+    - 旧ポリシー `active_users_can_read_all` を廃止し、管理者限定の `admins_can_read_all_users` へ差し替えた（issue #424）
+- 会員一覧・担当者選択・資料/動画/アプリの担当者名表示など、一般会員が他会員の公開情報を参照する用途は
+  `users` テーブルへの直接アクセスではなく `member_profiles` ビュー（4.9 参照）を経由する
 - 新規登録は、Supabase Authからの自動登録のみ許可
   - OAuth認証後のコールバック処理で、ユーザー自身のデータを登録する際に使用する
 - ユーザーは自身のデータのみ更新可能
@@ -363,6 +367,26 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 - `status = 'active'` かつ未削除のユーザーのみ全プロフィール画像を閲覧可能
 - ユーザーは自身の `auth_id` フォルダの `profile-image`（固定キー）のみアップロード・更新・削除可能
+
+### 4.9. member_profiles ビュー（会員公開プロフィール）
+
+定義ファイル: `06_views/member_profiles/00_create_member_profiles_view.sql`
+
+`users` テーブルの列レベルPII（`email` / `auth_id` / `role` / `status`）を、会員一覧・担当者選択・資料/動画/アプリの担当者名表示から隠蔽するためのビュー（issue #424）。
+
+- 公開列: `id` / `display_name` / `bio` / `avatar_url` / `profile_image_path` / `x_url` / `facebook_url` / `instagram_url` / `github_url` / `portfolio_url` の10列のみ
+- ビュー定義に `WHERE status = 'active' AND is_deleted = FALSE AND (SELECT is_active_user())` を組み込み、承認済み会員以外・削除済みユーザーの行は返さない
+  - `is_active_user()` は `(SELECT ...)` でラップしてInitPlan化し、候補行ごとではなくステートメントあたり1回の評価にしている（`04_policies` のポリシー定義と同じ方針）
+- `security_invoker = false`（所有者権限）で実行する
+  - `users` テーブル本体は「本人行」と「管理者」しか直接SELECTできないため、invoker権限のままだと会員一覧が本人1行しか返らなくなる
+  - 所有者権限とビュー内のガード（`is_active_user()` 等）の組み合わせにより、RLSを迂回しても意図した行・列のみが返る設計にしている
+  - Supabaseのsecurity lintは本構成を `security_definer_view` として警告するが、許容している。根拠はWikiのナレッジ共有ページを参照
+- `anon` ロールからは `REVOKE` し、`authenticated` ロールにのみ `SELECT` を許可する
+- 資料/動画/アプリの担当者埋め込み結合（`assignee:member_profiles!documents_assignee_fk(id, display_name)` 等）は、`users` への直接結合からこのビュー経由に置き換えている
+  - ビューは `status = 'active'` の行のみを含むため、非activeな担当者が既存データに存在する場合、一覧の担当者名表示は `null` になり、資料/動画編集フォームの担当者`Select`は選択肢に表示されなくなる（`assignee_id` 自体は保持されたまま保存される）
+- **ロールアウト順序**: マイグレーションはSupabase SQL Editorでの手動実行、アプリケーションコードはVercelへの一括デプロイのため、無停止で反映するには「`06_views` のビュー作成 → アプリのデプロイ → `04_policies` のポリシー差し替え」の順に実行すること
+  - `04_policies` を先に適用すると、新コードのデプロイ前は `fetchActiveUsers` が本人1行のみ、`users!..._fk` 埋め込みが全員 `null` になる
+  - `06_views` より先に新コードをデプロイすると、`member_profiles!..._fk` の埋め込みがPostgRESTエラー（PGRST200相当）になり、資料・動画・アプリ・会員一覧ページがエラー表示になる
 
 ## 5. Supabase Storage
 
