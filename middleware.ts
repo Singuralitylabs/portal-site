@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { USER_STATUS } from "./app/constants/user";
 import { fetchUserStatusByIdInServer } from "./app/services/api/users-server";
+import { buildContentSecurityPolicy } from "./app/utils/csp";
 import {
   isApiPath,
   isPublicApiRoute,
@@ -9,29 +10,43 @@ import {
   shouldSkipMiddleware,
 } from "./app/utils/middleware-path";
 
+// レスポンスに CSP を設定する。nonce はここでしか使わないため、返却直前に一箇所で付与する。
+function withCsp<T extends NextResponse>(response: T, nonce: string): T {
+  response.headers.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Server Component 側 (next/headers) から参照できるよう、リクエストヘッダーに nonce を積む。
+  // 以降の NextResponse.next({ request: { headers: request.headers } }) はこの参照を共有する。
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  request.headers.set("x-nonce", nonce);
+
   // 静的ファイルなどはスキップ
   if (shouldSkipMiddleware(pathname)) {
-    return NextResponse.next();
+    return withCsp(NextResponse.next({ request: { headers: request.headers } }), nonce);
   }
 
   // 公開ページルートはそのまま通す
   if (isPublicPageRoute(pathname)) {
-    return NextResponse.next();
+    return withCsp(NextResponse.next({ request: { headers: request.headers } }), nonce);
   }
 
   // 公開が必要な API のみホワイトリストでスキップする
   if (isPublicApiRoute(pathname)) {
-    return NextResponse.next();
+    return withCsp(NextResponse.next({ request: { headers: request.headers } }), nonce);
   }
 
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  let response = withCsp(
+    NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    }),
+    nonce
+  );
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,10 +75,13 @@ export async function middleware(request: NextRequest) {
   if (error || !user) {
     // API は呼び出し側の response.json() を壊さないよう 401 JSON を返す
     if (isApiPath(pathname)) {
-      return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+      return withCsp(
+        NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 }),
+        nonce
+      );
     }
     const redirectUrl = new URL("/login", request.url);
-    return NextResponse.redirect(redirectUrl);
+    return withCsp(NextResponse.redirect(redirectUrl), nonce);
   }
 
   // 多層防御: middleware はセッション有無のみ確認する。
@@ -85,17 +103,17 @@ export async function middleware(request: NextRequest) {
   if (!userStatus) {
     // ユーザー情報がない場合は承認待ちページへ
     const redirectUrl = new URL("/pending", request.url);
-    return NextResponse.redirect(redirectUrl);
+    return withCsp(NextResponse.redirect(redirectUrl), nonce);
   }
 
   if (userStatus === USER_STATUS.PENDING && !pathname.startsWith("/pending")) {
     const redirectUrl = new URL("/pending", request.url);
-    return NextResponse.redirect(redirectUrl);
+    return withCsp(NextResponse.redirect(redirectUrl), nonce);
   }
 
   if (userStatus === USER_STATUS.REJECTED && !pathname.startsWith("/rejected")) {
     const redirectUrl = new URL("/rejected", request.url);
-    return NextResponse.redirect(redirectUrl);
+    return withCsp(NextResponse.redirect(redirectUrl), nonce);
   }
 
   // activeユーザーは通常ページにアクセス可能
