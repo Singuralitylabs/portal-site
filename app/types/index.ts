@@ -101,6 +101,7 @@ export type MemberType = Pick<
   position_tags: {
     positions: {
       id: number;
+      is_leadership: boolean;
       name: string;
       is_deleted: boolean;
     } | null;
