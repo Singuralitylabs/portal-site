@@ -1,32 +1,28 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { CategoryItemType, ContentTableType, PlacementPositionType } from "@/app/types";
 import { getItemsByCategory } from "@/app/services/api/utils/display-order";
 
 /**
  * 表示順操作フォームのカスタムフック
+ *
+ * アイテム一覧（items）の取得は、呼び出し側が `handleCategoryChange` を
+ * 明示的に呼ぶことでのみ行う（カテゴリー選択時・モーダルの再オープン時など）。
+ * `categoryId` の変化を自動検知するeffectは持たない。これは、モーダルを
+ * 開いたまま同一カテゴリーで連続保存した場合に候補一覧が古いまま残る不具合
+ * （issue #352）を避けるため。呼び出し側の「モーダルが開かれたときの初期化」
+ * 処理から必ず `handleCategoryChange` を呼び出すこと。
  * @param contentType コンテンツタイプ（documents, videos, applications）
- * @param categoryId カテゴリーID
  * @param itemId アイテムID（編集時のみ）
  * @param isEdit 編集モードかどうか
  * @returns 表示順操作に必要な状態と関数
  */
 export function useDisplayOrderForm(
   contentType: ContentTableType,
-  categoryId: number,
   itemId?: number,
   isEdit?: boolean
 ) {
   const [items, setItems] = useState<CategoryItemType[]>([]);
   const [position, setPosition] = useState<string>(isEdit ? "current" : "last");
-
-  // カテゴリーIDが変更されたときにアイテム一覧を取得
-  useEffect(() => {
-    if (categoryId > 0) {
-      getItemsByCategory(contentType, categoryId, itemId).then(setItems);
-    } else {
-      setItems([]);
-    }
-  }, [contentType, categoryId, itemId]);
 
   // カテゴリー変更ハンドラー
   const handleCategoryChange = useCallback(
