@@ -39,7 +39,8 @@ export function useDisplayOrderForm(
         if (requestId === latestRequestId.current) {
           setItems(fetchedItems);
         }
-      } else if (requestId === latestRequestId.current) {
+      } else {
+        // awaitを挟んでいないため他の呼び出しが割り込む余地はなく、常にrequestIdは最新
         setItems([]);
       }
     },
