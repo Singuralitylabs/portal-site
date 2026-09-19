@@ -8,18 +8,23 @@ interface MembersPageTemplateProps {
   positions: PositionType[];
 }
 
-const isLeadershipMember = (member: MemberType) =>
-  member.position_tags.some(tag => tag.positions?.is_leadership === true);
-
 export function MembersPageTemplate({ members, positions }: MembersPageTemplateProps) {
   // 日本語の名前順にソート
   const sortedMembers = members.sort((a, b) => a.display_name.localeCompare(b.display_name, "ja"));
-  const generalMembers = sortedMembers.filter(member => !isLeadershipMember(member));
 
   // 役職者セクションに表示する役職を id 昇順で抽出（IDのハードコードに依存しない）
   const leadershipPositions = positions
-    .filter(position => position.is_leadership)
+    .filter(position => position.is_leadership && position.name.trim() !== "")
     .sort((a, b) => a.id - b.id);
+  const leadershipPositionIds = new Set(leadershipPositions.map(position => position.id));
+
+  // 役職者セクションでないメンバーを抽出
+  const generalMembers = sortedMembers.filter(
+    member =>
+      !member.position_tags.some(
+        tag => tag.positions != null && leadershipPositionIds.has(tag.positions.id)
+      )
+  );
 
   return (
     <>
@@ -33,7 +38,7 @@ export function MembersPageTemplate({ members, positions }: MembersPageTemplateP
               member.position_tags.some(tag => tag.positions?.id === position.id)
             );
 
-            if (!position.name || positionMembers.length === 0) {
+            if (positionMembers.length === 0) {
               return null;
             }
 

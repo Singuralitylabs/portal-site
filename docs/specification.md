@@ -752,7 +752,7 @@ sequenceDiagram
 - usersテーブルから以下のカラムを取得：
   - ユーザー基本情報: `id, display_name, role, bio, avatar_url, profile_image_path`
   - 関連URL情報: `x_url, facebook_url, instagram_url, github_url, portfolio_url`
-  - 関連テーブル: `position_tags（position_id, positions（id, name, is_leadership, is_deleted））`
+  - 関連テーブル: `position_tags（position_id, positions（id, name, is_deleted））`
 - 取得条件：
   - `status = 'active'`（承認済みメンバーのみ）
   - `is_deleted = FALSE`（論理削除されていないメンバーのみ）

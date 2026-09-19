@@ -102,7 +102,6 @@ export type MemberType = Pick<
     positions: {
       id: number;
       name: string;
-      is_leadership: boolean;
       is_deleted: boolean;
     } | null;
   }[];
