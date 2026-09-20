@@ -31,6 +31,8 @@ GitHub Actions のワークフローは、大きく以下の役割に分かれ�
 - **リリース自動化**: 本番リリース作業の一部を自動化する。詳細は [セクション 4](#4-リリース自動化) を参照
 - **チーム通知**: Wiki 更新など、開発ルールや運用情報の変更を Slack へ自動連携する。詳細は [セクション 5](#5-wiki-更新通知) を参照
 
+品質ゲートには、通常の build / lint / type-check に加えて、`database.types.ts` や `docs/database.md` から派生する生成物の更新漏れを検出するワークフローも含める。
+
 ### 2.2 自動化の判断基準
 
 新しいワークフローを追加する際は、以下の基準に基づいて自動化の可否を判断する。
@@ -82,6 +84,7 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | [`release-pr.yml`](../.github/workflows/release-pr.yml)                           | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
 | [`create-release.yml`](../.github/workflows/create-release.yml)                   | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
+| [`check_master.yml`](../.github/workflows/check_master.yml)                       | `contents: read`                         | master 関連の生成物整合性チェックに必要                          |
 | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | `contents: read`                         | Wiki 更新イベントを受けて Slack 通知するために必要               |
 
 **Secrets:**

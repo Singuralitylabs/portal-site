@@ -41,6 +41,7 @@ type MasterRowsByTable = {
   [T in MasterTableName]: RawMasterRecord[];
 };
 
+// master 管理画面の対象 5 テーブルをまとめて取得し、後続処理で扱いやすい形へ揃える。
 async function fetchMasterRows(): Promise<{
   data: MasterRowsByTable | null;
   error: PostgrestError | null;
@@ -73,9 +74,11 @@ async function fetchMasterRows(): Promise<{
   };
 }
 
+// 参照解決に必要な category / user の ID を、全テーブル分まとめて抽出する。
 function collectReferenceIds(rowsByTable: MasterRowsByTable, referenceType: "category" | "user") {
   const ids = new Set<number>();
 
+  // 表示対象テーブル全体から参照先 ID を先に集約し、参照解決クエリ回数を増やさないようにする。
   MASTER_TABLE_DEFINITIONS.forEach(table => {
     const references = table.references.filter(reference => reference.type === referenceType);
     rowsByTable[table.tableName].forEach(row => {
@@ -91,6 +94,7 @@ function collectReferenceIds(rowsByTable: MasterRowsByTable, referenceType: "cat
   return [...ids];
 }
 
+// 抽出した参照先 ID から、画面表示に使う名称マップを一括取得する。
 async function fetchReferenceMaps(rowsByTable: MasterRowsByTable): Promise<{
   data: ReferenceMaps | null;
   error: PostgrestError | null;
@@ -123,10 +127,12 @@ async function fetchReferenceMaps(rowsByTable: MasterRowsByTable): Promise<{
   };
 }
 
+// カラムキーに対応する参照定義を探し、参照解決が必要かどうかを判定する。
 function findReference(references: AnyMasterTableDefinition["references"], columnKey: string) {
   return references.find(reference => reference.columnKey === columnKey) ?? null;
 }
 
+// 参照定義と参照先マップを使い、外部キー値を画面表示用の名称へ変換する。
 function resolveReferenceLabel(
   value: MasterFieldValue,
   reference: AnyMasterTableDefinition["references"][number] | null,
@@ -140,9 +146,11 @@ function resolveReferenceLabel(
     return referenceMaps.categories.get(value) ?? "不明なカテゴリー";
   }
 
+  // users 参照が取得済みで該当 ID だけ見つからない場合は、退会済みユーザーとして扱う。
   return referenceMaps.users.get(value) ?? "退会済みユーザー";
 }
 
+// 1 テーブル分の生データを、一覧列と詳細表示列を持つ画面描画用データへ変換する。
 function createMasterTableData(
   definition: AnyMasterTableDefinition,
   rows: RawMasterRecord[],
@@ -169,6 +177,7 @@ function createMasterTableData(
   };
 }
 
+// 対象テーブル取得と参照解決をまとめて実行し、master 管理画面の初期表示データを返す。
 export async function fetchMasterManagementData(): Promise<{
   data: MasterManagementData | null;
   error: PostgrestError | null;
