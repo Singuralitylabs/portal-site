@@ -42,6 +42,7 @@ function formatFieldValue(field: MasterRecordField): string {
     return field.value ? "はい" : "いいえ";
   }
 
+  // master 画面では *_at 命名の文字列を日時として統一表示する。
   if (field.key.endsWith("_at") && typeof field.value === "string") {
     return formatDateTime(field.value);
   }
@@ -68,6 +69,7 @@ function getRecordTitle(record: MasterRecord): string {
 }
 
 export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
+  // 初期表示は先頭テーブル・先頭レコードを選び、空データ時だけ null にフォールバックする。
   const [activeTableName, setActiveTableName] = useState<MasterTableName>(
     initialData.tables[0]?.tableName ?? "documents"
   );
@@ -99,6 +101,7 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
       return [];
     }
 
+    // 一覧ヘッダーは同一テーブル内で共通のため、先頭レコードの field 定義を列見出しとして使う。
     return activeTable.listColumnKeys
       .map(key => activeTable.records[0].fields.find(field => field.key === key))
       .filter((field): field is MasterRecordField => Boolean(field));
@@ -187,7 +190,7 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
                       <Text size="xs" c="dimmed">
                         {field.label}
                       </Text>
-                      <Text size="sm" className="break-words">
+                      <Text component="div" size="sm" className="break-words">
                         <DeletedBadge field={field} />
                         {field.referenceLabel && (
                           <Text component="span" size="xs" c="dimmed" ml="xs">

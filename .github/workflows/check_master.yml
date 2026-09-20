@@ -1,0 +1,63 @@
+name: Master Definitions Consistency
+
+# master 参照画面用の generated metadata と master 定義の整合性をCIで検証するワークフロー
+on:
+  # master 関連ファイルや依存関係が変更されたときに実行
+  push:
+    paths:
+      - "docs/database.md"
+      - "app/types/lib/database.types.ts"
+      - "app/constants/master.ts"
+      - "app/constants/master-metadata.ts"
+      - "app/constants/master-metadata.generated.ts"
+      - "app/constants/master-metadata.override.ts"
+      - "scripts/update-master-definitions.cjs"
+      - "scripts/update-master-metadata-generated.cjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/check_master.yml"
+  # PRでも同じ条件で実行し、生成物の更新漏れをマージ前に検出
+  pull_request:
+    paths:
+      - "docs/database.md"
+      - "app/types/lib/database.types.ts"
+      - "app/constants/master.ts"
+      - "app/constants/master-metadata.ts"
+      - "app/constants/master-metadata.generated.ts"
+      - "app/constants/master-metadata.override.ts"
+      - "scripts/update-master-definitions.cjs"
+      - "scripts/update-master-metadata-generated.cjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/check_master.yml"
+  # 手動実行（必要時の再検証用）
+  workflow_dispatch:
+
+jobs:
+  check-master:
+    name: Validate master generated files
+    runs-on: ubuntu-latest
+
+    steps:
+      # リポジトリのソースコードをワークフロー実行環境へ取得
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # check スクリプト実行に必要な Node.js 実行環境を準備
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      # package-lock.json に基づいて依存関係を再現性高くインストール
+      - name: Install dependencies
+        run: npm ci
+
+      # docs/database.md から生成される metadata の更新漏れを検出
+      - name: Check generated master metadata
+        run: npm run master:metadata:check
+
+      # database.types.ts と metadata 定義から生成される master.ts の更新漏れを検出
+      - name: Check generated master definitions
+        run: npm run master:definitions:check
