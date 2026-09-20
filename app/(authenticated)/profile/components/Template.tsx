@@ -329,14 +329,34 @@ export function ProfilePageTemplate({
             </div>
 
             <div>
-              <MultiSelect
-                label="活動チーム、役割など"
-                data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
-                value={selectedPositionIds.map(String)}
-                onChange={values => setSelectedPositionIds(values.map(Number))}
-                placeholder="選択してください"
-                clearable
-              />
+              {user.role === "admin" ? (
+                <MultiSelect
+                  label="活動チーム、役割など"
+                  data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
+                  value={selectedPositionIds.map(String)}
+                  onChange={values => setSelectedPositionIds(values.map(Number))}
+                  placeholder="選択してください"
+                  clearable
+                />
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium mb-1">活動チーム、役割など</label>
+                  <div
+                    className="min-h-9 px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 text-sm cursor-not-allowed"
+                    aria-readonly="true"
+                  >
+                    {selectedPositionIds.length > 0
+                      ? selectedPositionIds
+                        .map(
+                          positionId =>
+                            allPositions.find(position => position.id === positionId)?.name
+                        )
+                        .filter((name): name is string => name !== undefined)
+                        .join(", ")
+                      : "設定なし"}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
