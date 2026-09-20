@@ -1,5 +1,10 @@
 import type { Database } from "@/app/types/lib/database.types";
 
+// createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY) と明示しなくても
+// 適切なオプションで createClient を自動生成できるようにするための内部型を参照します。
+// このファイルは scripts/update-master-definitions.cjs により自動生成されます。
+// 直接編集せず、app/constants/master-metadata.ts を更新して npm run master:definitions を再実行してください。
+
 export type MasterTableName = "documents" | "videos" | "categories" | "applications" | "positions";
 
 export type MasterFieldValue = string | number | boolean | null;
@@ -44,23 +49,23 @@ const DOCUMENTS_MASTER_TABLE = {
     { key: "id", label: "ID" },
     { key: "name", label: "資料名" },
     { key: "description", label: "説明" },
-    { key: "url", label: "URL" },
     { key: "category_id", label: "カテゴリー" },
-    { key: "assignee", label: "担当者名" },
-    { key: "assignee_id", label: "担当者" },
+    { key: "url", label: "URL" },
     { key: "display_order", label: "表示順" },
-    { key: "is_deleted", label: "削除状態" },
     { key: "created_by", label: "作成者" },
     { key: "updated_by", label: "更新者" },
+    { key: "assignee", label: "担当者名" },
+    { key: "assignee_id", label: "担当者" },
+    { key: "is_deleted", label: "削除状態" },
     { key: "created_at", label: "作成日時" },
     { key: "updated_at", label: "更新日時" },
   ],
   listColumnKeys: ["id", "name", "category_id", "is_deleted", "updated_at"],
   references: [
     { columnKey: "category_id", type: "category" },
-    { columnKey: "assignee_id", type: "user" },
     { columnKey: "created_by", type: "user" },
     { columnKey: "updated_by", type: "user" },
+    { columnKey: "assignee_id", type: "user" },
   ],
 } satisfies MasterTableDefinition<"documents">;
 
@@ -71,26 +76,26 @@ const VIDEOS_MASTER_TABLE = {
     { key: "id", label: "ID" },
     { key: "name", label: "動画名" },
     { key: "description", label: "説明" },
-    { key: "url", label: "URL" },
     { key: "category_id", label: "カテゴリー" },
-    { key: "assignee", label: "担当者名" },
-    { key: "assignee_id", label: "担当者" },
-    { key: "length", label: "動画時間" },
+    { key: "url", label: "URL" },
     { key: "thumbnail_path", label: "サムネイルパス" },
     { key: "thumbnail_time", label: "サムネイル時刻" },
+    { key: "length", label: "動画時間" },
     { key: "display_order", label: "表示順" },
-    { key: "is_deleted", label: "削除状態" },
     { key: "created_by", label: "作成者" },
     { key: "updated_by", label: "更新者" },
+    { key: "assignee", label: "担当者名" },
+    { key: "assignee_id", label: "担当者" },
+    { key: "is_deleted", label: "削除状態" },
     { key: "created_at", label: "作成日時" },
     { key: "updated_at", label: "更新日時" },
   ],
   listColumnKeys: ["id", "name", "category_id", "is_deleted", "updated_at"],
   references: [
     { columnKey: "category_id", type: "category" },
-    { columnKey: "assignee_id", type: "user" },
     { columnKey: "created_by", type: "user" },
     { columnKey: "updated_by", type: "user" },
+    { columnKey: "assignee_id", type: "user" },
   ],
 } satisfies MasterTableDefinition<"videos">;
 
@@ -118,14 +123,14 @@ const APPLICATIONS_MASTER_TABLE = {
     { key: "id", label: "ID" },
     { key: "name", label: "アプリ名" },
     { key: "description", label: "説明" },
-    { key: "url", label: "URL" },
     { key: "category_id", label: "カテゴリー" },
-    { key: "developer_id", label: "開発者" },
+    { key: "url", label: "URL" },
     { key: "thumbnail_path", label: "サムネイルパス" },
+    { key: "developer_id", label: "開発者" },
     { key: "display_order", label: "表示順" },
-    { key: "is_deleted", label: "削除状態" },
     { key: "created_by", label: "作成者" },
     { key: "updated_by", label: "更新者" },
+    { key: "is_deleted", label: "削除状態" },
     { key: "created_at", label: "作成日時" },
     { key: "updated_at", label: "更新日時" },
   ],
@@ -145,11 +150,11 @@ const POSITIONS_MASTER_TABLE = {
     { key: "id", label: "ID" },
     { key: "name", label: "役職名" },
     { key: "description", label: "説明" },
-    { key: "is_leadership", label: "役職者フラグ" },
     { key: "display_order", label: "表示順" },
     { key: "is_deleted", label: "削除状態" },
     { key: "created_at", label: "作成日時" },
     { key: "updated_at", label: "更新日時" },
+    { key: "is_leadership", label: "役職者フラグ" },
   ],
   listColumnKeys: ["id", "name", "is_leadership", "is_deleted", "updated_at"],
   references: [],
