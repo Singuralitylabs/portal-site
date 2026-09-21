@@ -43,6 +43,10 @@ npm run type-check # 型チェック（tsc --noEmit）
 npm run format:check # Prettierフォーマットチェック
 npm run format     # Prettierフォーマット適用
 npm run db:types:local   # Supabase型生成
+npm run master:metadata   # docs/database.md から master metadata を生成
+npm run master:metadata:check # master metadata の生成漏れを検知
+npm run master:definitions # master 定義を再生成
+npm run master:definitions:check # master 定義の生成漏れを検知
 ```
 
 ## ディレクトリ構造
