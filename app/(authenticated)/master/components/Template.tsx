@@ -14,6 +14,8 @@ interface MasterPageTemplateProps {
   initialData: MasterManagementData;
 }
 
+const MASTER_DISPLAY_TIME_ZONE = "Asia/Tokyo";
+
 function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -26,6 +28,7 @@ function formatDateTime(value: string): string {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: MASTER_DISPLAY_TIME_ZONE,
   });
 }
 
@@ -114,6 +117,22 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
     setSelectedRecordId(nextTable?.records[0]?.id ?? null);
   };
 
+  const handleRecordSelect = (recordId: number) => {
+    setSelectedRecordId(recordId);
+  };
+
+  const handleRecordKeyDown = (
+    event: React.KeyboardEvent<HTMLTableRowElement>,
+    recordId: number
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleRecordSelect(recordId);
+  };
+
   return (
     <>
       <PageTitle>マスター管理</PageTitle>
@@ -156,7 +175,10 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
                             : undefined
                         }
                         className="cursor-pointer"
-                        onClick={() => setSelectedRecordId(record.id)}
+                        onClick={() => handleRecordSelect(record.id)}
+                        onKeyDown={event => handleRecordKeyDown(event, record.id)}
+                        role="button"
+                        tabIndex={0}
                       >
                         {activeTable.listColumnKeys.map(key => {
                           const field = record.fields.find(item => item.key === key);
