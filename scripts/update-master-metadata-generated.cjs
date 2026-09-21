@@ -4,9 +4,11 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const ts = require("typescript");
 
 const projectRoot = path.resolve(__dirname, "..");
 const docsPath = path.join(projectRoot, "docs/database.md");
+const databaseTypesPath = path.join(projectRoot, "app/types/lib/database.types.ts");
 const outputPath = path.join(projectRoot, "app/constants/master-metadata.generated.ts");
 const isCheckMode = process.argv.includes("--check");
 const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
@@ -48,12 +50,18 @@ const COLUMN_LABELS = {
   updated_at: "更新日時",
 };
 
+const REFERENCE_TYPE_BY_RELATION = {
+  categories: "category",
+  users: "user",
+};
+
 // docs/database.md を読み、master 参照用の自動生成 metadata を生成または整合性確認する。
 function main() {
   const source = fs.readFileSync(docsPath, "utf8");
   const sections = extractTableSections(source);
+  const tableSchemaMap = extractTableSchemasFromDatabaseTypes(databaseTypesPath);
   const tables = TARGET_TABLES.map(tableName =>
-    buildGeneratedTable(tableName, sections[tableName])
+    buildGeneratedTable(tableName, sections[tableName], tableSchemaMap[tableName])
   );
   const generatedSource = formatWithPrettier(renderGeneratedMetadataSource(tables));
 
@@ -70,6 +78,145 @@ function main() {
 
   fs.writeFileSync(outputPath, generatedSource, "utf8");
   process.stdout.write("app/constants/master-metadata.generated.ts を更新しました。\n");
+}
+
+// database.types.ts の AST から各テーブルの Row カラムと参照定義を抽出し、docs と実装の差分検知に使う。
+function extractTableSchemasFromDatabaseTypes(filePath) {
+  const source = fs.readFileSync(filePath, "utf8");
+  const sourceFile = ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true);
+  const databaseAlias = sourceFile.statements.find(
+    statement => ts.isTypeAliasDeclaration(statement) && statement.name.text === "Database"
+  );
+
+  if (!databaseAlias || !ts.isTypeLiteralNode(databaseAlias.type)) {
+    throw new Error("Database 型定義を解析できませんでした。");
+  }
+
+  const publicType = getNestedTypeLiteral(databaseAlias.type, "public");
+  const tablesType = getNestedTypeLiteral(publicType, "Tables");
+  const result = {};
+
+  for (const member of tablesType.members) {
+    if (!ts.isPropertySignature(member) || !member.type) {
+      continue;
+    }
+
+    const tableName = getPropertyName(member.name);
+    const tableType = asTypeLiteral(member.type);
+    const rowType = getNestedTypeLiteral(tableType, "Row");
+    const relationshipsNode = getPropertyTypeNode(tableType, "Relationships");
+
+    result[tableName] = {
+      columns: rowType.members
+        .filter(ts.isPropertySignature)
+        .map(property => getPropertyName(property.name)),
+      references: extractReferenceDefinitionsFromRelationships(relationshipsNode),
+    };
+  }
+
+  return result;
+}
+
+// TypeLiteral から指定プロパティの型ノードを取り出す。
+function getPropertyTypeNode(typeLiteral, propertyName) {
+  const property = typeLiteral.members.find(
+    member => ts.isPropertySignature(member) && getPropertyName(member.name) === propertyName
+  );
+
+  if (!property || !property.type) {
+    throw new Error(`${propertyName} の型定義を見つけられませんでした。`);
+  }
+
+  return property.type;
+}
+
+// TypeLiteral から指定プロパティを辿り、入れ子の型定義を取り出す。
+function getNestedTypeLiteral(typeLiteral, propertyName) {
+  const property = typeLiteral.members.find(
+    member => ts.isPropertySignature(member) && getPropertyName(member.name) === propertyName
+  );
+
+  if (!property || !property.type) {
+    throw new Error(`${propertyName} の型定義を見つけられませんでした。`);
+  }
+
+  return asTypeLiteral(property.type);
+}
+
+// AST ノードを TypeLiteral として扱える形へ正規化する。
+function asTypeLiteral(node) {
+  if (ts.isTypeLiteralNode(node)) {
+    return node;
+  }
+
+  if (ts.isParenthesizedTypeNode(node)) {
+    return asTypeLiteral(node.type);
+  }
+
+  throw new Error("想定外の型定義に遭遇しました。TypeLiteral を期待しています。");
+}
+
+// AST 上のプロパティ名を文字列へ変換する。
+function getPropertyName(nameNode) {
+  if (ts.isIdentifier(nameNode) || ts.isStringLiteral(nameNode) || ts.isNumericLiteral(nameNode)) {
+    return nameNode.text;
+  }
+
+  throw new Error("サポート外のプロパティ名形式です。");
+}
+
+// Relationships 定義から、master 画面で扱う参照列だけを抽出する。
+function extractReferenceDefinitionsFromRelationships(node) {
+  if (!ts.isTupleTypeNode(node)) {
+    throw new Error("Relationships の型定義を解析できませんでした。");
+  }
+
+  return node.elements
+    .map(element => {
+      if (!ts.isTypeLiteralNode(element)) {
+        return null;
+      }
+
+      const relation = getStringLiteralValue(element, "referencedRelation");
+      const type = REFERENCE_TYPE_BY_RELATION[relation];
+      if (!type) {
+        return null;
+      }
+
+      const columnKey = getTupleStringValues(element, "columns")[0];
+      if (!columnKey) {
+        return null;
+      }
+
+      return { columnKey, type };
+    })
+    .filter(Boolean);
+}
+
+// 文字列リテラルの型プロパティ値を取り出す。
+function getStringLiteralValue(typeLiteral, propertyName) {
+  const propertyType = getPropertyTypeNode(typeLiteral, propertyName);
+  if (!ts.isLiteralTypeNode(propertyType) || !ts.isStringLiteral(propertyType.literal)) {
+    throw new Error(`${propertyName} の型定義を解析できませんでした。`);
+  }
+
+  return propertyType.literal.text;
+}
+
+// Tuple 型の文字列リテラル配列プロパティを取り出す。
+function getTupleStringValues(typeLiteral, propertyName) {
+  const propertyType = getPropertyTypeNode(typeLiteral, propertyName);
+  if (!ts.isTupleTypeNode(propertyType)) {
+    throw new Error(`${propertyName} の型定義を解析できませんでした。`);
+  }
+
+  return propertyType.elements.map(element => {
+    if (ts.isLiteralTypeNode(element) && ts.isStringLiteral(element.literal)) {
+      return element.literal.text;
+    }
+
+    throw new Error(`${propertyName} に想定外の値が含まれています。`);
+  });
 }
 
 // 対象 5 テーブルの見出し位置を基準に、各 markdown テーブル本文だけを抽出する。
@@ -140,9 +287,50 @@ function stripCode(value) {
 }
 
 // 1 テーブル分の行情報から、詳細表示順・表示ラベル・参照定義を持つ自動生成 metadata を組み立てる。
-function buildGeneratedTable(tableName, rows) {
+function buildGeneratedTable(tableName, rows, tableSchema) {
   if (!rows || rows.length === 0) {
     throw new Error(`docs/database.md から ${tableName} テーブルを解析できませんでした。`);
+  }
+
+  if (!tableSchema || !Array.isArray(tableSchema.columns) || tableSchema.columns.length === 0) {
+    throw new Error(`database.types.ts から ${tableName} テーブル定義を解析できませんでした。`);
+  }
+
+  const unknownColumns = rows
+    .map(row => row.columnKey)
+    .filter(columnKey => !tableSchema.columns.includes(columnKey));
+
+  if (unknownColumns.length > 0) {
+    throw new Error(
+      `${tableName} テーブルで docs/database.md と database.types.ts の列定義が一致しません: ${unknownColumns.join(", ")}`
+    );
+  }
+
+  const references = rows
+    .map(row => {
+      const referenceType = resolveReferenceType(row.constraints);
+      if (!referenceType) {
+        return null;
+      }
+
+      return {
+        columnKey: row.columnKey,
+        type: referenceType,
+      };
+    })
+    .filter(Boolean);
+
+  const normalizedDocReferences = references
+    .map(reference => `${reference.columnKey}:${reference.type}`)
+    .sort();
+  const normalizedDatabaseReferences = tableSchema.references
+    .map(reference => `${reference.columnKey}:${reference.type}`)
+    .sort();
+
+  if (normalizedDocReferences.join("|") !== normalizedDatabaseReferences.join("|")) {
+    throw new Error(
+      `${tableName} テーブルで docs/database.md と database.types.ts の参照定義が一致しません。docs=${normalizedDocReferences.join(", ")} db=${normalizedDatabaseReferences.join(", ")}`
+    );
   }
 
   return {
@@ -152,19 +340,7 @@ function buildGeneratedTable(tableName, rows) {
     labels: Object.fromEntries(
       rows.map(row => [row.columnKey, resolveColumnLabel(tableName, row)])
     ),
-    references: rows
-      .map(row => {
-        const referenceType = resolveReferenceType(row.constraints);
-        if (!referenceType) {
-          return null;
-        }
-
-        return {
-          columnKey: row.columnKey,
-          type: referenceType,
-        };
-      })
-      .filter(Boolean),
+    references,
   };
 }
 
