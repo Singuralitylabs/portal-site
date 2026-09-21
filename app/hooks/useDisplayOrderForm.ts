@@ -1,40 +1,46 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import type { CategoryItemType, ContentTableType, PlacementPositionType } from "@/app/types";
 import { getItemsByCategory } from "@/app/services/api/utils/display-order";
 
 /**
  * 表示順操作フォームのカスタムフック
+ *
+ * アイテム一覧（items）の取得は、呼び出し側が `handleCategoryChange` を
+ * 明示的に呼ぶことでのみ行う（カテゴリー選択時・モーダルの再オープン時など）。
+ * `categoryId` の変化を自動検知するeffectは持たない。これは、モーダルを
+ * 開いたまま同一カテゴリーで連続保存した場合に候補一覧が古いまま残る不具合
+ * （issue #352）を避けるため。呼び出し側の「モーダルが開かれたときの初期化」
+ * 処理から必ず `handleCategoryChange` を呼び出すこと。
  * @param contentType コンテンツタイプ（documents, videos, applications）
- * @param categoryId カテゴリーID
  * @param itemId アイテムID（編集時のみ）
  * @param isEdit 編集モードかどうか
  * @returns 表示順操作に必要な状態と関数
  */
 export function useDisplayOrderForm(
   contentType: ContentTableType,
-  categoryId: number,
   itemId?: number,
   isEdit?: boolean
 ) {
   const [items, setItems] = useState<CategoryItemType[]>([]);
   const [position, setPosition] = useState<string>(isEdit ? "current" : "last");
 
-  // カテゴリーIDが変更されたときにアイテム一覧を取得
-  useEffect(() => {
-    if (categoryId > 0) {
-      getItemsByCategory(contentType, categoryId, itemId).then(setItems);
-    } else {
-      setItems([]);
-    }
-  }, [contentType, categoryId, itemId]);
+  // モーダルオープン時の再取得とカテゴリー変更時の再取得が短時間に連続すると、
+  // 後発のリクエストより先発のリクエストが遅れて解決し古い結果で上書きする
+  // 可能性がある。リクエストごとに採番し、最新の呼び出し以外の結果は捨てる。
+  const latestRequestId = useRef(0);
 
   // カテゴリー変更ハンドラー
   const handleCategoryChange = useCallback(
     async (newCategoryId: number) => {
+      const requestId = ++latestRequestId.current;
+
       if (newCategoryId > 0) {
         const fetchedItems = await getItemsByCategory(contentType, newCategoryId, itemId);
-        setItems(fetchedItems);
+        if (requestId === latestRequestId.current) {
+          setItems(fetchedItems);
+        }
       } else {
+        // awaitを挟んでいないため他の呼び出しが割り込む余地はなく、常にrequestIdは最新
         setItems([]);
       }
     },
