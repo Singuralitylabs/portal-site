@@ -22,7 +22,7 @@ describe("fetchMasterManagementData", () => {
     jest.clearAllMocks();
   });
 
-  it("users 参照が正常終了して0件の場合は退会済みユーザーとして扱う", async () => {
+  it("users 参照がRLSで0件になる論理削除ユーザーは退会済みユーザーとして扱う", async () => {
     const supabase = {
       from: jest
         .fn()
@@ -62,6 +62,7 @@ describe("fetchMasterManagementData", () => {
     expect(result.error).toBeNull();
     const documents = result.data?.tables.find(table => table.tableName === "documents");
     const assignee = documents?.records[0].fields.find(field => field.key === "assignee_id");
+    // users テーブルでは論理削除レコードが RLS で非表示になるため、参照 0 件として扱う。
     expect(assignee?.referenceLabel).toBe("退会済みユーザー");
   });
 
