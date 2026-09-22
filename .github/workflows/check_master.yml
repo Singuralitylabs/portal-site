@@ -33,6 +33,9 @@ on:
   # 手動実行（必要時の再検証用）
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check-master:
     name: Validate master generated files
