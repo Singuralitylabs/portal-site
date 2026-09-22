@@ -16,8 +16,13 @@ interface MasterPageTemplateProps {
 
 const MASTER_DISPLAY_TIME_ZONE = "Asia/Tokyo";
 
+function parseUtcTimestamp(value: string): Date {
+  const hasExplicitTimeZone = /(?:Z|[+-]\d{2}:\d{2})$/.test(value);
+  return new Date(hasExplicitTimeZone ? value : `${value}Z`);
+}
+
 function formatDateTime(value: string): string {
-  const date = new Date(value);
+  const date = parseUtcTimestamp(value);
   if (Number.isNaN(date.getTime())) {
     return value;
   }
