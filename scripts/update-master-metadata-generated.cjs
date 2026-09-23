@@ -296,13 +296,22 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
     throw new Error(`database.types.ts から ${tableName} テーブル定義を解析できませんでした。`);
   }
 
-  const unknownColumns = rows
-    .map(row => row.columnKey)
-    .filter(columnKey => !tableSchema.columns.includes(columnKey));
+  const docColumns = rows.map(row => row.columnKey);
+  const unknownColumns = docColumns.filter(columnKey => !tableSchema.columns.includes(columnKey));
 
   if (unknownColumns.length > 0) {
     throw new Error(
       `${tableName} テーブルで docs/database.md と database.types.ts の列定義が一致しません: ${unknownColumns.join(", ")}`
+    );
+  }
+
+  const undocumentedColumns = tableSchema.columns.filter(
+    columnKey => !docColumns.includes(columnKey)
+  );
+
+  if (undocumentedColumns.length > 0) {
+    throw new Error(
+      `${tableName} テーブルで database.types.ts に存在する列が docs/database.md に不足しています: ${undocumentedColumns.join(", ")}`
     );
   }
 

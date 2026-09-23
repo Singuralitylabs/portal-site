@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Badge, Group, Paper, ScrollArea, Table, Tabs, Text } from "@mantine/core";
 import { PageTitle } from "@/app/components/PageTitle";
 import type {
@@ -84,6 +84,7 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
   const [selectedRecordId, setSelectedRecordId] = useState<number | null>(
     initialData.tables[0]?.records[0]?.id ?? null
   );
+  const rowRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
 
   const activeTable = useMemo(
     () =>
@@ -126,16 +127,65 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
     setSelectedRecordId(recordId);
   };
 
+  const focusRecordRow = (recordId: number) => {
+    rowRefs.current[recordId]?.focus();
+  };
+
+  const moveSelectedRecord = (direction: "prev" | "next" | "first" | "last") => {
+    if (!activeTable || activeTable.records.length === 0) {
+      return;
+    }
+
+    const selectedIndex = activeTable.records.findIndex(record => record.id === selectedRecord?.id);
+    const fallbackIndex = selectedIndex >= 0 ? selectedIndex : 0;
+
+    const nextIndex =
+      direction === "first"
+        ? 0
+        : direction === "last"
+          ? activeTable.records.length - 1
+          : direction === "prev"
+            ? Math.max(fallbackIndex - 1, 0)
+            : Math.min(fallbackIndex + 1, activeTable.records.length - 1);
+
+    const nextRecord = activeTable.records[nextIndex];
+    if (!nextRecord) {
+      return;
+    }
+
+    handleRecordSelect(nextRecord.id);
+    focusRecordRow(nextRecord.id);
+  };
+
   const handleRecordKeyDown = (
     event: React.KeyboardEvent<HTMLTableRowElement>,
     recordId: number
   ) => {
-    if (event.key !== "Enter" && event.key !== " ") {
-      return;
+    switch (event.key) {
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        handleRecordSelect(recordId);
+        return;
+      case "ArrowUp":
+        event.preventDefault();
+        moveSelectedRecord("prev");
+        return;
+      case "ArrowDown":
+        event.preventDefault();
+        moveSelectedRecord("next");
+        return;
+      case "Home":
+        event.preventDefault();
+        moveSelectedRecord("first");
+        return;
+      case "End":
+        event.preventDefault();
+        moveSelectedRecord("last");
+        return;
+      default:
+        return;
     }
-
-    event.preventDefault();
-    handleRecordSelect(recordId);
   };
 
   return (
@@ -153,20 +203,26 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
       </Tabs>
 
       {activeTable ? (
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4">
-          <Paper withBorder>
+        <div className="grid h-[calc(100dvh-13rem)] min-h-[32rem] grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:grid-rows-1">
+          <Paper withBorder className="flex min-h-0 flex-col overflow-hidden">
             <Group justify="space-between" p="md" pb="xs">
               <Text fw={700}>{activeTable.label}</Text>
               <Badge variant="light">件数: {activeTable.records.length}</Badge>
             </Group>
 
             {activeTable.records.length > 0 ? (
-              <ScrollArea>
+              <ScrollArea className="min-h-0 flex-1">
                 <Table highlightOnHover verticalSpacing="sm" miw={720}>
+                  <caption className="sr-only">
+                    {activeTable.label}
+                    の一覧です。上下キーで行を移動し、EnterまたはSpaceで詳細を選択できます。
+                  </caption>
                   <Table.Thead>
                     <Table.Tr>
                       {listFields.map(field => (
-                        <Table.Th key={field.key}>{field.label}</Table.Th>
+                        <Table.Th key={field.key} scope="col">
+                          {field.label}
+                        </Table.Th>
                       ))}
                     </Table.Tr>
                   </Table.Thead>
@@ -174,6 +230,9 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
                     {activeTable.records.map(record => (
                       <Table.Tr
                         key={record.id}
+                        ref={node => {
+                          rowRefs.current[record.id] = node;
+                        }}
                         bg={
                           selectedRecord?.id === record.id
                             ? "var(--mantine-color-blue-0)"
@@ -182,8 +241,8 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
                         className="cursor-pointer"
                         onClick={() => handleRecordSelect(record.id)}
                         onKeyDown={event => handleRecordKeyDown(event, record.id)}
-                        role="button"
-                        tabIndex={0}
+                        tabIndex={selectedRecord?.id === record.id ? 0 : -1}
+                        aria-selected={selectedRecord?.id === record.id}
                       >
                         {activeTable.listColumnKeys.map(key => {
                           const field = record.fields.find(item => item.key === key);
@@ -205,29 +264,31 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
             )}
           </Paper>
 
-          <Paper withBorder p="md">
+          <Paper withBorder p="md" className="flex min-h-0 flex-col overflow-hidden">
             {selectedRecord ? (
               <>
                 <Text fw={700} mb="xs">
                   {getRecordTitle(selectedRecord)}
                 </Text>
-                <div className="space-y-3">
-                  {selectedRecord.fields.map(field => (
-                    <div key={field.key}>
-                      <Text size="xs" c="dimmed">
-                        {field.label}
-                      </Text>
-                      <Text component="div" size="sm" className="break-words">
-                        <DeletedBadge field={field} />
-                        {field.referenceLabel && (
-                          <Text component="span" size="xs" c="dimmed" ml="xs">
-                            ID: {field.value}
-                          </Text>
-                        )}
-                      </Text>
-                    </div>
-                  ))}
-                </div>
+                <ScrollArea className="min-h-0 flex-1">
+                  <div className="space-y-3 pr-1">
+                    {selectedRecord.fields.map(field => (
+                      <div key={field.key}>
+                        <Text size="xs" c="dimmed">
+                          {field.label}
+                        </Text>
+                        <Text component="div" size="sm" className="break-words">
+                          <DeletedBadge field={field} />
+                          {field.referenceLabel && (
+                            <Text component="span" size="xs" c="dimmed" ml="xs">
+                              ID: {field.value}
+                            </Text>
+                          )}
+                        </Text>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </>
             ) : (
               <Text c="dimmed">レコードを選択してください。</Text>
