@@ -57,10 +57,10 @@ export const GENERATED_MASTER_METADATA: readonly GeneratedMasterMetadataTable[] 
       updated_at: "更新日時",
     },
     references: [
+      { columnKey: "assignee_id", type: "user" },
       { columnKey: "category_id", type: "category" },
       { columnKey: "created_by", type: "user" },
       { columnKey: "updated_by", type: "user" },
-      { columnKey: "assignee_id", type: "user" },
     ],
   },
   {
@@ -103,10 +103,10 @@ export const GENERATED_MASTER_METADATA: readonly GeneratedMasterMetadataTable[] 
       updated_at: "更新日時",
     },
     references: [
+      { columnKey: "assignee_id", type: "user" },
       { columnKey: "category_id", type: "category" },
       { columnKey: "created_by", type: "user" },
       { columnKey: "updated_by", type: "user" },
-      { columnKey: "assignee_id", type: "user" },
     ],
   },
   {
@@ -169,8 +169,8 @@ export const GENERATED_MASTER_METADATA: readonly GeneratedMasterMetadataTable[] 
     },
     references: [
       { columnKey: "category_id", type: "category" },
-      { columnKey: "developer_id", type: "user" },
       { columnKey: "created_by", type: "user" },
+      { columnKey: "developer_id", type: "user" },
       { columnKey: "updated_by", type: "user" },
     ],
   },
