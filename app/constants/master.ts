@@ -62,10 +62,10 @@ const DOCUMENTS_MASTER_TABLE = {
   ],
   listColumnKeys: ["id", "name", "category_id", "is_deleted", "updated_at"],
   references: [
+    { columnKey: "assignee_id", type: "user" },
     { columnKey: "category_id", type: "category" },
     { columnKey: "created_by", type: "user" },
     { columnKey: "updated_by", type: "user" },
-    { columnKey: "assignee_id", type: "user" },
   ],
 } satisfies MasterTableDefinition<"documents">;
 
@@ -92,10 +92,10 @@ const VIDEOS_MASTER_TABLE = {
   ],
   listColumnKeys: ["id", "name", "category_id", "is_deleted", "updated_at"],
   references: [
+    { columnKey: "assignee_id", type: "user" },
     { columnKey: "category_id", type: "category" },
     { columnKey: "created_by", type: "user" },
     { columnKey: "updated_by", type: "user" },
-    { columnKey: "assignee_id", type: "user" },
   ],
 } satisfies MasterTableDefinition<"videos">;
 
@@ -137,8 +137,8 @@ const APPLICATIONS_MASTER_TABLE = {
   listColumnKeys: ["id", "name", "category_id", "is_deleted", "updated_at"],
   references: [
     { columnKey: "category_id", type: "category" },
-    { columnKey: "developer_id", type: "user" },
     { columnKey: "created_by", type: "user" },
+    { columnKey: "developer_id", type: "user" },
     { columnKey: "updated_by", type: "user" },
   ],
 } satisfies MasterTableDefinition<"applications">;

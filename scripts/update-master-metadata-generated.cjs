@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const ts = require("typescript");
+const { MASTER_METADATA_DRIFT_ALLOWLIST } = require("./master-metadata-drift-allowlist.cjs");
 
 const projectRoot = path.resolve(__dirname, "..");
 const docsPath = path.join(projectRoot, "docs/database.md");
@@ -316,10 +317,20 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
 
   const docColumns = rows.map(row => row.columnKey);
   const unknownColumns = docColumns.filter(columnKey => !tableSchema.columns.includes(columnKey));
+  const allowedDocOnlyColumns = MASTER_METADATA_DRIFT_ALLOWLIST[tableName] ?? [];
+  const disallowedDocOnlyColumns = unknownColumns.filter(
+    columnKey => !allowedDocOnlyColumns.includes(columnKey)
+  );
 
   if (unknownColumns.length > 0) {
+    if (disallowedDocOnlyColumns.length > 0) {
+      throw new Error(
+        `${tableName} テーブルで docs/database.md にのみ存在する未許可の列があります: ${disallowedDocOnlyColumns.join(", ")}`
+      );
+    }
+
     reportNonFatalWarning(
-      `${tableName} テーブルで docs/database.md にのみ存在する列があります: ${unknownColumns.join(", ")}`
+      `${tableName} テーブルで docs/database.md にのみ存在する許可済み列があります: ${unknownColumns.join(", ")}`
     );
   }
 
@@ -334,8 +345,7 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
   }
 
   const rowsInSchema = rows.filter(row => tableSchema.columns.includes(row.columnKey));
-
-  const references = rowsInSchema
+  const docReferences = rowsInSchema
     .map(row => {
       const referenceType = resolveReferenceType(row.constraints);
       if (!referenceType) {
@@ -349,11 +359,14 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
     })
     .filter(Boolean);
 
-  const normalizedDocReferences = references
+  const references = tableSchema.references.filter(reference =>
+    rowsInSchema.some(row => row.columnKey === reference.columnKey)
+  );
+
+  const normalizedDocReferences = docReferences
     .map(reference => `${reference.columnKey}:${reference.type}`)
     .sort();
-  const normalizedDatabaseReferences = tableSchema.references
-    .filter(reference => rowsInSchema.some(row => row.columnKey === reference.columnKey))
+  const normalizedDatabaseReferences = references
     .map(reference => `${reference.columnKey}:${reference.type}`)
     .sort();
 
