@@ -29,7 +29,6 @@ export const MASTER_METADATA_OVERRIDE: readonly MasterMetadataOverrideTable[] = 
   {
     tableName: "categories",
     listColumnKeys: ["id", "category_type", "name", "is_deleted", "updated_at"],
-    appendUnknownColumns: false,
   },
   {
     tableName: "applications",
