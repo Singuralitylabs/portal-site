@@ -70,15 +70,9 @@ function main() {
   if (isCheckMode) {
     const currentSource = fs.readFileSync(outputPath, "utf8");
     if (currentSource !== generatedSource) {
-      if (nonFatalWarnings.length > 0) {
-        reportNonFatalWarning(
-          "docs/database.md と database.types.ts の差分があるため、app/constants/master-metadata.generated.ts の更新漏れチェックは警告扱いにします。"
-        );
-      } else {
-        throw new Error(
-          "app/constants/master-metadata.generated.ts が最新ではありません。npm run master:metadata を実行してください。"
-        );
-      }
+      throw new Error(
+        "app/constants/master-metadata.generated.ts が最新ではありません。npm run master:metadata を実行してください。"
+      );
     }
     process.stdout.write("app/constants/master-metadata.generated.ts は最新です。\n");
     return;
