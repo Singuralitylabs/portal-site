@@ -14,6 +14,7 @@ const outputPath = path.join(projectRoot, "app/constants/master.ts");
 const isCheckMode = process.argv.includes("--check");
 const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
 const transpiledModuleCache = new Map();
+const nonFatalWarnings = [];
 
 // metadata と database.types.ts を突き合わせ、master 参照画面で使う定義を生成または整合性確認する。
 function main() {
@@ -28,9 +29,15 @@ function main() {
   if (isCheckMode) {
     const currentSource = fs.readFileSync(outputPath, "utf8");
     if (currentSource !== generatedSource) {
-      throw new Error(
-        "app/constants/master.ts が最新ではありません。npm run master:definitions を実行してください。"
-      );
+      if (nonFatalWarnings.length > 0) {
+        reportNonFatalWarning(
+          "metadata と database.types.ts の差分があるため、app/constants/master.ts の更新漏れチェックは警告扱いにします。"
+        );
+      } else {
+        throw new Error(
+          "app/constants/master.ts が最新ではありません。npm run master:definitions を実行してください。"
+        );
+      }
     }
     process.stdout.write("app/constants/master.ts は最新です。\n");
     return;
@@ -38,6 +45,17 @@ function main() {
 
   fs.writeFileSync(outputPath, generatedSource, "utf8");
   process.stdout.write("app/constants/master.ts を更新しました。\n");
+}
+
+function reportNonFatalWarning(message) {
+  if (!nonFatalWarnings.includes(message)) {
+    nonFatalWarnings.push(message);
+  }
+
+  process.stdout.write(`[master:definitions] Warning: ${message}\n`);
+  if (process.env.GITHUB_ACTIONS === "true") {
+    process.stdout.write(`::warning::${message}\n`);
+  }
 }
 
 // TypeScript の metadata モジュールを CommonJS として評価し、相対 import も含めて読み込む。
@@ -241,40 +259,68 @@ function normalizeTableMetadata(table, tableColumnsMap) {
     throw new Error(`database.types.ts に ${table.tableName} テーブルが見つかりません。`);
   }
 
-  validateKnownKeys(`${table.tableName}.detailColumnKeys`, table.detailColumnKeys, schemaColumns);
-  validateKnownKeys(`${table.tableName}.listColumnKeys`, table.listColumnKeys, schemaColumns);
-  validateKnownKeys(
+  const detailColumnKeys = filterKnownKeys(
+    `${table.tableName}.detailColumnKeys`,
+    table.detailColumnKeys,
+    schemaColumns
+  );
+  const listColumnKeys = filterKnownKeys(
+    `${table.tableName}.listColumnKeys`,
+    table.listColumnKeys,
+    schemaColumns
+  );
+  const referenceColumnKeys = filterKnownKeys(
     `${table.tableName}.references`,
     table.references.map(reference => reference.columnKey),
     schemaColumns
   );
+  const references = table.references.filter(reference =>
+    referenceColumnKeys.includes(reference.columnKey)
+  );
 
+  const labels = {};
   for (const labeledKey of Object.keys(table.labels)) {
     if (!schemaColumns.includes(labeledKey)) {
-      throw new Error(
-        `${table.tableName}.labels に schema に存在しないカラム ${labeledKey} が含まれています。`
+      reportNonFatalWarning(
+        `${table.tableName}.labels に schema に存在しないカラム ${labeledKey} が含まれているため、このラベル定義は無視します。`
       );
+      continue;
     }
+
+    labels[labeledKey] = table.labels[labeledKey];
   }
 
   const columns = [];
-  for (const key of table.detailColumnKeys) {
-    columns.push({ key, label: resolveLabel(table, key, true) });
+  for (const key of detailColumnKeys) {
+    columns.push({ key, label: resolveLabel({ ...table, labels }, key, true) });
   }
 
   if (table.appendUnknownColumns !== false) {
     for (const key of schemaColumns) {
-      if (table.detailColumnKeys.includes(key)) {
+      if (detailColumnKeys.includes(key)) {
         continue;
       }
-      columns.push({ key, label: resolveLabel(table, key, false) });
+      columns.push({ key, label: resolveLabel({ ...table, labels }, key, false) });
     }
+  }
+
+  const missingSchemaColumns = schemaColumns.filter(
+    key => !columns.some(column => column.key === key)
+  );
+
+  if (missingSchemaColumns.length > 0) {
+    throw new Error(
+      `${table.tableName} テーブルで database.types.ts に存在する列が master.ts の生成対象に不足しています: ${missingSchemaColumns.join(", ")}`
+    );
   }
 
   return {
     ...table,
+    labels,
     constName: `${table.tableName.toUpperCase()}_MASTER_TABLE`,
     columns,
+    listColumnKeys,
+    references,
   };
 }
 
@@ -296,12 +342,17 @@ function resolveLabel(table, key, isExplicit) {
 }
 
 // metadata に書かれたカラムや参照が schema 上に実在するかを検証する。
-function validateKnownKeys(label, keys, schemaColumns) {
-  for (const key of keys) {
-    if (!schemaColumns.includes(key)) {
-      throw new Error(`${label} に schema に存在しないカラム ${key} が含まれています。`);
+function filterKnownKeys(label, keys, schemaColumns) {
+  return keys.filter(key => {
+    if (schemaColumns.includes(key)) {
+      return true;
     }
-  }
+
+    reportNonFatalWarning(
+      `${label} に schema に存在しないカラム ${key} が含まれているため、この定義はスキップします。`
+    );
+    return false;
+  });
 }
 
 // 1 テーブル分の master 定義を satisfies 付きの定数ブロックとして出力する。

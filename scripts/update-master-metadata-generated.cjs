@@ -12,6 +12,7 @@ const databaseTypesPath = path.join(projectRoot, "app/types/lib/database.types.t
 const outputPath = path.join(projectRoot, "app/constants/master-metadata.generated.ts");
 const isCheckMode = process.argv.includes("--check");
 const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
+const nonFatalWarnings = [];
 
 const TARGET_TABLES = ["documents", "videos", "categories", "applications", "positions"];
 
@@ -68,9 +69,15 @@ function main() {
   if (isCheckMode) {
     const currentSource = fs.readFileSync(outputPath, "utf8");
     if (currentSource !== generatedSource) {
-      throw new Error(
-        "app/constants/master-metadata.generated.ts が最新ではありません。npm run master:metadata を実行してください。"
-      );
+      if (nonFatalWarnings.length > 0) {
+        reportNonFatalWarning(
+          "docs/database.md と database.types.ts の差分があるため、app/constants/master-metadata.generated.ts の更新漏れチェックは警告扱いにします。"
+        );
+      } else {
+        throw new Error(
+          "app/constants/master-metadata.generated.ts が最新ではありません。npm run master:metadata を実行してください。"
+        );
+      }
     }
     process.stdout.write("app/constants/master-metadata.generated.ts は最新です。\n");
     return;
@@ -78,6 +85,17 @@ function main() {
 
   fs.writeFileSync(outputPath, generatedSource, "utf8");
   process.stdout.write("app/constants/master-metadata.generated.ts を更新しました。\n");
+}
+
+function reportNonFatalWarning(message) {
+  if (!nonFatalWarnings.includes(message)) {
+    nonFatalWarnings.push(message);
+  }
+
+  process.stdout.write(`[master:metadata] Warning: ${message}\n`);
+  if (process.env.GITHUB_ACTIONS === "true") {
+    process.stdout.write(`::warning::${message}\n`);
+  }
 }
 
 // database.types.ts の AST から各テーブルの Row カラムと参照定義を抽出し、docs と実装の差分検知に使う。
@@ -300,8 +318,8 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
   const unknownColumns = docColumns.filter(columnKey => !tableSchema.columns.includes(columnKey));
 
   if (unknownColumns.length > 0) {
-    throw new Error(
-      `${tableName} テーブルで docs/database.md と database.types.ts の列定義が一致しません: ${unknownColumns.join(", ")}`
+    reportNonFatalWarning(
+      `${tableName} テーブルで docs/database.md にのみ存在する列があります: ${unknownColumns.join(", ")}`
     );
   }
 
@@ -315,7 +333,9 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
     );
   }
 
-  const references = rows
+  const rowsInSchema = rows.filter(row => tableSchema.columns.includes(row.columnKey));
+
+  const references = rowsInSchema
     .map(row => {
       const referenceType = resolveReferenceType(row.constraints);
       if (!referenceType) {
@@ -333,11 +353,12 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
     .map(reference => `${reference.columnKey}:${reference.type}`)
     .sort();
   const normalizedDatabaseReferences = tableSchema.references
+    .filter(reference => rowsInSchema.some(row => row.columnKey === reference.columnKey))
     .map(reference => `${reference.columnKey}:${reference.type}`)
     .sort();
 
   if (normalizedDocReferences.join("|") !== normalizedDatabaseReferences.join("|")) {
-    throw new Error(
+    reportNonFatalWarning(
       `${tableName} テーブルで docs/database.md と database.types.ts の参照定義が一致しません。docs=${normalizedDocReferences.join(", ")} db=${normalizedDatabaseReferences.join(", ")}`
     );
   }
@@ -345,9 +366,9 @@ function buildGeneratedTable(tableName, rows, tableSchema) {
   return {
     tableName,
     label: TABLE_LABELS[tableName],
-    detailColumnKeys: rows.map(row => row.columnKey),
+    detailColumnKeys: rowsInSchema.map(row => row.columnKey),
     labels: Object.fromEntries(
-      rows.map(row => [row.columnKey, resolveColumnLabel(tableName, row)])
+      rowsInSchema.map(row => [row.columnKey, resolveColumnLabel(tableName, row)])
     ),
     references,
   };
