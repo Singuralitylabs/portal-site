@@ -29,15 +29,9 @@ function main() {
   if (isCheckMode) {
     const currentSource = fs.readFileSync(outputPath, "utf8");
     if (currentSource !== generatedSource) {
-      if (nonFatalWarnings.length > 0) {
-        reportNonFatalWarning(
-          "metadata と database.types.ts の差分があるため、app/constants/master.ts の更新漏れチェックは警告扱いにします。"
-        );
-      } else {
-        throw new Error(
-          "app/constants/master.ts が最新ではありません。npm run master:definitions を実行してください。"
-        );
-      }
+      throw new Error(
+        "app/constants/master.ts が最新ではありません。npm run master:definitions を実行してください。"
+      );
     }
     process.stdout.write("app/constants/master.ts は最新です。\n");
     return;
