@@ -749,13 +749,12 @@ sequenceDiagram
 
 ### 7.5 データ取得
 
-- usersテーブルから以下のカラムを取得：
-  - ユーザー基本情報: `id, display_name, role, bio, avatar_url, profile_image_path`
+- member_profilesビュー（公開列のみ・email/auth_id/role/status非公開）から以下のカラムを取得：
+  - ユーザー基本情報: `id, display_name, bio, avatar_url, profile_image_path`
   - 関連URL情報: `x_url, facebook_url, instagram_url, github_url, portfolio_url`
   - 関連テーブル: `position_tags（position_id, positions（id, name, is_deleted））`
 - 取得条件：
-  - `status = 'active'`（承認済みメンバーのみ）
-  - `is_deleted = FALSE`（論理削除されていないメンバーのみ）
+  - `status = 'active'`（承認済みメンバーのみ）・`is_deleted = FALSE`（論理削除されていないメンバーのみ）はビュー定義側（`WHERE`句）に組み込み済み
 - 表示分類（フロントエンド側で分類）：
   - 役職者セクション：
     - `is_leadership = TRUE` の役職を持つメンバー
@@ -809,7 +808,7 @@ sequenceDiagram
 - アプリ名
 - 短い紹介文（2行程度）
 - カテゴリータグ
-- 開発者名（usersテーブルのdisplay_name）
+- 開発者名（member_profilesビューのdisplay_name）
 - 「詳細」ボタン
 
 #### 8.3.2 アプリ詳細モーダル
@@ -820,7 +819,7 @@ sequenceDiagram
 - 詳細説明文（全文）
 - サムネイル画像（設定されている場合）
 - カテゴリー情報
-- 開発者名（usersテーブルのdisplay_name）
+- 開発者名（member_profilesビューのdisplay_name）
 - 「アプリを開く」ボタン
 
 ### 8.4 画面レイアウト
