@@ -326,12 +326,12 @@ export async function updateUserPositionTagsInServer(
     return currentUserError;
   }
 
-  if (currentUser.role !== "admin") {
+  if (currentUser.role !== "admin" && currentUser.role !== "maintainer") {
     return {
       code: "42501",
       details: "",
       hint: "",
-      message: "役職の変更はadmin権限が必要です",
+      message: "役職の変更はadmin・maintainer権限が必要です",
       name: "PostgrestError",
     };
   }
