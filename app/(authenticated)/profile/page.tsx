@@ -76,17 +76,19 @@ export default async function ProfilePage() {
     }
 
     // position_tags を更新
-    const positionTagsError = await updateUserPositionTagsInServer(user.id, positionIds);
+    if (user.role === "admin" || user.role === "maintainer") {
+      const positionTagsError = await updateUserPositionTagsInServer(user.id, positionIds);
 
-    if (positionTagsError) {
-      console.error(
-        `プロフィール更新成功 / position_tags更新失敗 (userId=${user.id}):`,
-        positionTagsError
-      );
-      return {
-        success: false,
-        message: "プロフィールは更新されましたが、活動チーム・役割の更新に失敗しました",
-      };
+      if (positionTagsError) {
+        console.error(
+          `プロフィール更新成功 / position_tags更新失敗 (userId=${user.id}):`,
+          positionTagsError
+        );
+        return {
+          success: false,
+          message: "プロフィールは更新されましたが、活動チーム・役割の更新に失敗しました",
+        };
+      }
     }
 
     return { success: true };
