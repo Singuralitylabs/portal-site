@@ -347,12 +347,12 @@ export function ProfilePageTemplate({
                   >
                     {selectedPositionIds.length > 0
                       ? selectedPositionIds
-                        .map(
-                          positionId =>
-                            allPositions.find(position => position.id === positionId)?.name
-                        )
-                        .filter((name): name is string => name !== undefined)
-                        .join(", ")
+                          .map(
+                            positionId =>
+                              allPositions.find(position => position.id === positionId)?.name
+                          )
+                          .filter((name): name is string => name !== undefined)
+                          .join(", ")
                       : "設定なし"}
                   </div>
                 </div>
