@@ -76,7 +76,7 @@ export default async function ProfilePage() {
     }
 
     // position_tags を更新
-    if (user.role === "admin") {
+    if (user.role === "admin" || user.role === "maintainer") {
       const positionTagsError = await updateUserPositionTagsInServer(user.id, positionIds);
 
       if (positionTagsError) {
