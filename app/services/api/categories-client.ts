@@ -328,8 +328,7 @@ export async function deleteCategory(id: number, categoryType: CategoryTypeValue
     const { error: moveError } = await supabase
       .from(tableName)
       .update({ category_id: uncategorized.id })
-      .eq("category_id", id)
-      .eq("is_deleted", false);
+      .eq("category_id", id);
 
     if (moveError) {
       return { success: false, error: moveError };
