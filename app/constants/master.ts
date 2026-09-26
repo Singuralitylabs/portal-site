@@ -221,6 +221,7 @@ const POSITIONS_MASTER_TABLE = defineMasterTable({
     is_leadership: "役職者フラグ",
     is_deleted: "削除状態",
     created_at: "作成日時",
+    updated_at: "更新日時",
   },
   listColumnKeys: ["id", "name", "is_leadership", "is_deleted", "updated_at"],
   references: [],
