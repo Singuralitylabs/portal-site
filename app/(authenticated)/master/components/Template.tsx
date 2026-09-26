@@ -58,7 +58,7 @@ function formatFieldValue(field: MasterRecordField): string {
   return String(field.value);
 }
 
-function DeletedBadge({ field }: { field: MasterRecordField }) {
+function FieldValue({ field }: { field: MasterRecordField }) {
   if (field.key !== "is_deleted" || typeof field.value !== "boolean") {
     return <>{formatFieldValue(field)}</>;
   }
@@ -71,7 +71,7 @@ function DeletedBadge({ field }: { field: MasterRecordField }) {
 }
 
 function getRecordTitle(record: MasterRecord): string {
-  const nameField = record.fields.find(field => field.key === "name");
+  const nameField = record.fieldMap.name;
   const formattedName = nameField ? formatFieldValue(nameField) : "";
   return formattedName !== "-" ? formattedName : `ID: ${record.id}`;
 }
@@ -112,7 +112,7 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
 
     // 一覧ヘッダーは同一テーブル内で共通のため、先頭レコードの field 定義を列見出しとして使う。
     return activeTable.listColumnKeys
-      .map(key => activeTable.records[0].fields.find(field => field.key === key))
+      .map(key => activeTable.records[0].fieldMap[key])
       .filter((field): field is MasterRecordField => Boolean(field));
   }, [activeTable]);
 
@@ -242,13 +242,13 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
                         onClick={() => handleRecordSelect(record.id)}
                         onKeyDown={event => handleRecordKeyDown(event, record.id)}
                         tabIndex={selectedRecord?.id === record.id ? 0 : -1}
-                        aria-selected={selectedRecord?.id === record.id}
+                        aria-current={selectedRecord?.id === record.id ? "true" : undefined}
                       >
                         {activeTable.listColumnKeys.map(key => {
-                          const field = record.fields.find(item => item.key === key);
+                          const field = record.fieldMap[key];
                           return (
                             <Table.Td key={key} maw={260} className="truncate">
-                              {field ? <DeletedBadge field={field} /> : "-"}
+                              {field ? <FieldValue field={field} /> : "-"}
                             </Table.Td>
                           );
                         })}
@@ -278,7 +278,7 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
                           {field.label}
                         </Text>
                         <Text component="div" size="sm" className="break-words">
-                          <DeletedBadge field={field} />
+                          <FieldValue field={field} />
                           {field.referenceLabel && (
                             <Text component="span" size="xs" c="dimmed" ml="xs">
                               ID: {field.value}
