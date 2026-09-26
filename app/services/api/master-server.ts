@@ -7,6 +7,10 @@ import {
 } from "@/app/constants/master";
 import { createServerSupabaseClient } from "./supabase-server";
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createServerSupabaseClient>>;
+type UserReferenceRow = { id: number; display_name: string };
+const MASTER_RECORD_FETCH_LIMIT = 1000;
+
 type RawMasterRecord = Record<string, MasterFieldValue> & { id: number };
 
 export type MasterRecordField = {
@@ -19,6 +23,7 @@ export type MasterRecordField = {
 export type MasterRecord = {
   id: number;
   fields: MasterRecordField[];
+  fieldMap: Record<string, MasterRecordField>;
 };
 
 export type MasterTableData = {
@@ -42,17 +47,36 @@ type MasterRowsByTable = {
 };
 
 // master 管理画面の対象 5 テーブルをまとめて取得し、後続処理で扱いやすい形へ揃える。
-async function fetchMasterRows(): Promise<{
+async function fetchMasterRows(supabase: SupabaseServerClient): Promise<{
   data: MasterRowsByTable | null;
   error: PostgrestError | null;
 }> {
-  const supabase = await createServerSupabaseClient();
   const [documents, videos, categories, applications, positions] = await Promise.all([
-    supabase.from("documents").select("*").order("id", { ascending: true }),
-    supabase.from("videos").select("*").order("id", { ascending: true }),
-    supabase.from("categories").select("*").order("id", { ascending: true }),
-    supabase.from("applications").select("*").order("id", { ascending: true }),
-    supabase.from("positions").select("*").order("id", { ascending: true }),
+    supabase
+      .from("documents")
+      .select("*")
+      .order("id", { ascending: true })
+      .limit(MASTER_RECORD_FETCH_LIMIT),
+    supabase
+      .from("videos")
+      .select("*")
+      .order("id", { ascending: true })
+      .limit(MASTER_RECORD_FETCH_LIMIT),
+    supabase
+      .from("categories")
+      .select("*")
+      .order("id", { ascending: true })
+      .limit(MASTER_RECORD_FETCH_LIMIT),
+    supabase
+      .from("applications")
+      .select("*")
+      .order("id", { ascending: true })
+      .limit(MASTER_RECORD_FETCH_LIMIT),
+    supabase
+      .from("positions")
+      .select("*")
+      .order("id", { ascending: true })
+      .limit(MASTER_RECORD_FETCH_LIMIT),
   ]);
 
   const error =
@@ -95,24 +119,21 @@ function collectReferenceIds(rowsByTable: MasterRowsByTable, referenceType: "cat
 }
 
 // 抽出した参照先 ID から、画面表示に使う名称マップを一括取得する。
-async function fetchReferenceMaps(rowsByTable: MasterRowsByTable): Promise<{
+async function fetchReferenceMaps(
+  supabase: SupabaseServerClient,
+  rowsByTable: MasterRowsByTable
+): Promise<{
   data: ReferenceMaps | null;
   error: PostgrestError | null;
 }> {
-  const supabase = await createServerSupabaseClient();
-  const categoryIds = collectReferenceIds(rowsByTable, "category");
   const userIds = collectReferenceIds(rowsByTable, "user");
 
-  const [categories, users] = await Promise.all([
-    categoryIds.length > 0
-      ? supabase.from("categories").select("id, name").in("id", categoryIds)
-      : Promise.resolve({ data: [], error: null }),
+  const users: { data: UserReferenceRow[] | null; error: PostgrestError | null } =
     userIds.length > 0
-      ? supabase.from("users").select("id, display_name").in("id", userIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+      ? await supabase.from("users").select("id, display_name").in("id", userIds)
+      : { data: [], error: null };
 
-  const error = categories.error ?? users.error;
+  const error = users.error;
   if (error) {
     console.error("マスター管理参照データ取得エラー:", error.message);
     return { data: null, error };
@@ -120,7 +141,9 @@ async function fetchReferenceMaps(rowsByTable: MasterRowsByTable): Promise<{
 
   return {
     data: {
-      categories: new Map((categories.data ?? []).map(category => [category.id, category.name])),
+      categories: new Map(
+        rowsByTable.categories.map(category => [category.id, String(category.name)])
+      ),
       users: new Map((users.data ?? []).map(user => [user.id, user.display_name])),
     },
     error: null,
@@ -160,9 +183,8 @@ function createMasterTableData(
     tableName: definition.tableName,
     label: definition.label,
     listColumnKeys: definition.listColumnKeys,
-    records: rows.map(row => ({
-      id: row.id,
-      fields: definition.columns.map(column => {
+    records: rows.map(row => {
+      const fields = definition.columns.map(column => {
         const value = row[column.key] ?? null;
         const reference = findReference(definition.references, column.key);
 
@@ -172,8 +194,14 @@ function createMasterTableData(
           value,
           referenceLabel: resolveReferenceLabel(value, reference, referenceMaps),
         };
-      }),
-    })),
+      });
+
+      return {
+        id: row.id,
+        fields,
+        fieldMap: Object.fromEntries(fields.map(field => [field.key, field])),
+      };
+    }),
   };
 }
 
@@ -182,14 +210,16 @@ export async function fetchMasterManagementData(): Promise<{
   data: MasterManagementData | null;
   error: PostgrestError | null;
 }> {
-  const rows = await fetchMasterRows();
+  const supabase = await createServerSupabaseClient();
+
+  const rows = await fetchMasterRows(supabase);
   if (rows.error || !rows.data) {
     return { data: null, error: rows.error };
   }
 
   const rowsByTable = rows.data;
 
-  const referenceMaps = await fetchReferenceMaps(rowsByTable);
+  const referenceMaps = await fetchReferenceMaps(supabase, rowsByTable);
   if (referenceMaps.error || !referenceMaps.data) {
     return { data: null, error: referenceMaps.error };
   }
