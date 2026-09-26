@@ -263,8 +263,9 @@ describe("server API services", () => {
             github_url: null,
             portfolio_url: null,
             position_tags: [
-              { positions: { id: 1, name: "dev", is_deleted: false } },
-              { positions: { id: 2, name: "old", is_deleted: true } },
+              { positions: { id: 1, name: "dev", is_deleted: false, is_leadership: true } },
+              { positions: { id: 2, name: "staff", is_deleted: false, is_leadership: false } },
+              { positions: { id: 3, name: "old", is_deleted: true, is_leadership: true } },
             ],
           },
         ],
@@ -286,7 +287,17 @@ describe("server API services", () => {
           expect.objectContaining({
             id: 1,
             profile_image_url: null,
-            position_tags: [{ positions: { id: 1, name: "dev", is_deleted: false } }],
+            position_tags: [
+              { positions: { id: 1, name: "dev", is_deleted: false, is_leadership: true } },
+              {
+                positions: {
+                  id: 2,
+                  name: "staff",
+                  is_deleted: false,
+                  is_leadership: false,
+                },
+              },
+            ],
           }),
         ],
         error: null,
