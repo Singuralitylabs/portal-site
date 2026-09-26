@@ -5,12 +5,13 @@ const GOOGLE_AVATAR_HOSTNAME = "lh3.googleusercontent.com";
 const isDev = process.env.NODE_ENV !== "production";
 
 // カスタムドメイン設定時にも追従できるよう、Supabaseの許可先はプロジェクトURLから導出する。
-// URLが未設定・不正な場合は許可を広げず空にする(設定漏れをワイルドカードで隠さない)。
+// URLが未設定・不正・http/https以外のスキームの場合は許可を広げず空にする(設定漏れをワイルドカードで隠さない)。
 function getSupabaseCsp(): { httpOrigin: string; wsOrigin: string } {
   const empty = { httpOrigin: "", wsOrigin: "" };
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return empty;
   try {
     const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return empty;
     const wsProtocol = url.protocol === "http:" ? "ws:" : "wss:";
     return { httpOrigin: url.origin, wsOrigin: `${wsProtocol}//${url.host}` };
   } catch {
