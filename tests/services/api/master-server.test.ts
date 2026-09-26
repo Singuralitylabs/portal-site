@@ -7,12 +7,19 @@ jest.mock("../../../app/services/api/supabase-server", () => ({
 
 const createOrderBuilder = (result: { data: unknown[] | null; error: unknown }) => ({
   select: jest.fn().mockReturnThis(),
-  order: jest.fn().mockResolvedValue(result),
+  order: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockResolvedValue(result),
 });
 
 const createInBuilder = (result: { data: unknown[] | null; error: unknown }) => ({
   select: jest.fn().mockReturnThis(),
   in: jest.fn().mockResolvedValue(result),
+});
+
+type QueryBuilder = ReturnType<typeof createOrderBuilder> | ReturnType<typeof createInBuilder>;
+
+const createSupabase = (builders: Record<string, QueryBuilder>) => ({
+  from: jest.fn((table: string) => builders[table]),
 });
 
 describe("fetchMasterManagementData", () => {
@@ -23,38 +30,33 @@ describe("fetchMasterManagementData", () => {
   });
 
   it("users 参照がRLSで0件になる論理削除ユーザーは退会済みユーザーとして扱う", async () => {
-    const supabase = {
-      from: jest
-        .fn()
-        .mockReturnValueOnce(
-          createOrderBuilder({
-            data: [
-              {
-                id: 1,
-                name: "資料",
-                category_id: 10,
-                assignee: null,
-                assignee_id: 999,
-                description: null,
-                url: "https://example.com",
-                display_order: 1,
-                is_deleted: false,
-                created_by: 999,
-                updated_by: 999,
-                created_at: "2024-01-01T00:00:00Z",
-                updated_at: "2024-01-02T00:00:00Z",
-              },
-            ],
-            error: null,
-          })
-        )
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [{ id: 10, name: "共通" }], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createInBuilder({ data: [{ id: 10, name: "共通" }], error: null }))
-        .mockReturnValueOnce(createInBuilder({ data: [], error: null })),
-    };
+    const supabase = createSupabase({
+      documents: createOrderBuilder({
+        data: [
+          {
+            id: 1,
+            name: "資料",
+            category_id: 10,
+            assignee: null,
+            assignee_id: 999,
+            description: null,
+            url: "https://example.com",
+            display_order: 1,
+            is_deleted: false,
+            created_by: 999,
+            updated_by: 999,
+            created_at: "2024-01-01T00:00:00Z",
+            updated_at: "2024-01-02T00:00:00Z",
+          },
+        ],
+        error: null,
+      }),
+      videos: createOrderBuilder({ data: [], error: null }),
+      categories: createOrderBuilder({ data: [{ id: 10, name: "共通" }], error: null }),
+      applications: createOrderBuilder({ data: [], error: null }),
+      positions: createOrderBuilder({ data: [], error: null }),
+      users: createInBuilder({ data: [], error: null }),
+    });
     createServerSupabaseClientMock.mockResolvedValue(supabase);
 
     const result = await fetchMasterManagementData();
@@ -69,15 +71,13 @@ describe("fetchMasterManagementData", () => {
   it("マスター本体テーブルの取得エラーは後続処理を行わず返す", async () => {
     const documentsError = { message: "documents failed" };
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-    const supabase = {
-      from: jest
-        .fn()
-        .mockReturnValueOnce(createOrderBuilder({ data: null, error: documentsError }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null })),
-    };
+    const supabase = createSupabase({
+      documents: createOrderBuilder({ data: null, error: documentsError }),
+      videos: createOrderBuilder({ data: [], error: null }),
+      categories: createOrderBuilder({ data: [], error: null }),
+      applications: createOrderBuilder({ data: [], error: null }),
+      positions: createOrderBuilder({ data: [], error: null }),
+    });
     createServerSupabaseClientMock.mockResolvedValue(supabase);
 
     const result = await fetchMasterManagementData();
@@ -88,41 +88,16 @@ describe("fetchMasterManagementData", () => {
     consoleError.mockRestore();
   });
 
-  it("categories 参照の取得エラーはデータ取得エラーとして返す", async () => {
+  it("categories テーブルの取得エラーはデータ取得エラーとして返す", async () => {
     const categoriesError = { message: "categories failed" };
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-    const supabase = {
-      from: jest
-        .fn()
-        .mockReturnValueOnce(
-          createOrderBuilder({
-            data: [
-              {
-                id: 1,
-                name: "資料",
-                category_id: 10,
-                assignee: null,
-                assignee_id: 999,
-                description: null,
-                url: "https://example.com",
-                display_order: 1,
-                is_deleted: false,
-                created_by: 999,
-                updated_by: 999,
-                created_at: "2024-01-01T00:00:00Z",
-                updated_at: "2024-01-02T00:00:00Z",
-              },
-            ],
-            error: null,
-          })
-        )
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createInBuilder({ data: null, error: categoriesError }))
-        .mockReturnValueOnce(createInBuilder({ data: [], error: null })),
-    };
+    const supabase = createSupabase({
+      documents: createOrderBuilder({ data: [], error: null }),
+      videos: createOrderBuilder({ data: [], error: null }),
+      categories: createOrderBuilder({ data: null, error: categoriesError }),
+      applications: createOrderBuilder({ data: [], error: null }),
+      positions: createOrderBuilder({ data: [], error: null }),
+    });
     createServerSupabaseClientMock.mockResolvedValue(supabase);
 
     const result = await fetchMasterManagementData();
@@ -135,38 +110,33 @@ describe("fetchMasterManagementData", () => {
   it("users 参照の取得エラーはデータ取得エラーとして返す", async () => {
     const usersError = { message: "users failed" };
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-    const supabase = {
-      from: jest
-        .fn()
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(
-          createOrderBuilder({
-            data: [
-              {
-                id: 1,
-                name: "アプリ",
-                description: "説明",
-                url: "https://example.com",
-                category_id: 10,
-                developer_id: 999,
-                thumbnail_path: null,
-                display_order: 1,
-                is_deleted: false,
-                created_by: 999,
-                updated_by: 999,
-                created_at: "2024-01-01T00:00:00Z",
-                updated_at: "2024-01-02T00:00:00Z",
-              },
-            ],
-            error: null,
-          })
-        )
-        .mockReturnValueOnce(createOrderBuilder({ data: [], error: null }))
-        .mockReturnValueOnce(createInBuilder({ data: [{ id: 10, name: "共通" }], error: null }))
-        .mockReturnValueOnce(createInBuilder({ data: null, error: usersError })),
-    };
+    const supabase = createSupabase({
+      documents: createOrderBuilder({ data: [], error: null }),
+      videos: createOrderBuilder({ data: [], error: null }),
+      categories: createOrderBuilder({ data: [], error: null }),
+      applications: createOrderBuilder({
+        data: [
+          {
+            id: 1,
+            name: "アプリ",
+            description: "説明",
+            url: "https://example.com",
+            category_id: 10,
+            developer_id: 999,
+            thumbnail_path: null,
+            display_order: 1,
+            is_deleted: false,
+            created_by: 999,
+            updated_by: 999,
+            created_at: "2024-01-01T00:00:00Z",
+            updated_at: "2024-01-02T00:00:00Z",
+          },
+        ],
+        error: null,
+      }),
+      positions: createOrderBuilder({ data: [], error: null }),
+      users: createInBuilder({ data: null, error: usersError }),
+    });
     createServerSupabaseClientMock.mockResolvedValue(supabase);
 
     const result = await fetchMasterManagementData();
