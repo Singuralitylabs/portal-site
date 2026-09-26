@@ -14,10 +14,6 @@
     "format": "prettier --write . --ignore-unknown",
     "db:types": "node scripts/db-types.cjs",
     "db:types:local": "dotenvx run --strict -f .env.development -- node scripts/db-types.cjs",
-    "master:metadata": "node scripts/update-master-metadata-generated.cjs",
-    "master:metadata:check": "node scripts/update-master-metadata-generated.cjs --check",
-    "master:definitions": "node scripts/update-master-definitions.cjs",
-    "master:definitions:check": "node scripts/update-master-definitions.cjs --check",
     "lint:logs": "node scripts/lint-logs.cjs",
     "lint:env": "node scripts/check-env-encrypted.cjs",
     "test": "jest --verbose --coverage"

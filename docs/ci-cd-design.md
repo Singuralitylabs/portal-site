@@ -84,7 +84,6 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | [`release-pr.yml`](../.github/workflows/release-pr.yml)                           | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
 | [`create-release.yml`](../.github/workflows/create-release.yml)                   | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
-| [`check_master.yml`](../.github/workflows/check_master.yml)                       | `contents: read`                         | master 関連の生成物整合性チェックに必要                          |
 | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | `contents: read`                         | Wiki 更新イベントを受けて Slack 通知するために必要               |
 
 **Secrets:**
