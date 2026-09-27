@@ -105,17 +105,6 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
     );
   }, [activeTable, selectedRecordId]);
 
-  const listFields = useMemo(() => {
-    if (!activeTable?.records[0]) {
-      return [];
-    }
-
-    // 一覧ヘッダーは同一テーブル内で共通のため、先頭レコードの field 定義を列見出しとして使う。
-    return activeTable.listColumnKeys
-      .map(key => activeTable.records[0].fieldMap[key])
-      .filter((field): field is MasterRecordField => Boolean(field));
-  }, [activeTable]);
-
   const handleTableChange = (value: string | null) => {
     const nextTableName = (value as MasterTableName | null) ?? "documents";
     const nextTable = initialData.tables.find(table => table.tableName === nextTableName);
@@ -192,109 +181,125 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
     <>
       <PageTitle>マスター管理</PageTitle>
 
-      <Tabs value={activeTableName} onChange={handleTableChange} mt="md" mb="md">
-        <Tabs.List>
-          {initialData.tables.map(table => (
-            <Tabs.Tab key={table.tableName} value={table.tableName}>
-              {table.label}
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-      </Tabs>
-
       {activeTable ? (
-        <div className="grid h-[calc(100dvh-13rem)] min-h-[32rem] grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:grid-rows-1">
-          <Paper withBorder className="flex min-h-0 flex-col overflow-hidden">
-            <Group justify="space-between" p="md" pb="xs">
-              <Text fw={700}>{activeTable.label}</Text>
-              <Badge variant="light">件数: {activeTable.records.length}</Badge>
-            </Group>
+        <Tabs value={activeTableName} onChange={handleTableChange} mt="md" mb="md">
+          <Tabs.List>
+            {initialData.tables.map(table => (
+              <Tabs.Tab key={table.tableName} value={table.tableName}>
+                {table.label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
 
-            {activeTable.records.length > 0 ? (
-              <ScrollArea className="min-h-0 flex-1">
-                <Table highlightOnHover verticalSpacing="sm" miw={720}>
-                  <caption className="sr-only">
-                    {activeTable.label}
-                    の一覧です。上下キーで行を移動し、EnterまたはSpaceで詳細を選択できます。
-                  </caption>
-                  <Table.Thead>
-                    <Table.Tr>
-                      {listFields.map(field => (
-                        <Table.Th key={field.key} scope="col">
-                          {field.label}
-                        </Table.Th>
-                      ))}
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {activeTable.records.map(record => (
-                      <Table.Tr
-                        key={record.id}
-                        ref={node => {
-                          rowRefs.current[record.id] = node;
-                        }}
-                        bg={
-                          selectedRecord?.id === record.id
-                            ? "var(--mantine-color-blue-0)"
-                            : undefined
-                        }
-                        className="cursor-pointer"
-                        onClick={() => handleRecordSelect(record.id)}
-                        onKeyDown={event => handleRecordKeyDown(event, record.id)}
-                        tabIndex={selectedRecord?.id === record.id ? 0 : -1}
-                        aria-current={selectedRecord?.id === record.id ? "true" : undefined}
-                      >
-                        {activeTable.listColumnKeys.map(key => {
-                          const field = record.fieldMap[key];
-                          return (
-                            <Table.Td key={key} maw={260} className="truncate">
-                              {field ? <FieldValue field={field} /> : "-"}
-                            </Table.Td>
-                          );
-                        })}
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </ScrollArea>
-            ) : (
-              <Text c="dimmed" ta="center" py="xl">
-                表示できるレコードはありません。
-              </Text>
-            )}
-          </Paper>
+          {initialData.tables.map(table => {
+            const panelListFields = table.records[0]
+              ? table.listColumnKeys
+                  .map(key => table.records[0].fieldMap[key])
+                  .filter((field): field is MasterRecordField => Boolean(field))
+              : [];
+            const panelSelectedRecord =
+              table.tableName === activeTableName ? selectedRecord : (table.records[0] ?? null);
 
-          <Paper withBorder p="md" className="flex min-h-0 flex-col overflow-hidden">
-            {selectedRecord ? (
-              <>
-                <Text fw={700} mb="xs">
-                  {getRecordTitle(selectedRecord)}
-                </Text>
-                <ScrollArea className="min-h-0 flex-1">
-                  <div className="space-y-3 pr-1">
-                    {selectedRecord.fields.map(field => (
-                      <div key={field.key}>
-                        <Text size="xs" c="dimmed">
-                          {field.label}
+            return (
+              <Tabs.Panel key={table.tableName} value={table.tableName} pt="md">
+                <div className="grid h-[calc(100dvh-13rem)] min-h-[32rem] grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:grid-rows-1">
+                  <Paper withBorder className="flex min-h-0 flex-col overflow-hidden">
+                    <Group justify="space-between" p="md" pb="xs">
+                      <Text fw={700}>{table.label}</Text>
+                      <Badge variant="light">件数: {table.records.length}</Badge>
+                    </Group>
+
+                    {table.records.length > 0 ? (
+                      <ScrollArea className="min-h-0 flex-1">
+                        <Table highlightOnHover verticalSpacing="sm" miw={720}>
+                          <caption className="sr-only">
+                            {table.label}
+                            の一覧です。上下キーで行を移動し、EnterまたはSpaceで詳細を選択できます。
+                          </caption>
+                          <Table.Thead>
+                            <Table.Tr>
+                              {panelListFields.map(field => (
+                                <Table.Th key={field.key} scope="col">
+                                  {field.label}
+                                </Table.Th>
+                              ))}
+                            </Table.Tr>
+                          </Table.Thead>
+                          <Table.Tbody>
+                            {table.records.map(record => (
+                              <Table.Tr
+                                key={record.id}
+                                ref={node => {
+                                  rowRefs.current[record.id] = node;
+                                }}
+                                bg={
+                                  panelSelectedRecord?.id === record.id
+                                    ? "var(--mantine-color-blue-0)"
+                                    : undefined
+                                }
+                                className="cursor-pointer"
+                                onClick={() => handleRecordSelect(record.id)}
+                                onKeyDown={event => handleRecordKeyDown(event, record.id)}
+                                tabIndex={panelSelectedRecord?.id === record.id ? 0 : -1}
+                                aria-current={
+                                  panelSelectedRecord?.id === record.id ? "true" : undefined
+                                }
+                              >
+                                {table.listColumnKeys.map(key => {
+                                  const field = record.fieldMap[key];
+                                  return (
+                                    <Table.Td key={key} maw={260} className="truncate">
+                                      {field ? <FieldValue field={field} /> : "-"}
+                                    </Table.Td>
+                                  );
+                                })}
+                              </Table.Tr>
+                            ))}
+                          </Table.Tbody>
+                        </Table>
+                      </ScrollArea>
+                    ) : (
+                      <Text c="dimmed" ta="center" py="xl">
+                        表示できるレコードはありません。
+                      </Text>
+                    )}
+                  </Paper>
+
+                  <Paper withBorder p="md" className="flex min-h-0 flex-col overflow-hidden">
+                    {panelSelectedRecord ? (
+                      <>
+                        <Text fw={700} mb="xs">
+                          {getRecordTitle(panelSelectedRecord)}
                         </Text>
-                        <Text component="div" size="sm" className="break-words">
-                          <FieldValue field={field} />
-                          {field.referenceLabel && (
-                            <Text component="span" size="xs" c="dimmed" ml="xs">
-                              ID: {field.value}
-                            </Text>
-                          )}
-                        </Text>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </>
-            ) : (
-              <Text c="dimmed">レコードを選択してください。</Text>
-            )}
-          </Paper>
-        </div>
+                        <ScrollArea className="min-h-0 flex-1">
+                          <div className="space-y-3 pr-1">
+                            {panelSelectedRecord.fields.map(field => (
+                              <div key={field.key}>
+                                <Text size="xs" c="dimmed">
+                                  {field.label}
+                                </Text>
+                                <Text component="div" size="sm" className="break-words">
+                                  <FieldValue field={field} />
+                                  {field.referenceLabel && (
+                                    <Text component="span" size="xs" c="dimmed" ml="xs">
+                                      ID: {field.value}
+                                    </Text>
+                                  )}
+                                </Text>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </>
+                    ) : (
+                      <Text c="dimmed">レコードを選択してください。</Text>
+                    )}
+                  </Paper>
+                </div>
+              </Tabs.Panel>
+            );
+          })}
+        </Tabs>
       ) : (
         <Text c="dimmed" ta="center" py="xl">
           表示できるテーブルはありません。
