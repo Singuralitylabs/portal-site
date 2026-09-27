@@ -14,6 +14,7 @@
     "format": "prettier --write . --ignore-unknown",
     "db:types": "node scripts/db-types.cjs",
     "db:types:local": "dotenvx run --strict -f .env.development -- node scripts/db-types.cjs",
+    "db:migrate:docker": "node scripts/apply-local-migrations.cjs",
     "lint:logs": "node scripts/lint-logs.cjs",
     "lint:env": "node scripts/check-env-encrypted.cjs",
     "test": "jest --verbose --coverage"

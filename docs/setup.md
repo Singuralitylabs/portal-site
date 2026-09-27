@@ -10,6 +10,7 @@
 2. [プロジェクトのセットアップ](#2-プロジェクトのセットアップ)
 3. [開発環境の起動確認](#3-開発環境の起動確認)
 4. [トラブルシューティング](#4-トラブルシューティング)
+5. [（任意）ローカルDockerでSupabaseを起動する](#5-任意ローカルdockerでsupabaseを起動する)
 
 ## 1. 事前準備
 
@@ -415,6 +416,71 @@ npm run db:types:local
 # または、既存のビルドキャッシュをクリア
 rm -rf .next
 npm run dev
+```
+
+## 5. （任意）ローカルDockerでSupabaseを起動する
+
+§2.3 の共有クラウド開発用Supabase（dotenvx経由）が本項目の標準手順です。以下は、他メンバーのデータに影響を与えず自分専用のSupabase環境で試したい場合や、共有の開発用Supabaseにアクセスできない場合の代替手段です。
+
+### 5.1 前提条件
+
+- Docker Desktop（起動しておくこと）
+- Supabase CLI をグローバルインストール
+  ```bash
+  brew install supabase/tap/supabase
+  ```
+  `npx supabase`（本リポジトリの `node_modules` 経由のCLI）は環境によってクラッシュすることを確認しているため、グローバルインストールした `supabase` コマンドを使用する。
+
+### 5.2 起動とスキーマ適用
+
+```bash
+# 1. ローカルSupabaseを起動（初回はイメージのダウンロードで数分かかる）
+supabase start
+
+# 2. supabase/migrations 配下のSQLを、依存関係を満たす順序で適用する
+npm run db:migrate:docker
+```
+
+`supabase/migrations` は「番号順にSupabaseのSQLエディタで手動実行する」運用（[supabase/README.md](../supabase/README.md)参照）のため、Supabase CLIの `supabase db reset` だけではテーブルが1つも作成されない。また、フォルダ名の辞書順（`01_tables/applications` → `01_tables/categories` → ...）では外部キー参照の順序を満たせない箇所がある。そのため `scripts/apply-local-migrations.cjs` に、実際に依存関係を満たす適用順序を明示的なリストとして定義している。
+
+**新しいマイグレーションファイルを追加した場合は、`scripts/apply-local-migrations.cjs` の `ORDERED_RELATIVE_PATHS` にも追記すること。** リストと実ファイルが一致しない場合、スクリプトは何も適用せずエラーで停止する（更新漏れの検出用）。
+
+起動後、以下のコマンドで接続情報を確認できる。
+
+```bash
+supabase status
+```
+
+- `API_URL`（既定: `http://127.0.0.1:54321`）
+- `ANON_KEY`
+- `STUDIO_URL`（既定: `http://127.0.0.1:54323`、ブラウザでテーブルやRLSポリシーを確認できる管理画面）
+
+### 5.3 アプリからローカルSupabaseに接続する
+
+`npm run dev` は dotenvx 経由で `.env.development`（共有クラウド開発用）を読み込む固定の起動コマンドのため、ローカルDocker用には使わない。代わりに `.env.local` に以下を設定し、dotenvxを経由しない素の `next dev` で起動する。
+
+```env
+# .env.local（Gitに含めない。Next.jsが自動で読み込む）
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=（supabase status のANON_KEY）
+SUPABASE_PROJECT_ID=local
+```
+
+```bash
+npx next dev --turbopack
+```
+
+`GOOGLE_CALENDAR_IDS` / `GOOGLE_SERVICE_ACCOUNT_KEY` / `SLACK_WEBHOOK_URL` は未設定でもアプリは起動する（各機能が該当箇所で警告を出しつつスキップする）。Google認証によるログインは外部のOAuth設定に依存するため、ローカルSupabaseでは実施できない。API疎通・スキーマ・RLSポリシーの確認が主な用途となる。
+
+### 5.4 リセット・停止
+
+```bash
+# スキーマをまっさらに戻して再適用する
+supabase db reset
+npm run db:migrate:docker
+
+# 停止（コンテナは残る。次回 supabase start で再開）
+supabase stop
 ```
 
 ## 次のステップ
