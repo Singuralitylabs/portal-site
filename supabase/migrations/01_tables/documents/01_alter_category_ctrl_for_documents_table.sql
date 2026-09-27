@@ -6,8 +6,8 @@ ADD COLUMN category_id INTEGER;
 UPDATE documents
 SET category_id = CASE
     WHEN category = '事務局資料' THEN 2
-    WHEN ategory = '申請書類' THEN 3
-    WHEN ategory = '広報用資料' THEN 4
+    WHEN category = '申請書類' THEN 3
+    WHEN category = '広報用資料' THEN 4
     WHEN category = '学習資料' THEN 5
     ELSE 1 -- 未分類
 END;
