@@ -555,6 +555,7 @@ sequenceDiagram
 3. プロフィール情報の編集
    - フォームで名前、自己紹介、SNSアカウントや個人HP等のURLを編集可能
    - 「保存」ボタンで変更を保存
+     - 活動チーム、役割など（`position_tags`）は、`sync_user_position_tags` 関数の1回の呼び出しで同期する（[データベース設計 6.5](database.md#65-position_tags-同期関数)）
    - 保存成功時にトースト通知を表示
 
 ### 6.4 表示項目

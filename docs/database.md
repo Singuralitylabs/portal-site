@@ -456,6 +456,85 @@ UPDATE は列指定トリガー（`UPDATE OF role, status`）とし、`role` / `
 > **適用順の制約**
 > 本トリガー関数は `03_functions/rls_helper_functions.sql` の `is_active_user()` / `is_admin()` を参照します。ディレクトリの番号順（`02_triggers` → `03_functions`）とは逆の依存関係になるため、**必ず `03_functions/rls_helper_functions.sql` を先に適用してください**。関数の作成自体は遅延解決のため成功しますが、関数が未定義のままトリガーが発火すると `function is_admin() does not exist` で失敗します。影響を受けるのは新規ユーザー登録（INSERT）と `role` / `status` を含む UPDATE で、承認・否認が行えなくなります。
 
+### 6.5. position_tags 同期関数
+
+定義ファイル: `supabase/migrations/03_functions/position_tags_functions.sql`
+
+> 本節は Issue #347 の設計です。関数の作成とサービス層の切り替えは同 Issue の実装で行います。
+
+ユーザーの役職タグを、指定した position ID の集合に一致させる関数です。`supabase.rpc(...)` の1回の呼び出しで完結させ、削除と挿入を1トランザクションにまとめます。PostgREST は RPC の1回の呼び出しを1トランザクションで実行するため、関数内で例外が発生すると変更はすべてロールバックされます。
+
+| 項目       | 内容                                                          |
+| ---------- | ------------------------------------------------------------- |
+| 関数名     | `sync_user_position_tags`                                     |
+| 引数       | `p_user_id INTEGER`, `p_position_ids INTEGER[]`               |
+| 戻り値     | `INTEGER[]`（同期後に保持している position ID、昇順）         |
+| 実行モード | `SECURITY INVOKER`、`search_path = public, pg_catalog` を固定 |
+| 実行権限   | `authenticated` のみ（`PUBLIC` と `anon` からは REVOKE する） |
+
+処理手順:
+
+1. 呼び出しユーザーが、対象ユーザー本人（`status = 'active'` かつ未削除）または `is_active_user() AND is_content_manager()` であることを確認する
+2. `pg_advisory_xact_lock` で、対象ユーザー単位のロックを取得する
+3. 入力配列から `NULL` と重複を除く
+4. 新規に追加する ID が、未削除の `positions` に存在することを確認する
+5. 配列に含まれない既存行を削除する
+6. 不足している行を `ON CONFLICT (user_id, position_id) DO NOTHING` で挿入する
+7. 同期後の position ID 配列を返す
+
+入力値の扱い:
+
+| 入力                                | 扱い                             |
+| ----------------------------------- | -------------------------------- |
+| `NULL` の配列                       | 空配列として扱う（全タグを外す） |
+| 配列内の `NULL`、重複した ID        | 関数内で除去する                 |
+| 存在しない ID                       | 例外にして全体を拒否する         |
+| 論理削除済みの役職 ID（新規追加）   | 例外にして全体を拒否する         |
+| 論理削除済みの役職 ID（すでに保持） | そのまま保持を許可する           |
+
+エラー:
+
+| 条件                                | SQLSTATE | 意味                    |
+| ----------------------------------- | -------- | ----------------------- |
+| 権限がない                          | `42501`  | insufficient_privilege  |
+| 存在しない、または削除済みの役職 ID | `22023`  | invalid_parameter_value |
+
+SQLSTATE は `PostgrestError.code` としてアプリケーションに返ります。
+
+設計上の判断:
+
+- **差分同期（不要分の削除 + 不足分の挿入）**: 全削除 + 全挿入と原子性は同じですが、変更のない行の `id` / `created_at` が保たれ、同じ入力で再実行しても結果が変わりません。
+- **`SECURITY INVOKER`**: 「4.7. position_tags テーブルのRLSポリシー」をそのまま権限の根拠にします。ただしRLSだけでは、権限のない DELETE が0件削除のまま成功扱いになるため、手順1で明示的に確認して例外にします。
+- **advisory lock**: 二重送信などで同一ユーザーの同期が並行しても、順番に適用されます。`users` 行の `SELECT ... FOR UPDATE` は、メンテナーが他ユーザーの行をRLSによりロックできないため使いません。
+- **検証対象を新規追加分に限る**: プロフィール画面は保持中の position ID（論理削除済みの役職を含む）をそのまま送り返します。全件を検証すると、削除済みの役職を持つユーザーが保存できなくなります。
+- **不正な ID は読み飛ばさない**: 黙って除外すると、画面の選択内容と保存結果がずれるためです。
+
+アプリケーション側は `updateUserPositionTagsInServer`（`app/services/api/users-server.ts`）のシグネチャを変えず、処理を本関数の呼び出し1回に置き換えます。重複排除と削除・挿入の順序制御は本関数が担い、サービス層は引数の受け渡しとエラーログのみを担います。
+
+### 6.6. 複数更新処理の RPC 化方針
+
+1つの操作で複数の書き込みを行う処理は、PostgreSQL 関数にまとめて RPC で呼び出します。「6.5. position_tags 同期関数」を標準パターンとします。
+
+RPC にまとめる条件（いずれかに該当する場合）:
+
+- 1つのユースケースで、書き込みが2文以上になる
+- 読み取った値に依存して書き込む（読み取りと書き込みの間に他の更新が入りうる）
+- 件数分のループで1行ずつ更新している
+
+RPC にまとめない場合:
+
+- 単一の INSERT / UPDATE で完結する
+- Storage や外部 API など、PostgreSQL の外をまたぐ（補償処理や条件付き UPDATE で対応する）
+
+関数を作るときの共通ルール:
+
+- `SECURITY INVOKER` を既定とし、RLSを権限の根拠にする
+- 権限は関数の冒頭で明示的に確認し、違反時は例外にする
+- `search_path` を固定し、`PUBLIC` と `anon` の実行権限を外す
+- エラーは `RAISE EXCEPTION ... USING ERRCODE` で返し、不正な入力を黙って読み飛ばさない
+- 同じ対象への同時実行は advisory lock で直列化する
+- `supabase/migrations/03_functions/` に `CREATE OR REPLACE` で定義し、適用後に `npm run db:types:local` で型を再生成する
+
 ## 7. データアクセス制御の実現
 
 これらのRLSポリシーとSupabase Auth統合により、シンラボポータルサイトでは以下のデータアクセス制御を実現しています。
