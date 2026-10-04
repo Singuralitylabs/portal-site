@@ -6,6 +6,7 @@ import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
 import { Card, Text } from "@mantine/core";
 import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
+import { YOUTUBE_THUMBNAIL_HOSTNAME } from "@/app/constants/media";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
@@ -21,7 +22,7 @@ function getThumbnailUrl(video: VideoWithCategoryType): string {
 
   const videoId = getYouTubeVideoId(video.url);
   if (videoId) {
-    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    return `https://${YOUTUBE_THUMBNAIL_HOSTNAME}/vi/${videoId}/hqdefault.jpg`;
   }
 
   return "/default_video_thumbnail.png";
