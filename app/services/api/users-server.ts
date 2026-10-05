@@ -311,8 +311,17 @@ export async function updateUserPositionTagsInServer(
   const supabase = await createServerSupabaseClient();
 
   const { authId, error: authError } = await getServerCurrentUser();
-  if (authError || !authId) {
+  if (authError) {
     return authError;
+  }
+  if (!authId) {
+    return {
+      code: "PGRST116",
+      details: "",
+      hint: "",
+      message: "ユーザーが見つかりません",
+      name: "PostgrestError",
+    };
   }
 
   const { data: currentUser, error: currentUserError } = await supabase

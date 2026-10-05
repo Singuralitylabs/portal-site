@@ -329,34 +329,25 @@ export function ProfilePageTemplate({
             </div>
 
             <div>
-              {user.role === "admin" ? (
-                <MultiSelect
-                  label="活動チーム、役割など"
-                  data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
-                  value={selectedPositionIds.map(String)}
-                  onChange={values => setSelectedPositionIds(values.map(Number))}
-                  placeholder="選択してください"
-                  clearable
-                />
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium mb-1">活動チーム、役割など</label>
-                  <div
-                    className="min-h-9 px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 text-sm cursor-not-allowed"
-                    aria-readonly="true"
-                  >
-                    {selectedPositionIds.length > 0
-                      ? selectedPositionIds
-                          .map(
-                            positionId =>
-                              allPositions.find(position => position.id === positionId)?.name
-                          )
-                          .filter((name): name is string => name !== undefined)
-                          .join(", ")
-                      : "設定なし"}
-                  </div>
-                </div>
-              )}
+              {(() => {
+                const isEditable = user.role === "admin" || user.role === "maintainer";
+                const hasData = selectedPositionIds.length > 0;
+                const placeholder = !hasData ? (isEditable ? "選択してください" : "設定なし") : "";
+
+                return (
+                  <MultiSelect
+                    label="活動チーム、役割など"
+                    data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
+                    value={selectedPositionIds.map(String)}
+                    onChange={
+                      isEditable ? values => setSelectedPositionIds(values.map(Number)) : undefined
+                    }
+                    placeholder={placeholder}
+                    disabled={!isEditable}
+                    clearable={isEditable}
+                  />
+                );
+              })()}
             </div>
 
             <div>
