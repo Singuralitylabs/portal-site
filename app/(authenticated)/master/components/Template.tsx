@@ -84,7 +84,9 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
   const [selectedRecordId, setSelectedRecordId] = useState<number | null>(
     initialData.tables[0]?.records[0]?.id ?? null
   );
-  const rowRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
+  const rowRefs = useRef<
+    Partial<Record<MasterTableName, Record<number, HTMLTableRowElement | null>>>
+  >({});
 
   const activeTable = useMemo(
     () =>
@@ -117,7 +119,7 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
   };
 
   const focusRecordRow = (recordId: number) => {
-    rowRefs.current[recordId]?.focus();
+    rowRefs.current[activeTableName]?.[recordId]?.focus();
   };
 
   const moveSelectedRecord = (direction: "prev" | "next" | "first" | "last") => {
@@ -230,7 +232,8 @@ export function MasterPageTemplate({ initialData }: MasterPageTemplateProps) {
                               <Table.Tr
                                 key={record.id}
                                 ref={node => {
-                                  rowRefs.current[record.id] = node;
+                                  const tableRefs = (rowRefs.current[table.tableName] ??= {});
+                                  tableRefs[record.id] = node;
                                 }}
                                 bg={
                                   panelSelectedRecord?.id === record.id
