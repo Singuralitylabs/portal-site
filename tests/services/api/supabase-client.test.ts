@@ -12,7 +12,11 @@ import {
   registerDocument,
   updateDocument,
 } from "../../../app/services/api/documents-client";
-import { registerCategory, updateCategory } from "../../../app/services/api/categories-client";
+import {
+  deleteCategory,
+  registerCategory,
+  updateCategory,
+} from "../../../app/services/api/categories-client";
 import {
   deleteVideo,
   getVideosByCategory,
@@ -547,6 +551,38 @@ describe("categories-client", () => {
 
     expect(response.success).toBe(false);
     expect((response.error as Error).message).toContain("表示順の取得に失敗しました");
+  });
+
+  it("deleteCategory 正常系: 削除済みコンテンツも未分類へ移動する", async () => {
+    const targetBuilder = createSelectSingleBuilder({
+      data: { id: 10, name: "カテゴリA", category_type: "documents" },
+      error: null,
+    });
+    const uncategorizedBuilder = createSelectSingleBuilder({
+      data: { id: 99 },
+      error: null,
+    });
+    const moveBuilder = createAwaitableUpdateBuilder({ data: null, error: null });
+    const deleteBuilder = createAwaitableUpdateBuilder({ data: null, error: null });
+    const reorderSelectBuilder = createOrderBuilder({ data: [{ id: 99 }], error: null });
+    const reorderUpdateBuilder = createUpdateBuilder({ data: null, error: null });
+
+    const supabase = { from: jest.fn() };
+    supabase.from
+      .mockReturnValueOnce(targetBuilder)
+      .mockReturnValueOnce(uncategorizedBuilder)
+      .mockReturnValueOnce(moveBuilder)
+      .mockReturnValueOnce(deleteBuilder)
+      .mockReturnValueOnce(reorderSelectBuilder)
+      .mockReturnValueOnce(reorderUpdateBuilder);
+    createClientSupabaseClientMock.mockReturnValue(supabase);
+
+    const response = await deleteCategory(10, "documents");
+
+    expect(response).toEqual({ success: true, error: null });
+    expect(moveBuilder.update).toHaveBeenCalledWith({ category_id: 99 });
+    expect(moveBuilder.eq).toHaveBeenCalledWith("category_id", 10);
+    expect(moveBuilder.eq).not.toHaveBeenCalledWith("is_deleted", false);
   });
 });
 
