@@ -34,6 +34,7 @@ export async function fetchUserStatusByIdInServer({
 
 /**
  * usersテーブルから指定のauth_idのユーザーの情報（id, role）を取得する（サーバーサイド用）
+ * マスター管理画面を含む、サーバー側の権限判定前提となるユーザー情報取得で利用する。
  * @param param0 - パラメータオブジェクト
  * @param {string} param0.authId - ユーザーの認証ID（必須）
  * @returns { id: number, role: string, error: PostgrestError | null } - ユーザーID・ロールとエラー
@@ -72,7 +73,7 @@ export async function fetchActiveUsers(): Promise<{
   const { data, error } = await supabase
     .from("users")
     .select(
-      "id, display_name, role, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+      "id, display_name, role, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted, is_leadership))"
     )
     .eq("status", "active")
     .eq("is_deleted", false)
