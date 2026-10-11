@@ -2,7 +2,7 @@ import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } f
 import { createServerSupabaseClient, getServerCurrentUser } from "./supabase-server";
 import type { AuthError, PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
-import { USER_STATUS } from "@/app/constants/user";
+import { USER_STATUS, USER_ROLE } from "@/app/constants/user";
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -335,7 +335,7 @@ export async function updateUserPositionTagsInServer(
     return currentUserError;
   }
 
-  if (currentUser.role !== "admin" && currentUser.role !== "maintainer") {
+  if (currentUser.role !== USER_ROLE.ADMIN && currentUser.role !== USER_ROLE.MAINTAINER) {
     return {
       code: "42501",
       details: "",
