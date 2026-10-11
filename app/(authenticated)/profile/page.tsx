@@ -6,6 +6,7 @@ import {
   updateUserPositionTagsInServer,
   updateUserProfileServerInServer,
 } from "@/app/services/api/users-server";
+import { USER_ROLE } from "@/app/constants/user";
 import { ProfilePageTemplate } from "./components/Template";
 
 export default async function ProfilePage() {
@@ -76,7 +77,7 @@ export default async function ProfilePage() {
     }
 
     // position_tags を更新
-    if (user.role === "admin" || user.role === "maintainer") {
+    if (user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.MAINTAINER) {
       const positionTagsError = await updateUserPositionTagsInServer(user.id, positionIds);
 
       if (positionTagsError) {
