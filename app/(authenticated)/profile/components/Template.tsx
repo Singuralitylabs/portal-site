@@ -6,6 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { User } from "lucide-react";
 import { useState, useEffect, useTransition, useRef } from "react";
 import { PositionType, ProfileUserType } from "@/app/types";
+import { USER_ROLE } from "@/app/constants/user";
 import { validateUrls } from "@/app/utils/url-validation";
 import { useProfileImage } from "@/app/providers/profile-image-provider";
 
@@ -330,7 +331,8 @@ export function ProfilePageTemplate({
 
             <div>
               {(() => {
-                const isEditable = user.role === "admin" || user.role === "maintainer";
+                const isEditable =
+                  user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.MAINTAINER;
                 const hasData = selectedPositionIds.length > 0;
                 const placeholder = !hasData ? (isEditable ? "選択してください" : "設定なし") : "";
 
