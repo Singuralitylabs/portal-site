@@ -1,8 +1,8 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
-import { createServerSupabaseClient } from "./supabase-server";
-import type { PostgrestError } from "@supabase/supabase-js";
+import { createServerSupabaseClient, getServerCurrentUser } from "./supabase-server";
+import type { AuthError, PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
-import { USER_STATUS } from "@/app/constants/user";
+import { USER_STATUS, USER_ROLE } from "@/app/constants/user";
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -307,8 +307,43 @@ export async function fetchUserPositionTagsByUserId(userId: number): Promise<{
 export async function updateUserPositionTagsInServer(
   userId: number,
   positionIds: number[]
-): Promise<PostgrestError | null> {
+): Promise<AuthError | PostgrestError | null> {
   const supabase = await createServerSupabaseClient();
+
+  const { authId, error: authError } = await getServerCurrentUser();
+  if (authError) {
+    return authError;
+  }
+  if (!authId) {
+    return {
+      code: "PGRST116",
+      details: "",
+      hint: "",
+      message: "ユーザーが見つかりません",
+      name: "PostgrestError",
+    };
+  }
+
+  const { data: currentUser, error: currentUserError } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", authId)
+    .single();
+
+  if (currentUserError) {
+    console.error("Supabase 認証ユーザーロール取得エラー:", currentUserError.message);
+    return currentUserError;
+  }
+
+  if (currentUser.role !== USER_ROLE.ADMIN && currentUser.role !== USER_ROLE.MAINTAINER) {
+    return {
+      code: "42501",
+      details: "",
+      hint: "",
+      message: "役職の変更はadmin・maintainer権限が必要です",
+      name: "PostgrestError",
+    };
+  }
 
   const { error: deleteError } = await supabase
     .from("position_tags")
