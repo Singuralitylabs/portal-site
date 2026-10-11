@@ -270,7 +270,9 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: jest.fn() })) };
       createServerSupabaseClientMock.mockResolvedValue({
         from: jest.fn(() => builder),
@@ -314,7 +316,9 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
       });
@@ -353,7 +357,9 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       const createSignedUrlsMock = jest
         .fn()
         .mockResolvedValue({ data: null, error: { message: "Storage一時障害" } });
@@ -392,7 +398,9 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       // トップレベルの error は null だが、要素単位で error が返るケース
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [
