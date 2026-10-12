@@ -48,6 +48,7 @@
 - GitHub copilot - 生成AIによるコードレビュー
 - Jest - テストフレームワーク
 - dotenvx - ローカル開発環境の環境変数の暗号化管理
+- Docker（任意） - 個人用のローカルSupabase環境を起動する場合に使用（[環境構築手順 5.](docs/setup.md#5-任意ローカルdockerでsupabaseを起動する)参照）
 
 ## プロジェクト構成
 
