@@ -1,38 +1,50 @@
-import {
-  createServerSupabaseClient,
-  getServerCurrentUser,
-} from "@/app/services/api/supabase-server";
+import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
+import { requireApiUser } from "@/app/services/auth/require-api-user";
+import { USER_STATUS } from "@/app/constants/user";
 import { NextResponse } from "next/server";
 
 const BUCKET_NAME = "profile-images";
 const MAX_FILE_SIZE = 1024 * 1024;
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif"];
 
-async function isActiveUser(
-  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
-  authId: string
-) {
-  const { data, error } = await supabase
-    .from("users")
-    .select("id")
-    .eq("auth_id", authId)
-    .eq("status", "active")
-    .eq("is_deleted", false)
-    .maybeSingle();
-
-  return { isActive: !!data, error };
+function detectMimeFromBuffer(buf: Buffer): string | null {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (
+    buf.length >= 8 &&
+    buf[0] === 0x89 &&
+    buf[1] === 0x50 &&
+    buf[2] === 0x4e &&
+    buf[3] === 0x47 &&
+    buf[4] === 0x0d &&
+    buf[5] === 0x0a &&
+    buf[6] === 0x1a &&
+    buf[7] === 0x0a
+  )
+    return "image/png";
+  if (
+    buf.length >= 6 &&
+    buf[0] === 0x47 &&
+    buf[1] === 0x49 &&
+    buf[2] === 0x46 &&
+    buf[3] === 0x38 &&
+    (buf[4] === 0x37 || buf[4] === 0x39) &&
+    buf[5] === 0x61
+  )
+    return "image/gif";
+  return null;
 }
 
 export async function POST(request: Request) {
-  const { authId, error: authError } = await getServerCurrentUser();
-  if (authError || !authId) {
-    return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+  const auth = await requireApiUser([USER_STATUS.ACTIVE]);
+  if (!auth.ok) {
+    return auth.response;
   }
+  const authId = auth.user.id;
 
   const formData = await request.formData();
-  const file = formData.get("image") as File | null;
+  const file = formData.get("image");
 
-  if (!file) {
+  if (!file || !(file instanceof File)) {
     return NextResponse.json(
       { success: false, error: "画像ファイルを選択してください" },
       { status: 400 }
@@ -46,7 +58,9 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+  const detectedMime = detectMimeFromBuffer(fileBuffer);
+  if (!detectedMime || !ALLOWED_MIME_TYPES.includes(detectedMime)) {
     return NextResponse.json(
       { success: false, error: "jpg / jpeg / png / gif のみアップロード可能です" },
       { status: 400 }
@@ -54,26 +68,12 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { isActive, error: activeUserError } = await isActiveUser(supabase, authId);
-  if (activeUserError) {
-    return NextResponse.json(
-      { success: false, error: "ユーザー情報の確認に失敗しました" },
-      { status: 500 }
-    );
-  }
-  if (!isActive) {
-    return NextResponse.json(
-      { success: false, error: "この操作は許可されていません" },
-      { status: 403 }
-    );
-  }
 
   const filePath = `${authId}/profile-image`;
-  const fileBuffer = await file.arrayBuffer();
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(filePath, fileBuffer, { contentType: file.type, upsert: true });
+    .upload(filePath, fileBuffer, { contentType: detectedMime, upsert: true, cacheControl: "0" });
 
   if (uploadError) {
     console.error("Storage アップロードエラー:", uploadError.message);
@@ -105,26 +105,13 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
-  const { authId, error: authError } = await getServerCurrentUser();
-  if (authError || !authId) {
-    return NextResponse.json({ success: false, error: "認証が必要です" }, { status: 401 });
+  const auth = await requireApiUser([USER_STATUS.ACTIVE]);
+  if (!auth.ok) {
+    return auth.response;
   }
+  const authId = auth.user.id;
 
   const supabase = await createServerSupabaseClient();
-  const { isActive, error: activeUserError } = await isActiveUser(supabase, authId);
-  if (activeUserError) {
-    return NextResponse.json(
-      { success: false, error: "ユーザー情報の確認に失敗しました" },
-      { status: 500 }
-    );
-  }
-  if (!isActive) {
-    return NextResponse.json(
-      { success: false, error: "この操作は許可されていません" },
-      { status: 403 }
-    );
-  }
-
   const filePath = `${authId}/profile-image`;
 
   const { error: updateError } = await supabase

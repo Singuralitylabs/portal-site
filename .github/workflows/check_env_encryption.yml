@@ -1,0 +1,37 @@
+name: Check env encryption
+
+# コミット済みの .env.development に平文の秘密情報が混入していないか検証するワークフロー。
+# 公開リポジトリに暗号化前の値が誤ってコミットされることを防ぐ。
+on:
+  push:
+    paths:
+      - ".env.development"
+      - "scripts/check-env-encrypted.cjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/check_env_encryption.yml"
+  pull_request:
+    paths:
+      - ".env.development"
+      - "scripts/check-env-encrypted.cjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/check_env_encryption.yml"
+  workflow_dispatch:
+
+jobs:
+  check-env-encryption:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
+      # 依存不要（Node 標準モジュールのみ）のため npm ci は行わない
+      - name: Check .env.development is fully encrypted
+        run: npm run lint:env

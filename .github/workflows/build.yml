@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - "app/**"
+      - "middleware.ts"
   pull_request:
     paths:
       - "app/**"
+      - "middleware.ts"
   workflow_dispatch:
 
 jobs:

@@ -1,6 +1,6 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
-import { PostgrestError } from "@supabase/supabase-js";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS } from "@/app/constants/user";
 
@@ -72,12 +72,11 @@ export async function fetchActiveUsers(): Promise<{
   const { data, error } = await supabase
     .from("users")
     .select(
-      "id, display_name, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+      "id, display_name, role, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
     )
     .eq("status", "active")
     .eq("is_deleted", false)
-    .eq("position_tags.positions.is_deleted", false)
-    .order("created_at", { ascending: true });
+    .eq("position_tags.positions.is_deleted", false);
 
   if (error) {
     console.error("Supabase 会員一覧取得エラー:", error.message);
@@ -92,6 +91,7 @@ export async function fetchActiveUsers(): Promise<{
   const transformedData = data.map(user => ({
     id: user.id,
     display_name: user.display_name,
+    role: user.role,
     bio: user.bio,
     avatar_url: user.avatar_url,
     profile_image_path: user.profile_image_path,
@@ -115,22 +115,24 @@ export async function fetchActiveUsers(): Promise<{
     ...new Set(
       transformedData.map(u => u.profile_image_path).filter((p): p is string => p != null)
     ),
-  ];
+  ].sort();
   const signedUrlMap = new Map<string, string>();
   if (uniquePaths.length > 0) {
-    const { data: signedUrls, error: signedUrlsError } = await supabase.storage
+    const { data: signedUrls, error: signedUrlError } = await supabase.storage
       .from("profile-images")
       .createSignedUrls(uniquePaths, 3600);
-    if (signedUrlsError) {
-      console.error("署名付きURL一括生成エラー:", signedUrlsError.message);
-    } else if (signedUrls) {
-      signedUrls.forEach(({ path, signedUrl, error: urlError }) => {
-        if (urlError) {
-          console.error("署名付きURL生成エラー:", path, urlError);
-        } else if (path && signedUrl) {
-          signedUrlMap.set(path, `${signedUrl}&t=${Date.now()}`);
+    if (signedUrlError) {
+      // バッチ全体の失敗時は画像なしでフォールバックする
+      console.error("署名付きURL一括生成エラー:", signedUrlError.message);
+    } else {
+      for (const item of signedUrls ?? []) {
+        if (item.error || !item.signedUrl || !item.path) {
+          // 個別要素の失敗はパスとエラー内容を記録したうえで、その画像だけ除外する
+          console.error("署名付きURL個別生成エラー:", { path: item.path, message: item.error });
+          continue;
         }
-      });
+        signedUrlMap.set(item.path, item.signedUrl);
+      }
     }
   }
 
@@ -337,4 +339,120 @@ export async function updateUserPositionTagsInServer(
   }
 
   return null;
+}
+
+export type ClaimRegistrationSlackResult = {
+  claimed: boolean;
+  alreadyNotified: boolean;
+  displayName: string;
+  error: PostgrestError | null;
+};
+
+type RegistrationNotificationRow = {
+  display_name: string;
+  registration_notified_at: string | null;
+};
+
+type UsersNotificationQuery = {
+  select: (columns: string) => UsersNotificationQuery;
+  update: (values: { registration_notified_at: string | null }) => UsersNotificationQuery;
+  eq: (column: string, value: string | boolean) => UsersNotificationQuery;
+  is: (column: string, value: null) => UsersNotificationQuery;
+  maybeSingle: () => Promise<{
+    data: RegistrationNotificationRow | null;
+    error: PostgrestError | null;
+  }>;
+};
+
+/**
+ * 新規登録 Slack 通知を1回に制限する。
+ * `registration_notified_at` が NULL の行だけを原子的に更新して通知権を取得する。
+ * カラム追加: supabase/migrations/01_tables/users/07_add_registration_notified_at_to_users.sql
+ */
+export async function claimRegistrationSlackNotification({
+  authId,
+}: {
+  authId: string;
+}): Promise<ClaimRegistrationSlackResult> {
+  const supabase = await createServerSupabaseClient();
+  const users = supabase.from("users") as unknown as UsersNotificationQuery;
+  const { data, error } = await users
+    .select("display_name, registration_notified_at")
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .eq("is_deleted", false)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Slack通知の通知権確認エラー:", error.message);
+    return { claimed: false, alreadyNotified: false, displayName: "", error };
+  }
+  if (!data) {
+    return { claimed: false, alreadyNotified: false, displayName: "", error: null };
+  }
+
+  if (data.registration_notified_at) {
+    return {
+      claimed: false,
+      alreadyNotified: true,
+      displayName: data.display_name,
+      error: null,
+    };
+  }
+
+  const { data: claimed, error: updateError } = await (
+    supabase.from("users") as unknown as UsersNotificationQuery
+  )
+    .update({ registration_notified_at: new Date().toISOString() })
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .is("registration_notified_at", null)
+    .select("display_name, registration_notified_at")
+    .maybeSingle();
+
+  if (updateError) {
+    console.error("Slack通知の通知権取得エラー:", updateError.message);
+    return {
+      claimed: false,
+      alreadyNotified: false,
+      displayName: data.display_name,
+      error: updateError,
+    };
+  }
+  if (!claimed) {
+    return {
+      claimed: false,
+      alreadyNotified: true,
+      displayName: data.display_name,
+      error: null,
+    };
+  }
+
+  return {
+    claimed: true,
+    alreadyNotified: false,
+    displayName: claimed.display_name,
+    error: null,
+  };
+}
+
+/**
+ * Slack 通知の送信に失敗したとき、通知権を戻す。
+ */
+export async function releaseRegistrationSlackNotification({
+  authId,
+}: {
+  authId: string;
+}): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const users = supabase.from("users") as unknown as UsersNotificationQuery;
+  const { error } = await users
+    .update({ registration_notified_at: null })
+    .eq("auth_id", authId)
+    .eq("status", USER_STATUS.PENDING)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Slack通知の通知権ロールバックエラー:", error.message);
+  }
 }

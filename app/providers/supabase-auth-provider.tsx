@@ -112,12 +112,6 @@ export function SupabaseAuthProvider({
           try {
             const response = await fetch("/api/notifications/slack", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                displayName: user.user_metadata?.full_name || "",
-              }),
             });
 
             if (!response.ok) {
@@ -132,7 +126,7 @@ export function SupabaseAuthProvider({
           }
         }
       } else {
-        // 既存ユーザーの場合、最新のGoogle avatar_urlでDBを更新する
+        // 既存ユーザーの場合、Google側の最新値（未提供時はnull）でDBを上書きする
         await updateUserAvatarUrl({ authId: user.id, avatarUrl: latestAvatarUrl });
       }
     } catch (error) {

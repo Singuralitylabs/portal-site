@@ -4,12 +4,14 @@ on:
   push:
     paths:
       - "app/**"
+      - "middleware.ts"
       - "scripts/lint-logs.cjs"
       - "package.json"
       - "package-lock.json"
   pull_request:
     paths:
       - "app/**"
+      - "middleware.ts"
       - "scripts/lint-logs.cjs"
       - "package.json"
       - "package-lock.json"

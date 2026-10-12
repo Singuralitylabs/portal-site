@@ -25,13 +25,13 @@ CREATE POLICY "content_managers_can_insert_videos" ON "videos"
     is_active_user() AND is_content_manager()
   );
 
--- UPDATE: adminまたはmaintainerがvideosを更新可能
+-- UPDATE: adminまたはmaintainerがvideosを更新可能（論理削除を含む）
 DROP POLICY IF EXISTS "content_managers_can_update_videos" ON "videos";
 CREATE POLICY "content_managers_can_update_videos" ON "videos"
   FOR UPDATE
   TO authenticated
   USING (
-    is_deleted = FALSE AND is_active_user() AND is_content_manager()
+    is_active_user() AND is_content_manager()
   )
   WITH CHECK (
     is_active_user() AND is_content_manager()

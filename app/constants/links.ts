@@ -34,7 +34,7 @@ export const QUICK_LINK_CATEGORIES: QuickLinkCategoryType[] = [
     links: [
       {
         name: "Sinlab Study",
-        url: "https://web-skillup-service.vercel.app/",
+        url: "https://study.future-tech-association.org/",
         description:
           "シンラボメンバー向けの学習支援サービスです。GASに関するコンテンツをレッスン形式で学べます。",
         headerImagePath: "/links/sinlab-study.png",
@@ -43,7 +43,7 @@ export const QUICK_LINK_CATEGORIES: QuickLinkCategoryType[] = [
       },
       {
         name: "Sinlab Knowledge",
-        url: "https://sinlab-knowledge.vercel.app/",
+        url: "https://knowledge.future-tech-association.org/",
         description:
           "シンラボの知見を蓄積・共有するナレッジベースです。ウェブ技術・ウェブ開発・AI駆動開発のノウハウを閲覧できます。",
         headerImagePath: "/links/sinlab-knowledge.png",

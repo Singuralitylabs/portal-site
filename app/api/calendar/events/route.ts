@@ -1,6 +1,8 @@
 import { google, calendar_v3 } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
 import * as path from "path";
+import { USER_STATUS } from "@/app/constants/user";
+import { requireApiUser } from "@/app/services/auth/require-api-user";
 
 // カレンダーIDとエイリアスのマッピング
 interface CalendarConfig {
@@ -39,6 +41,11 @@ const getCalendarConfigs = (): CalendarConfig[] => {
 const CALENDAR_CONFIGS = getCalendarConfigs();
 
 export async function GET(request: NextRequest) {
+  const auth = await requireApiUser([USER_STATUS.ACTIVE]);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     // 環境変数からサービスアカウントキーを取得、なければローカルファイルを使用
     let auth;

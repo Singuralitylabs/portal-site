@@ -88,6 +88,7 @@ export type MemberType = Pick<
   UserType,
   | "id"
   | "display_name"
+  | "role"
   | "bio"
   | "avatar_url"
   | "profile_image_path"
@@ -166,4 +167,22 @@ export type QuickLinkCategoryType = {
   name: string;
   displayMode: QuickLinkDisplayModeType;
   links: QuickLinkType[];
+};
+
+// Trash types
+export type TrashTabType = "documents" | "videos" | "applications" | "categories";
+
+export type TrashContentItem = {
+  id: number;
+  name: string;
+  updated_at: string;
+  category_id: number;
+  category: { name: string } | null;
+};
+
+export type TrashCategoryItem = {
+  id: number;
+  name: string;
+  updated_at: string;
+  category_type: CategoryTypeValue;
 };
