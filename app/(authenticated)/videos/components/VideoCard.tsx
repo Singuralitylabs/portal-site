@@ -2,11 +2,10 @@
 
 import { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
 import Image from "next/image";
-import { getYouTubeVideoId } from "@/app/(authenticated)/videos/utils";
+import { getVideoThumbnailUrl } from "@/app/(authenticated)/videos/utils";
 import { Card, Text } from "@mantine/core";
 import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
-import { YOUTUBE_THUMBNAIL_HOSTNAME } from "@/app/constants/media";
 
 interface VideoCardProps {
   video: VideoWithCategoryType;
@@ -15,21 +14,8 @@ interface VideoCardProps {
   userId: number;
 }
 
-function getThumbnailUrl(video: VideoWithCategoryType): string {
-  if (video.thumbnail_path) {
-    return video.thumbnail_path;
-  }
-
-  const videoId = getYouTubeVideoId(video.url);
-  if (videoId) {
-    return `https://${YOUTUBE_THUMBNAIL_HOSTNAME}/vi/${videoId}/hqdefault.jpg`;
-  }
-
-  return "/default_video_thumbnail.png";
-}
-
 export function VideoCard({ video, isContentMgr, categories, userId }: VideoCardProps) {
-  const thumbnailUrl = getThumbnailUrl(video);
+  const thumbnailUrl = getVideoThumbnailUrl(video);
   return (
     <Card
       shadow="sm"
