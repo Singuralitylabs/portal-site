@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Group, SegmentedControl } from "@mantine/core";
+import { Group, SegmentedControl, Table } from "@mantine/core";
 import { LayoutGrid, List } from "lucide-react";
 import { VideoCard } from "./VideoCard";
 import { VideoListItem } from "./VideoListItem";
@@ -25,8 +25,8 @@ export function VideosPageTemplate({
   userId,
 }: VideosPageTemplateProps) {
   const [viewMode, setViewMode] = useState("card");
-  const videoCategoryIds = new Set(videos.map(video => video.category_id));
-  const existingCategories = categories.filter(category => videoCategoryIds.has(category.id));
+  const videoCategoryNames = new Set(videos.map(video => video.category?.name));
+  const existingCategories = categories.filter(category => videoCategoryNames.has(category.name));
 
   return (
     <>
@@ -84,7 +84,7 @@ export function VideosPageTemplate({
             {viewMode === "card" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8 px-4">
                 {videos
-                  .filter(video => video.category_id === category.id)
+                  .filter(video => video.category?.name === category.name)
                   .map(video => (
                     <div key={video.id} className="w-full">
                       <VideoCard
@@ -97,19 +97,42 @@ export function VideosPageTemplate({
                   ))}
               </div>
             ) : (
-              <ul aria-label={`${category.name}の動画`} className="mb-8 px-4 list-none">
-                {videos
-                  .filter(video => video.category_id === category.id)
-                  .map(video => (
-                    <VideoListItem
-                      key={video.id}
-                      video={video}
-                      isContentMgr={isContentMgr}
-                      categories={categories}
-                      userId={userId}
-                    />
-                  ))}
-              </ul>
+              <div className="mb-8 px-4 [contain:inline-size]">
+                <Table.ScrollContainer minWidth={900} type="native">
+                  <Table
+                    aria-label={`${category.name}の動画`}
+                    verticalSpacing="sm"
+                    horizontalSpacing="sm"
+                    highlightOnHover
+                    style={{ tableLayout: "fixed" }}
+                  >
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th w={56}>画像</Table.Th>
+                        <Table.Th w={180}>動画名</Table.Th>
+                        <Table.Th>説明</Table.Th>
+                        <Table.Th w={110}>分類</Table.Th>
+                        <Table.Th w={108}>更新日</Table.Th>
+                        <Table.Th w={86}>再生時間</Table.Th>
+                        {isContentMgr && <Table.Th w={56}>操作</Table.Th>}
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {videos
+                        .filter(video => video.category?.name === category.name)
+                        .map(video => (
+                          <VideoListItem
+                            key={video.id}
+                            video={video}
+                            isContentMgr={isContentMgr}
+                            categories={categories}
+                            userId={userId}
+                          />
+                        ))}
+                    </Table.Tbody>
+                  </Table>
+                </Table.ScrollContainer>
+              </div>
             )}
           </div>
         ))}
