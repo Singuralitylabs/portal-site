@@ -66,13 +66,6 @@ export type Database = {
             foreignKeyName: "applications_created_by_fkey";
             columns: ["created_by"];
             isOneToOne: false;
-            referencedRelation: "member_profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "applications_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
           },
@@ -80,21 +73,7 @@ export type Database = {
             foreignKeyName: "applications_developer_id_fkey";
             columns: ["developer_id"];
             isOneToOne: false;
-            referencedRelation: "member_profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "applications_developer_id_fkey";
-            columns: ["developer_id"];
-            isOneToOne: false;
             referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "applications_updated_by_fkey";
-            columns: ["updated_by"];
-            isOneToOne: false;
-            referencedRelation: "member_profiles";
             referencedColumns: ["id"];
           },
           {
@@ -190,13 +169,6 @@ export type Database = {
             foreignKeyName: "documents_assignee_fk";
             columns: ["assignee_id"];
             isOneToOne: false;
-            referencedRelation: "member_profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "documents_assignee_fk";
-            columns: ["assignee_id"];
-            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
           },
@@ -211,21 +183,7 @@ export type Database = {
             foreignKeyName: "documents_created_by_fkey";
             columns: ["created_by"];
             isOneToOne: false;
-            referencedRelation: "member_profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "documents_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
             referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "documents_updated_by_fkey";
-            columns: ["updated_by"];
-            isOneToOne: false;
-            referencedRelation: "member_profiles";
             referencedColumns: ["id"];
           },
           {
@@ -265,13 +223,6 @@ export type Database = {
             columns: ["position_id"];
             isOneToOne: false;
             referencedRelation: "positions";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "position_tags_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "member_profiles";
             referencedColumns: ["id"];
           },
           {
@@ -436,13 +387,6 @@ export type Database = {
             foreignKeyName: "videos_assignee_fk";
             columns: ["assignee_id"];
             isOneToOne: false;
-            referencedRelation: "member_profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "videos_assignee_fk";
-            columns: ["assignee_id"];
-            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
           },
@@ -457,21 +401,7 @@ export type Database = {
             foreignKeyName: "videos_created_by_fkey";
             columns: ["created_by"];
             isOneToOne: false;
-            referencedRelation: "member_profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "videos_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
             referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "videos_updated_by_fkey";
-            columns: ["updated_by"];
-            isOneToOne: false;
-            referencedRelation: "member_profiles";
             referencedColumns: ["id"];
           },
           {
@@ -485,45 +415,7 @@ export type Database = {
       };
     };
     Views: {
-      member_profiles: {
-        Row: {
-          avatar_url: string | null;
-          bio: string | null;
-          display_name: string | null;
-          facebook_url: string | null;
-          github_url: string | null;
-          id: number | null;
-          instagram_url: string | null;
-          portfolio_url: string | null;
-          profile_image_path: string | null;
-          x_url: string | null;
-        };
-        Insert: {
-          avatar_url?: string | null;
-          bio?: string | null;
-          display_name?: string | null;
-          facebook_url?: string | null;
-          github_url?: string | null;
-          id?: number | null;
-          instagram_url?: string | null;
-          portfolio_url?: string | null;
-          profile_image_path?: string | null;
-          x_url?: string | null;
-        };
-        Update: {
-          avatar_url?: string | null;
-          bio?: string | null;
-          display_name?: string | null;
-          facebook_url?: string | null;
-          github_url?: string | null;
-          id?: number | null;
-          instagram_url?: string | null;
-          portfolio_url?: string | null;
-          profile_image_path?: string | null;
-          x_url?: string | null;
-        };
-        Relationships: [];
-      };
+      [_ in never]: never;
     };
     Functions: {
       get_clerk_user_id: { Args: never; Returns: string };
