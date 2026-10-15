@@ -1,5 +1,5 @@
 -- 会員一覧の役職者セクション（代表・副代表・シンラボ管理人）用データ追加
--- id 8, 9, 10 はアプリケーションコードで参照する予約済みID（docs/database.md §2.6 参照）
+-- 04_add_is_leadership_column.sql で id 8, 9, 10 予約から専用フラグに移行
 INSERT INTO positions (id, name, display_order, is_deleted)
 VALUES
   (8,  '代表',           8,  FALSE),
