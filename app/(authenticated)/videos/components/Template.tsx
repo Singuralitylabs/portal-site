@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Group, SegmentedControl, Table } from "@mantine/core";
 import { LayoutGrid, List } from "lucide-react";
 import { VideoCard } from "./VideoCard";
@@ -25,12 +25,31 @@ export function VideosPageTemplate({
   userId,
 }: VideosPageTemplateProps) {
   const [viewMode, setViewMode] = useState("card");
+  const [stickyHeaderOffset, setStickyHeaderOffset] = useState(0);
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const videoCategoryNames = new Set(videos.map(video => video.category?.name));
   const existingCategories = categories.filter(category => videoCategoryNames.has(category.name));
 
+  useEffect(() => {
+    const stickyHeader = stickyHeaderRef.current;
+    if (!stickyHeader) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      const nextOffset = Math.ceil(stickyHeader.getBoundingClientRect().height + 8);
+      setStickyHeaderOffset(currentOffset =>
+        currentOffset === nextOffset ? currentOffset : nextOffset
+      );
+    });
+
+    observer.observe(stickyHeader);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <>
-      <div className="sticky top-0 z-10 bg-white">
+      <div ref={stickyHeaderRef} className="sticky top-0 z-10 bg-white">
         <PageTitle>動画一覧</PageTitle>
         <Group justify="flex-end" gap="sm" mt="md" wrap="wrap">
           <SegmentedControl
@@ -78,7 +97,13 @@ export function VideosPageTemplate({
       <div>
         {existingCategories.map(category => (
           <div key={category.id} className="mb-12">
-            <h2 id={`category-${category.id}`} className="scroll-mt-40">
+            <h2
+              id={`category-${category.id}`}
+              className="scroll-mt-40"
+              style={
+                stickyHeaderOffset ? { scrollMarginTop: `${stickyHeaderOffset}px` } : undefined
+              }
+            >
               {category.name}
             </h2>
             {viewMode === "card" ? (
