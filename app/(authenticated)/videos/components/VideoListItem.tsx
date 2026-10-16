@@ -5,7 +5,7 @@ import { Table, Text } from "@mantine/core";
 import type { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
 import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
-import { getVideoThumbnailUrl } from "../utils";
+import { formatVideoUpdatedDate, getVideoThumbnailUrl } from "../utils";
 
 interface VideoListItemProps {
   video: VideoWithCategoryType;
@@ -15,12 +15,7 @@ interface VideoListItemProps {
 }
 
 export function VideoListItem({ video, categories, isContentMgr, userId }: VideoListItemProps) {
-  const updatedDate = new Date(video.updated_at).toLocaleDateString("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  const updatedDate = formatVideoUpdatedDate(video.updated_at);
   const duration = video.length
     ? `${Math.floor(video.length / 60)}:${(video.length % 60).toString().padStart(2, "0")}`
     : "未設定";

@@ -20,3 +20,15 @@ export function getVideoThumbnailUrl(
     ? `https://${YOUTUBE_THUMBNAIL_HOSTNAME}/vi/${videoId}/hqdefault.jpg`
     : "/default_video_thumbnail.png";
 }
+
+export function formatVideoUpdatedDate(timestamp: string): string {
+  const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(timestamp);
+  const date = new Date(hasTimezone ? timestamp : `${timestamp}Z`);
+
+  return date.toLocaleDateString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
