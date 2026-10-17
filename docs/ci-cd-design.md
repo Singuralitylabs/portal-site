@@ -22,6 +22,10 @@
    - [6.3 API キーの方針](#63-api-キーの方針)
    - [6.4 Secrets の登録手順](#64-secrets-の登録手順)
    - [6.5 失敗時の扱い](#65-失敗時の扱い)
+7. [GitHub Actions 失敗通知](#7-github-actions-失敗通知)
+   - [7.1 対象と通知条件](#71-対象と通知条件)
+   - [7.2 通知内容](#72-通知内容)
+   - [7.3 監視対象の整合性とレビュー](#73-監視対象の整合性とレビュー)
 
 ## 1. 概要
 
@@ -35,7 +39,7 @@ GitHub Actions のワークフローは、大きく以下の役割に分かれ�
 
 - **品質ゲート**: PR や push のたびにコードの品質を自動チェックする。詳細は [テスト設計書 4.1](./testing.md#41-github-actions-ワークフロー) を参照
 - **リリース自動化**: 本番リリース作業の一部を自動化する。詳細は [セクション 4](#4-リリース自動化) を参照
-- **チーム通知**: Wiki 更新など、開発ルールや運用情報の変更を Slack へ自動連携する。詳細は [セクション 5](#5-wiki-更新通知) を参照
+- **チーム通知**: Wiki 更新や GitHub Actions の失敗を Slack へ自動連携する。詳細は [セクション 5](#5-wiki-更新通知) と [セクション 7](#7-github-actions-失敗通知) を参照
 - **運用保守**: 外部サービス（Supabase）の稼働状態を維持する。詳細は [セクション 6](#6-supabase-keep-alive) を参照
 
 ### 2.2 自動化の判断基準
@@ -84,27 +88,28 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 
 各ワークフローに自動で付与されるトークン。必要最小限の権限のみ許可し、各ワークフローでは `permissions` を明示してデフォルト権限に依存しない。
 
-| ワークフロー                                                                      | 権限                                     | 理由                                                             |
-| --------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
-| [`release-pr.yml`](../.github/workflows/release-pr.yml)                           | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
-| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
-| [`create-release.yml`](../.github/workflows/create-release.yml)                   | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
-| [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | `contents: read`                         | Wiki 更新イベントを受けて Slack 通知するために必要               |
-| `supabase-keep-alive.yml`                                                         | なし（`permissions: {}`）                | リポジトリ操作を行わず、checkout も不要                          |
+| ワークフロー                                                                                          | 権限                                     | 理由                                                             |
+| ----------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
+| [`release-pr.yml`](../.github/workflows/release-pr.yml)                                               | `contents: read`, `pull-requests: write` | リリース PR の作成に必要                                         |
+| [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                                                 | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
+| [`create-release.yml`](../.github/workflows/create-release.yml)                                       | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
+| [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)                     | `contents: read`                         | Wiki 更新イベントを受けて Slack 通知するために必要               |
+| `supabase-keep-alive.yml`                                                                             | なし（`permissions: {}`）                | リポジトリ操作を行わず、checkout も不要                          |
+| [`action-failure-slack-notification.yml`](../.github/workflows/action-failure-slack-notification.yml) | `contents: read`                         | 通知workflow自身のコミットから共通Slack送信ヘルパーを取得する    |
 
 **Secrets:**
 
 機密情報はソースコードに書かず、GitHub の **Secrets**（暗号化された秘密情報）に保存する。登録場所: GitHub リポジトリの **Settings → Secrets and variables → Actions**
 
-| 名前                                   | 内容                                                                   | 使用箇所                                                                          | 備考                                                                                                                                                                                                                   |
-| -------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FORK_SYNC_TOKEN`                      | フォーク同期用トークン                                                 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                                                                                                                             |
-| `SUPABASE_ACCESS_TOKEN`                | Supabase 接続用トークン                                                | [`db-types.yml`](../.github/workflows/db-types.yml)                               |                                                                                                                                                                                                                        |
-| `SLACK_WEBHOOK_URL`                    | Wiki 更新通知ワークフローで利用する Slack Incoming Webhook URL         | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.development` / ホスティング環境変数） |
-| `SUPABASE_URL_PRODUCTION`              | 本番用 Supabase プロジェクトの Project URL                             | `supabase-keep-alive.yml`                                                         | 登録手順は [6.4](#64-secrets-の登録手順) を参照                                                                                                                                                                        |
-| `SUPABASE_PUBLISHABLE_KEY_PRODUCTION`  | 本番用 Supabase プロジェクトの Publishable key（`sb_publishable_...`） | `supabase-keep-alive.yml`                                                         | レガシーの anon key は使用しない。理由は [6.3](#63-api-キーの方針) を参照                                                                                                                                              |
-| `SUPABASE_URL_DEVELOPMENT`             | 開発用 Supabase プロジェクトの Project URL                             | `supabase-keep-alive.yml`                                                         |                                                                                                                                                                                                                        |
-| `SUPABASE_PUBLISHABLE_KEY_DEVELOPMENT` | 開発用 Supabase プロジェクトの Publishable key（`sb_publishable_...`） | `supabase-keep-alive.yml`                                                         |                                                                                                                                                                                                                        |
+| 名前                                   | 内容                                                                    | 使用箇所                                                                                                                                                                                 | 備考                                                                                                                                                                                                                   |
+| -------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FORK_SYNC_TOKEN`                      | フォーク同期用トークン                                                  | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                                                                                                                                    | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                                                                                                                             |
+| `SUPABASE_ACCESS_TOKEN`                | Supabase 接続用トークン                                                 | [`db-types.yml`](../.github/workflows/db-types.yml)                                                                                                                                      |                                                                                                                                                                                                                        |
+| `SLACK_WEBHOOK_URL`                    | Wiki 更新・GitHub Actions 失敗通知で利用する Slack Incoming Webhook URL | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)、[`action-failure-slack-notification.yml`](../.github/workflows/action-failure-slack-notification.yml) | GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.development` / ホスティング環境変数） |
+| `SUPABASE_URL_PRODUCTION`              | 本番用 Supabase プロジェクトの Project URL                              | `supabase-keep-alive.yml`                                                                                                                                                                | 登録手順は [6.4](#64-secrets-の登録手順) を参照                                                                                                                                                                        |
+| `SUPABASE_PUBLISHABLE_KEY_PRODUCTION`  | 本番用 Supabase プロジェクトの Publishable key（`sb_publishable_...`）  | `supabase-keep-alive.yml`                                                                                                                                                                | レガシーの anon key は使用しない。理由は [6.3](#63-api-キーの方針) を参照                                                                                                                                              |
+| `SUPABASE_URL_DEVELOPMENT`             | 開発用 Supabase プロジェクトの Project URL                              | `supabase-keep-alive.yml`                                                                                                                                                                |                                                                                                                                                                                                                        |
+| `SUPABASE_PUBLISHABLE_KEY_DEVELOPMENT` | 開発用 Supabase プロジェクトの Publishable key（`sb_publishable_...`）  | `supabase-keep-alive.yml`                                                                                                                                                                |                                                                                                                                                                                                                        |
 
 **Variables:**
 
@@ -324,3 +329,37 @@ Publishable key は公開を前提とした鍵だが、本リポジトリが `.e
 | `schedule` の自動無効化                  | Keep Alive が実行されなくなる                                                                  | GitHub Actions の画面からワークフローを再度有効化する                                                                           |
 
 ワークフローの失敗は GitHub から作成者へメールで通知される。Slack 通知が必要になった場合は、既存の `SLACK_WEBHOOK_URL` を利用する形で別イシューとして追加する。
+
+## 7. GitHub Actions 失敗通知
+
+GitHub Actions の実行失敗を Slack で把握するため、[`.github/workflows/action-failure-slack-notification.yml`](../.github/workflows/action-failure-slack-notification.yml) で対象 workflow の完了結果を監視する。通知先には Wiki 更新通知と共通の `SLACK_WEBHOOK_URL` Secret を利用する。
+
+### 7.1 対象と通知条件
+
+`workflow_run` で以下の workflow を監視する。同一リポジトリ上の実行ブランチが `main` または `release` で、完了結果が `failure` の場合のみ通知する。成功・キャンセル・スキップ、対象外ブランチ、および fork からの実行は通知しない。
+
+| ワークフロー                                               | 失敗通知の発生例                                                    |
+| ---------------------------------------------------------- | ------------------------------------------------------------------- |
+| `Build Test` (`build.yml`)                                 | `npm ci` または `npm run build` が失敗する                          |
+| `Jest Unit Tests` (`test.yml`)                             | Jest のテストが失敗する                                             |
+| `TypeScript Type Check` (`typecheck.yml`)                  | `npx tsc --noEmit` または ESLint の型関連チェックが失敗する         |
+| `Format Check` (`format-check.yml`)                        | `npm run format:check` でフォーマット差分が検出される               |
+| `Supabase DB Types Consistency` (`db-types.yml`)           | Supabase 設定不足、型生成失敗、または生成型の差分が検出される       |
+| `Check env encryption` (`check_env_encryption.yml`)        | `.env.development` の暗号化チェックに失敗する                       |
+| `Check console.log and debugger` (`check_console_log.yml`) | 禁止対象の `console.log` / `debugger` が検出される                  |
+| `Release PR` (`release-pr.yml`)                            | バージョン検証、品質チェック、またはリリース PR 作成に失敗する      |
+| `Create Release` (`create-release.yml`)                    | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する  |
+| `Fork Sync` (`fork-sync.yml`)                              | 必須設定の検証、またはフォークへの release ブランチ push に失敗する |
+
+`Wiki Slack Notification` (`wiki-slack-notification.yml`) は通知そのものを行う workflow のため監視対象に含めない。通知失敗を再通知するループを避ける。
+
+### 7.2 通知内容と権限
+
+通知には workflow 名、ブランチ、結論、実行ページの URL を含める。通知処理は workflow_run イベントの情報と `SLACK_WEBHOOK_URL` Secret のみを使用し、リポジトリ checkout や `GITHUB_TOKEN` の権限を必要としない。
+
+### 7.3 有効化と検証
+
+- `workflow_run` は通知 workflow がデフォルトブランチに存在する場合にのみ動作する。したがって、本リポジトリでは `main` へのマージ後に通知が有効になる。
+- 本リポジトリでは通知確認のために意図的な失敗を起こさず、`main` または `release` 上で実際に失敗が発生した際に、Slack 通知と実行 URL を確認する。リリース作業は [本番環境リリース手順](https://github.com/Singuralitylabs/portal-site/wiki/%E6%9C%AC%E7%95%AA%E7%92%B0%E5%A2%83%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E6%89%8B%E9%A0%86) に従う。
+- 失敗通知を事前に試験する場合は、個人 fork を隔離環境として使う。通知 workflow を fork のデフォルトブランチに置き、試験用 `SLACK_WEBHOOK_URL` を設定したうえで、`main` または `release` 上の対象 workflow を失敗させて確認する。本リポジトリの本番通知先は試験に使わない。
+- 通知が届かない場合は、対象 workflow と通知 workflow の両方の Actions 実行結果・ログ、ブランチ、Secret 設定を確認する。
