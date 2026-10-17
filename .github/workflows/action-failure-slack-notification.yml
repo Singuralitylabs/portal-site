@@ -1,0 +1,59 @@
+name: Actions Failure Slack Notification
+
+on:
+  workflow_run:
+    workflows:
+      - Build Test
+      - Jest Unit Tests
+      - TypeScript Type Check
+      - Format Check
+      - Supabase DB Types Consistency
+      - Check env encryption
+      - Check console.log and debugger
+      - Release PR
+      - Create Release
+      - Fork Sync
+    types:
+      - completed
+    branches:
+      - main
+      - release
+
+permissions: {}
+
+jobs:
+  notify:
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
+            echo "::error::SLACK_WEBHOOK_URL が GitHub Actions Secrets に設定されていません。"
+            exit 1
+          fi
+
+          payload=$(jq -n \
+            --arg workflow "$WORKFLOW_NAME" \
+            --arg branch "$WORKFLOW_BRANCH" \
+            --arg conclusion "$WORKFLOW_CONCLUSION" \
+            --arg url "$WORKFLOW_URL" \
+            '{text: ("GitHub Actions のワークフローが失敗しました\n\n- ワークフロー: " + $workflow + "\n- ブランチ: " + $branch + "\n- 結果: " + $conclusion + "\n- 実行URL: " + $url)}')
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"
