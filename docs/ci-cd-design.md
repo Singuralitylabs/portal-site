@@ -16,6 +16,8 @@
    - [4.2 ガード条件と同時実行制御](#42-ガード条件と同時実行制御)
    - [4.3 失敗時の扱い](#43-失敗時の扱い)
 5. [Wiki 更新通知](#5-wiki-更新通知)
+   - [5.1 ワークフローの動作](#51-ワークフローの動作)
+   - [5.2 失敗時の扱い](#52-失敗時の扱い)
 6. [Supabase Keep Alive](#6-supabase-keep-alive)
    - [6.1 方式の選定](#61-方式の選定)
    - [6.2 ワークフローの動作](#62-ワークフローの動作)
@@ -24,8 +26,8 @@
    - [6.5 失敗時の扱い](#65-失敗時の扱い)
 7. [GitHub Actions 失敗通知](#7-github-actions-失敗通知)
    - [7.1 対象と通知条件](#71-対象と通知条件)
-   - [7.2 通知内容](#72-通知内容)
-   - [7.3 監視対象の整合性とレビュー](#73-監視対象の整合性とレビュー)
+   - [7.2 通知内容と権限](#72-通知内容と権限)
+   - [7.3 有効化と検証](#73-有効化と検証)
 
 ## 1. 概要
 
@@ -332,30 +334,45 @@ Publishable key は公開を前提とした鍵だが、本リポジトリが `.e
 
 ## 7. GitHub Actions 失敗通知
 
-GitHub Actions の実行失敗を Slack で把握するため、[`.github/workflows/action-failure-slack-notification.yml`](../.github/workflows/action-failure-slack-notification.yml) で対象 workflow の完了結果を監視する。通知先には Wiki 更新通知と共通の `SLACK_WEBHOOK_URL` Secret を利用する。
+GitHub Actions の実行失敗を Slack で把握するため、[`.github/workflows/action-failure-slack-notification.yml`](../.github/workflows/action-failure-slack-notification.yml) で対象 workflow の完了結果を監視する。
 
 ### 7.1 対象と通知条件
 
 `workflow_run` で以下の workflow を監視する。同一リポジトリ上の実行ブランチが `main` または `release` で、完了結果が `failure` の場合のみ通知する。成功・キャンセル・スキップ、対象外ブランチ、および fork からの実行は通知しない。
 
-| ワークフロー                                               | 失敗通知の発生例                                                    |
-| ---------------------------------------------------------- | ------------------------------------------------------------------- |
-| `Build Test` (`build.yml`)                                 | `npm ci` または `npm run build` が失敗する                          |
-| `Jest Unit Tests` (`test.yml`)                             | Jest のテストが失敗する                                             |
-| `TypeScript Type Check` (`typecheck.yml`)                  | `npx tsc --noEmit` または ESLint の型関連チェックが失敗する         |
-| `Format Check` (`format-check.yml`)                        | `npm run format:check` でフォーマット差分が検出される               |
-| `Supabase DB Types Consistency` (`db-types.yml`)           | Supabase 設定不足、型生成失敗、または生成型の差分が検出される       |
-| `Check env encryption` (`check_env_encryption.yml`)        | `.env.development` の暗号化チェックに失敗する                       |
-| `Check console.log and debugger` (`check_console_log.yml`) | 禁止対象の `console.log` / `debugger` が検出される                  |
-| `Release PR` (`release-pr.yml`)                            | バージョン検証、品質チェック、またはリリース PR 作成に失敗する      |
-| `Create Release` (`create-release.yml`)                    | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する  |
-| `Fork Sync` (`fork-sync.yml`)                              | 必須設定の検証、またはフォークへの release ブランチ push に失敗する |
+| ワークフロー                                                                                             | 失敗通知の発生例                                                    |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `Build Test` ([`build.yml`](../.github/workflows/build.yml))                                             | `npm ci` または `npm run build` が失敗する                          |
+| `Jest Unit Tests` ([`test.yml`](../.github/workflows/test.yml))                                          | Jest のテストが失敗する                                             |
+| `TypeScript Type Check` ([`typecheck.yml`](../.github/workflows/typecheck.yml))                          | `npx tsc --noEmit` または ESLint の型関連チェックが失敗する         |
+| `Format Check` ([`format-check.yml`](../.github/workflows/format-check.yml))                             | `npm run format:check` でフォーマット差分が検出される               |
+| `Supabase DB Types Consistency` ([`db-types.yml`](../.github/workflows/db-types.yml))                    | Supabase 設定不足、型生成失敗、または生成型の差分が検出される       |
+| `Check env encryption` ([`check_env_encryption.yml`](../.github/workflows/check_env_encryption.yml))     | `.env.development` の暗号化チェックに失敗する                       |
+| `Check console.log and debugger` ([`check_console_log.yml`](../.github/workflows/check_console_log.yml)) | 禁止対象の `console.log` / `debugger` が検出される                  |
+| `Release PR` ([`release-pr.yml`](../.github/workflows/release-pr.yml))                                   | バージョン検証、品質チェック、またはリリース PR 作成に失敗する      |
+| `Create Release` ([`create-release.yml`](../.github/workflows/create-release.yml))                       | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する  |
+| `Fork Sync` ([`fork-sync.yml`](../.github/workflows/fork-sync.yml))                                      | 必須設定の検証、またはフォークへの release ブランチ push に失敗する |
 
-`Wiki Slack Notification` (`wiki-slack-notification.yml`) は通知そのものを行う workflow のため監視対象に含めない。通知失敗を再通知するループを避ける。
+`Wiki Slack Notification` ([`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)) は通知そのものを行う workflow のため監視対象に含めない。通知失敗を再通知するループを避ける。
 
 ### 7.2 通知内容と権限
 
-通知には workflow 名、ブランチ、結論、実行ページの URL を含める。通知処理は workflow_run イベントの情報と `SLACK_WEBHOOK_URL` Secret のみを使用し、リポジトリ checkout や `GITHUB_TOKEN` の権限を必要としない。
+| 項目     | 内容                                                            |
+| -------- | --------------------------------------------------------------- |
+| 通知単位 | 対象 workflow の失敗 run ごとに 1 件                            |
+| 通知内容 | workflow 名、ブランチ、結論、実行ページの URL                   |
+| 通知先   | Wiki 更新通知と共通の `SLACK_WEBHOOK_URL` Secret の既定チャネル |
+
+Slack 通知本文は Incoming Webhook の通常テキストとして送信する。
+
+```text
+GitHub Actions のワークフローが失敗しました
+
+- ワークフロー: Build Test
+- ブランチ: main
+- 結果: failure
+- 実行URL: 実行URL
+```
 
 ### 7.3 有効化と検証
 
