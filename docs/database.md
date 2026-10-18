@@ -456,6 +456,45 @@ UPDATE は列指定トリガー（`UPDATE OF role, status`）とし、`role` / `
 > **適用順の制約**
 > 本トリガー関数は `03_functions/rls_helper_functions.sql` の `is_active_user()` / `is_admin()` を参照します。ディレクトリの番号順（`02_triggers` → `03_functions`）とは逆の依存関係になるため、**必ず `03_functions/rls_helper_functions.sql` を先に適用してください**。関数の作成自体は遅延解決のため成功しますが、関数が未定義のままトリガーが発火すると `function is_admin() does not exist` で失敗します。影響を受けるのは新規ユーザー登録（INSERT）と `role` / `status` を含む UPDATE で、承認・否認が行えなくなります。
 
+### 6.5. position_tags 同期関数
+
+ユーザーの役職タグを、指定した position ID の集合に一致させる関数です。`supabase.rpc(...)` の1回の呼び出しで完結させ、削除と挿入を1トランザクションにまとめます。PostgREST は RPC の1回の呼び出しを1トランザクションで実行するため、関数内で例外が発生すると変更はすべてロールバックされます。
+
+| 項目       | 内容                                                          |
+| ---------- | ------------------------------------------------------------- |
+| 関数名     | `sync_user_position_tags`                                     |
+| 引数       | `p_user_id INTEGER`, `p_position_ids INTEGER[]`               |
+| 戻り値     | `INTEGER[]`（同期後に保持している position ID、昇順）         |
+| 実行モード | `SECURITY INVOKER`、`search_path = public, pg_catalog` を固定 |
+| 実行権限   | `authenticated` のみ（`PUBLIC` と `anon` からは REVOKE する） |
+
+補足: 定義ファイルは `supabase/migrations/03_functions/position_tags_functions.sql`
+
+### 6.6. 複数更新処理の RPC 化方針
+
+1つの操作で複数の書き込みを行う処理は、PostgreSQL 関数にまとめて RPC で呼び出します。「6.5. position_tags 同期関数」を標準パターンとします。
+
+RPC にまとめる条件（いずれかに該当する場合）:
+
+- 1つのユースケースで、書き込みが2文以上になる
+- 読み取った値に依存して書き込む（読み取りと書き込みの間に他の更新が入りうる）
+- 件数分のループで1行ずつ更新している
+
+RPC にまとめない場合:
+
+- 単一の INSERT / UPDATE で完結する
+- Storage や外部 API など、PostgreSQL の外をまたぐ（補償処理や条件付き UPDATE で対応する）
+
+関数を作るときの共通ルール:
+
+- `SECURITY INVOKER` を既定とし、RLSを権限の根拠にする
+- 権限は関数の冒頭で明示的に確認し、違反時は例外にする
+- `search_path` を固定し、`PUBLIC` と `anon` の実行権限を外す
+- エラーは `RAISE EXCEPTION ... USING ERRCODE` で返し、不正な入力を黙って読み飛ばさない
+- 同じ対象への同時実行は advisory lock で直列化する
+- 処理中の閲覧ブロックは行わない（1トランザクションにまとめれば、中間状態は他のセッションから見えない）
+- `supabase/migrations/03_functions/` に `CREATE OR REPLACE` で定義し、適用後に `npm run db:types:local` で型を再生成する
+
 ## 7. データアクセス制御の実現
 
 これらのRLSポリシーとSupabase Auth統合により、シンラボポータルサイトでは以下のデータアクセス制御を実現しています。
