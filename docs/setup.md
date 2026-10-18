@@ -288,7 +288,7 @@ chmod 600 .env.keys   # Mac/Linux
   なお、この鍵入れ替えだけでは**過去にコミットした暗号文（履歴）は保護されない**点に注意する。旧鍵が漏れていれば履歴の値は復号され得るため、鍵漏洩が疑われる場合は次の緊急対応を行う。
 
 - **鍵・秘密情報の漏洩時（緊急対応）**: 復号鍵の漏洩が疑われる場合、鍵の入れ替えだけでは不十分で、**暗号化していた秘密情報そのものを上流で無効化・再発行**する必要がある。
-  1. Supabase: Dashboard → Project Settings → API で API キーをローテーションする（必要に応じて anon / service キーを再発行）。
+  1. Supabase: Dashboard → Project Settings → API で API キーをローテーションする（必要に応じて anon / service キーを再発行）。Publishable key を再発行した場合は、Keep Alive ワークフロー用の GitHub Secrets も新しい値に更新する（登録手順は [CI/CD 設計書 6.4](./ci-cd-design.md#64-secrets-の登録手順) を参照）。
   2. Google サービスアカウント: Google Cloud Console で対象の鍵を削除し、新しい JSON 鍵を発行する。
   3. Slack: 対象の Incoming Webhook を無効化し、新しい Webhook を発行する。
   4. 新しい値で `.env.development` を再暗号化し（`npx dotenvx set <KEY> <値> -f .env.development`）、上記「予防的ローテ」の手順で dev 鍵も入れ替える。
