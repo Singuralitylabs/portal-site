@@ -132,6 +132,16 @@ function findDbContainer() {
     );
     process.exit(1);
   }
+  // 他プロジェクトのローカルSupabaseが同時に起動していると、どのDBに適用するか特定できない。
+  // 別プロジェクトのDBへ誤って適用しないよう、複数見つかった場合は何もせずに停止する。
+  if (names.length > 1) {
+    console.error(
+      "ローカルSupabaseのDBコンテナが複数起動しているため、適用先を特定できません。\n" +
+        "このリポジトリ以外のSupabaseを `supabase stop` で停止してから、再実行してください。\n  " +
+        names.join("\n  ")
+    );
+    process.exit(1);
+  }
   return names[0];
 }
 
