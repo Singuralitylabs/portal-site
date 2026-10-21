@@ -7,6 +7,8 @@ const { spawnSync } = require("node:child_process");
 // （例: applications はcategories/usersより辞書順で先に来るが、それらを参照する）。
 // そのため実際に依存関係を満たす順序をここに明示する。
 // 新しいマイグレーションファイルを追加した場合は、このリストにも追記すること。
+// 使い方（ローカルSupabaseの起動〜停止の手順）は Wiki を参照:
+// https://github.com/Singuralitylabs/portal-site/wiki/ローカルSupabase環境構築
 const MIGRATIONS_ROOT = path.join("supabase", "migrations");
 
 const ORDERED_RELATIVE_PATHS = [
