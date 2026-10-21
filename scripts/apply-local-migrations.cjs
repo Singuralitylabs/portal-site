@@ -121,7 +121,7 @@ function assertListIsUpToDate() {
   }
 }
 
-// ローカルSupabaseのDB用コンテナ名は `supabase db start` 時のプロジェクトrefで変わるため
+// ローカルSupabaseのDB用コンテナ名（`supabase_db_<id>`）は、起動時の SUPABASE_PROJECT_ID（未設定なら config.toml の project_id）で変わるため
 // 固定文字列にせず、実行中のコンテナから動的に見つける。
 function findDbContainer() {
   const result = run("docker", ["ps", "--filter", "name=supabase_db_", "--format", "{{.Names}}"]);
