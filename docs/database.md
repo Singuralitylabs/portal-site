@@ -383,7 +383,8 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
   - `users` テーブル本体は「本人行」と「管理者」しか直接SELECTできないため、invoker権限のままだと会員一覧が本人1行しか返らなくなる
   - 所有者権限とビュー内のガード（`is_active_user()` 等）の組み合わせにより、RLSを迂回しても意図した行・列のみが返る設計にしている
   - Supabaseのsecurity lintは本構成を `security_definer_view` として警告するが、許容している。根拠はWikiのナレッジ共有ページを参照
-- `anon` ロールからは `REVOKE` し、`authenticated` ロールにのみ `SELECT` を許可する
+- `PUBLIC` / `anon` / `authenticated` から `REVOKE ALL` したうえで、`authenticated` ロールにのみ `SELECT` を `GRANT` する
+  - Supabaseの `public` スキーマは新規オブジェクトに既定で全権限を付与する。ビューは単一テーブル由来で更新可能なため、`REVOKE ALL FROM authenticated` を行わないと、`security_invoker = false` によりビュー経由の `UPDATE` / `DELETE` が `users` のRLSを通らず、他会員の行を書き換えられてしまう
 - 資料/動画/アプリの担当者埋め込み結合（`assignee:member_profiles!documents_assignee_fk(id, display_name)` 等）は、`users` への直接結合からこのビュー経由に置き換えている
   - ビューは `status = 'active'` の行のみを含むため、非activeな担当者が既存データに存在する場合、一覧の担当者名表示は `null` になり、資料/動画編集フォームの担当者`Select`は選択肢に表示されなくなる（`assignee_id` 自体は保持されたまま保存される）
 - **ロールアウト順序**: マイグレーションはSupabase SQL Editorでの手動実行、アプリケーションコードはVercelへの一括デプロイのため、無停止で反映するには「`06_views` のビュー作成 → アプリのデプロイ → `04_policies` のポリシー差し替え」の順に実行すること

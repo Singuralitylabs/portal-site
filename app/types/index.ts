@@ -85,21 +85,13 @@ export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
 // member_profiles ビュー（公開列のみ・email/auth_id/role/status非公開）のRow型。
-// `npm run db:types:local` 実行後は database.types.ts の
-// `Database["public"]["Views"]["member_profiles"]["Row"]` に置き換えること（手動編集不可のため暫定定義）。
-export type MemberProfileType = Pick<
-  UserType,
-  | "id"
-  | "display_name"
-  | "bio"
-  | "avatar_url"
-  | "profile_image_path"
-  | "x_url"
-  | "facebook_url"
-  | "instagram_url"
-  | "github_url"
-  | "portfolio_url"
->;
+// ビューのRowは全列nullableで生成されるため、ビュー定義（users由来のNOT NULL列）に合わせて
+// id / display_name のみ非nullに絞る。
+type MemberProfilesRow = Database["public"]["Views"]["member_profiles"]["Row"];
+export type MemberProfileType = Omit<MemberProfilesRow, "id" | "display_name"> & {
+  id: number;
+  display_name: string;
+};
 
 export type MemberType = MemberProfileType & {
   position_tags: {

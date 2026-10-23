@@ -34,7 +34,12 @@ WHERE status = 'active'
   AND is_deleted = FALSE
   AND (SELECT is_active_user());
 
+-- Supabase の public スキーマは新規オブジェクトに既定で全権限を付与するため、
+-- 明示的に REVOKE する。単一テーブル由来のビューは更新可能であり、security_invoker = false では
+-- ビュー経由の INSERT / UPDATE / DELETE が users の RLS を通らないため、
+-- authenticated にも SELECT 以外を残さない（書き込みによる他会員行の改ざん防止）。
 -- anon には公開しない（未承認の匿名アクセスから会員一覧を隠す）
 REVOKE ALL ON member_profiles FROM PUBLIC;
 REVOKE ALL ON member_profiles FROM anon;
+REVOKE ALL ON member_profiles FROM authenticated;
 GRANT SELECT ON member_profiles TO authenticated;
