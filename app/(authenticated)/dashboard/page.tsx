@@ -10,14 +10,6 @@ export default async function DashboardPage() {
     return <p>認証情報が取得できませんでした。</p>;
   }
 
-  const { error, data: initialData } = await fetchApprovalUsers();
-  const data = initialData ?? [];
-
-  if (error) {
-    console.error("承認待ちの会員一覧取得に失敗:", error);
-    return <p>承認待ちの会員一覧を取得できませんでした。</p>;
-  }
-
   const { role, error: roleError } = await fetchUserInfoByAuthId({ authId });
   if (roleError) {
     console.error("データ取得エラー:", roleError);
@@ -27,6 +19,14 @@ export default async function DashboardPage() {
   if (!checkAdminPermissions(role)) {
     console.error("管理者ではありません.");
     return <p>管理者ではありません</p>;
+  }
+
+  const { error, data: initialData } = await fetchApprovalUsers();
+  const data = initialData ?? [];
+
+  if (error) {
+    console.error("承認待ちの会員一覧取得に失敗:", error);
+    return <p>承認待ちの会員一覧を取得できませんでした。</p>;
   }
 
   return <DashboardPageTemplate members={data} />;
