@@ -139,15 +139,16 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 
 ### 2.6. positions テーブル
 
-| カラム名        | データ型      | 制約                                | 説明                           |
-| --------------- | ------------- | ----------------------------------- | ------------------------------ |
-| `id`            | `SERIAL`      | PRIMARY KEY                         | レコードの一意な識別子（連番） |
-| `name`          | `VARCHAR(50)` | NOT NULL                            | 役職・所属名                   |
-| `description`   | `TEXT`        |                                     | 役職・所属の説明文             |
-| `display_order` | `INTEGER`     | DEFAULT 0, NOT NULL                 | 表示順                         |
-| `is_deleted`    | `BOOLEAN`     | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                 |
-| `created_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                       |
-| `updated_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                       |
+| カラム名        | データ型      | 制約                                | 説明                                             |
+| --------------- | ------------- | ----------------------------------- | ------------------------------------------------ |
+| `id`            | `SERIAL`      | PRIMARY KEY                         | レコードの一意な識別子（連番）                   |
+| `name`          | `VARCHAR(50)` | NOT NULL                            | 役職・所属名                                     |
+| `description`   | `TEXT`        |                                     | 役職・所属の説明文                               |
+| `display_order` | `INTEGER`     | DEFAULT 0, NOT NULL                 | 表示順                                           |
+| `is_leadership` | `BOOLEAN`     | DEFAULT FALSE, NOT NULL             | 会員一覧の役職者セクションに表示する役職かどうか |
+| `is_deleted`    | `BOOLEAN`     | DEFAULT FALSE, NOT NULL             | 論理削除フラグ                                   |
+| `created_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 作成日時                                         |
+| `updated_at`    | `TIMESTAMP`   | DEFAULT CURRENT_TIMESTAMP, NOT NULL | 更新日時                                         |
 
 ### 2.7. position_tags テーブル
 
@@ -252,6 +253,7 @@ erDiagram
         VARCHAR name "役職・所属名 (最大50文字)"
         TEXT description "役職・所属の説明文"
         INTEGER display_order "表示順"
+        BOOLEAN is_leadership "役職者セクション表示対象フラグ (デフォルト: false)"
         BOOLEAN is_deleted "論理削除フラグ (デフォルト: false)"
         TIMESTAMP created_at "作成日時"
         TIMESTAMP updated_at "更新日時"
