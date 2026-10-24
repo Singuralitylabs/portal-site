@@ -58,7 +58,7 @@ export function ApplicationFormModal({
       developer_id: initialData?.developer_id ?? 0,
     });
 
-    // 表示順の初期化（開くたびに位置候補も最新化する。issue #352）
+    // 表示順の初期化
     setPosition(initialData ? "current" : "last");
     handleCategoryChange(categoryId);
   }, [opened, initialData, setPosition, handleCategoryChange]);
