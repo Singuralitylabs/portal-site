@@ -14,7 +14,7 @@
 --   という意図した挙動に限定する。
 --   Supabase の security lint はこの構成を `security_definer_view` として
 --   警告するが、ビュー内のガードと anon / authenticated への REVOKE（SELECT のみ GRANT）により実質的な
---   RLS 迂回は発生しない（詳細は issue #424 のコメントを参照: https://github.com/Singuralitylabs/portal-site/issues/424#issuecomment-6377233321）。
+--   RLS 迂回は発生しない（詳細は docs/database.md 4.9節を参照）。
 CREATE OR REPLACE VIEW member_profiles
 WITH (security_invoker = false)
 AS

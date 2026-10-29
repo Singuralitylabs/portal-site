@@ -382,7 +382,9 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - `security_invoker = false`（所有者権限）で実行する
   - `users` テーブル本体は「本人行」と「管理者」しか直接SELECTできないため、invoker権限のままだと会員一覧が本人1行しか返らなくなる
   - 所有者権限とビュー内のガード（`is_active_user()` 等）の組み合わせにより、RLSを迂回しても意図した行・列のみが返る設計にしている
-  - Supabaseのsecurity lintは本構成を `security_definer_view` として警告するが、許容している。根拠は[issue #424のコメント](https://github.com/Singuralitylabs/portal-site/issues/424#issuecomment-6377233321)を参照
+  - Supabaseのsecurity lintは本構成を `security_definer_view` として警告するが、次の理由で許容している
+    - 返す行はビュー内の `WHERE`（`status = 'active'`・`is_deleted = FALSE`・`is_active_user()`）で、返す列は公開10列で、それぞれ限定している
+    - `PUBLIC` / `anon` / `authenticated` から `REVOKE ALL` し、`authenticated` には `SELECT` のみを `GRANT` しているため、未承認者アクセスやビュー経由の書き込みによるRLS迂回は発生しない
 - `PUBLIC` / `anon` / `authenticated` から `REVOKE ALL` したうえで、`authenticated` ロールにのみ `SELECT` を `GRANT` する
   - Supabaseの `public` スキーマは新規オブジェクトに既定で全権限を付与する。ビューは単一テーブル由来で更新可能なため、`REVOKE ALL FROM authenticated` を行わないと、`security_invoker = false` によりビュー経由の `UPDATE` / `DELETE` が `users` のRLSを通らず、他会員の行を書き換えられてしまう
 - 資料/動画/アプリの担当者埋め込み結合（`assignee:member_profiles!documents_assignee_fk(id, display_name)` 等）は、`users` への直接結合からこのビュー経由に置き換えている
