@@ -1,4 +1,5 @@
 const fs = require("node:fs");
+const { sendSlackNotification } = require("./slack-webhook.cjs");
 
 const DEFAULT_REPOSITORY_OWNER = "Singuralitylabs";
 const DEFAULT_REPOSITORY_NAME = "portal-site";
@@ -76,22 +77,6 @@ function buildSlackMessage({ actor, trigger, pages }) {
   return lines.join("\n").trim();
 }
 
-// 組み立てた本文を Slack Incoming Webhook へ送信する。
-async function sendSlackNotification(webhookUrl, message) {
-  const payload = { text: message };
-  const response = await fetch(webhookUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Slack notification failed: ${response.status} ${await response.text()}`);
-  }
-}
-
 async function main() {
   // Secret とイベント payload の存在を先に検証し、実行失敗理由を明確にする。
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
@@ -127,6 +112,8 @@ async function main() {
 
   await sendSlackNotification(webhookUrl, message);
 }
+
+module.exports = { buildSlackMessage, createPages, main };
 
 if (require.main === module) {
   main().catch(error => {

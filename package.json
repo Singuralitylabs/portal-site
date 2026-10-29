@@ -16,6 +16,7 @@
     "db:types:local": "dotenvx run --strict -f .env.development -- node scripts/db-types.cjs",
     "lint:logs": "node scripts/lint-logs.cjs",
     "lint:env": "node scripts/check-env-encrypted.cjs",
+    "lint:workflows": "node scripts/check-workflow-notifications.cjs",
     "test": "jest --verbose --coverage"
   },
   "dependencies": {
