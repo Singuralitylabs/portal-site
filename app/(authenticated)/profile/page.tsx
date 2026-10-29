@@ -6,6 +6,7 @@ import {
   updateUserPositionTagsInServer,
   updateUserProfileServerInServer,
 } from "@/app/services/api/users-server";
+import { USER_ROLE } from "@/app/constants/user";
 import { ProfilePageTemplate } from "./components/Template";
 
 export default async function ProfilePage() {
@@ -76,17 +77,19 @@ export default async function ProfilePage() {
     }
 
     // position_tags を更新
-    const positionTagsError = await updateUserPositionTagsInServer(user.id, positionIds);
+    if (user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.MAINTAINER) {
+      const positionTagsError = await updateUserPositionTagsInServer(user.id, positionIds);
 
-    if (positionTagsError) {
-      console.error(
-        `プロフィール更新成功 / position_tags更新失敗 (userId=${user.id}):`,
-        positionTagsError
-      );
-      return {
-        success: false,
-        message: "プロフィールは更新されましたが、活動チーム・役割の更新に失敗しました",
-      };
+      if (positionTagsError) {
+        console.error(
+          `プロフィール更新成功 / position_tags更新失敗 (userId=${user.id}):`,
+          positionTagsError
+        );
+        return {
+          success: false,
+          message: "プロフィールは更新されましたが、活動チーム・役割の更新に失敗しました",
+        };
+      }
     }
 
     return { success: true };
