@@ -298,7 +298,7 @@ export async function fetchUserPositionTagsByUserId(userId: number): Promise<{
 }
 
 /**
- * ユーザーの position_tags を更新する（既存削除 → 新規挿入）
+ * ユーザーの position_tags を更新する（RPC で差分同期）
  * @param userId - ユーザーID
  * @param positionIds - 設定する position ID の配列
  * @returns PostgrestError | null
@@ -309,32 +309,14 @@ export async function updateUserPositionTagsInServer(
 ): Promise<PostgrestError | null> {
   const supabase = await createServerSupabaseClient();
 
-  const { error: deleteError } = await supabase
-    .from("position_tags")
-    .delete()
-    .eq("user_id", userId);
+  const { error } = await supabase.rpc("sync_user_position_tags", {
+    p_user_id: userId,
+    p_position_ids: positionIds,
+  });
 
-  if (deleteError) {
-    console.error("Supabase position_tags削除エラー:", deleteError.message);
-    return deleteError;
-  }
-
-  const uniquePositionIds = [...new Set(positionIds)];
-
-  if (uniquePositionIds.length === 0) {
-    return null;
-  }
-
-  const { error: insertError } = await supabase.from("position_tags").insert(
-    uniquePositionIds.map(positionId => ({
-      user_id: userId,
-      position_id: positionId,
-    }))
-  );
-
-  if (insertError) {
-    console.error("Supabase position_tags挿入エラー:", insertError.message);
-    return insertError;
+  if (error) {
+    console.error("Supabase position_tags同期エラー:", error.message);
+    return error;
   }
 
   return null;
