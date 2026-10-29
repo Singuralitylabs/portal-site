@@ -88,7 +88,6 @@ export type MemberType = Pick<
   UserType,
   | "id"
   | "display_name"
-  | "role"
   | "bio"
   | "avatar_url"
   | "profile_image_path"
