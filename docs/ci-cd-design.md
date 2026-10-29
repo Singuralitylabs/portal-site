@@ -27,7 +27,8 @@
 7. [GitHub Actions 失敗通知](#7-github-actions-失敗通知)
    - [7.1 対象と通知条件](#71-対象と通知条件)
    - [7.2 通知内容と権限](#72-通知内容と権限)
-   - [7.3 有効化と検証](#73-有効化と検証)
+   - [7.3 監視対象の整合性とレビュー](#73-監視対象の整合性とレビュー)
+   - [7.4 有効化と検証](#74-有効化と検証)
 
 ## 1. 概要
 
@@ -338,7 +339,9 @@ GitHub Actions の実行失敗を Slack で把握するため、[`.github/workfl
 
 ### 7.1 対象と通知条件
 
-`workflow_run` で以下の workflow を監視する。同一リポジトリ上の実行ブランチが `main` または `release` で、完了結果が `failure` の場合のみ通知する。成功・キャンセル・スキップ、対象外ブランチ、および fork からの実行は通知しない。
+`workflow_run` で以下の workflow を監視する。同一リポジトリ上の実行ブランチ（`workflow_run.head_branch`）が `main` または `release` で、完了結果が `failure`・`timed_out`・`startup_failure` の場合に通知する。成功・キャンセル・スキップ、その他の結論、対象外ブランチ、および fork からの実行は通知しない。
+
+PR起因の実行もheadブランチで判定する。通常のmain→releaseのリリースでは `main` と表示され、PRのbaseがreleaseでもheadがhotfix等なら対象外となる。通知workflowはデフォルトブランチに存在する必要があるため、mainへのマージ後に有効になる。
 
 | ワークフロー                                                                                             | 失敗通知の発生例                                                    |
 | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -353,28 +356,46 @@ GitHub Actions の実行失敗を Slack で把握するため、[`.github/workfl
 | `Create Release` ([`create-release.yml`](../.github/workflows/create-release.yml))                       | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する  |
 | `Fork Sync` ([`fork-sync.yml`](../.github/workflows/fork-sync.yml))                                      | 必須設定の検証、またはフォークへの release ブランチ push に失敗する |
 
-`Wiki Slack Notification` ([`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)) は通知そのものを行う workflow のため監視対象に含めない。通知失敗を再通知するループを避ける。
+`Wiki Slack Notification` ([`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)) はIssue #172で定めた対象10件の範囲外のため監視対象に含めない。Wiki通知を含めても失敗通知workflow自身を監視しなければ循環は起きない。Wiki通知や失敗通知自体のエラーはGitHub Actionsの失敗通知・実行ログで確認する。共通Webhookの設定不備や障害は、同じWebhookへの通知では検知を保証できない。
+
+Wiki更新通知と失敗通知は [`scripts/slack-webhook.cjs`](../scripts/slack-webhook.cjs) の送信処理を共有する。イベント固有の本文生成は各スクリプトが担当する。HTTPエラーはステータスのみを報告し、レスポンス本文はログへ出さない。失敗通知は `contents: read` のみで `github.workflow_sha`（通知workflow自身のコミット）をcheckoutし、認証情報を永続化しない。元runのheadコミットや成果物からコードを実行しない。
 
 ### 7.2 通知内容と権限
 
-| 項目     | 内容                                                            |
-| -------- | --------------------------------------------------------------- |
-| 通知単位 | 対象 workflow の失敗 run ごとに 1 件                            |
-| 通知内容 | workflow 名、ブランチ、結論、実行ページの URL                   |
-| 通知先   | Wiki 更新通知と共通の `SLACK_WEBHOOK_URL` Secret の既定チャネル |
+| 項目     | 内容                                                                          |
+| -------- | ----------------------------------------------------------------------------- |
+| 通知単位 | 対象 workflow の異常終了した実行回ごとに 1 件                                 |
+| 通知内容 | workflow 名、headブランチ、結論、実行回数、トリガー、コミットSHA、実行回別URL |
+| 通知先   | Wiki 更新通知と共通の `SLACK_WEBHOOK_URL` Secret の既定チャネル               |
 
 Slack 通知本文は Incoming Webhook の通常テキストとして送信する。
 
 ```text
-GitHub Actions のワークフローが失敗しました
+GitHub Actions のワークフローが異常終了しました
 
 - ワークフロー: Build Test
 - ブランチ: main
 - 結果: failure
-- 実行URL: 実行URL
+- 実行回数: 2
+- トリガー: workflow_dispatch
+- コミット: コミットSHA
+- 実行URL: https://github.com/owner/repository/actions/runs/123/attempts/2
 ```
 
-### 7.3 有効化と検証
+### 7.3 監視対象の整合性とレビュー
+
+`npm run lint:workflows` は全workflowをYAMLとして解析し、通知対象または明示的な除外対象（Wiki通知・失敗通知自身）に分類されているか検査する。追加・削除・名称変更・名前の重複・除外対象の変更を検出し、監視一覧の未更新をエラーにする。既存の `Format Check` で毎回実行するため、workflowの変更だけでも検査される。
+
+workflowの追加・更新時は、監視一覧と本節の対象表を同時に見直す。新たに除外する場合は、チェックスクリプトの除外一覧へ明示し、理由を設計書へ記載する。AI Agentのレビューでも追加・削除・`name:` 変更と監視分類、実イベントのhead/base、異常終了条件、最小権限を確認し、`npm run lint:workflows` と `npx jest tests/scripts --runInBand --coverage=false` の実行結果を報告する。CI検査は実施を保証し、AIレビューは通知範囲や除外理由の妥当性を補完する。
+
+### 7.4 有効化と検証
+
+- `workflow_run` は通知 workflow がデフォルトブランチに存在する場合にのみ動作する。したがって、本リポジトリでは `main` へのマージ後に通知が有効になる。
+- 本リポジトリでは通知確認のために意図的な失敗を起こさず、`main` または `release` 上で実際に失敗が発生した際に、Slack 通知と実行 URL を確認する。リリース作業は [本番環境リリース手順](https://github.com/Singuralitylabs/portal-site/wiki/%E6%9C%AC%E7%95%AA%E7%92%B0%E5%A2%83%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E6%89%8B%E9%A0%86) に従う。
+- 失敗通知を事前に試験する場合は、個人 fork を隔離環境として使う。通知 workflow を fork のデフォルトブランチに置き、試験用 `SLACK_WEBHOOK_URL` を設定したうえで、`main` または `release` 上の対象 workflow を失敗させて確認する。本リポジトリの本番通知先は試験に使わない。
+- 通知が届かない場合は、対象 workflow と通知 workflow の両方の Actions 実行結果・ログ、ブランチ、Secret 設定を確認する。
+
+### 7.4 有効化と検証
 
 - `workflow_run` は通知 workflow がデフォルトブランチに存在する場合にのみ動作する。したがって、本リポジトリでは `main` へのマージ後に通知が有効になる。
 - 本リポジトリでは通知確認のために意図的な失敗を起こさず、`main` または `release` 上で実際に失敗が発生した際に、Slack 通知と実行 URL を確認する。リリース作業は [本番環境リリース手順](https://github.com/Singuralitylabs/portal-site/wiki/%E6%9C%AC%E7%95%AA%E7%92%B0%E5%A2%83%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E6%89%8B%E9%A0%86) に従う。

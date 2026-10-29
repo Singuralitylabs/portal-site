@@ -20,44 +20,30 @@ on:
       - main
       - release
 
-# workflow_runのイベント情報とSecretのみを使うため、GITHUB_TOKENの権限は不要。
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   notify:
-    # 失敗かつ同一リポジトリの実行に限定し、fork由来の実行を除外する。
     if: >-
-      ${{ github.event.workflow_run.conclusion == 'failure' &&
+      ${{ contains(fromJSON('["failure","timed_out","startup_failure"]'), github.event.workflow_run.conclusion) &&
       github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
-      # 通知情報を組み立て、既存のSlack Incoming Webhookへ送信する。
+      - name: Checkout notification workflow revision
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
       - name: Send Slack notification
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
-          WORKFLOW_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}
-        run: |
-          set -euo pipefail
-
-          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
-            echo "::error::SLACK_WEBHOOK_URL が GitHub Actions Secrets に設定されていません。"
-            exit 1
-          fi
-
-          payload=$(jq -n \
-            --arg workflow "$WORKFLOW_NAME" \
-            --arg branch "$WORKFLOW_BRANCH" \
-            --arg conclusion "$WORKFLOW_CONCLUSION" \
-            --arg url "$WORKFLOW_URL" \
-            '{text: ("GitHub Actions のワークフローが失敗しました\n\n- ワークフロー: " + $workflow + "\n- ブランチ: " + $branch + "\n- 結果: " + $conclusion + "\n- 実行URL: " + $url)}')
-
-          curl --fail-with-body --silent --show-error \
-            --request POST \
-            --header "Content-Type: application/json" \
-            --data "$payload" \
-            "$SLACK_WEBHOOK_URL"
+        run: node scripts/action-failure-slack-notification.cjs
