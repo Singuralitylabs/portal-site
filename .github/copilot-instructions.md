@@ -95,6 +95,15 @@ Copilot レビューは次の優先順位で指摘する。
 - `Impact`: 何に影響するか
 - `Suggested Fix`: 最小修正案
 
+### GitHub Actions変更時の追加レビュー
+
+- `.github/workflows/` の追加・削除・`name:`変更時は、失敗通知の監視一覧と設計書の対象表を同時に確認する
+- 全workflowを監視対象か明示的除外に分類する。除外の追加・変更には理由を記載する
+- `npm run lint:workflows` と `npx jest tests/scripts --runInBand --coverage=false` を実行し、結果を報告する
+- PR起因のrunはheadとbaseを区別し、通知範囲・異常終了条件・再実行識別情報を確認する
+- `workflow_run` では元runのコードや成果物を実行しない。共通ヘルパーは通知workflow自身のコミットから取得し、権限を必要最小限にする
+- 詳細は `docs/ci-cd-design.md` の「6.3 監視対象の整合性とレビュー」を参照する
+
 ## 実装後チェック
 
 変更後は以下を順に実行し、すべて成功させる。
