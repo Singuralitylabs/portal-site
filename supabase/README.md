@@ -42,7 +42,7 @@
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxxxxxxxxxxxxxxxxxx
 SUPABASE_PROJECT_ID=xxxxxxxxxx
 ```
 

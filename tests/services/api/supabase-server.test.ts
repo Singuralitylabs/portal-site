@@ -539,7 +539,7 @@ describe("supabase-server module", () => {
 
   it("createServerSupabaseClient: 環境変数を利用してクライアントを生成する", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key";
 
     const cookieStore = { getAll: jest.fn(() => []), set: jest.fn() };
     cookiesMock.mockResolvedValue(cookieStore);
@@ -549,10 +549,10 @@ describe("supabase-server module", () => {
 
     const response = await supabaseServerActual.createServerSupabaseClient();
 
-    // createServerClient が URL/ANON KEY と cookie ハンドラで呼ばれることを確認
+    // createServerClient が URL/Publishable key と cookie ハンドラで呼ばれることを確認
     expect(createServerClientMock).toHaveBeenCalledWith(
       "https://example.supabase.co",
-      "anon-key",
+      "publishable-key",
       expect.objectContaining({ cookies: expect.any(Object) })
     );
     // 生成したクライアントがそのまま返ることを確認
@@ -561,7 +561,7 @@ describe("supabase-server module", () => {
 
   it("getServerCurrentUser: 正常系/異常系", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key";
 
     const cookieStore = { getAll: jest.fn(() => []), set: jest.fn() };
     cookiesMock.mockResolvedValue(cookieStore);
