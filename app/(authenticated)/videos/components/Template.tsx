@@ -1,9 +1,7 @@
 import { VideoCard } from "./VideoCard";
+import { VideoCollection } from "./VideoCollection";
 import { PageTitle } from "@/app/components/PageTitle";
 import { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
-import CategoryLink from "@/app/(authenticated)/components/CategoryLink";
-import ContentMgrNewButton from "@/app/(authenticated)/components/ContentMgrNewButton";
-import { CONTENT_TYPE } from "@/app/constants/content";
 
 interface VideosPageTemplateProps {
   videos: VideoWithCategoryType[];
@@ -20,58 +18,32 @@ export function VideosPageTemplate({
 }: VideosPageTemplateProps) {
   const videoCategoryNames = new Set(videos.map(video => video.category?.name));
   const existingCategories = categories.filter(category => videoCategoryNames.has(category.name));
-
-  return (
-    <>
-      <div className="sticky top-0 z-10 bg-white">
-        <PageTitle>動画一覧</PageTitle>
-        {isContentMgr && (
-          <div className="mt-4 flex justify-end">
-            <ContentMgrNewButton type={CONTENT_TYPE.VIDEO} categories={categories} userId={userId}>
-              新規登録
-            </ContentMgrNewButton>
-          </div>
-        )}
-
-        <div className="mb-4 py-4 flex flex-wrap items-center">
-          <CategoryLink
-            categories={existingCategories.map(category => ({
-              id: category.id,
-              name: category.name,
-            }))}
+  const sections = existingCategories.map(category => {
+    const categoryVideos = videos.filter(video => video.category?.name === category.name);
+    return {
+      category,
+      videos: categoryVideos,
+      cards: categoryVideos.map(video => (
+        <div key={video.id} className="w-full">
+          <VideoCard
+            video={video}
+            isContentMgr={isContentMgr}
+            categories={categories}
+            userId={userId}
           />
         </div>
-      </div>
+      )),
+    };
+  });
 
-      <div>
-        {existingCategories.map(category => (
-          <div key={category.id} className="mb-12">
-            <h2 id={`category-${category.id}`} className="scroll-mt-40">
-              {category.name}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8 px-4">
-              {videos
-                .filter(video => video.category?.name === category.name)
-                .map(video => (
-                  <div key={video.id} className="w-full">
-                    <VideoCard
-                      video={video}
-                      isContentMgr={isContentMgr}
-                      categories={categories}
-                      userId={userId}
-                    />
-                  </div>
-                ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="text-left mt-8 mb-4">
-        <a href="#" className="text-blue-600">
-          TOPへ
-        </a>
-      </div>
-    </>
+  return (
+    <VideoCollection
+      sections={sections}
+      categories={categories}
+      isContentMgr={isContentMgr}
+      userId={userId}
+    >
+      <PageTitle>動画一覧</PageTitle>
+    </VideoCollection>
   );
 }
