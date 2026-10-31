@@ -25,10 +25,18 @@ export function formatVideoUpdatedDate(timestamp: string): string {
   const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(timestamp);
   const date = new Date(hasTimezone ? timestamp : `${timestamp}Z`);
 
-  return date.toLocaleDateString("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return date
+    .toLocaleDateString("ja-JP", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .replaceAll("/", "-");
+}
+
+export function formatVideoDuration(seconds: number | null): string {
+  return seconds
+    ? `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`
+    : "未設定";
 }

@@ -5,7 +5,8 @@ import { Table, Text } from "@mantine/core";
 import type { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
 import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
-import { formatVideoUpdatedDate, getVideoThumbnailUrl } from "../utils";
+import { getVideoThumbnailUrl } from "../utils";
+import { VideoDuration, VideoUpdatedDate } from "./VideoMetadata";
 
 interface VideoListItemProps {
   video: VideoWithCategoryType;
@@ -15,11 +16,6 @@ interface VideoListItemProps {
 }
 
 export function VideoListItem({ video, categories, isContentMgr, userId }: VideoListItemProps) {
-  const updatedDate = formatVideoUpdatedDate(video.updated_at);
-  const duration = video.length
-    ? `${Math.floor(video.length / 60)}:${(video.length % 60).toString().padStart(2, "0")}`
-    : "未設定";
-
   return (
     <Table.Tr>
       <Table.Td>
@@ -45,21 +41,20 @@ export function VideoListItem({ video, categories, isContentMgr, userId }: Video
           {video.description}
         </Text>
       </Table.Td>
-      <Table.Td className="[overflow-wrap:anywhere]">{video.category?.name}</Table.Td>
       <Table.Td>
-        <time dateTime={video.updated_at}>{updatedDate}</time>
+        <VideoUpdatedDate timestamp={video.updated_at} />
       </Table.Td>
-      <Table.Td>{duration}</Table.Td>
+      <Table.Td>
+        <VideoDuration seconds={video.length} />
+      </Table.Td>
       {isContentMgr && (
         <Table.Td>
-          <div role="group" aria-label={`${video.name}の管理メニュー`}>
-            <ContentMgrMenu<VideoWithCategoryType>
-              type={CONTENT_TYPE.VIDEO}
-              content={video}
-              categories={categories}
-              userId={userId}
-            />
-          </div>
+          <ContentMgrMenu<VideoWithCategoryType>
+            type={CONTENT_TYPE.VIDEO}
+            content={video}
+            categories={categories}
+            userId={userId}
+          />
         </Table.Td>
       )}
     </Table.Tr>

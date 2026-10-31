@@ -458,9 +458,11 @@ sequenceDiagram
 リスト表示：
 
 - サムネイル（30px以下）、動画名、説明文
-- 分類名
 - 更新日、再生時間
 - 管理操作（管理者・メンテナーのみ）
+
+一覧・詳細の更新日は日本時間（Asia/Tokyo）の `YYYY-MM-DD`、再生時間は `分:秒`（秒は2桁）で表示する。
+リストの再生時間が未設定または0の場合は「未設定」と表示する。
 
 ### 5.4 画面レイアウト
 
@@ -502,9 +504,9 @@ sequenceDiagram
 
 ### 5.6 リストデザイン
 
-| 画像     | 動画名   | 説明 | 分類   | 更新日 | 再生時間 | 操作     |
-| -------- | -------- | ---- | ------ | ------ | -------- | -------- |
-| 30px以下 | タイトル | 説明 | 分類名 | 日付   | 分:秒    | メニュー |
+| 画像     | 動画名   | 説明 | 更新日 | 再生時間 | 操作     |
+| -------- | -------- | ---- | ------ | -------- | -------- |
+| 30px以下 | タイトル | 説明 | 日付   | 分:秒    | メニュー |
 
 ### 5.7 動画詳細デザイン
 
@@ -762,7 +764,7 @@ sequenceDiagram
 ### 7.5 データ取得
 
 - usersテーブルから以下のカラムを取得：
-  - ユーザー基本情報: `id, display_name, bio, avatar_url, profile_image_path`
+  - ユーザー基本情報: `id, display_name, role, bio, avatar_url, profile_image_path`
   - 関連URL情報: `x_url, facebook_url, instagram_url, github_url, portfolio_url`
   - 関連テーブル: `position_tags（position_id, positions（id, name, is_deleted））`
 - 取得条件：

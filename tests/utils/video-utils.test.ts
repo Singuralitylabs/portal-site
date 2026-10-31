@@ -1,4 +1,5 @@
 import {
+  formatVideoDuration,
   formatVideoUpdatedDate,
   getVideoThumbnailUrl,
 } from "../../app/(authenticated)/videos/utils";
@@ -41,7 +42,7 @@ describe("formatVideoUpdatedDate", () => {
       process.env.TZ = "Asia/Tokyo";
       const jstEnvironmentDate = formatVideoUpdatedDate("2026-10-15T18:00:00");
 
-      expect(utcEnvironmentDate).toBe("2026/10/16");
+      expect(utcEnvironmentDate).toBe("2026-10-16");
       expect(jstEnvironmentDate).toBe(utcEnvironmentDate);
     } finally {
       if (originalTimezone === undefined) {
@@ -53,6 +54,18 @@ describe("formatVideoUpdatedDate", () => {
   });
 
   it("明示されたタイムゾーンを保持して日本日付に変換する", () => {
-    expect(formatVideoUpdatedDate("2026-10-15T18:00:00+00:00")).toBe("2026/10/16");
+    expect(formatVideoUpdatedDate("2026-10-15T18:00:00+00:00")).toBe("2026-10-16");
+  });
+});
+
+describe("formatVideoDuration", () => {
+  it.each([
+    [null, "未設定"],
+    [0, "未設定"],
+    [9, "0:09"],
+    [60, "1:00"],
+    [3661, "61:01"],
+  ])("%s秒を%sに整形する", (seconds, expected) => {
+    expect(formatVideoDuration(seconds)).toBe(expected);
   });
 });
