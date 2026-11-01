@@ -125,10 +125,15 @@ function assertListIsUpToDate() {
 // 固定文字列にせず、実行中のコンテナから動的に見つける。
 function findDbContainer() {
   const result = run("docker", ["ps", "--filter", "name=supabase_db_", "--format", "{{.Names}}"]);
+  // docker ps自体の失敗（Docker未起動・未インストール）は、コンテナが無い場合と分けて案内する
+  if (result.error || result.status !== 0) {
+    console.error("Dockerに接続できません。Docker Desktopが起動しているか確認してください。");
+    process.exit(1);
+  }
   const names = (result.stdout || "").trim().split("\n").filter(Boolean);
   if (names.length === 0) {
     console.error(
-      "ローカルSupabaseのDBコンテナが見つかりません。先に `supabase start` を実行してください。"
+      "ローカルSupabaseのDBコンテナが見つかりません。先に `npx supabase start` を実行してください。"
     );
     process.exit(1);
   }
@@ -137,7 +142,7 @@ function findDbContainer() {
   if (names.length > 1) {
     console.error(
       "ローカルSupabaseのDBコンテナが複数起動しているため、適用先を特定できません。\n" +
-        "このリポジトリ以外のSupabaseを `supabase stop` で停止してから、再実行してください。\n  " +
+        "このリポジトリ以外のSupabaseを `npx supabase stop` で停止してから、再実行してください。\n  " +
         names.join("\n  ")
     );
     process.exit(1);
@@ -170,6 +175,8 @@ function applyFile(containerName, relativePath) {
     console.error(`\n適用に失敗しました: ${relativePath}`);
     if (result.stdout) process.stdout.write(result.stdout);
     if (result.stderr) process.stderr.write(result.stderr);
+    // 失敗より前のファイルは適用済みのまま残るため、そのまま再実行すると「すでに存在する」エラーになる
+    console.error("\n`npx supabase db reset` で空に戻してから、再実行してください。");
     process.exit(result.status ?? 1);
   }
 
