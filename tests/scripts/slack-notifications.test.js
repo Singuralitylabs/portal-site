@@ -203,6 +203,7 @@ describe("Slack webhook", () => {
 
   afterEach(() => {
     global.fetch = originalFetch;
+    jest.restoreAllMocks();
   });
 
   test("sends JSON without changing the message", async () => {
@@ -212,7 +213,26 @@ describe("Slack webhook", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: '通知 "test"' }),
+      signal: expect.any(AbortSignal),
     });
+  });
+
+  test("rejects when the request timeout aborts fetch", async () => {
+    const controller = new AbortController();
+    const timeout = jest.spyOn(AbortSignal, "timeout").mockReturnValue(controller.signal);
+    global.fetch = jest.fn(
+      (_url, { signal }) =>
+        new Promise((resolve, reject) => {
+          signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+        })
+    );
+
+    const request = sendSlackNotification("https://example.invalid/webhook", "test");
+    controller.abort(new DOMException("The operation timed out", "TimeoutError"));
+
+    await expect(request).rejects.toMatchObject({ name: "TimeoutError" });
+    expect(timeout).toHaveBeenCalledWith(10_000);
+    expect(global.fetch.mock.calls[0][1].signal).toBe(controller.signal);
   });
 
   test("rejects a missing secret without sending", async () => {

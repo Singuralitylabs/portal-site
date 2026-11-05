@@ -1,3 +1,5 @@
+const SLACK_WEBHOOK_TIMEOUT_MS = 10_000;
+
 async function sendSlackNotification(webhookUrl, message) {
   if (!webhookUrl) {
     throw new Error(
@@ -9,6 +11,7 @@ async function sendSlackNotification(webhookUrl, message) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: message }),
+    signal: AbortSignal.timeout(SLACK_WEBHOOK_TIMEOUT_MS),
   });
 
   if (!response.ok) {
