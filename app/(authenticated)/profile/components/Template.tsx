@@ -6,6 +6,7 @@ import { notifications } from "@mantine/notifications";
 import { User } from "lucide-react";
 import { useState, useEffect, useTransition, useRef } from "react";
 import { PositionType, ProfileUserType } from "@/app/types";
+import { USER_ROLE } from "@/app/constants/user";
 import { validateUrls } from "@/app/utils/url-validation";
 import { useProfileImage } from "@/app/providers/profile-image-provider";
 
@@ -329,14 +330,26 @@ export function ProfilePageTemplate({
             </div>
 
             <div>
-              <MultiSelect
-                label="活動チーム、役割など"
-                data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
-                value={selectedPositionIds.map(String)}
-                onChange={values => setSelectedPositionIds(values.map(Number))}
-                placeholder="選択してください"
-                clearable
-              />
+              {(() => {
+                const isEditable =
+                  user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.MAINTAINER;
+                const hasData = selectedPositionIds.length > 0;
+                const placeholder = !hasData ? (isEditable ? "選択してください" : "設定なし") : "";
+
+                return (
+                  <MultiSelect
+                    label="活動チーム、役割など"
+                    data={allPositions.map(p => ({ value: String(p.id), label: p.name }))}
+                    value={selectedPositionIds.map(String)}
+                    onChange={
+                      isEditable ? values => setSelectedPositionIds(values.map(Number)) : undefined
+                    }
+                    placeholder={placeholder}
+                    disabled={!isEditable}
+                    clearable={isEditable}
+                  />
+                );
+              })()}
             </div>
 
             <div>
