@@ -66,7 +66,7 @@ export function DocumentFormModal({
     const supabase = createClientSupabaseClient();
     const fetchUsers = async () => {
       const { data } = await supabase
-        .from("users")
+        .from("member_profiles")
         .select("id, display_name")
         .order("display_name");
 

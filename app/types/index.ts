@@ -84,19 +84,16 @@ export type UserStatusType = "pending" | "active" | "rejected";
 export type UserActionType = "approve" | "reject" | "delete";
 export type UserRoleType = "admin" | "maintainer" | "member";
 
-export type MemberType = Pick<
-  UserType,
-  | "id"
-  | "display_name"
-  | "bio"
-  | "avatar_url"
-  | "profile_image_path"
-  | "x_url"
-  | "facebook_url"
-  | "instagram_url"
-  | "github_url"
-  | "portfolio_url"
-> & {
+// member_profiles ビュー（公開列のみ・email/auth_id/role/status非公開）のRow型。
+// ビューのRowは全列nullableで生成されるため、ビュー定義（users由来のNOT NULL列）に合わせて
+// id / display_name のみ非nullに絞る。
+type MemberProfilesRow = Database["public"]["Views"]["member_profiles"]["Row"];
+export type MemberProfileType = Omit<MemberProfilesRow, "id" | "display_name"> & {
+  id: number;
+  display_name: string;
+};
+
+export type MemberType = MemberProfileType & {
   position_tags: {
     positions: {
       id: number;
