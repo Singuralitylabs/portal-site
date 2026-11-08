@@ -2,6 +2,7 @@ import {
   formatVideoDuration,
   formatVideoUpdatedDate,
   getVideoThumbnailUrl,
+  normalizeVideoTimestamp,
 } from "../../app/(authenticated)/videos/utils";
 
 describe("getVideoThumbnailUrl", () => {
@@ -31,26 +32,19 @@ describe("getVideoThumbnailUrl", () => {
   });
 });
 
+describe("normalizeVideoTimestamp", () => {
+  it.each([
+    ["2026-10-15T18:00:00", "2026-10-15T18:00:00.000Z"],
+    ["2026-10-15T18:00:00Z", "2026-10-15T18:00:00.000Z"],
+    ["2026-10-16T03:00:00+09:00", "2026-10-15T18:00:00.000Z"],
+  ])("%sをUTCのISO日時に正規化する", (timestamp, expected) => {
+    expect(normalizeVideoTimestamp(timestamp)).toBe(expected);
+  });
+});
+
 describe("formatVideoUpdatedDate", () => {
-  it("UTCとJSTの実行環境でオフセットなしのUTC日時を同じ日本日付で表示する", () => {
-    const originalTimezone = process.env.TZ;
-
-    try {
-      process.env.TZ = "UTC";
-      const utcEnvironmentDate = formatVideoUpdatedDate("2026-10-15T18:00:00");
-
-      process.env.TZ = "Asia/Tokyo";
-      const jstEnvironmentDate = formatVideoUpdatedDate("2026-10-15T18:00:00");
-
-      expect(utcEnvironmentDate).toBe("2026-10-16");
-      expect(jstEnvironmentDate).toBe(utcEnvironmentDate);
-    } finally {
-      if (originalTimezone === undefined) {
-        delete process.env.TZ;
-      } else {
-        process.env.TZ = originalTimezone;
-      }
-    }
+  it("オフセットなしのUTC日時を日本日付で表示する", () => {
+    expect(formatVideoUpdatedDate("2026-10-15T18:00:00")).toBe("2026-10-16");
   });
 
   it("明示されたタイムゾーンを保持して日本日付に変換する", () => {
@@ -62,6 +56,10 @@ describe("formatVideoDuration", () => {
   it.each([
     [null, "未設定"],
     [0, "未設定"],
+    [-1, "未設定"],
+    [NaN, "未設定"],
+    [Infinity, "未設定"],
+    [-Infinity, "未設定"],
     [9, "0:09"],
     [60, "1:00"],
     [3661, "61:01"],

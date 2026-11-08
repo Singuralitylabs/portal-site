@@ -1,7 +1,9 @@
-import { formatVideoDuration, formatVideoUpdatedDate } from "../utils";
+import { formatVideoDuration, formatVideoUpdatedDate, normalizeVideoTimestamp } from "../utils";
 
 export function VideoUpdatedDate({ timestamp }: { timestamp: string }) {
-  return <time dateTime={timestamp}>{formatVideoUpdatedDate(timestamp)}</time>;
+  return (
+    <time dateTime={normalizeVideoTimestamp(timestamp)}>{formatVideoUpdatedDate(timestamp)}</time>
+  );
 }
 
 export function VideoDuration({ seconds }: { seconds: number | null }) {

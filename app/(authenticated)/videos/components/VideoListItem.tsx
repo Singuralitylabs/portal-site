@@ -22,6 +22,7 @@ export function VideoListItem({ video, categories, isContentMgr, userId }: Video
         <Image
           src={getVideoThumbnailUrl(video)}
           alt=""
+          aria-hidden="true"
           width={30}
           height={17}
           sizes="30px"

@@ -16,10 +16,19 @@ export function VideosPageTemplate({
   isContentMgr,
   userId,
 }: VideosPageTemplateProps) {
-  const videoCategoryNames = new Set(videos.map(video => video.category?.name));
-  const existingCategories = categories.filter(category => videoCategoryNames.has(category.name));
+  const videosByCategory = new Map<string | undefined, VideoWithCategoryType[]>();
+  for (const video of videos) {
+    const categoryName = video.category?.name;
+    const categoryVideos = videosByCategory.get(categoryName);
+    if (categoryVideos) {
+      categoryVideos.push(video);
+    } else {
+      videosByCategory.set(categoryName, [video]);
+    }
+  }
+  const existingCategories = categories.filter(category => videosByCategory.has(category.name));
   const sections = existingCategories.map(category => {
-    const categoryVideos = videos.filter(video => video.category?.name === category.name);
+    const categoryVideos = videosByCategory.get(category.name) ?? [];
     return {
       category,
       videos: categoryVideos,

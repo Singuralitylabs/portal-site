@@ -21,9 +21,13 @@ export function getVideoThumbnailUrl(
     : "/default_video_thumbnail.png";
 }
 
-export function formatVideoUpdatedDate(timestamp: string): string {
+export function normalizeVideoTimestamp(timestamp: string): string {
   const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(timestamp);
-  const date = new Date(hasTimezone ? timestamp : `${timestamp}Z`);
+  return new Date(hasTimezone ? timestamp : `${timestamp}Z`).toISOString();
+}
+
+export function formatVideoUpdatedDate(timestamp: string): string {
+  const date = new Date(normalizeVideoTimestamp(timestamp));
 
   return date
     .toLocaleDateString("ja-JP", {
@@ -36,7 +40,7 @@ export function formatVideoUpdatedDate(timestamp: string): string {
 }
 
 export function formatVideoDuration(seconds: number | null): string {
-  return seconds
-    ? `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`
-    : "未設定";
+  if (seconds === null || !Number.isFinite(seconds) || seconds <= 0) return "未設定";
+
+  return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
