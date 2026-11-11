@@ -29,7 +29,27 @@ describe("fetchMasterManagementData", () => {
     jest.clearAllMocks();
   });
 
-  it("users 参照がRLSで0件になる論理削除ユーザーは退会済みユーザーとして扱う", async () => {
+  it.each([
+    {
+      name: "在籍会員の参照を公開プロフィールの表示名で解決する",
+      profiles: [{ id: 999, display_name: "担当者" }],
+      expectedLabel: "担当者",
+    },
+    {
+      name: "公開プロフィールに存在しない会員を退会済みユーザーとして扱う",
+      profiles: [],
+      expectedLabel: "退会済みユーザー",
+    },
+    {
+      name: "ID または表示名が null のプロフィールを参照マップから除外する",
+      profiles: [
+        { id: null, display_name: "担当者" },
+        { id: 999, display_name: null },
+      ],
+      expectedLabel: "退会済みユーザー",
+    },
+  ])("$name", async ({ profiles, expectedLabel }) => {
+    const profilesBuilder = createInBuilder({ data: profiles, error: null });
     const supabase = createSupabase({
       documents: createOrderBuilder({
         data: [
@@ -55,7 +75,7 @@ describe("fetchMasterManagementData", () => {
       categories: createOrderBuilder({ data: [{ id: 10, name: "共通" }], error: null }),
       applications: createOrderBuilder({ data: [], error: null }),
       positions: createOrderBuilder({ data: [], error: null }),
-      users: createInBuilder({ data: [], error: null }),
+      member_profiles: profilesBuilder,
     });
     createServerSupabaseClientMock.mockResolvedValue(supabase);
 
@@ -64,8 +84,11 @@ describe("fetchMasterManagementData", () => {
     expect(result.error).toBeNull();
     const documents = result.data?.tables.find(table => table.tableName === "documents");
     const assignee = documents?.records[0].fields.find(field => field.key === "assignee_id");
-    // users テーブルでは論理削除レコードが RLS で非表示になるため、参照 0 件として扱う。
-    expect(assignee?.referenceLabel).toBe("退会済みユーザー");
+    expect(assignee?.referenceLabel).toBe(expectedLabel);
+    expect(supabase.from).toHaveBeenCalledWith("member_profiles");
+    expect(supabase.from).not.toHaveBeenCalledWith("users");
+    expect(profilesBuilder.select).toHaveBeenCalledWith("id, display_name");
+    expect(profilesBuilder.in).toHaveBeenCalledWith("id", [999]);
   });
 
   it("マスター本体テーブルの取得エラーは後続処理を行わず返す", async () => {
@@ -107,7 +130,7 @@ describe("fetchMasterManagementData", () => {
     consoleError.mockRestore();
   });
 
-  it("users 参照の取得エラーはデータ取得エラーとして返す", async () => {
+  it("member_profiles 参照の取得エラーはデータ取得エラーとして返す", async () => {
     const usersError = { message: "users failed" };
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const supabase = createSupabase({
@@ -135,7 +158,7 @@ describe("fetchMasterManagementData", () => {
         error: null,
       }),
       positions: createOrderBuilder({ data: [], error: null }),
-      users: createInBuilder({ data: null, error: usersError }),
+      member_profiles: createInBuilder({ data: null, error: usersError }),
     });
     createServerSupabaseClientMock.mockResolvedValue(supabase);
 

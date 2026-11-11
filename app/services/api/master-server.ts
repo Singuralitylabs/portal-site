@@ -5,10 +5,14 @@ import {
   MasterFieldValue,
   MasterTableName,
 } from "@/app/constants/master";
+import { Database } from "@/app/types/lib/database.types";
 import { createServerSupabaseClient } from "./supabase-server";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createServerSupabaseClient>>;
-type UserReferenceRow = { id: number; display_name: string };
+type UserReferenceRow = Pick<
+  Database["public"]["Views"]["member_profiles"]["Row"],
+  "id" | "display_name"
+>;
 const MASTER_RECORD_FETCH_LIMIT = 1000;
 
 type RawMasterRecord = Record<string, MasterFieldValue> & { id: number };
@@ -130,7 +134,7 @@ async function fetchReferenceMaps(
 
   const users: { data: UserReferenceRow[] | null; error: PostgrestError | null } =
     userIds.length > 0
-      ? await supabase.from("users").select("id, display_name").in("id", userIds)
+      ? await supabase.from("member_profiles").select("id, display_name").in("id", userIds)
       : { data: [], error: null };
 
   const error = users.error;
@@ -144,7 +148,11 @@ async function fetchReferenceMaps(
       categories: new Map(
         rowsByTable.categories.map(category => [category.id, String(category.name)])
       ),
-      users: new Map((users.data ?? []).map(user => [user.id, user.display_name])),
+      users: new Map(
+        (users.data ?? []).flatMap(user =>
+          user.id !== null && user.display_name !== null ? [[user.id, user.display_name]] : []
+        )
+      ),
     },
     error: null,
   };

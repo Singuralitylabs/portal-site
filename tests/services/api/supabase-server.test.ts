@@ -275,13 +275,17 @@ describe("server API services", () => {
       // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
       const builder = createEqTerminatingBuilder(1, result);
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: jest.fn() })) };
+      const fromMock = jest.fn(() => builder);
       createServerSupabaseClientMock.mockResolvedValue({
-        from: jest.fn(() => builder),
+        from: fromMock,
         storage: storageMock,
       });
 
       const response = await fetchActiveUsers();
 
+      expect(fromMock).toHaveBeenCalledWith("member_profiles");
+      expect(builder.select).toHaveBeenCalledWith(expect.stringContaining("is_leadership"));
+      expect(builder.select).not.toHaveBeenCalledWith(expect.stringContaining("role"));
       // 非削除の position_tags のみを含む整形結果が返ることを確認
       // profile_image_path が null の場合 profile_image_url も null になることを確認
       expect(response).toEqual({
