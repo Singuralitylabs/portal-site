@@ -40,7 +40,7 @@ export function VideoCard({ video, isContentMgr, categories, userId }: VideoCard
     >
       <Card.Section component="a" href={`/videos/${video.id}`}>
         {isContentMgr && (
-          <div style={{ position: "absolute", top: "8px", right: "8px", zIndex: 10 }}>
+          <div style={{ position: "absolute", top: "8px", right: "8px", zIndex: 1 }}>
             <ContentMgrMenu<VideoWithCategoryType>
               type={CONTENT_TYPE.VIDEO}
               content={video}
