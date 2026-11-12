@@ -1,0 +1,75 @@
+name: Supabase Keep Alive
+
+# Supabase無料プランの自動Pause（7日間を通したDBアクティビティ不足）を防ぐため、定期的にDBへ軽量クエリを送るワークフロー
+# 設計: docs/ci-cd-design.md「6. Supabase Keep Alive」
+on:
+  # 1日2回（JST 9:00 / 21:00）実行
+  schedule:
+    - cron: "0 0,12 * * *"
+  # 手動実行（動作確認用）
+  workflow_dispatch:
+  # 【一時】PR上で動作確認するためのトリガー。マージ前に削除する（#456）
+  pull_request:
+    paths:
+      - ".github/workflows/supabase-keep-alive.yml"
+
+# リポジトリ操作を行わず、checkout も不要なため権限を付与しない
+permissions: {}
+
+jobs:
+  keep-alive:
+    name: Keep alive (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      # 片方のプロジェクトの失敗で、もう片方の実行を止めない
+      fail-fast: false
+      matrix:
+        target: [production, development]
+        include:
+          - target: production
+            secret_suffix: PRODUCTION
+          - target: development
+            secret_suffix: DEVELOPMENT
+    env:
+      # 未設定時のエラーメッセージに表示する Secret 名
+      URL_SECRET_NAME: SUPABASE_URL_${{ matrix.secret_suffix }}
+      KEY_SECRET_NAME: SUPABASE_PUBLISHABLE_KEY_${{ matrix.secret_suffix }}
+      # ターゲットごとの Project URL / Publishable key（GitHub Secrets）
+      SUPABASE_URL: ${{ secrets[format('SUPABASE_URL_{0}', matrix.secret_suffix)] }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets[format('SUPABASE_PUBLISHABLE_KEY_{0}', matrix.secret_suffix)] }}
+
+    steps:
+      # 必須設定（Secrets）の有無を確認し、後続ステップの実行可否を決定
+      - name: Check Supabase configuration
+        run: |
+          missing=""
+          if [ -z "$SUPABASE_URL" ]; then
+            missing="$URL_SECRET_NAME"
+          fi
+          if [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            missing="${missing:+$missing / }$KEY_SECRET_NAME"
+          fi
+
+          if [ -n "$missing" ]; then
+            echo "::error::必須パラメータが未設定です。${missing}（Secret）を設定してください。"
+            echo ""
+            echo "::error::[対応方法]"
+            echo "::error::1. Supabase側で値を確認する（${{ matrix.target }} 用のプロジェクト）"
+            echo "::error::   - Project Settings > API Keys > Publishable and secret API keys で Publishable key（sb_publishable_...）を確認"
+            echo "::error::   - 未発行の場合は Create new API keys で発行（既存の anon / service_role キーはそのまま動作する）"
+            echo "::error::   - Project URL（https://<project-ref>.supabase.co）を確認"
+            echo "::error::2. GitHubリポジトリで値を設定する"
+            echo "::error::   - Settings > Secrets and variables > Actions > Secrets"
+            echo "::error::     - ${URL_SECRET_NAME} / ${KEY_SECRET_NAME} を登録"
+            echo "::error::3. 設定後にこのワークフローを再実行する"
+            exit 1
+          fi
+
+      # PostgREST 経由で軽量な SELECT を実行し、DB アクティビティを発生させる
+      # Publishable key は JWT ではないため apikey ヘッダーのみに設定する（Authorization ヘッダーは付けない）
+      - name: Ping Supabase database
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 10 \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            "$SUPABASE_URL/rest/v1/categories?select=id&limit=1" > /dev/null

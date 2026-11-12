@@ -90,7 +90,7 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
 | [`create-release.yml`](../.github/workflows/create-release.yml)                   | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
 | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | `contents: read`                         | Wiki 更新イベントを受けて Slack 通知するために必要               |
-| `supabase-keep-alive.yml`                                                         | なし（`permissions: {}`）                | リポジトリ操作を行わず、checkout も不要                          |
+| [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)         | なし（`permissions: {}`）                | リポジトリ操作を行わず、checkout も不要                          |
 
 **Secrets:**
 
@@ -101,10 +101,10 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | `FORK_SYNC_TOKEN`                      | フォーク同期用トークン                                                 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                             | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                                                                                                                             |
 | `SUPABASE_ACCESS_TOKEN`                | Supabase 接続用トークン                                                | [`db-types.yml`](../.github/workflows/db-types.yml)                               |                                                                                                                                                                                                                        |
 | `SLACK_WEBHOOK_URL`                    | Wiki 更新通知ワークフローで利用する Slack Incoming Webhook URL         | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml) | GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.development` / ホスティング環境変数） |
-| `SUPABASE_URL_PRODUCTION`              | 本番用 Supabase プロジェクトの Project URL                             | `supabase-keep-alive.yml`                                                         | 登録手順は [6.4](#64-secrets-の登録手順) を参照                                                                                                                                                                        |
-| `SUPABASE_PUBLISHABLE_KEY_PRODUCTION`  | 本番用 Supabase プロジェクトの Publishable key（`sb_publishable_...`） | `supabase-keep-alive.yml`                                                         | レガシーの anon key は使用しない。理由は [6.3](#63-api-キーの方針) を参照                                                                                                                                              |
-| `SUPABASE_URL_DEVELOPMENT`             | 開発用 Supabase プロジェクトの Project URL                             | `supabase-keep-alive.yml`                                                         |                                                                                                                                                                                                                        |
-| `SUPABASE_PUBLISHABLE_KEY_DEVELOPMENT` | 開発用 Supabase プロジェクトの Publishable key（`sb_publishable_...`） | `supabase-keep-alive.yml`                                                         |                                                                                                                                                                                                                        |
+| `SUPABASE_URL_PRODUCTION`              | 本番用 Supabase プロジェクトの Project URL                             | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)         | 登録手順は [6.4](#64-secrets-の登録手順) を参照                                                                                                                                                                        |
+| `SUPABASE_PUBLISHABLE_KEY_PRODUCTION`  | 本番用 Supabase プロジェクトの Publishable key（`sb_publishable_...`） | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)         | レガシーの anon key は使用しない。理由は [6.3](#63-api-キーの方針) を参照                                                                                                                                              |
+| `SUPABASE_URL_DEVELOPMENT`             | 開発用 Supabase プロジェクトの Project URL                             | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)         |                                                                                                                                                                                                                        |
+| `SUPABASE_PUBLISHABLE_KEY_DEVELOPMENT` | 開発用 Supabase プロジェクトの Publishable key（`sb_publishable_...`） | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)         |                                                                                                                                                                                                                        |
 
 **Variables:**
 
@@ -238,7 +238,7 @@ Wiki が更新されました
 
 ## 6. Supabase Keep Alive
 
-> **ステータス**: 設計段階（[#456](https://github.com/Singuralitylabs/portal-site/issues/456)）。本セクションの合意後に、ワークフロー `.github/workflows/supabase-keep-alive.yml` を別 PR で追加する。
+ワークフロー定義: [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)（[#456](https://github.com/Singuralitylabs/portal-site/issues/456)）
 
 Supabase 無料プランのプロジェクトは、直近 7 日間のユーザー由来の DB アクティビティが乏しいと自動で Pause される（[Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing)）。Pause されるとポータルが利用不能になり、復旧には Dashboard からの手動 Restore が必要になる。
 
