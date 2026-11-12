@@ -263,22 +263,29 @@ describe("server API services", () => {
             github_url: null,
             portfolio_url: null,
             position_tags: [
-              { positions: { id: 1, name: "dev", is_deleted: false } },
-              { positions: { id: 2, name: "old", is_deleted: true } },
+              { positions: { id: 1, name: "dev", is_deleted: false, is_leadership: true } },
+              { positions: { id: 2, name: "staff", is_deleted: false, is_leadership: false } },
+              { positions: { id: 3, name: "old", is_deleted: true, is_leadership: true } },
             ],
           },
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       const storageMock = { from: jest.fn(() => ({ createSignedUrls: jest.fn() })) };
+      const fromMock = jest.fn(() => builder);
       createServerSupabaseClientMock.mockResolvedValue({
-        from: jest.fn(() => builder),
+        from: fromMock,
         storage: storageMock,
       });
 
       const response = await fetchActiveUsers();
 
+      expect(fromMock).toHaveBeenCalledWith("member_profiles");
+      expect(builder.select).toHaveBeenCalledWith(expect.stringContaining("is_leadership"));
+      expect(builder.select).not.toHaveBeenCalledWith(expect.stringContaining("role"));
       // 非削除の position_tags のみを含む整形結果が返ることを確認
       // profile_image_path が null の場合 profile_image_url も null になることを確認
       expect(response).toEqual({
@@ -286,7 +293,17 @@ describe("server API services", () => {
           expect.objectContaining({
             id: 1,
             profile_image_url: null,
-            position_tags: [{ positions: { id: 1, name: "dev", is_deleted: false } }],
+            position_tags: [
+              { positions: { id: 1, name: "dev", is_deleted: false, is_leadership: true } },
+              {
+                positions: {
+                  id: 2,
+                  name: "staff",
+                  is_deleted: false,
+                  is_leadership: false,
+                },
+              },
+            ],
           }),
         ],
         error: null,
@@ -314,7 +331,9 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [{ path: "auth-2/avatar.png", signedUrl: "https://signed.url/img", error: null }],
       });
@@ -353,7 +372,9 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       const createSignedUrlsMock = jest
         .fn()
         .mockResolvedValue({ data: null, error: { message: "Storage一時障害" } });
@@ -392,7 +413,9 @@ describe("server API services", () => {
         ],
         error: null,
       };
-      const builder = createEqTerminatingBuilder(3, result);
+      // member_profiles ビューは status/is_deleted のフィルタをビュー定義側に内包するため、
+      // アプリ側の .eq() 呼び出しは position_tags.positions.is_deleted の1回のみ
+      const builder = createEqTerminatingBuilder(1, result);
       // トップレベルの error は null だが、要素単位で error が返るケース
       const createSignedUrlsMock = jest.fn().mockResolvedValue({
         data: [
@@ -531,7 +554,7 @@ describe("supabase-server module", () => {
 
   it("createServerSupabaseClient: 環境変数を利用してクライアントを生成する", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key";
 
     const cookieStore = { getAll: jest.fn(() => []), set: jest.fn() };
     cookiesMock.mockResolvedValue(cookieStore);
@@ -541,10 +564,10 @@ describe("supabase-server module", () => {
 
     const response = await supabaseServerActual.createServerSupabaseClient();
 
-    // createServerClient が URL/ANON KEY と cookie ハンドラで呼ばれることを確認
+    // createServerClient が URL/Publishable key と cookie ハンドラで呼ばれることを確認
     expect(createServerClientMock).toHaveBeenCalledWith(
       "https://example.supabase.co",
-      "anon-key",
+      "publishable-key",
       expect.objectContaining({ cookies: expect.any(Object) })
     );
     // 生成したクライアントがそのまま返ることを確認
@@ -553,7 +576,7 @@ describe("supabase-server module", () => {
 
   it("getServerCurrentUser: 正常系/異常系", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key";
 
     const cookieStore = { getAll: jest.fn(() => []), set: jest.fn() };
     cookiesMock.mockResolvedValue(cookieStore);

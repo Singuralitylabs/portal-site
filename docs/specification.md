@@ -749,13 +749,12 @@ sequenceDiagram
 
 ### 7.5 データ取得
 
-- usersテーブルから以下のカラムを取得：
-  - ユーザー基本情報: `id, display_name, role, bio, avatar_url, profile_image_path`
+- member_profilesビュー（公開列のみ・email/auth_id/role/status非公開）から以下のカラムを取得：
+  - ユーザー基本情報: `id, display_name, bio, avatar_url, profile_image_path`
   - 関連URL情報: `x_url, facebook_url, instagram_url, github_url, portfolio_url`
   - 関連テーブル: `position_tags（position_id, positions（id, name, is_deleted））`
 - 取得条件：
-  - `status = 'active'`（承認済みメンバーのみ）
-  - `is_deleted = FALSE`（論理削除されていないメンバーのみ）
+  - `status = 'active'`（承認済みメンバーのみ）・`is_deleted = FALSE`（論理削除されていないメンバーのみ）はビュー定義側（`WHERE`句）に組み込み済み
 - 表示分類（フロントエンド側で分類）：
   - 役職者セクション：
     - `is_leadership = TRUE` の役職を持つメンバー
@@ -809,7 +808,7 @@ sequenceDiagram
 - アプリ名
 - 短い紹介文（2行程度）
 - カテゴリータグ
-- 開発者名（usersテーブルのdisplay_name）
+- 開発者名（member_profilesビューのdisplay_name）
 - 「詳細」ボタン
 
 #### 8.3.2 アプリ詳細モーダル
@@ -820,7 +819,7 @@ sequenceDiagram
 - 詳細説明文（全文）
 - サムネイル画像（設定されている場合）
 - カテゴリー情報
-- 開発者名（usersテーブルのdisplay_name）
+- 開発者名（member_profilesビューのdisplay_name）
 - 「アプリを開く」ボタン
 
 ### 8.4 画面レイアウト
@@ -1833,7 +1832,7 @@ sequenceDiagram
 2. 一覧表示
    - 対象テーブルは `documents` / `videos` / `categories` / `applications` / `positions` とし、各テーブルを一覧表示する
    - `users` および `position_tags` はマスター管理画面の対象外とする
-   - 表示するテーブル・カラム・型・リレーションは `app/types/lib/database.types.ts` を正本とし、型検証済みの静的設定またはビルド時生成物として解決する
+   - 表示するテーブル・カラム・型・リレーションは `app/types/lib/database.types.ts` を正本とし、`app/constants/master.ts` に定義した型検証済みの静的設定として解決する
    - 実行時に `app/types/lib/database.types.ts` を読み取って、テーブル・カラム・型・リレーションを動的解決する実装にはしない
    - 論理削除済みレコードも表示対象とし、`is_deleted` によるフィルタリングは行わない
    - データ参照は対象テーブルの Row Level Security（RLS）に従う
@@ -1843,9 +1842,9 @@ sequenceDiagram
 3. 詳細表示
    - 一覧の行を選択すると、対象レコードの詳細情報を参照できる
    - 詳細画面には、レコード詳細と外部キー参照先の表示名を表示する
-   - `users` 参照は表示解決に限り `id` / `display_name` を表示する
-   - `users` クエリが正常終了し、参照先ユーザーのレコードが 0 件の場合は「退会済みユーザー」と表示する（`users` のRLSは論理削除済みレコードを返さないため、0 件の場合は退会済みユーザーとして扱う）
-   - `users` 参照のデータ取得でエラーが発生した場合は、「退会済みユーザー」ではなくデータ取得エラーとして扱う
+   - ユーザー参照の表示解決には `users` テーブルを直接参照せず、公開プロフィールビュー `member_profiles` の `id` / `display_name` のみを参照する
+   - `member_profiles` の取得が正常終了し、参照先ユーザーが含まれない場合は「退会済みユーザー」と表示する（ビューは `status = 'active'` かつ論理削除されていない会員のみを返すため、退会済みに加えて非アクティブな会員も同じ表示とする）
+   - `member_profiles` 参照のデータ取得でエラーが発生した場合は、「退会済みユーザー」ではなくデータ取得エラーとして扱う
 
 ### 13.3 画面レイアウト
 

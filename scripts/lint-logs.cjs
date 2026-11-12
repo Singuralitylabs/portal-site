@@ -7,9 +7,6 @@ const EXTRA_FILES = [path.resolve(__dirname, "..", "middleware.ts")];
 const TARGET_EXTENSIONS = new Set([".ts", ".tsx"]);
 const IGNORE_DIRS = new Set(["node_modules", ".next", "dist"]);
 const ALLOW_LIST = [
-  { file: "app/(auth)/callback/route.ts", includes: '"認証成功:' },
-  { file: "app/(auth)/callback/route.ts", includes: '"認証セッション確立完了"' },
-  { file: "app/(auth)/callback/route.ts", includes: '"認証コードなしまたはエラー"' },
   {
     file: "app/providers/supabase-auth-provider.tsx",
     includes: '"新規ユーザーをusersテーブルに追加:',

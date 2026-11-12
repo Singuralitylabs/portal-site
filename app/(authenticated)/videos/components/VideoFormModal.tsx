@@ -43,14 +43,18 @@ export function VideoFormModal({
 
   // 表示順操作フック
   const { position, setPosition, positionOptions, parsePosition, handleCategoryChange } =
-    useDisplayOrderForm("videos", form.category_id, initialData?.id, !!initialData);
+    useDisplayOrderForm("videos", initialData?.id, !!initialData);
 
   // モーダルが開かれたときの初期化処理
   useEffect(() => {
+    if (!opened) return;
+
+    const categoryId = initialData?.category_id ?? 0;
+
     // フォームを初期化
     setForm({
       name: initialData?.name ?? "",
-      category_id: initialData?.category_id ?? 0,
+      category_id: categoryId,
       description: initialData?.description ?? "",
       url: initialData?.url ?? "",
       thumbnail_path: initialData?.thumbnail_path ?? "",
@@ -61,13 +65,14 @@ export function VideoFormModal({
 
     // 表示順の初期化
     setPosition(initialData ? "current" : "last");
-  }, [opened, initialData, setPosition]);
+    handleCategoryChange(categoryId);
+  }, [opened, initialData, setPosition, handleCategoryChange]);
 
   useEffect(() => {
     const supabase = createClientSupabaseClient();
     const fetchUsers = async () => {
       const { data } = await supabase
-        .from("users")
+        .from("member_profiles")
         .select("id, display_name")
         .order("display_name");
 

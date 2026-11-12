@@ -1,8 +1,8 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
-import { createServerSupabaseClient } from "./supabase-server";
-import type { PostgrestError } from "@supabase/supabase-js";
+import { createServerSupabaseClient, getServerCurrentUser } from "./supabase-server";
+import type { AuthError, PostgrestError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
-import { USER_STATUS } from "@/app/constants/user";
+import { USER_STATUS, USER_ROLE } from "@/app/constants/user";
 
 /**
  * usersテーブルから指定のauth_idのユーザーのステータスを取得する（サーバーサイド用）
@@ -34,6 +34,7 @@ export async function fetchUserStatusByIdInServer({
 
 /**
  * usersテーブルから指定のauth_idのユーザーの情報（id, role）を取得する（サーバーサイド用）
+ * マスター管理画面を含む、サーバー側の権限判定前提となるユーザー情報取得で利用する。
  * @param param0 - パラメータオブジェクト
  * @param {string} param0.authId - ユーザーの認証ID（必須）
  * @returns { id: number, role: string, error: PostgrestError | null } - ユーザーID・ロールとエラー
@@ -61,6 +62,8 @@ export async function fetchUserInfoByAuthId({
 
 /**
  * 会員一覧を取得する
+ * member_profiles ビュー（公開列のみ・active会員限定）経由で取得するため、
+ * status/is_deleted のフィルタはビュー定義側に組み込み済み（issue #424）。
  * @returns { data: MemberType[] | null, error: PostgrestError | null } - 会員一覧とエラー
  */
 export async function fetchActiveUsers(): Promise<{
@@ -70,12 +73,10 @@ export async function fetchActiveUsers(): Promise<{
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase
-    .from("users")
+    .from("member_profiles")
     .select(
-      "id, display_name, role, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted))"
+      "id, display_name, bio, avatar_url, profile_image_path, x_url, facebook_url, instagram_url, github_url, portfolio_url, position_tags(positions(id, name, is_deleted, is_leadership))"
     )
-    .eq("status", "active")
-    .eq("is_deleted", false)
     .eq("position_tags.positions.is_deleted", false);
 
   if (error) {
@@ -91,7 +92,6 @@ export async function fetchActiveUsers(): Promise<{
   const transformedData = data.map(user => ({
     id: user.id,
     display_name: user.display_name,
-    role: user.role,
     bio: user.bio,
     avatar_url: user.avatar_url,
     profile_image_path: user.profile_image_path,
@@ -307,8 +307,43 @@ export async function fetchUserPositionTagsByUserId(userId: number): Promise<{
 export async function updateUserPositionTagsInServer(
   userId: number,
   positionIds: number[]
-): Promise<PostgrestError | null> {
+): Promise<AuthError | PostgrestError | null> {
   const supabase = await createServerSupabaseClient();
+
+  const { authId, error: authError } = await getServerCurrentUser();
+  if (authError) {
+    return authError;
+  }
+  if (!authId) {
+    return {
+      code: "PGRST116",
+      details: "",
+      hint: "",
+      message: "ユーザーが見つかりません",
+      name: "PostgrestError",
+    };
+  }
+
+  const { data: currentUser, error: currentUserError } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", authId)
+    .single();
+
+  if (currentUserError) {
+    console.error("Supabase 認証ユーザーロール取得エラー:", currentUserError.message);
+    return currentUserError;
+  }
+
+  if (currentUser.role !== USER_ROLE.ADMIN && currentUser.role !== USER_ROLE.MAINTAINER) {
+    return {
+      code: "42501",
+      details: "",
+      hint: "",
+      message: "役職の変更はadmin・maintainer権限が必要です",
+      name: "PostgrestError",
+    };
+  }
 
   const { error: deleteError } = await supabase
     .from("position_tags")

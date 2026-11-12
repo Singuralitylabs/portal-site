@@ -176,14 +176,17 @@ describe("supabase-client", () => {
 
   it("環境変数を利用して Supabase クライアントを生成する", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key";
     const mockClient = { from: jest.fn() };
     createBrowserClientMock.mockReturnValue(mockClient);
 
     const response = supabaseClientActual.createClientSupabaseClient();
 
-    // createBrowserClient が環境変数の URL / ANON KEY で呼ばれることを確認
-    expect(createBrowserClientMock).toHaveBeenCalledWith("https://example.supabase.co", "anon-key");
+    // createBrowserClient が環境変数の URL / Publishable key で呼ばれることを確認
+    expect(createBrowserClientMock).toHaveBeenCalledWith(
+      "https://example.supabase.co",
+      "publishable-key"
+    );
     // ラッパー関数の戻り値として生成クライアントが返ることを確認
     expect(response).toBe(mockClient);
   });

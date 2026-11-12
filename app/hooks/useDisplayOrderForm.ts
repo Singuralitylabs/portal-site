@@ -1,39 +1,36 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import type { CategoryItemType, ContentTableType, PlacementPositionType } from "@/app/types";
 import { getItemsByCategory } from "@/app/services/api/utils/display-order";
 
 /**
  * 表示順操作フォームのカスタムフック
+ * アイテム一覧は `handleCategoryChange` の呼び出し時のみ取得する
  * @param contentType コンテンツタイプ（documents, videos, applications）
- * @param categoryId カテゴリーID
  * @param itemId アイテムID（編集時のみ）
  * @param isEdit 編集モードかどうか
  * @returns 表示順操作に必要な状態と関数
  */
 export function useDisplayOrderForm(
   contentType: ContentTableType,
-  categoryId: number,
   itemId?: number,
   isEdit?: boolean
 ) {
   const [items, setItems] = useState<CategoryItemType[]>([]);
   const [position, setPosition] = useState<string>(isEdit ? "current" : "last");
 
-  // カテゴリーIDが変更されたときにアイテム一覧を取得
-  useEffect(() => {
-    if (categoryId > 0) {
-      getItemsByCategory(contentType, categoryId, itemId).then(setItems);
-    } else {
-      setItems([]);
-    }
-  }, [contentType, categoryId, itemId]);
+  // 最新のリクエスト結果のみ反映するための連番
+  const latestRequestId = useRef(0);
 
   // カテゴリー変更ハンドラー
   const handleCategoryChange = useCallback(
     async (newCategoryId: number) => {
+      const requestId = ++latestRequestId.current;
+
       if (newCategoryId > 0) {
         const fetchedItems = await getItemsByCategory(contentType, newCategoryId, itemId);
-        setItems(fetchedItems);
+        if (requestId === latestRequestId.current) {
+          setItems(fetchedItems);
+        }
       } else {
         setItems([]);
       }
