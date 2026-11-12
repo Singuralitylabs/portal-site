@@ -16,6 +16,15 @@ interface MasterPageTemplateProps {
 
 const MASTER_DISPLAY_TIME_ZONE = "Asia/Tokyo";
 
+const masterDateTimeFormatter = new Intl.DateTimeFormat("ja-JP", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: MASTER_DISPLAY_TIME_ZONE,
+});
+
 function parseUtcTimestamp(value: string): Date {
   const hasExplicitTimeZone = /(?:Z|[+-]\d{2}:\d{2})$/.test(value);
   return new Date(hasExplicitTimeZone ? value : `${value}Z`);
@@ -27,14 +36,7 @@ function formatDateTime(value: string): string {
     return value;
   }
 
-  return date.toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: MASTER_DISPLAY_TIME_ZONE,
-  });
+  return masterDateTimeFormatter.format(date);
 }
 
 function formatFieldValue(field: MasterRecordField): string {
