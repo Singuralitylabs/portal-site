@@ -59,7 +59,7 @@ describe("buildContentSecurityPolicy", () => {
     expect(directive(csp, "style-src-elem")).not.toContain("nonce");
   });
 
-  it("Preview では vercel.live を許可する", () => {
+  it("Preview では vercel.live を許可し、style 要素は nonce なしの 'unsafe-inline' にする", () => {
     setEnv({ NODE_ENV: "production", VERCEL_ENV: "preview" });
     const csp = buildContentSecurityPolicy("abc123");
     expect(directive(csp, "script-src")).toContain("https://vercel.live");
@@ -81,7 +81,7 @@ describe("buildContentSecurityPolicy", () => {
     );
   });
 
-  it("Supabase URL が不正なら許可先を広げない", () => {
+  it("Supabase URL が http/https 以外のスキームなら許可先を広げない", () => {
     setEnv({ NODE_ENV: "production", NEXT_PUBLIC_SUPABASE_URL: "ftp://example.com" });
     expect(directive(buildContentSecurityPolicy("abc123"), "connect-src")).toBe(
       "connect-src 'self'"

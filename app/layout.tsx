@@ -33,7 +33,7 @@ export default async function RootLayout({
   return (
     <html lang="ja" {...mantineHtmlProps}>
       <head>
-        {/* ブラウザが nonce 属性を隠すため client 側で nonce が空になり、ハイドレーション警告が出る(dev のみ・無害) */}
+        {/* ブラウザが nonce 属性を隠すため client 側で nonce が空になり、ハイドレーション警告になるため suppressHydrationWarning で抑止する */}
         <ColorSchemeScript nonce={nonce} suppressHydrationWarning />
       </head>
       <body>
