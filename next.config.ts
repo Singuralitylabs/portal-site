@@ -44,6 +44,7 @@ const nextConfig: NextConfig = {
           // 本来の Content-Security-Policy はリクエストごとの nonce が必要なため middleware.ts で設定する
           // (同名ヘッダーは middleware 側が上書きする)。middleware の matcher 対象外のパス
           // (拡張子付きパスの 404 など)にも最低限の保護が残るよう、nonce 不要のフォールバックを置く。
+          // このパスの 404 HTML はインライン script/style がブロックされ、ハイドレーションされない(意図どおり)。
           {
             key: "Content-Security-Policy",
             value: "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",

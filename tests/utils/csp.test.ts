@@ -64,6 +64,21 @@ describe("buildContentSecurityPolicy", () => {
     const csp = buildContentSecurityPolicy("abc123");
     expect(directive(csp, "script-src")).toContain("https://vercel.live");
     expect(directive(csp, "connect-src")).toContain("https://vercel.live");
+    for (const name of ["style-src", "style-src-elem"]) {
+      expect(directive(csp, name)).toContain("'unsafe-inline'");
+      expect(directive(csp, name)).not.toContain("nonce");
+    }
+  });
+
+  it("Supabase URL が未設定・パース不能でも許可先を広げない", () => {
+    setEnv({ NODE_ENV: "production", NEXT_PUBLIC_SUPABASE_URL: undefined });
+    expect(directive(buildContentSecurityPolicy("abc123"), "connect-src")).toBe(
+      "connect-src 'self'"
+    );
+    setEnv({ NODE_ENV: "production", NEXT_PUBLIC_SUPABASE_URL: "not a url" });
+    expect(directive(buildContentSecurityPolicy("abc123"), "connect-src")).toBe(
+      "connect-src 'self'"
+    );
   });
 
   it("Supabase URL が不正なら許可先を広げない", () => {

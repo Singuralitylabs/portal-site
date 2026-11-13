@@ -10,5 +10,11 @@ interface AppMantineProviderProps {
 // MantineProvider の getStyleNonce は関数 prop のため Server Component からは渡せない。
 // nonce (文字列) だけを RSC 境界越しに受け取り、クロージャはこの Client Component 内で生成する。
 export function AppMantineProvider({ nonce, children }: AppMantineProviderProps) {
-  return <CoreMantineProvider getStyleNonce={() => nonce}>{children}</CoreMantineProvider>;
+  return (
+    <CoreMantineProvider
+      getStyleNonce={process.env.NODE_ENV === "production" ? () => nonce : undefined}
+    >
+      {children}
+    </CoreMantineProvider>
+  );
 }

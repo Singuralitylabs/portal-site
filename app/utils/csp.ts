@@ -23,7 +23,7 @@ function getSupabaseCsp(): { httpOrigin: string; wsOrigin: string } {
  * 新しい外部スクリプトを追加する場合、ホスト追加ではなく nonce 付きスクリプトからの動的読み込みが必要。
  * style-src は要素(<style>)と属性(style="")を分離する。
  * Mantine v7 は CSS 変数注入用の <style> に getStyleNonce 経由で nonce を付与できるため
- * style-src-elem は nonce のみに絞れるが、アプリ側で多用している style={{...}} という
+ * style-src-elem は(本番では)nonce のみに絞れるが、アプリ側で多用している style={{...}} という
  * インライン style 属性は nonce/hash の対象外(CSPの仕様上、属性には適用できない)なため
  * style-src-attr は 'unsafe-inline' を許可する(値はすべて静的なので実害は限定的)。
  */

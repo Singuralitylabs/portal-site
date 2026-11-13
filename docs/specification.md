@@ -51,7 +51,8 @@ Supabase Authを使用したGoogleアカウントでの認証機能を提供し�
 2. セキュリティヘッダー（CSP）
    - Content-Security-Policy は middleware がリクエストごとに nonce を発行して設定する（`app/utils/csp.ts`）
    - `script-src` は `'nonce-xxx' 'strict-dynamic'` のみ。新しいインライン script/style には nonce が必要で、外部スクリプトはホスト追加では許可されない
-   - `style-src-attr` のみ `'unsafe-inline'`（`style={{...}}` に nonce は付けられないため）
+   - 本番は `style-src-attr` のみ `'unsafe-inline'`（`style={{...}}` に nonce は付けられないため）。開発（next-devtools）と Vercel Preview は nonce なしの `<style>` が注入されるため、style 要素も `'unsafe-inline'` を許可する
+   - middleware の matcher 対象外のパス（拡張子付きパスの 404 など）には `next.config.ts` の最小限のフォールバック CSP が適用される
    - ルートレイアウトが `headers()` から nonce を読むため、全ルートが動的レンダリングになる
 
 3. データ管理
