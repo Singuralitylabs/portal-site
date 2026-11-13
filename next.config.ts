@@ -41,7 +41,13 @@ const nextConfig: NextConfig = {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
           },
-          // Content-Security-Policy はリクエストごとの nonce が必要なため middleware.ts で設定する
+          // 本来の Content-Security-Policy はリクエストごとの nonce が必要なため middleware.ts で設定する
+          // (同名ヘッダーは middleware 側が上書きする)。middleware の matcher 対象外のパス
+          // (拡張子付きパスの 404 など)にも最低限の保護が残るよう、nonce 不要のフォールバックを置く。
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+          },
         ],
       },
     ];

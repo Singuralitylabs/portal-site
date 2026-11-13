@@ -33,7 +33,8 @@ export default async function RootLayout({
   return (
     <html lang="ja" {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript nonce={nonce} />
+        {/* ブラウザが nonce 属性を隠すため client 側で nonce が空になり、ハイドレーション警告が出る(dev のみ・無害) */}
+        <ColorSchemeScript nonce={nonce} suppressHydrationWarning />
       </head>
       <body>
         <SupabaseAuthProvider>

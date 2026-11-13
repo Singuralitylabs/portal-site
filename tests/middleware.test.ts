@@ -93,6 +93,14 @@ describe("middleware", () => {
   });
 
   describe("CSP nonce", () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    beforeEach(() => {
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
+    });
+    afterEach(() => {
+      (process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv;
+    });
+
     const expectNonceCsp = (response: Response) => {
       const csp = response.headers.get("content-security-policy") ?? "";
       const match = csp.match(/script-src[^;]*'nonce-([^']+)'/);
@@ -114,6 +122,26 @@ describe("middleware", () => {
 
       mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "active", error: null });
       expectNonceCsp(await middleware(createRequest("/calendar")));
+    });
+
+    it("静的パス・status未取得・rejected でも CSP を付与し、リクエスト側ヘッダーにも同じ nonce を渡す", async () => {
+      const staticResponse = await middleware(createRequest("/_next/static/chunk.js"));
+      const staticNonce = expectNonceCsp(staticResponse);
+      expect(staticResponse.headers.get("x-middleware-request-x-nonce")).toBe(staticNonce);
+      expect(staticResponse.headers.get("x-middleware-request-content-security-policy")).toContain(
+        `'nonce-${staticNonce}'`
+      );
+
+      mockAuthenticatedClient();
+      mockFetchUserStatusByIdInServer.mockResolvedValue({ status: null, error: null });
+      expectNonceCsp(await middleware(createRequest("/calendar")));
+
+      mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "rejected", error: null });
+      expectNonceCsp(await middleware(createRequest("/calendar")));
+
+      mockFetchUserStatusByIdInServer.mockResolvedValue({ status: "active", error: null });
+      const active = await middleware(createRequest("/calendar"));
+      expect(active.headers.get("x-middleware-request-x-nonce")).toBe(expectNonceCsp(active));
     });
 
     it("nonce はリクエストごとに変わる", async () => {

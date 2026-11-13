@@ -48,7 +48,13 @@ Supabase Authを使用したGoogleアカウントでの認証機能を提供し�
    - 認証とデータ管理の一元化
    - 自動セッション管理
 
-2. データ管理
+2. セキュリティヘッダー（CSP）
+   - Content-Security-Policy は middleware がリクエストごとに nonce を発行して設定する（`app/utils/csp.ts`）
+   - `script-src` は `'nonce-xxx' 'strict-dynamic'` のみ。新しいインライン script/style には nonce が必要で、外部スクリプトはホスト追加では許可されない
+   - `style-src-attr` のみ `'unsafe-inline'`（`style={{...}}` に nonce は付けられないため）
+   - ルートレイアウトが `headers()` から nonce を読むため、全ルートが動的レンダリングになる
+
+3. データ管理
    - 初回ログイン時にSupabaseのusersテーブルにメンバー情報を登録
    - 登録情報：
      - auth_id（Supabase AuthのユーザーUUID）
