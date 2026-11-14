@@ -82,6 +82,7 @@ export default function ContentMgrMenu<
       <Menu>
         <Menu.Target>
           <Button
+            aria-label={`${content.name}の管理メニュー`}
             variant="subtle"
             size="compact-xs"
             p="4px"

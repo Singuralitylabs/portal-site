@@ -69,6 +69,8 @@ export function VideoFormModal({
   }, [opened, initialData, setPosition, handleCategoryChange]);
 
   useEffect(() => {
+    if (!opened) return;
+
     const supabase = createClientSupabaseClient();
     const fetchUsers = async () => {
       const { data } = await supabase
@@ -80,7 +82,7 @@ export function VideoFormModal({
     };
 
     fetchUsers();
-  }, []);
+  }, [opened]);
 
   // カテゴリー変更時の処理
   const handleCategoryChangeWrapper = async (value: string | null) => {
