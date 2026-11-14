@@ -1,0 +1,49 @@
+name: Actions Failure Slack Notification
+
+# 対象workflowの完了イベントを監視し、main / release上の失敗に限定する。
+on:
+  workflow_run:
+    workflows:
+      - Build Test
+      - Jest Unit Tests
+      - TypeScript Type Check
+      - Format Check
+      - Supabase DB Types Consistency
+      - Check env encryption
+      - Check console.log and debugger
+      - Release PR
+      - Create Release
+      - Fork Sync
+    types:
+      - completed
+    branches:
+      - main
+      - release
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    if: >-
+      ${{ contains(fromJSON('["failure","timed_out","startup_failure"]'), github.event.workflow_run.conclusion) &&
+      github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout notification workflow revision
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: node scripts/action-failure-slack-notification.cjs
