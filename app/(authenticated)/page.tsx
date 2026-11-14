@@ -9,16 +9,19 @@ export default async function Home() {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    weekday: "short",
   }).formatToParts(new Date());
   const y = parts.find(p => p.type === "year")!.value;
   const m = parts.find(p => p.type === "month")!.value;
   const d = parts.find(p => p.type === "day")!.value;
+  const w = parts.find(p => p.type === "weekday")!.value;
 
   const timeMin = new Date(`${y}-${m}-${d}T00:00:00+09:00`);
   const timeMax = new Date(`${y}-${m}-${d}T00:00:00+09:00`);
   timeMax.setDate(timeMax.getDate() + 1);
 
-  const todayLabel = `${y}/${Number(m)}/${Number(d)}`;
+  // 例: 2026/10/22（木）
+  const todayLabel = `${y}/${Number(m)}/${Number(d)}（${w}）`;
 
   const { data: events, error } = await fetchCalendarEvents({
     startDate: timeMin,
