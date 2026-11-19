@@ -343,18 +343,19 @@ GitHub Actions の実行失敗を Slack で把握するため、[`.github/workfl
 
 PR起因の実行もheadブランチで判定する。通常のmain→releaseのリリースでは `main` と表示され、PRのbaseがreleaseでもheadがhotfix等なら対象外となる。通知workflowはデフォルトブランチに存在する必要があるため、mainへのマージ後に有効になる。
 
-| ワークフロー                                                                                             | 失敗通知の発生例                                                    |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `Build Test` ([`build.yml`](../.github/workflows/build.yml))                                             | `npm ci` または `npm run build` が失敗する                          |
-| `Jest Unit Tests` ([`test.yml`](../.github/workflows/test.yml))                                          | Jest のテストが失敗する                                             |
-| `TypeScript Type Check` ([`typecheck.yml`](../.github/workflows/typecheck.yml))                          | `npx tsc --noEmit` または ESLint の型関連チェックが失敗する         |
-| `Format Check` ([`format-check.yml`](../.github/workflows/format-check.yml))                             | `npm run format:check` でフォーマット差分が検出される               |
-| `Supabase DB Types Consistency` ([`db-types.yml`](../.github/workflows/db-types.yml))                    | Supabase 設定不足、型生成失敗、または生成型の差分が検出される       |
-| `Check env encryption` ([`check_env_encryption.yml`](../.github/workflows/check_env_encryption.yml))     | `.env.development` の暗号化チェックに失敗する                       |
-| `Check console.log and debugger` ([`check_console_log.yml`](../.github/workflows/check_console_log.yml)) | 禁止対象の `console.log` / `debugger` が検出される                  |
-| `Release PR` ([`release-pr.yml`](../.github/workflows/release-pr.yml))                                   | バージョン検証、品質チェック、またはリリース PR 作成に失敗する      |
-| `Create Release` ([`create-release.yml`](../.github/workflows/create-release.yml))                       | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する  |
-| `Fork Sync` ([`fork-sync.yml`](../.github/workflows/fork-sync.yml))                                      | 必須設定の検証、またはフォークへの release ブランチ push に失敗する |
+| ワークフロー                                                                                             | 失敗通知の発生例                                                                     |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `Build Test` ([`build.yml`](../.github/workflows/build.yml))                                             | `npm ci` または `npm run build` が失敗する                                           |
+| `Jest Unit Tests` ([`test.yml`](../.github/workflows/test.yml))                                          | Jest のテストが失敗する                                                              |
+| `TypeScript Type Check` ([`typecheck.yml`](../.github/workflows/typecheck.yml))                          | `npx tsc --noEmit` または ESLint の型関連チェックが失敗する                          |
+| `Format Check` ([`format-check.yml`](../.github/workflows/format-check.yml))                             | `npm run format:check` でフォーマット差分が検出される                                |
+| `Supabase DB Types Consistency` ([`db-types.yml`](../.github/workflows/db-types.yml))                    | Supabase 設定不足、型生成失敗、または生成型の差分が検出される                        |
+| `Check env encryption` ([`check_env_encryption.yml`](../.github/workflows/check_env_encryption.yml))     | `.env.development` の暗号化チェックに失敗する                                        |
+| `Check console.log and debugger` ([`check_console_log.yml`](../.github/workflows/check_console_log.yml)) | 禁止対象の `console.log` / `debugger` が検出される                                   |
+| `Release PR` ([`release-pr.yml`](../.github/workflows/release-pr.yml))                                   | バージョン検証、品質チェック、またはリリース PR 作成に失敗する                       |
+| `Create Release` ([`create-release.yml`](../.github/workflows/create-release.yml))                       | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する                   |
+| `Fork Sync` ([`fork-sync.yml`](../.github/workflows/fork-sync.yml))                                      | 必須設定の検証、またはフォークへの release ブランチ push に失敗する                  |
+| `Supabase Keep Alive` ([`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml))        | Secrets 未設定、または Supabase へのリクエストが失敗する（Pause 済み・キー無効など） |
 
 `Wiki Slack Notification` ([`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)) はIssue #172で定めた対象10件の範囲外のため監視対象に含めない。Wiki通知を含めても失敗通知workflow自身を監視しなければ循環は起きない。Wiki通知や失敗通知自体のエラーはGitHub Actionsの失敗通知・実行ログで確認する。共通Webhookの設定不備や障害は、同じWebhookへの通知では検知を保証できない。
 
