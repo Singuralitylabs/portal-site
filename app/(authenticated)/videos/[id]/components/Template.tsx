@@ -4,6 +4,7 @@ import { MarkdownText } from "@/app/components/MarkdownText";
 import { Button, Flex, Text, Divider } from "@mantine/core";
 import Youtube from "./Youtube";
 import { Calendar } from "lucide-react";
+import { VideoDuration, VideoUpdatedDate } from "../../components/VideoMetadata";
 
 interface VideoDetailPageProps {
   video: VideoWithCategoryType;
@@ -54,19 +55,12 @@ export function VideoDetailPageTemplate({ video }: VideoDetailPageProps) {
               <Flex align="center" gap="0.25rem">
                 <Calendar style={{ width: "1rem", height: "1rem" }} />
                 <Text component="div" fs="0.875rem" lh="1.25rem">
-                  {new Date(video.updated_at)
-                    .toLocaleDateString("ja-JP", {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                    })
-                    .replaceAll("/", "-")}
+                  <VideoUpdatedDate timestamp={video.updated_at} />
                 </Text>
               </Flex>
               {video.length ? (
                 <Text>
-                  ビデオの長さ {Math.floor(Number(video.length) / 60)}:
-                  {(Number(video.length) % 60).toString().padStart(2, "0")}
+                  ビデオの長さ <VideoDuration seconds={video.length} />
                 </Text>
               ) : (
                 ""

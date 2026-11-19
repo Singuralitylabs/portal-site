@@ -69,6 +69,8 @@ export function VideoFormModal({
   }, [opened, initialData, setPosition, handleCategoryChange]);
 
   useEffect(() => {
+    if (!opened) return;
+
     const supabase = createClientSupabaseClient();
     const fetchUsers = async () => {
       const { data } = await supabase
@@ -80,7 +82,7 @@ export function VideoFormModal({
     };
 
     fetchUsers();
-  }, []);
+  }, [opened]);
 
   // カテゴリー変更時の処理
   const handleCategoryChangeWrapper = async (value: string | null) => {
@@ -217,14 +219,6 @@ export function VideoFormModal({
         }
         value={form.assignee_id ? String(form.assignee_id) : ""}
         onChange={value => setForm(f => ({ ...f, assignee_id: value ? Number(value) : null }))}
-        mb="sm"
-      />
-      <Select
-        label="表示順"
-        data={positionOptions}
-        value={position}
-        onChange={value => setPosition(value || "last")}
-        placeholder="配置位置を選択"
         mb="sm"
       />
       <Select
