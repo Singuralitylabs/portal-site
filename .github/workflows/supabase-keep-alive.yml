@@ -8,10 +8,6 @@ on:
     - cron: "0 0,12 * * *"
   # 手動実行（動作確認用）
   workflow_dispatch:
-  # 【一時】PR上で動作確認するためのトリガー。マージ前に削除する（#456）
-  pull_request:
-    paths:
-      - ".github/workflows/supabase-keep-alive.yml"
 
 # リポジトリ操作を行わず、checkout も不要なため権限を付与しない
 permissions: {}
