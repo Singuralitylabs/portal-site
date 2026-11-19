@@ -32,3 +32,9 @@ jobs:
 
       - name: Run Prettier format check
         run: npm run format:check
+
+      - name: Check workflow notification targets
+        run: npm run lint:workflows
+
+      - name: Test Slack notifications and workflow checks
+        run: npx jest tests/scripts --runInBand --coverage=false
