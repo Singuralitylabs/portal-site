@@ -97,7 +97,7 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                                                 | `contents: read`                         | 本体リポジトリの書き込みは不要（フォーク同期は別トークンで行う） |
 | [`create-release.yml`](../.github/workflows/create-release.yml)                                       | `contents: write`                        | タグのプッシュと GitHub Release の作成に必要                     |
 | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)                     | `contents: read`                         | Wiki 更新イベントを受けて Slack 通知するために必要               |
-| `supabase-keep-alive.yml`                                                                             | なし（`permissions: {}`）                | リポジトリ操作を行わず、checkout も不要                          |
+| [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)                             | なし（`permissions: {}`）                | リポジトリ操作を行わず、checkout も不要                          |
 | [`action-failure-slack-notification.yml`](../.github/workflows/action-failure-slack-notification.yml) | `contents: read`                         | 通知workflow自身のコミットから共通Slack送信ヘルパーを取得する    |
 
 **Secrets:**
@@ -109,10 +109,10 @@ GitHub 以外のサービス（例: フォークリポジトリ、Supabase）を
 | `FORK_SYNC_TOKEN`                      | フォーク同期用トークン                                                  | [`fork-sync.yml`](../.github/workflows/fork-sync.yml)                                                                                                                                    | 対象リポジトリをフォークのみに限定し、権限はコードの読み書きのみに制限する                                                                                                                                             |
 | `SUPABASE_ACCESS_TOKEN`                | Supabase 接続用トークン                                                 | [`db-types.yml`](../.github/workflows/db-types.yml)                                                                                                                                      |                                                                                                                                                                                                                        |
 | `SLACK_WEBHOOK_URL`                    | Wiki 更新・GitHub Actions 失敗通知で利用する Slack Incoming Webhook URL | [`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)、[`action-failure-slack-notification.yml`](../.github/workflows/action-failure-slack-notification.yml) | GitHub リポジトリの **Settings → Secrets and variables → Actions → Secrets** に登録する。アプリ通知でも同一値を利用する方針だが、アプリ側の設定先は実行環境の環境変数（例: `.env.development` / ホスティング環境変数） |
-| `SUPABASE_URL_PRODUCTION`              | 本番用 Supabase プロジェクトの Project URL                              | `supabase-keep-alive.yml`                                                                                                                                                                | 登録手順は [6.4](#64-secrets-の登録手順) を参照                                                                                                                                                                        |
-| `SUPABASE_PUBLISHABLE_KEY_PRODUCTION`  | 本番用 Supabase プロジェクトの Publishable key（`sb_publishable_...`）  | `supabase-keep-alive.yml`                                                                                                                                                                | レガシーの anon key は使用しない。理由は [6.3](#63-api-キーの方針) を参照                                                                                                                                              |
-| `SUPABASE_URL_DEVELOPMENT`             | 開発用 Supabase プロジェクトの Project URL                              | `supabase-keep-alive.yml`                                                                                                                                                                |                                                                                                                                                                                                                        |
-| `SUPABASE_PUBLISHABLE_KEY_DEVELOPMENT` | 開発用 Supabase プロジェクトの Publishable key（`sb_publishable_...`）  | `supabase-keep-alive.yml`                                                                                                                                                                |                                                                                                                                                                                                                        |
+| `SUPABASE_URL_PRODUCTION`              | 本番用 Supabase プロジェクトの Project URL                              | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)                                                                                                                | 登録手順は [6.4](#64-secrets-の登録手順) を参照                                                                                                                                                                        |
+| `SUPABASE_PUBLISHABLE_KEY_PRODUCTION`  | 本番用 Supabase プロジェクトの Publishable key（`sb_publishable_...`）  | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)                                                                                                                | レガシーの anon key は使用しない。理由は [6.3](#63-api-キーの方針) を参照                                                                                                                                              |
+| `SUPABASE_URL_DEVELOPMENT`             | 開発用 Supabase プロジェクトの Project URL                              | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)                                                                                                                |                                                                                                                                                                                                                        |
+| `SUPABASE_PUBLISHABLE_KEY_DEVELOPMENT` | 開発用 Supabase プロジェクトの Publishable key（`sb_publishable_...`）  | [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)                                                                                                                |                                                                                                                                                                                                                        |
 
 **Variables:**
 
@@ -246,7 +246,7 @@ Wiki が更新されました
 
 ## 6. Supabase Keep Alive
 
-> **ステータス**: 設計段階（[#456](https://github.com/Singuralitylabs/portal-site/issues/456)）。本セクションの合意後に、ワークフロー `.github/workflows/supabase-keep-alive.yml` を別 PR で追加する。
+ワークフロー定義: [`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)（[#456](https://github.com/Singuralitylabs/portal-site/issues/456)）
 
 Supabase 無料プランのプロジェクトは、直近 7 日間のユーザー由来の DB アクティビティが乏しいと自動で Pause される（[Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing)）。Pause されるとポータルが利用不能になり、復旧には Dashboard からの手動 Restore が必要になる。
 
@@ -343,18 +343,19 @@ GitHub Actions の実行失敗を Slack で把握するため、[`.github/workfl
 
 PR起因の実行もheadブランチで判定する。通常のmain→releaseのリリースでは `main` と表示され、PRのbaseがreleaseでもheadがhotfix等なら対象外となる。通知workflowはデフォルトブランチに存在する必要があるため、mainへのマージ後に有効になる。
 
-| ワークフロー                                                                                             | 失敗通知の発生例                                                    |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `Build Test` ([`build.yml`](../.github/workflows/build.yml))                                             | `npm ci` または `npm run build` が失敗する                          |
-| `Jest Unit Tests` ([`test.yml`](../.github/workflows/test.yml))                                          | Jest のテストが失敗する                                             |
-| `TypeScript Type Check` ([`typecheck.yml`](../.github/workflows/typecheck.yml))                          | `npx tsc --noEmit` または ESLint の型関連チェックが失敗する         |
-| `Format Check` ([`format-check.yml`](../.github/workflows/format-check.yml))                             | `npm run format:check` でフォーマット差分が検出される               |
-| `Supabase DB Types Consistency` ([`db-types.yml`](../.github/workflows/db-types.yml))                    | Supabase 設定不足、型生成失敗、または生成型の差分が検出される       |
-| `Check env encryption` ([`check_env_encryption.yml`](../.github/workflows/check_env_encryption.yml))     | `.env.development` の暗号化チェックに失敗する                       |
-| `Check console.log and debugger` ([`check_console_log.yml`](../.github/workflows/check_console_log.yml)) | 禁止対象の `console.log` / `debugger` が検出される                  |
-| `Release PR` ([`release-pr.yml`](../.github/workflows/release-pr.yml))                                   | バージョン検証、品質チェック、またはリリース PR 作成に失敗する      |
-| `Create Release` ([`create-release.yml`](../.github/workflows/create-release.yml))                       | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する  |
-| `Fork Sync` ([`fork-sync.yml`](../.github/workflows/fork-sync.yml))                                      | 必須設定の検証、またはフォークへの release ブランチ push に失敗する |
+| ワークフロー                                                                                             | 失敗通知の発生例                                                                     |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `Build Test` ([`build.yml`](../.github/workflows/build.yml))                                             | `npm ci` または `npm run build` が失敗する                                           |
+| `Jest Unit Tests` ([`test.yml`](../.github/workflows/test.yml))                                          | Jest のテストが失敗する                                                              |
+| `TypeScript Type Check` ([`typecheck.yml`](../.github/workflows/typecheck.yml))                          | `npx tsc --noEmit` または ESLint の型関連チェックが失敗する                          |
+| `Format Check` ([`format-check.yml`](../.github/workflows/format-check.yml))                             | `npm run format:check` でフォーマット差分が検出される                                |
+| `Supabase DB Types Consistency` ([`db-types.yml`](../.github/workflows/db-types.yml))                    | Supabase 設定不足、型生成失敗、または生成型の差分が検出される                        |
+| `Check env encryption` ([`check_env_encryption.yml`](../.github/workflows/check_env_encryption.yml))     | `.env.development` の暗号化チェックに失敗する                                        |
+| `Check console.log and debugger` ([`check_console_log.yml`](../.github/workflows/check_console_log.yml)) | 禁止対象の `console.log` / `debugger` が検出される                                   |
+| `Release PR` ([`release-pr.yml`](../.github/workflows/release-pr.yml))                                   | バージョン検証、品質チェック、またはリリース PR 作成に失敗する                       |
+| `Create Release` ([`create-release.yml`](../.github/workflows/create-release.yml))                       | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する                   |
+| `Fork Sync` ([`fork-sync.yml`](../.github/workflows/fork-sync.yml))                                      | 必須設定の検証、またはフォークへの release ブランチ push に失敗する                  |
+| `Supabase Keep Alive` ([`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml))        | Secrets 未設定、または Supabase へのリクエストが失敗する（Pause 済み・キー無効など） |
 
 `Wiki Slack Notification` ([`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)) はIssue #172で定めた対象10件の範囲外のため監視対象に含めない。Wiki通知を含めても失敗通知workflow自身を監視しなければ循環は起きない。Wiki通知や失敗通知自体のエラーはGitHub Actionsの失敗通知・実行ログで確認する。共通Webhookの設定不備や障害は、同じWebhookへの通知では検知を保証できない。
 
