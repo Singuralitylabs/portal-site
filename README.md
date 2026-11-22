@@ -106,6 +106,7 @@ portal-site/
 - [データベース設計](docs/database.md) - テーブル構造とRLSポリシー
 - [機能仕様書](docs/specification.md) - 各機能の詳細仕様
 - [テスト設計](docs/testing.md) - テスト戦略と項目
+- [セキュリティアップデート運用](docs/security-updates.md) - 脆弱性・依存更新の確認と対応手順
 - [Supabaseガイド](supabase/README.md) - Supabaseの設定と使い方
 - [開発フロー](https://github.com/Singuralitylabs/portal-site/wiki/%E3%83%9D%E3%83%BC%E3%82%BF%E3%83%AB%E3%82%B5%E3%82%A4%E3%83%88%E9%96%8B%E7%99%BA%E3%83%95%E3%83%AD%E3%83%BC) - 開発の進め方
 - [コーディング規約](https://github.com/Singuralitylabs/portal-site/wiki/%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E8%A6%8F%E7%B4%84) - コーディングを行う上でのルール
