@@ -5,10 +5,14 @@ on:
     paths:
       - "app/**"
       - "middleware.ts"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
     paths:
       - "app/**"
       - "middleware.ts"
+      - "package.json"
+      - "package-lock.json"
   workflow_dispatch:
 
 jobs:
