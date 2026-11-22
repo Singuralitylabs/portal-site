@@ -24,13 +24,13 @@
    | Medium          | 1か月以内                |
    | Low             | 次回の定期更新でまとめて |
 
-3. PRのCI（type-check / format:check / build / test）が通ることを確認する。CIで実行されない `npm run lint` は手元で実行し、問題なければマージする
+3. PRのCI（lint / type-check / format:check / build / test）が通ることを確認してマージする
    - `db-types` ワークフローは Dependabot のPRでは Secrets が使えないためスキップされる。Supabase CLI の更新による型ズレは、マージ後の main への push で検出される
 4. 修正版がない、または更新が困難なものは、理由と残存リスクをIssueに記録する
 
 ## 3. メジャーアップデートの扱い
 
-メジャー更新は自動PRの対象外にしています（`dependabot.yml` の `ignore`）。対象は Next.js（`eslint-config-next` 含む）、ESLint、Mantine、Tailwind CSS、`@types/node` です。`@supabase/ssr` は 0.x のため、マイナー更新も対象外にしています。
+メジャー更新は、一部のパッケージを自動PRの対象外にしています（`dependabot.yml` の `ignore`）。それ以外（react、typescript、zod など）のメジャー更新は、通常どおり個別のPRで届きます。対象外にしているのは Next.js（`eslint-config-next` 含む）、ESLint、Mantine、Tailwind CSS、`@types/node` です。`@supabase/ssr` は 0.x のため、マイナー更新も対象外にしています。
 
 - 影響調査と実施の計画は #293 で管理する（ESLint は flat config への移行を Next.js 16 対応とセットで行う）
 - ただし、脆弱性の修正にメジャー更新が必要な場合は、セキュリティ対応として優先して実施する
