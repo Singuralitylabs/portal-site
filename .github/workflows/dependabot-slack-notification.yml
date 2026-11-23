@@ -1,0 +1,37 @@
+name: Dependabot Slack Notification
+
+# Dependabot の更新PRが作成されたときに Slack へ通知し、PR の見落としを防ぐ。
+# Dependabot 起点の pull_request では Secrets が渡らないため、base ブランチのコードで動く
+# pull_request_target を使う。PR の head はチェックアウトせず、イベント情報だけを参照する。
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: Notify Dependabot pull requests
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # base ブランチ（信頼できるコード）のみを取得する。
+      - name: Checkout base repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: node scripts/dependabot-slack-notification.cjs

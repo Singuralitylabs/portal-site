@@ -5,6 +5,7 @@ const {
   buildSlackMessage,
 } = require("../../scripts/action-failure-slack-notification.cjs");
 const wiki = require("../../scripts/wiki-slack-notification.cjs");
+const dependabot = require("../../scripts/dependabot-slack-notification.cjs");
 const { validateWorkflows } = require("../../scripts/check-workflow-notifications.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -246,5 +247,49 @@ describe("Slack webhook", () => {
     await expect(sendSlackNotification("https://example.invalid", "test")).rejects.toThrow(
       "Slack notification failed: 403"
     );
+  });
+});
+
+describe("Dependabot notification", () => {
+  const pullRequest = {
+    user: { login: "dependabot[bot]" },
+    title: "Bump <next> | group",
+    html_url: "https://github.com/example/portal/pull/1",
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test("notifies only for Dependabot pull requests", () => {
+    expect(dependabot.shouldNotify(pullRequest)).toBe(true);
+    expect(dependabot.shouldNotify({ ...pullRequest, user: { login: "someone" } })).toBe(false);
+    expect(dependabot.shouldNotify(undefined)).toBe(false);
+  });
+
+  test("escapes Slack link characters in the title", () => {
+    const message = dependabot.buildSlackMessage(pullRequest);
+    expect(message).toContain("<https://github.com/example/portal/pull/1|Bump ＜next＞ ｜ group>");
+  });
+
+  function prepare(event) {
+    process.env.GITHUB_EVENT_PATH = "/mock-event.json";
+    process.env.SLACK_WEBHOOK_URL = "https://example.invalid/webhook";
+    jest.spyOn(fs, "existsSync").mockReturnValue(true);
+    jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify(event));
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+  }
+
+  test("entry point sends a notification for a Dependabot pull request", async () => {
+    prepare({ pull_request: pullRequest });
+    await dependabot.main();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("entry point skips other authors", async () => {
+    prepare({ pull_request: { ...pullRequest, user: { login: "someone" } } });
+    jest.spyOn(process.stdout, "write").mockReturnValue(true);
+    await dependabot.main();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
