@@ -310,7 +310,7 @@ curl --fail --silent --show-error --retry 3 --retry-delay 10 \
 
 Publishable key は公開を前提とした鍵だが、本リポジトリが `.env.development` を暗号化して扱っている方針に合わせ、Project URL とともに Secrets へ登録する。
 
-アプリ本体が使用する `NEXT_PUBLIC_SUPABASE_ANON_KEY` の Publishable key への移行は、本ワークフローの対象外とし、別イシューで扱う。
+アプリ本体が使用する API キーも、[#465](https://github.com/Singuralitylabs/portal-site/issues/465)（PR [#478](https://github.com/Singuralitylabs/portal-site/pull/478)）で `NEXT_PUBLIC_SUPABASE_ANON_KEY` から `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` へ移行済み。
 
 ### 6.4 Secrets の登録手順
 
