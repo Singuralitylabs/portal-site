@@ -63,21 +63,25 @@ const ORDERED_RELATIVE_PATHS = [
   "02_triggers/position_tags_triggers.sql",
   "02_triggers/users_triggers.sql",
   "02_triggers/videos_triggers.sql",
+  "03_functions/master_management.sql",
 
   // 04_policies: 03_functionsのヘルパー関数に依存するが、テーブル間の順序依存はない
   "04_policies/applications/00_applications_policies.sql",
   "04_policies/categories/00_categories_policies.sql",
   "04_policies/documents/00_documents_policies.sql",
   "04_policies/position_tags/00_position_tags_policies.sql",
+  "04_policies/position_tags/01_content_managers_can_modify_position_tags.sql",
   "04_policies/positions/00_positions_policies.sql",
   "04_policies/users/00_users_policies.sql",
   "04_policies/users/01_update_users_policies.sql",
+  "04_policies/users/02_restrict_active_users_read_all.sql",
   "04_policies/videos/00_videos_policies.sql",
 
   // 05_storage
   "05_storage/00_profile_images_bucket.sql",
   "05_storage/01_fix_profile_images_policies.sql",
   "05_storage/02_update_profile_images_bucket_settings.sql",
+  "06_views/member_profiles/00_create_member_profiles_view.sql",
 ];
 
 function run(command, args, options = {}) {

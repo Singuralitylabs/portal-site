@@ -44,7 +44,7 @@ export function RestoreModal({ opened, onClose, target, userId }: RestoreModalPr
   const handleRestore = async () => {
     if (!target) return;
 
-    let result: { success: boolean; error: Error | null };
+    let result: { success: boolean; error: { message: string } | null };
 
     switch (target.type) {
       case "documents":

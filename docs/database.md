@@ -339,7 +339,7 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - 管理者またはメンテナーは全データを閲覧・登録・更新可能
 - 管理者またはメンテナーは論理削除が可能
   - 論理削除のみとし、物理削除を防止
-  - 削除時の「未分類」への移動・自動作成はRLSではなくアプリケーション仕様として実装する（詳細は `docs/specification.md` の「8.2 基本機能 > [カテゴリー管理] > 5. 削除」を参照）
+  - 削除時の「未分類」への移動はアプリケーション仕様として実装する（詳細は `docs/specification.md` の「9.2 基本機能 > [カテゴリー管理] > 5. 削除」を参照）。予約カテゴリーは事前に存在することを前提とし、未存在時は処理を失敗させる。
 
 ### 4.5. applications テーブルのRLSポリシー
 
@@ -354,15 +354,16 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 - 認証済ユーザーは削除されていないデータのみ閲覧可能
 - 管理者またはメンテナーは全データを閲覧可能
 - 管理者またはメンテナーは全データを登録・更新可能
+- UPDATE 対象は未削除の行のみ。削除済み役職の復元は許可しない。
+- 使用中の行は名称・説明・表示順のみ更新可能。使用中または `is_leadership = true` の行は論理削除不可（6.5 のトリガーで保護）。
 - 論理削除のみとし、物理削除を防止
 
 ### 4.7. position_tags テーブルのRLSポリシー
 
 - 認証済ユーザーは全データを閲覧可能
   - 物理削除のため、削除フラグは考慮不要
-- ユーザーは自身のデータのみ登録・更新可能
+- 一般メンバーは自身のデータを含め登録・更新・削除不可
 - 管理者またはメンテナーは全データを登録・更新可能
-- ユーザーは自身のデータのみ物理削除可能
 - 管理者またはメンテナーは全データを物理削除可能
 
 ### 4.8. profile-images Storage のRLSポリシー
@@ -482,6 +483,17 @@ UPDATE は列指定トリガー（`UPDATE OF role, status`）とし、`role` / `
 
 > **適用順の制約**
 > 本トリガー関数は `03_functions/rls_helper_functions.sql` の `is_active_user()` / `is_admin()` を参照します。ディレクトリの番号順（`02_triggers` → `03_functions`）とは逆の依存関係になるため、**必ず `03_functions/rls_helper_functions.sql` を先に適用してください**。関数の作成自体は遅延解決のため成功しますが、関数が未定義のままトリガーが発火すると `function is_admin() does not exist` で失敗します。影響を受けるのは新規ユーザー登録（INSERT）と `role` / `status` を含む UPDATE で、承認・否認が行えなくなります。
+
+### 6.5. マスター更新の整合性保護
+
+定義ファイル: `supabase/migrations/03_functions/master_management.sql`。既存テーブル・RLS ヘルパー・`update_updated_at_column()` の適用後に実行する。
+
+- `mutate_master_record` は SECURITY INVOKER とし、active な admin / maintainer と既存 RLS の両方で許可された更新だけを行う。ブラウザーからは Server Actions を呼び、サーバーサービスを経由して RPC を実行する。service_role は利用しない。
+- 全マスター更新をトランザクション単位の advisory lock で直列化する。更新 RPC は対象行を取得する前、直接の INSERT・UPDATE・DELETE は文単位の BEFORE トリガーで同じロックを取得する。行トリガーはその後に参照整合性を検証する。コンテンツ移動・カテゴリー削除・表示順変更・再採番は不可分に実行し、途中失敗ではすべてロールバックする。
+- `master_category_preview` は削除済みを含む全コンテンツとカテゴリー状態を JSON に集約する。確認用 token を更新トランザクション内でも比較し、内容が変われば更新を拒否する。影響一覧は通常一覧の件数制限を受けない。
+- `guard_master_integrity` は直接更新にも適用される。カテゴリーの種別整合性、未分類保護、参照中カテゴリーの種別変更・直接削除の禁止、幹部/使用中役職の削除禁止、使用中役職の幹部フラグ変更禁止を検証する。削除済み役職への新規割り当ても禁止する。
+- ID・created_at・created_by の変更を禁止し、コンテンツの created_by / updated_by は認証ユーザーから設定する。positions.updated_at にも共通の更新日時トリガーを適用する。
+- 復元は documents / videos / applications / categories のみ。削除済み行の通常編集、positions の復元は許可しない。
 
 ## 7. データアクセス制御の実現
 

@@ -14,9 +14,9 @@
 
 `migrations`ディレクトリには、データベース構築に必要なSQLファイルが含まれています：
 
-1. `01_create_tables.sql` - テーブル作成・更新
-2. `02_triggers.sql` - トリガー設定（updated_at自動更新など）
-3. `03_functions.sql` - 関数作成
+1. `01_tables/` - テーブル作成・更新
+2. `02_triggers/` - トリガー設定（updated_at自動更新など）
+3. `03_functions/` - 関数作成
 4. `04_policies` - テーブルのRLSポリシー設定
 
 ### マイグレーションとは？
@@ -33,6 +33,8 @@
 各マイグレーションファイルは番号順に実行する必要があります。ファイル内のSQLコマンドは、supabaseのSQLエディタ画面で実行して下さい（本番・共有の開発用Supabaseへの適用方法）。
 
 ローカルのDocker上でSupabaseを起動して試したい場合は、Wiki「[ローカルSupabase環境構築](https://github.com/Singuralitylabs/portal-site/wiki/ローカルSupabase環境構築)」を参照してください。フォルダ名の辞書順では外部キー参照の順序を満たせない箇所があるため、専用スクリプト（`npm run db:migrate:docker`）で依存関係を満たす順序に適用します。**新しいマイグレーションファイルを追加した場合は、`scripts/apply-local-migrations.cjs` の `ORDERED_RELATIVE_PATHS` にも追記してください。**
+
+構築済み DB では全マイグレーションを再実行せず、未適用分だけを SQL エディタなどで適用してください。Issue #420 の `03_functions/master_management.sql` は既存全テーブル・RLS ヘルパー・共通日時トリガー関数に依存します。アプリの更新より先に適用し、その後に型を再生成します。共有/本番 DB への適用はリリース手順に従います。
 
 ## 環境設定
 

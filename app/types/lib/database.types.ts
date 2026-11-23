@@ -1,11 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
   public: {
     Tables: {
       applications: {
@@ -24,6 +19,7 @@ export type Database = {
           updated_by: number;
           url: string;
         };
+        ComputedFields: never;
         Insert: {
           category_id: number;
           created_at?: string;
@@ -117,6 +113,7 @@ export type Database = {
           name: string;
           updated_at: string;
         };
+        ComputedFields: never;
         Insert: {
           category_type: string;
           created_at?: string;
@@ -155,6 +152,7 @@ export type Database = {
           updated_by: number;
           url: string;
         };
+        ComputedFields: never;
         Insert: {
           assignee?: string | null;
           assignee_id?: number | null;
@@ -245,6 +243,7 @@ export type Database = {
           updated_at: string;
           user_id: number;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           id?: number;
@@ -294,6 +293,7 @@ export type Database = {
           name: string;
           updated_at: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           description?: string | null;
@@ -331,11 +331,13 @@ export type Database = {
           is_deleted: boolean;
           portfolio_url: string | null;
           profile_image_path: string | null;
+          registration_notified_at: string | null;
           role: string;
           status: string;
           updated_at: string;
           x_url: string | null;
         };
+        ComputedFields: never;
         Insert: {
           auth_id: string;
           avatar_url?: string | null;
@@ -350,6 +352,7 @@ export type Database = {
           is_deleted?: boolean;
           portfolio_url?: string | null;
           profile_image_path?: string | null;
+          registration_notified_at?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;
@@ -369,6 +372,7 @@ export type Database = {
           is_deleted?: boolean;
           portfolio_url?: string | null;
           profile_image_path?: string | null;
+          registration_notified_at?: string | null;
           role?: string;
           status?: string;
           updated_at?: string;
@@ -395,6 +399,7 @@ export type Database = {
           updated_by: number;
           url: string;
         };
+        ComputedFields: never;
         Insert: {
           assignee?: string | null;
           assignee_id?: number | null;
@@ -489,15 +494,16 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           bio: string | null;
-          display_name: string | null;
+          display_name: string;
           facebook_url: string | null;
           github_url: string | null;
-          id: number | null;
+          id: number;
           instagram_url: string | null;
           portfolio_url: string | null;
           profile_image_path: string | null;
           x_url: string | null;
         };
+        ComputedFields: never;
         Insert: {
           avatar_url?: string | null;
           bio?: string | null;
@@ -526,13 +532,29 @@ export type Database = {
       };
     };
     Functions: {
-      get_clerk_user_id: { Args: never; Returns: string };
-      is_active_user: { Args: never; Returns: boolean };
-      is_admin: { Args: never; Returns: boolean };
-      is_authenticated_user: { Args: never; Returns: boolean };
-      is_content_manager: { Args: never; Returns: boolean };
-      is_registered_user: { Args: never; Returns: boolean };
-      requesting_user_id: { Args: never; Returns: string };
+      get_clerk_user_id: { Args: Record<PropertyKey, never>; Returns: string };
+      is_active_user: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_content_manager: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
+      is_registered_user: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
+      master_category_preview: { Args: { category_id: number }; Returns: Json };
+      mutate_master_record: {
+        Args: {
+          confirmation_token?: string;
+          fields?: Json;
+          operation: string;
+          placement?: Json;
+          record_id?: number;
+          table_name: string;
+        };
+        Returns: number;
+      };
       set_clerk_user_id: { Args: { clerk_id: string }; Returns: undefined };
     };
     Enums: {

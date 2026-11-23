@@ -95,6 +95,14 @@ CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-gi
 
 ### 3.2 セキュリティテスト
 
+マスター更新の DB 統合テストは PGlite（PostgreSQL WASM）に実際のテーブル・RLS・トリガー定義を読み込み、外部 DB に接続せずに検証する。`npm test` は PGlite の dynamic import に必要な `--experimental-vm-modules` を有効化する。
+
+```bash
+npm test -- --runTestsByPath tests/services/api/master-validation.test.ts tests/services/api/master-mutations-server.test.ts tests/services/api/master-database.test.ts tests/services/api/trash-client.test.ts --runInBand --coverage=false
+```
+
+確認対象は認可、未分類保護、削除済みを含む参照、種別整合性、役職保護、日時更新、確認後の変更、再採番、復元および失敗時ロールバック。実 DB の複数接続による競合とブラウザーのスクロール/確認操作は、ローカル Supabase と Playwright で別途確認する。
+
 認証・認可・承認ステータスの制御が、意図した振る舞いを満たすことを確認する。
 
 本プロジェクトのセキュリティテストは、**単体で確認できる部分はユニット**、**実際の認証フローに関わる部分は統合/ E2E**に分類する。
