@@ -331,7 +331,7 @@ Publishable key は公開を前提とした鍵だが、本リポジトリが `.e
 | リクエスト失敗（リトライ後も 4xx / 5xx） | 該当ターゲットのジョブが失敗する。もう一方のターゲットは継続する                               | Publishable key の失効、Project URL の誤り、プロジェクトの Pause 状態を確認する。Pause 済みの場合は Dashboard から Restore する |
 | `schedule` の自動無効化                  | Keep Alive が実行されなくなる                                                                  | GitHub Actions の画面からワークフローを再度有効化する                                                                           |
 
-ワークフローの失敗は GitHub から作成者へメールで通知される。Slack 通知が必要になった場合は、既存の `SLACK_WEBHOOK_URL` を利用する形で別イシューとして追加する。
+ワークフローの失敗（`failure`・`timed_out`・`startup_failure`）は、[7. GitHub Actions 失敗通知](#7-github-actions-失敗通知) の仕組み（#476）により Slack に通知される。スケジュール実行は main ブランチ上で動くため、通知の対象になる。あわせて GitHub からもメールで通知される。なお、表にある「`schedule` の自動無効化」はワークフローの失敗ではないため Slack には通知されず、GitHub からのメールで把握する。
 
 ## 7. GitHub Actions 失敗通知
 
