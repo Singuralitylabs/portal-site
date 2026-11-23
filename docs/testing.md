@@ -188,8 +188,8 @@ GitHub Actions は CI/CD の実行基盤として利用する。詳細は各ワ�
 - `.github/workflows/db-types.yml` を実行するために、GitHub Actions 側で以下の設定が必要。
 - **Secret**: `SUPABASE_ACCESS_TOKEN`（Supabase CLI で利用する Personal Access Token）
 - **Variable**: `SUPABASE_PROJECT_ID`（対象 Supabase プロジェクトの Project ID）
-- Dependabot 起点の実行では Secrets / Variables が渡らないため、ジョブはスキップされる。
-- Dependabot PR の Slack 通知（`dependabot-slack-notification.yml`）は `pull_request_target` で動くため、通常の Actions Secret の `SLACK_WEBHOOK_URL` をそのまま使う。Supabase CLI の更新による型ズレは、マージ後の `main` への push で検出する。
+- Dependabot 起点の実行では Secrets / Variables が渡らないため、ジョブはスキップされる。Supabase CLI の更新による型ズレは、マージ後の `main` への push で検出する。
+- Dependabot PR の Slack 通知（`dependabot-slack-notification.yml`）は `schedule` で動くため、通常の Actions Secret の `SLACK_WEBHOOK_URL` をそのまま使う。
 
 ## 5. テスト規約
 

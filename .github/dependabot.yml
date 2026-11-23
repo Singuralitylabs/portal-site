@@ -1,5 +1,5 @@
 # Dependabot version updates
-# Dependabot PR の作成時は Slack に通知される（.github/workflows/dependabot-slack-notification.yml）
+# オープン中の Dependabot PR は毎週 Slack に通知される（.github/workflows/dependabot-slack-notification.yml）
 version: 2
 updates:
   - package-ecosystem: "npm"
