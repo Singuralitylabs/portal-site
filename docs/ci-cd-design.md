@@ -367,7 +367,7 @@ PR起因の実行もheadブランチで判定する。通常のmain→releaseの
 | `Create Release` ([`create-release.yml`](../.github/workflows/create-release.yml))                       | リリース条件の検証、タグ作成、または GitHub Release 作成に失敗する  |
 | `Fork Sync` ([`fork-sync.yml`](../.github/workflows/fork-sync.yml))                                      | 必須設定の検証、またはフォークへの release ブランチ push に失敗する |
 
-`Wiki Slack Notification` ([`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)) はIssue #172で定めた対象10件の範囲外のため監視対象に含めない。Wiki通知を含めても失敗通知workflow自身を監視しなければ循環は起きない。`Dependabot Slack Notification` ([`dependabot-slack-notification.yml`](../.github/workflows/dependabot-slack-notification.yml)) もIssue #172で定めた対象10件の範囲外のため監視対象に含めない。共通Webhookの設定不備や障害は、同じWebhookへの通知では検知できない。このworkflowが失敗した場合は、GitHubから通知対象（cronを最後に更新したユーザー）へメールで届くほか、Actionsの実行ログで確認する。Wiki通知や失敗通知自体のエラーはGitHub Actionsの失敗通知・実行ログで確認する。共通Webhookの設定不備や障害は、同じWebhookへの通知では検知を保証できない。
+`Wiki Slack Notification` ([`wiki-slack-notification.yml`](../.github/workflows/wiki-slack-notification.yml)) はIssue #172で定めた対象10件の範囲外のため監視対象に含めない。Wiki通知を含めても失敗通知workflow自身を監視しなければ循環は起きない。`Dependabot Slack Notification` ([`dependabot-slack-notification.yml`](../.github/workflows/dependabot-slack-notification.yml)) もIssue #172で定めた対象10件の範囲外のため監視対象に含めない。このworkflowが失敗した場合は、GitHubから通知対象（cronを最後に更新したユーザー）へメールで届くほか、Actionsの実行ログで確認する。Wiki通知や失敗通知自体のエラーはGitHub Actionsの失敗通知・実行ログで確認する。共通Webhookの設定不備や障害は、同じWebhookへの通知では検知を保証できない。
 
 Wiki更新通知と失敗通知は [`scripts/slack-webhook.cjs`](../scripts/slack-webhook.cjs) の送信処理を共有する。イベント固有の本文生成は各スクリプトが担当する。HTTPエラーはステータスのみを報告し、レスポンス本文はログへ出さない。失敗通知は `contents: read` のみで `github.workflow_sha`（通知workflow自身のコミット）をcheckoutし、認証情報を永続化しない。元runのheadコミットや成果物からコードを実行しない。
 
