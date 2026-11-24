@@ -7,6 +7,23 @@ import {
 } from "@/app/utils/master-validation";
 import type { MasterTableName } from "@/app/constants/master";
 
+const publicMutationMessages = new Set([
+  "ログインが必要です。",
+  "操作権限がありません。",
+  "カテゴリーが見つかりません。",
+  "有効な同種別のカテゴリーを指定してください。",
+  "未分類カテゴリーは名称・種別の変更および削除ができません。",
+  "参照されているカテゴリーの種別変更・直接削除はできません。",
+  "幹部または使用中の役職は削除できません。",
+  "使用中の役職の幹部フラグは変更できません。",
+  "対象レコードが見つかりません。",
+  "削除状態が変更されています。再取得してください。",
+  "参照状況が変更されています。再確認してください。",
+  "未分類カテゴリーは削除できません。",
+  "配置先が見つかりません。",
+  "操作対象が見つからないか権限がありません。",
+]);
+
 export async function requireMasterManager() {
   const supabase = await createServerSupabaseClient();
   const { data: auth, error: authError } = await supabase.auth.getUser();
@@ -69,9 +86,10 @@ export async function mutateMasterRecord(
     if (error) throw new Error(error.message);
     return { success: true, error: null, id: data as number };
   } catch (error) {
+    const message = error instanceof Error ? error.message : "";
     return {
       success: false,
-      error: { message: error instanceof Error ? error.message : "更新に失敗しました。" },
+      error: { message: publicMutationMessages.has(message) ? message : "更新に失敗しました。" },
     };
   }
 }

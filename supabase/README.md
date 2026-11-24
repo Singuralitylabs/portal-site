@@ -36,6 +36,22 @@
 
 構築済み DB では全マイグレーションを再実行せず、未適用分だけを SQL エディタなどで適用してください。Issue #420 の `03_functions/master_management.sql` は既存全テーブル・RLS ヘルパー・共通日時トリガー関数に依存します。アプリの更新より先に適用し、その後に型を再生成します。共有/本番 DB への適用はリリース手順に従います。
 
+`master_management.sql` の適用前に、削除済みのコンテンツも含めて確認できる権限で、次の読み取り専用クエリを実行してください。結果が 0 件であることを確認し、不一致があれば対象レコードを調査・修正してから適用してください。
+
+```sql
+WITH content_categories AS (
+  SELECT 'documents' AS content_type, id, category_id FROM public.documents
+  UNION ALL
+  SELECT 'videos', id, category_id FROM public.videos
+  UNION ALL
+  SELECT 'applications', id, category_id FROM public.applications
+)
+SELECT content.content_type, content.id, content.category_id, category.category_type
+FROM content_categories AS content
+JOIN public.categories AS category ON category.id = content.category_id
+WHERE category.category_type <> content.content_type;
+```
+
 ## 環境設定
 
 ### 必要な環境変数

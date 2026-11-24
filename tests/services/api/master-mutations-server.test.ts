@@ -127,4 +127,16 @@ describe("master server mutations", () => {
     });
     expect((await mutateMasterRecord(input)).error?.message).toContain("再確認");
   });
+
+  it("hides internal database errors from the caller", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'new row violates row-level security policy for table "documents"' },
+    });
+
+    expect(await mutateMasterRecord(input)).toEqual({
+      success: false,
+      error: { message: "更新に失敗しました。" },
+    });
+  });
 });

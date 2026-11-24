@@ -28,10 +28,7 @@ export async function mutateMasterRecordAction(
 export async function fetchMasterFormOptionsAction(table: MasterTableName, id?: number) {
   try {
     return { options: await fetchMasterFormOptions(table, id), error: null };
-  } catch (error) {
-    return {
-      options: null,
-      error: error instanceof Error ? error.message : "選択肢の取得に失敗しました。",
-    };
+  } catch {
+    return { options: null, error: "選択肢の取得に失敗しました。" };
   }
 }
