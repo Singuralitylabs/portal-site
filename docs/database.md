@@ -358,12 +358,13 @@ Supabaseでは、Row Level Security（RLS）を使用してデータアクセス
 
 ### 4.7. position_tags テーブルのRLSポリシー
 
-- 認証済ユーザーは全データを閲覧可能
+- 定義ファイル: `04_policies/position_tags/00` → `01` → `02` の順に実行する
+  - `00_position_tags_policies.sql` を単独で再実行しないこと。旧定義（member による登録・更新・削除を許可するポリシー）が残っており、再実行すると復活してしまう
+- 認証済ユーザーは全データを閲覧可能（`authenticated_users_can_read_all`）
   - 物理削除のため、削除フラグは考慮不要
-- ユーザーは自身のデータのみ登録・更新可能
-- 管理者またはメンテナーは全データを登録・更新可能
-- ユーザーは自身のデータのみ物理削除可能
-- 管理者またはメンテナーは全データを物理削除可能
+- 管理者またはメンテナーは全データを登録・更新可能（`content_managers_can_insert` / `content_managers_can_update`）
+- 管理者またはメンテナーは全データを物理削除可能（`content_managers_can_delete_position_tags`、旧名 `admins_can_delete_position_tags` から改名）
+- 一般会員（member）による登録・更新・削除は許可しない（issue #434）
 
 ### 4.8. profile-images Storage のRLSポリシー
 
