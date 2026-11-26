@@ -17,7 +17,7 @@ export type DocumentUpdateFormType = Omit<
 
 // Videos types
 type VideosTable = Database["public"]["Tables"]["videos"];
-export type VideoWithCategoryType = VideosTable["Row"] & {
+export type VideoWithCategoryType = Omit<VideosTable["Row"], "assignee"> & {
   category: { name: string } | null;
   assignee?: { id: number; display_name: string } | null;
 };

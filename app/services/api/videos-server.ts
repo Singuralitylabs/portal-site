@@ -9,7 +9,9 @@ export async function fetchVideos(): Promise<{
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("videos")
-    .select(`*, category:categories (name)`)
+    .select(
+      `*, category:categories (name), assignee:member_profiles!videos_assignee_fk (id, display_name)`
+    )
     .eq("is_deleted", false)
     .order("display_order");
 

@@ -6,16 +6,23 @@ import type { SelectCategoryType, VideoWithCategoryType } from "@/app/types";
 import ContentMgrMenu from "@/app/(authenticated)/components/ContentMgrMenu";
 import { CONTENT_TYPE } from "@/app/constants/content";
 import { getVideoThumbnailUrl } from "../utils";
-import { VideoDuration, VideoUpdatedDate } from "./VideoMetadata";
+import { VideoDuration, VideoRecordedDate, VideoUpdatedDate } from "./VideoMetadata";
 
 interface VideoListItemProps {
   video: VideoWithCategoryType;
+  showCategory: boolean;
   categories: SelectCategoryType[];
   isContentMgr: boolean;
   userId: number;
 }
 
-export function VideoListItem({ video, categories, isContentMgr, userId }: VideoListItemProps) {
+export function VideoListItem({
+  video,
+  showCategory,
+  categories,
+  isContentMgr,
+  userId,
+}: VideoListItemProps) {
   return (
     <Table.Tr>
       <Table.Td>
@@ -41,6 +48,15 @@ export function VideoListItem({ video, categories, isContentMgr, userId }: Video
         <Text size="sm" c="dimmed" lineClamp={2} className="[overflow-wrap:anywhere]">
           {video.description}
         </Text>
+      </Table.Td>
+      {showCategory && (
+        <Table.Td className="[overflow-wrap:anywhere]">{video.category?.name ?? "未設定"}</Table.Td>
+      )}
+      <Table.Td>
+        <VideoRecordedDate date={video.recorded_on} />
+      </Table.Td>
+      <Table.Td className="[overflow-wrap:anywhere]">
+        {video.assignee?.display_name || "未設定"}
       </Table.Td>
       <Table.Td>
         <VideoUpdatedDate timestamp={video.updated_at} />

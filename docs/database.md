@@ -97,6 +97,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス                   |
 | `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算）     |
 | `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）             |
+| `recorded_on`    | `DATE`         | NULL許容、既定値なし                 | 収録日（時刻・タイムゾーンなし）     |
 | `display_order`  | `INTEGER`      | DEFAULT 0, NOT NULL                  | 表示順                               |
 | `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー               |
 | `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー         |
@@ -211,6 +212,7 @@ erDiagram
         TEXT thumbnail_path "サムネイル画像パス"
         INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
         INTEGER length "動画の再生時間（秒換算）"
+        DATE recorded_on "収録日（任意）"
         INTEGER display_order "表示順"
         INTEGER created_by FK "動画を作成したユーザー (users.id)"
         INTEGER updated_by FK "動画を最後に更新したユーザー (users.id)"
