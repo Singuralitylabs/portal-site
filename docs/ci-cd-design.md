@@ -297,7 +297,6 @@ Pause 予告メールを Slack へ通知する仕組みは [#148](https://github
 
 本ワークフローでは、レガシーの anon key ではなく **Publishable key**（`sb_publishable_...`）を使用する。
 
-- Supabase は API キーを Publishable key / Secret key へ移行しており、レガシーの `anon` / `service_role` キーが動作するのは 2026 年末までと案内されている（[Migrating to publishable and secret API keys](https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys)）。新規に追加する仕組みでレガシーキーへ依存しない
 - Publishable key は JWT secret と独立して発行・失効できるため、漏洩時にアプリ本体のキーへ影響を与えずにローテーションできる
 
 Publishable key は JWT ではないため、リクエストでは `apikey` ヘッダーのみに設定する。`Authorization: Bearer` ヘッダーは付けない（[API keys](https://supabase.com/docs/guides/getting-started/api-keys)）。
