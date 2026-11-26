@@ -1,6 +1,27 @@
 import { validateMasterMutation } from "@/app/utils/master-validation";
 
 describe("master mutation validation", () => {
+  it.each(["documents", "videos", "applications"] as const)(
+    "requires HTTPS for %s creation and updates",
+    table => {
+      for (const operation of ["create", "update"] as const) {
+        const input = {
+          table,
+          operation,
+          id: 1,
+          fields: { name: "Content", category_id: 1, url: "http://example.com" },
+        };
+        expect(validateMasterMutation(input)).toContain("https");
+        expect(
+          validateMasterMutation({
+            ...input,
+            fields: { ...input.fields, url: "https://example.com" },
+          })
+        ).toBeNull();
+      }
+    }
+  );
+
   it("accepts editable position fields", () => {
     expect(
       validateMasterMutation({

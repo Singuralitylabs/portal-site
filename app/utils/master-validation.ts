@@ -83,8 +83,8 @@ export function validateMasterMutation(input: MasterMutationInput): string | nul
       }
     } else if (key === "url") {
       try {
-        if (typeof value !== "string" || !["http:", "https:"].includes(new URL(value).protocol)) {
-          return "URL は http または https で指定してください。";
+        if (typeof value !== "string" || new URL(value).protocol !== "https:") {
+          return "URL は https で指定してください。";
         }
       } catch {
         return "有効な URL を入力してください。";

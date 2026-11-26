@@ -95,10 +95,12 @@ CI のワークフロー一覧は [4.1 GitHub Actions ワークフロー](#41-gi
 
 ### 3.2 セキュリティテスト
 
-マスター更新の DB 統合テストは PGlite（PostgreSQL WASM）に実際のテーブル・RLS・トリガー定義を読み込み、外部 DB に接続せずに検証する。`npm test` は PGlite の dynamic import に必要な `--experimental-vm-modules` を有効化する。
+通常の Jest 起動と GitHub Actions は既存の `npm test` を使用し、SQL 統合テスト（`tests/services/api/master-database.test.ts`）を対象外とする。GitHub Actions では実 DB・ローカル Supabase・PGlite の SQL テストを実行しない。
+
+マスター更新の SQL 統合テストはローカル専用とする。PGlite（PostgreSQL WASM）に実際のテーブル・RLS・トリガー定義を読み込み、外部 DB に接続せずに検証する。ローカルで SQL 統合テストを含めて実行する場合は、`JEST_LOCAL_SQL=1` と PGlite の dynamic import に必要な `--experimental-vm-modules` を設定する `npm run test:vm-modules` を使用する。`CI` が設定された環境では、`JEST_LOCAL_SQL=1` でも SQL 統合テストを除外する。
 
 ```bash
-npm test -- --runTestsByPath tests/services/api/master-validation.test.ts tests/services/api/master-mutations-server.test.ts tests/services/api/master-database.test.ts tests/services/api/trash-client.test.ts --runInBand --coverage=false
+npm run test:vm-modules -- --runTestsByPath tests/services/api/master-validation.test.ts tests/services/api/master-mutations-server.test.ts tests/services/api/master-database.test.ts tests/services/api/trash-client.test.ts --runInBand --coverage=false
 ```
 
 確認対象は認可、未分類保護、削除済みを含む参照、種別整合性、役職保護、日時更新、確認後の変更、再採番、復元および失敗時ロールバック。実 DB の複数接続による競合とブラウザーのスクロール/確認操作は、ローカル Supabase と Playwright で別途確認する。

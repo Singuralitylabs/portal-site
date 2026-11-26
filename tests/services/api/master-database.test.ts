@@ -136,6 +136,58 @@ afterAll(async () => {
 });
 
 describe("master database operations with actual migrations and RLS", () => {
+  it.each(["documents", "videos", "applications"])(
+    "blocks edits to deleted %s while allowing reclassification and restoration",
+    async table => {
+      const group = await category(`Deleted ${table}`, table);
+      const destination = await category(`Other ${table}`, table);
+      const record = await mutate(table, "create", null, {
+        name: "Original",
+        description: "Original description",
+        url: "https://example.com",
+        category_id: group,
+      });
+      await mutate(table, "delete", record);
+      for (const assignment of [
+        "name='Changed'",
+        "url='https://example.com/changed'",
+        "display_order=100",
+        `category_id=${destination}`,
+        "is_deleted=false,name='Changed'",
+      ]) {
+        await expect(
+          query(`UPDATE ${table} SET ${assignment} WHERE id=$1`, [record])
+        ).rejects.toThrow("削除済み");
+      }
+      const impact = await preview(group);
+      await mutate("categories", "delete", group, {}, undefined, impact.token);
+      await mutate(table, "restore", record);
+      expect(await query(`SELECT name,is_deleted FROM ${table} WHERE id=$1`, [record])).toEqual([
+        { name: "Original", is_deleted: false },
+      ]);
+    }
+  );
+
+  it("blocks edits to deleted categories while allowing restoration", async () => {
+    const group = await category("Deleted category");
+    const impact = await preview(group);
+    await mutate("categories", "delete", group, {}, undefined, impact.token);
+    for (const assignment of [
+      "name='Changed'",
+      "category_type='videos'",
+      "display_order=100",
+      "is_deleted=false,name='Changed'",
+    ]) {
+      await expect(
+        query(`UPDATE categories SET ${assignment} WHERE id=$1`, [group])
+      ).rejects.toThrow("削除済み");
+    }
+    await mutate("categories", "restore", group);
+    expect(await query("SELECT name,is_deleted FROM categories WHERE id=$1", [group])).toEqual([
+      { name: "Deleted category", is_deleted: false },
+    ]);
+  });
+
   it.each([1, 2])("allows active manager %s to mutate", async id => {
     await actor(id);
     const position = await mutate("positions", "create", null, { name: "New role" });

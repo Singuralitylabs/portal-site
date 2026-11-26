@@ -59,11 +59,29 @@ BEGIN
     IF NEW.id IS DISTINCT FROM OLD.id OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
       RAISE EXCEPTION 'ID・作成日時は変更できません。';
     END IF;
+    IF OLD.is_deleted AND TG_TABLE_NAME <> 'positions' THEN
+      IF (to_jsonb(NEW) - ARRAY['is_deleted','display_order','updated_at','updated_by','category_id'])
+        IS DISTINCT FROM (to_jsonb(OLD) - ARRAY['is_deleted','display_order','updated_at','updated_by','category_id']) THEN
+        RAISE EXCEPTION '削除済みのレコードは変更できません。';
+      END IF;
+      IF TG_TABLE_NAME = 'categories' AND NEW.is_deleted AND NEW.display_order IS DISTINCT FROM OLD.display_order THEN
+        RAISE EXCEPTION '削除済みのレコードは変更できません。';
+      END IF;
+    END IF;
   END IF;
   IF TG_TABLE_NAME IN ('documents', 'videos', 'applications') THEN
     SELECT * INTO category_row FROM categories WHERE id = NEW.category_id FOR UPDATE;
     IF NOT FOUND OR category_row.is_deleted OR category_row.category_type <> TG_TABLE_NAME THEN
       RAISE EXCEPTION '有効な同種別のカテゴリーを指定してください。';
+    END IF;
+    IF TG_OP = 'UPDATE' AND OLD.is_deleted THEN
+      IF NEW.category_id IS DISTINCT FROM OLD.category_id THEN
+        IF NOT NEW.is_deleted OR category_row.name <> '未分類' THEN
+          RAISE EXCEPTION '削除済みのレコードは変更できません。';
+        END IF;
+      ELSIF NEW.is_deleted AND NEW.display_order IS DISTINCT FROM OLD.display_order THEN
+        RAISE EXCEPTION '削除済みのレコードは変更できません。';
+      END IF;
     END IF;
     IF TG_OP = 'UPDATE' AND NEW.created_by IS DISTINCT FROM OLD.created_by THEN
       RAISE EXCEPTION '作成者は変更できません。';

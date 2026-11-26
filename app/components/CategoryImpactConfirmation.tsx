@@ -22,7 +22,12 @@ export function CategoryImpactConfirmation({
         {impact.contents.length}{" "}
         件のコンテンツが関連しています。削除時は同種別の未分類へ移動します。
       </Alert>
-      <ScrollArea h={240} type="always" offsetScrollbars>
+      <ScrollArea
+        h={240}
+        type="always"
+        offsetScrollbars
+        viewportProps={{ tabIndex: 0, role: "region", "aria-label": "関連コンテンツ一覧" }}
+      >
         <Table miw={400}>
           <Table.Thead>
             <Table.Tr>
