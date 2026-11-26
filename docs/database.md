@@ -107,12 +107,6 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                             |
 | `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                             |
 
-**収録日の扱い**
-
-- 収録日導入前の動画（論理削除済みを含む）には、作成日を初期値として設定する。作成日はタイムゾーンなしの `created_at` を既存表示と同じく UTC として解釈し、`Asia/Tokyo` に変換した日付とする。この初期値の設定で `updated_at` と `display_order` は変わらない。
-- 作成日は実際の収録日と異なる場合があるため、管理者またはメンテナーが必要に応じて修正する。新規動画や手動でクリアした収録日は `NULL` のままとし、作成日で補完し直さない。
-- 一覧の責任者名は既存の外部キー `videos_assignee_fk` を使い、動画詳細と同様に `member_profiles.display_name` を参照する。責任者未設定の動画も一覧取得の対象とする。RLS・HTTP API・管理用の表示順変更処理は変更しない。
-
 ### 2.4. categories テーブル
 
 | カラム名        | データ型       | 制約                                                | 説明                            |
