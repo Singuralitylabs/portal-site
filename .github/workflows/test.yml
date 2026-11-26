@@ -9,6 +9,7 @@ on:
       - "jest.config.js"
       - "package.json"
       - "package-lock.json"
+      - ".github/workflows/test.yml"
   pull_request:
     paths:
       - "app/**"
@@ -17,6 +18,7 @@ on:
       - "jest.config.js"
       - "package.json"
       - "package-lock.json"
+      - ".github/workflows/test.yml"
   workflow_dispatch:
 
 jobs:

@@ -18,10 +18,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      # メジャー更新も1本のPRにまとめ、open-pull-requests-limit を使い切らないようにする
+      major-updates:
+        update-types:
+          - "major"
     ignore:
       # メジャー更新は Issue #293 で影響調査のうえ計画的に実施する
       # eslint は flat config への移行（Next.js 16 対応）とセットで実施する
-      # @types/node は実行環境の Node.js 22 に合わせる
+      # @types/node は実行環境（Node.js 22）より新しい 23 以降を除外する
       - dependency-name: "next"
         update-types: ["version-update:semver-major"]
       - dependency-name: "eslint-config-next"
@@ -29,7 +33,7 @@ updates:
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
+        versions: [">=23"]
       - dependency-name: "@mantine/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "tailwindcss"
