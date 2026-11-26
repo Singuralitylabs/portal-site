@@ -145,6 +145,7 @@ const VIDEOS_MASTER_TABLE = defineMasterTable({
     thumbnail_path: "サムネイルパス",
     thumbnail_time: "サムネイル時刻",
     length: "動画時間",
+    recorded_on: "収録日",
     display_order: "表示順",
     created_by: "作成者",
     updated_by: "更新者",

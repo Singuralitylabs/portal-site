@@ -389,6 +389,7 @@ export type Database = {
           is_deleted: boolean;
           length: number | null;
           name: string;
+          recorded_on: string | null;
           thumbnail_path: string | null;
           thumbnail_time: number | null;
           updated_at: string;
@@ -407,6 +408,7 @@ export type Database = {
           is_deleted?: boolean;
           length?: number | null;
           name: string;
+          recorded_on?: string | null;
           thumbnail_path?: string | null;
           thumbnail_time?: number | null;
           updated_at?: string;
@@ -425,6 +427,7 @@ export type Database = {
           is_deleted?: boolean;
           length?: number | null;
           name?: string;
+          recorded_on?: string | null;
           thumbnail_path?: string | null;
           thumbnail_time?: number | null;
           updated_at?: string;

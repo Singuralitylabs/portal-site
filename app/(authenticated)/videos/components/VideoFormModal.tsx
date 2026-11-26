@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, TextInput, Select, Textarea, Button, Group, NumberInput } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { registerVideo, updateVideo } from "@/app/services/api/videos-client";
@@ -31,6 +33,7 @@ export function VideoFormModal({
     thumbnail_path: "",
     thumbnail_time: 0,
     length: 0,
+    recorded_on: null as string | null,
     assignee_id: null as number | null,
   });
   const [users, setUsers] = useState<
@@ -60,6 +63,7 @@ export function VideoFormModal({
       thumbnail_path: initialData?.thumbnail_path ?? "",
       thumbnail_time: initialData?.thumbnail_time ?? 0,
       length: initialData?.length ?? 0,
+      recorded_on: initialData?.recorded_on ?? null,
       assignee_id: initialData?.assignee_id ?? null,
     });
 
@@ -122,6 +126,7 @@ export function VideoFormModal({
       thumbnail_path: form.thumbnail_path,
       thumbnail_time: form.thumbnail_time,
       length: form.length,
+      recorded_on: form.recorded_on,
       assignee_id: form.assignee_id,
       position: parsedPosition,
     };
@@ -200,6 +205,16 @@ export function VideoFormModal({
         value={form.thumbnail_time}
         onChange={value => setForm(f => ({ ...f, thumbnail_time: Number(value) }))}
         min={0}
+        mb="sm"
+      />
+      <DatePickerInput
+        label="収録日"
+        valueFormat="YYYY-MM-DD"
+        value={form.recorded_on ? dayjs(form.recorded_on).toDate() : null}
+        onChange={value =>
+          setForm(f => ({ ...f, recorded_on: value ? dayjs(value).format("YYYY-MM-DD") : null }))
+        }
+        clearable
         mb="sm"
       />
       <NumberInput

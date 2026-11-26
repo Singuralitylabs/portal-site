@@ -322,6 +322,7 @@ describe("content client services", () => {
         thumbnail_path: "/thumb.png",
         thumbnail_time: 12,
         length: 100,
+        recorded_on: "2026-03-01",
         assignee_id: 1,
         created_by: 10,
         position: { type: "first" as const },
@@ -335,6 +336,7 @@ describe("content client services", () => {
         thumbnail_path: "/thumb2.png",
         thumbnail_time: 20,
         length: 120,
+        recorded_on: null,
         assignee_id: 2,
         updated_by: 11,
         position: { type: "after" as const, afterId: 3 },
@@ -357,6 +359,11 @@ describe("content client services", () => {
 
       // 登録成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
+      if ("recorded_on" in registerPayload) {
+        expect(insertBuilder.insert).toHaveBeenCalledWith([
+          expect.objectContaining({ recorded_on: registerPayload.recorded_on }),
+        ]);
+      }
       // 登録後にカテゴリ内 display_order の再採番が実行されることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(1);
     });
@@ -405,6 +412,11 @@ describe("content client services", () => {
 
       // 更新成功時に success=true が返ることを確認
       expect(response).toEqual({ success: true, error: null });
+      if ("recorded_on" in updatePayload) {
+        expect(updateBuilder.update).toHaveBeenCalledWith(
+          expect.objectContaining({ recorded_on: updatePayload.recorded_on })
+        );
+      }
       // カテゴリ移動時に移動元/移動先で再採番が2回行われることを確認
       expect(reorderItemsInCategoryMock).toHaveBeenCalledTimes(2);
     });
