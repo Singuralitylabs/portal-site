@@ -97,6 +97,7 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `thumbnail_path` | `TEXT`         |                                      | サムネイル画像パス                   |
 | `thumbnail_time` | `INTEGER`      |                                      | サムネイルのタイミング（秒換算）     |
 | `length`         | `INTEGER`      |                                      | 動画の再生時間（秒換算）             |
+| `recorded_on`    | `DATE`         | NULL許容、既定値なし                 | 収録日（時刻・タイムゾーンなし）     |
 | `display_order`  | `INTEGER`      | DEFAULT 0, NOT NULL                  | 表示順                               |
 | `created_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を作成したユーザー               |
 | `updated_by`     | `INTEGER`      | FOREIGN KEY(users.id), NOT NULL      | 動画を最後に更新したユーザー         |
@@ -105,6 +106,12 @@ Supabaseは、PostgreSQLを基盤としたオープンソースのバックエ�
 | `is_deleted`     | `BOOLEAN`      | DEFAULT FALSE, NOT NULL              | 論理削除フラグ                       |
 | `created_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 作成日時                             |
 | `updated_at`     | `TIMESTAMP`    | DEFAULT CURRENT_TIMESTAMP, NOT NULL  | 更新日時                             |
+
+**収録日の扱い**
+
+- 収録日導入前の動画（論理削除済みを含む）には、作成日を初期値として設定する。作成日はタイムゾーンなしの `created_at` を既存表示と同じく UTC として解釈し、`Asia/Tokyo` に変換した日付とする。この初期値の設定で `updated_at` と `display_order` は変わらない。
+- 作成日は実際の収録日と異なる場合があるため、管理者またはメンテナーが必要に応じて修正する。新規動画や手動でクリアした収録日は `NULL` のままとし、作成日で補完し直さない。
+- 一覧の責任者名は既存の外部キー `videos_assignee_fk` を使い、動画詳細と同様に `member_profiles.display_name` を参照する。責任者未設定の動画も一覧取得の対象とする。RLS・HTTP API・管理用の表示順変更処理は変更しない。
 
 ### 2.4. categories テーブル
 
@@ -211,6 +218,7 @@ erDiagram
         TEXT thumbnail_path "サムネイル画像パス"
         INTEGER thumbnail_time "サムネイルのタイミング（秒換算）"
         INTEGER length "動画の再生時間（秒換算）"
+        DATE recorded_on "収録日（任意）"
         INTEGER display_order "表示順"
         INTEGER created_by FK "動画を作成したユーザー (users.id)"
         INTEGER updated_by FK "動画を最後に更新したユーザー (users.id)"
