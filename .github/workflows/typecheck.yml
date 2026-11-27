@@ -9,6 +9,7 @@ on:
       - "tsconfig.json"
       - "package.json"
       - "package-lock.json"
+      - ".github/workflows/typecheck.yml"
   pull_request:
     paths:
       - "app/**"
@@ -17,6 +18,7 @@ on:
       - "tsconfig.json"
       - "package.json"
       - "package-lock.json"
+      - ".github/workflows/typecheck.yml"
   workflow_dispatch:
 
 jobs:

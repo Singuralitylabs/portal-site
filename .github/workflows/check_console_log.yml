@@ -8,6 +8,7 @@ on:
       - "scripts/lint-logs.cjs"
       - "package.json"
       - "package-lock.json"
+      - ".github/workflows/check_console_log.yml"
   pull_request:
     paths:
       - "app/**"
@@ -15,6 +16,7 @@ on:
       - "scripts/lint-logs.cjs"
       - "package.json"
       - "package-lock.json"
+      - ".github/workflows/check_console_log.yml"
   workflow_dispatch:
 
 jobs:

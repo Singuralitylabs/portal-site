@@ -5,10 +5,16 @@ on:
     paths:
       - "app/**"
       - "middleware.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/build.yml"
   pull_request:
     paths:
       - "app/**"
       - "middleware.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/build.yml"
   workflow_dispatch:
 
 jobs:

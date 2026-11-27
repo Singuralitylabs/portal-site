@@ -5,6 +5,7 @@ const {
   buildSlackMessage,
 } = require("../../scripts/action-failure-slack-notification.cjs");
 const wiki = require("../../scripts/wiki-slack-notification.cjs");
+const dependabot = require("../../scripts/dependabot-slack-notification.cjs");
 const { validateWorkflows } = require("../../scripts/check-workflow-notifications.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -246,5 +247,69 @@ describe("Slack webhook", () => {
     await expect(sendSlackNotification("https://example.invalid", "test")).rejects.toThrow(
       "Slack notification failed: 403"
     );
+  });
+});
+
+describe("Dependabot notification", () => {
+  const originalFetch = global.fetch;
+  const now = new Date("2026-11-23T02:00:00Z");
+  const dependabotPr = {
+    user: { login: "dependabot[bot]" },
+    title: "Bump <next> | group",
+    html_url: "https://github.com/example/portal/pull/1",
+    created_at: "2026-11-20T02:00:00Z",
+  };
+  const humanPr = { ...dependabotPr, user: { login: "someone" }, title: "Human PR" };
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.restoreAllMocks();
+  });
+
+  function prepare(pullRequests) {
+    process.env.GITHUB_REPOSITORY = "example/portal";
+    process.env.GITHUB_TOKEN = "token";
+    process.env.SLACK_WEBHOOK_URL = "https://example.invalid/webhook";
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => pullRequests })
+      .mockResolvedValue({ ok: true });
+  }
+
+  test("keeps only Dependabot pull requests", () => {
+    expect(dependabot.filterDependabotPullRequests([dependabotPr, humanPr])).toEqual([
+      dependabotPr,
+    ]);
+  });
+
+  test("builds a message with escaped titles and age in days", () => {
+    const message = dependabot.buildSlackMessage([dependabotPr], now);
+    expect(message).toContain("未対応の Dependabot PR が 1 件あります");
+    expect(message).toContain(
+      "<https://github.com/example/portal/pull/1|Bump ＜next＞ ｜ group>（作成から 3 日）"
+    );
+  });
+
+  test("entry point lists open pull requests and sends one notification", async () => {
+    prepare([dependabotPr, humanPr]);
+    await dependabot.main();
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(global.fetch.mock.calls[0][0]).toContain("/repos/example/portal/pulls?state=open");
+    const message = JSON.parse(global.fetch.mock.calls[1][1].body).text;
+    expect(message).toContain("1 件");
+    expect(message).not.toContain("Human PR");
+  });
+
+  test("entry point skips when there are no Dependabot pull requests", async () => {
+    prepare([humanPr]);
+    jest.spyOn(process.stdout, "write").mockReturnValue(true);
+    await dependabot.main();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("entry point propagates GitHub API errors", async () => {
+    prepare([]);
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 403 });
+    await expect(dependabot.main()).rejects.toThrow("GitHub API request failed: 403");
   });
 });

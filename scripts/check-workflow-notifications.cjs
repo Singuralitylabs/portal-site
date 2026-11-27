@@ -6,6 +6,7 @@ const NOTIFIER = "action-failure-slack-notification.yml";
 const EXCLUSIONS = {
   "action-failure-slack-notification.yml": "Actions Failure Slack Notification",
   "wiki-slack-notification.yml": "Wiki Slack Notification",
+  "dependabot-slack-notification.yml": "Dependabot Slack Notification",
 };
 
 function validateWorkflows(workflows) {
