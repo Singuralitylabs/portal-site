@@ -15,11 +15,11 @@ jobs:
     steps:
       # 通知スクリプト本体を含む portal-site リポジトリを取得する。
       - name: Checkout portal-site repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # スクリプト実行に必要な Node.js 実行環境を用意する。
       - name: Setup Node.js 22.x
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
 
