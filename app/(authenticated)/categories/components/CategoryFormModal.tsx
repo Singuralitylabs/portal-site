@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Group, Modal, Select, TextInput, Textarea } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
+import { CategoryImpactConfirmation } from "@/app/components/CategoryImpactConfirmation";
+import type { CategoryImpact } from "@/app/utils/master-validation";
 import {
   getCategoriesForPosition,
   registerCategory,
@@ -59,6 +61,8 @@ export function CategoryFormModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [position, setPosition] = useState<string>("last");
+  const [impact, setImpact] = useState<CategoryImpact | null>(null);
+  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<
     { id: number; name: string; display_order: number }[]
   >([]);
@@ -72,12 +76,28 @@ export function CategoryFormModal({
     setName(initialData?.name ?? "");
     setDescription(initialData?.description ?? "");
     setPosition(initialData ? "current" : "last");
+    setImpact(null);
   }, [opened, initialData, defaultType]);
 
   useEffect(() => {
     if (!opened) return;
 
-    getCategoriesForPosition(categoryType, initialData?.id).then(setCategories);
+    let active = true;
+    getCategoriesForPosition(categoryType, initialData?.id)
+      .then(data => {
+        if (active) setCategories(data);
+      })
+      .catch(() => {
+        if (active)
+          notifications.show({
+            title: "取得失敗",
+            message: "表示順の選択肢を取得できませんでした。",
+            color: "red",
+          });
+      });
+    return () => {
+      active = false;
+    };
   }, [opened, categoryType, initialData?.id]);
 
   const positionOptions = useMemo(() => {
@@ -101,7 +121,8 @@ export function CategoryFormModal({
     return options;
   }, [categories, initialData]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (confirmationToken?: string) => {
+    if (loading) return;
     if (!name.trim()) {
       notifications.show({
         title: "入力エラー",
@@ -111,38 +132,56 @@ export function CategoryFormModal({
       return;
     }
 
-    const result = initialData
-      ? await updateCategory({
-          id: initialData.id,
-          category_type: categoryType,
-          name: name.trim(),
-          description: description.trim() || null,
-          position: parsePosition(position),
-        })
-      : await registerCategory({
-          category_type: categoryType,
-          name: name.trim(),
-          description: description.trim() || null,
-          position: parsePosition(position),
-        });
+    setLoading(true);
+    try {
+      const result = initialData
+        ? await updateCategory(
+            {
+              id: initialData.id,
+              category_type: categoryType,
+              name: name.trim(),
+              description: description.trim() || null,
+              position: parsePosition(position),
+            },
+            confirmationToken
+          )
+        : await registerCategory({
+            category_type: categoryType,
+            name: name.trim(),
+            description: description.trim() || null,
+            position: parsePosition(position),
+          });
 
-    if (!result.success) {
+      if (!result.success) {
+        if (result.confirmation) {
+          setImpact(result.confirmation);
+          return;
+        }
+        notifications.show({
+          title: initialData ? "更新失敗" : "登録失敗",
+          message: getErrorMessage(result.error),
+          color: "red",
+        });
+        return;
+      }
+
       notifications.show({
-        title: initialData ? "更新失敗" : "登録失敗",
-        message: getErrorMessage(result.error),
+        title: initialData ? "更新完了" : "登録完了",
+        message: initialData ? "カテゴリーを更新しました。" : "カテゴリーを登録しました。",
+        color: "green",
+      });
+
+      onClose();
+      router.refresh();
+    } catch {
+      notifications.show({
+        title: "保存失敗",
+        message: "通信に失敗しました。再試行してください。",
         color: "red",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    notifications.show({
-      title: initialData ? "更新完了" : "登録完了",
-      message: initialData ? "カテゴリーを更新しました。" : "カテゴリーを登録しました。",
-      color: "green",
-    });
-
-    onClose();
-    router.refresh();
   };
 
   return (
@@ -151,51 +190,69 @@ export function CategoryFormModal({
       onClose={onClose}
       title={initialData ? "カテゴリー編集" : "カテゴリー新規登録"}
       centered
+      closeOnClickOutside={!loading}
+      closeOnEscape={!loading}
+      withCloseButton={!loading}
     >
-      <Select
-        label="カテゴリー種別"
-        data={CATEGORY_TYPE_OPTIONS}
-        value={categoryType}
-        onChange={value => {
-          if (!value) return;
-          setCategoryType(value as CategoryTypeValue);
-          const shouldKeepCurrent = initialData && value === initialData.category_type;
-          setPosition(shouldKeepCurrent ? "current" : "last");
-        }}
-        mb="sm"
-        required
-      />
+      {impact ? (
+        <CategoryImpactConfirmation
+          impact={impact}
+          loading={loading}
+          onConfirm={() => void handleSubmit(impact.token)}
+          onCancel={() => setImpact(null)}
+        />
+      ) : (
+        <>
+          <Select
+            label="カテゴリー種別"
+            data={CATEGORY_TYPE_OPTIONS}
+            value={categoryType}
+            onChange={value => {
+              if (!value) return;
+              setCategoryType(value as CategoryTypeValue);
+              const shouldKeepCurrent = initialData && value === initialData.category_type;
+              setPosition(shouldKeepCurrent ? "current" : "last");
+            }}
+            mb="sm"
+            required
+            disabled={loading || initialData?.name === "未分類"}
+          />
 
-      <TextInput
-        label="カテゴリー名"
-        value={name}
-        onChange={event => setName(event.target.value)}
-        mb="sm"
-        required
-      />
+          <TextInput
+            label="カテゴリー名"
+            value={name}
+            onChange={event => setName(event.target.value)}
+            mb="sm"
+            required
+            disabled={loading || initialData?.name === "未分類"}
+          />
 
-      <Textarea
-        label="説明文"
-        value={description}
-        onChange={event => setDescription(event.target.value)}
-        rows={4}
-        mb="sm"
-      />
+          <Textarea
+            label="説明文"
+            value={description}
+            onChange={event => setDescription(event.target.value)}
+            rows={4}
+            mb="sm"
+          />
 
-      <Select
-        label="表示順"
-        data={positionOptions}
-        value={position}
-        onChange={value => setPosition(value ?? "last")}
-        mb="sm"
-      />
+          <Select
+            label="表示順"
+            data={positionOptions}
+            value={position}
+            onChange={value => setPosition(value ?? "last")}
+            mb="sm"
+          />
 
-      <Group mt="md" justify="flex-end">
-        <Button variant="default" onClick={onClose}>
-          キャンセル
-        </Button>
-        <Button onClick={handleSubmit}>{initialData ? "更新" : "登録"}</Button>
-      </Group>
+          <Group mt="md" justify="flex-end">
+            <Button variant="default" onClick={onClose}>
+              キャンセル
+            </Button>
+            <Button onClick={() => void handleSubmit()} loading={loading}>
+              {initialData ? "更新" : "登録"}
+            </Button>
+          </Group>
+        </>
+      )}
     </Modal>
   );
 }

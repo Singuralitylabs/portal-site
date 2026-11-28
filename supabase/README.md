@@ -14,9 +14,9 @@
 
 `migrations`ディレクトリには、データベース構築に必要なSQLファイルが含まれています：
 
-1. `01_create_tables.sql` - テーブル作成・更新
-2. `02_triggers.sql` - トリガー設定（updated_at自動更新など）
-3. `03_functions.sql` - 関数作成
+1. `01_tables/` - テーブル作成・更新
+2. `02_triggers/` - トリガー設定（updated_at自動更新など）
+3. `03_functions/` - 関数作成
 4. `04_policies` - テーブルのRLSポリシー設定
 
 ### マイグレーションとは？
@@ -33,6 +33,24 @@
 各マイグレーションファイルは番号順に実行する必要があります。ファイル内のSQLコマンドは、supabaseのSQLエディタ画面で実行して下さい（本番・共有の開発用Supabaseへの適用方法）。
 
 ローカルのDocker上でSupabaseを起動して試したい場合は、Wiki「[ローカルSupabase環境構築](https://github.com/Singuralitylabs/portal-site/wiki/ローカルSupabase環境構築)」を参照してください。フォルダ名の辞書順では外部キー参照の順序を満たせない箇所があるため、専用スクリプト（`npm run db:migrate:docker`）で依存関係を満たす順序に適用します。**新しいマイグレーションファイルを追加した場合は、`scripts/apply-local-migrations.cjs` の `ORDERED_RELATIVE_PATHS` にも追記してください。**
+
+構築済み DB では全マイグレーションを再実行せず、未適用分だけを SQL エディタなどで適用してください。Issue #420 の `03_functions/master_management.sql` は既存全テーブル・RLS ヘルパー・共通日時トリガー関数に依存します。アプリの更新より先に適用し、その後に型を再生成します。共有/本番 DB への適用はリリース手順に従います。
+
+`master_management.sql` の適用前に、削除済みのコンテンツも含めて確認できる権限で、次の読み取り専用クエリを実行してください。結果が 0 件であることを確認し、不一致があれば対象レコードを調査・修正してから適用してください。
+
+```sql
+WITH content_categories AS (
+  SELECT 'documents' AS content_type, id, category_id FROM public.documents
+  UNION ALL
+  SELECT 'videos', id, category_id FROM public.videos
+  UNION ALL
+  SELECT 'applications', id, category_id FROM public.applications
+)
+SELECT content.content_type, content.id, content.category_id, category.category_type
+FROM content_categories AS content
+JOIN public.categories AS category ON category.id = content.category_id
+WHERE category.category_type <> content.content_type;
+```
 
 ## 環境設定
 

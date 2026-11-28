@@ -18,7 +18,8 @@
     "lint:logs": "node scripts/lint-logs.cjs",
     "lint:env": "node scripts/check-env-encrypted.cjs",
     "lint:workflows": "node scripts/check-workflow-notifications.cjs",
-    "test": "jest --verbose --coverage"
+    "test": "jest --verbose --coverage",
+    "test:vm-modules": "JEST_LOCAL_SQL=1 node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose --coverage"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^2.38.2",
+    "@electric-sql/pglite": "^0.5.17",
     "@eslint/eslintrc": "^3",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.19.30",
