@@ -54,11 +54,9 @@ export type ContentTableType = "documents" | "videos" | "applications";
 export type CategoryTypeValue = ContentTableType;
 
 // Display order placement position types
+// "current" is for edits only
 export type PlacementPositionType =
-  | { type: "first" }
-  | { type: "after"; afterId: number }
-  | { type: "last" }
-  | { type: "current" }; // For edits only
+  { type: "first" } | { type: "after"; afterId: number } | { type: "last" } | { type: "current" };
 
 // Users types
 type UsersTable = Database["public"]["Tables"]["users"];

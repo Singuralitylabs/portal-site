@@ -21,9 +21,7 @@ import { ApplicationFormModal } from "../applications/components/ApplicationForm
 
 interface ContentMgrMenuProps<
   T extends
-    | DocumentWithCategoryType
-    | VideoWithCategoryType
-    | ApplicationWithCategoryAndDeveloperType,
+    DocumentWithCategoryType | VideoWithCategoryType | ApplicationWithCategoryAndDeveloperType,
 > {
   type: ContentType;
   content: T;
@@ -34,9 +32,7 @@ interface ContentMgrMenuProps<
 
 export default function ContentMgrMenu<
   T extends
-    | DocumentWithCategoryType
-    | VideoWithCategoryType
-    | ApplicationWithCategoryAndDeveloperType,
+    DocumentWithCategoryType | VideoWithCategoryType | ApplicationWithCategoryAndDeveloperType,
 >({ type, content, categories, developers, userId }: ContentMgrMenuProps<T>) {
   const [editDocumentModalOpened, setEditDocumentModalOpened] = useState(false);
   const [deleteDocumentModalOpened, setDeleteDocumentModalOpened] = useState(false);
