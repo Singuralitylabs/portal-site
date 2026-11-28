@@ -1,7 +1,6 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient, getServerCurrentUser } from "./supabase-server";
-import { PostgrestError } from "@supabase/supabase-js";
-import type { AuthError } from "@supabase/supabase-js";
+import { PostgrestError, type AuthError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS, USER_ROLE } from "@/app/constants/user";
 
