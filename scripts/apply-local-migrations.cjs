@@ -69,6 +69,8 @@ const ORDERED_RELATIVE_PATHS = [
   "04_policies/categories/00_categories_policies.sql",
   "04_policies/documents/00_documents_policies.sql",
   "04_policies/position_tags/00_position_tags_policies.sql",
+  "04_policies/position_tags/01_content_managers_can_modify_position_tags.sql",
+  "04_policies/position_tags/02_rename_position_tags_delete_policy.sql",
   "04_policies/positions/00_positions_policies.sql",
   "04_policies/users/00_users_policies.sql",
   "04_policies/users/01_update_users_policies.sql",
