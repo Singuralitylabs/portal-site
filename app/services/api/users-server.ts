@@ -1,6 +1,6 @@
 import { MemberType, PendingUserType, PositionType, UserStatusType, UserType } from "@/app/types";
 import { createServerSupabaseClient, getServerCurrentUser } from "./supabase-server";
-import type { AuthError, PostgrestError } from "@supabase/supabase-js";
+import { PostgrestError, type AuthError } from "@supabase/supabase-js";
 import { UUID } from "crypto";
 import { USER_STATUS, USER_ROLE } from "@/app/constants/user";
 
@@ -315,13 +315,12 @@ export async function updateUserPositionTagsInServer(
     return authError;
   }
   if (!authId) {
-    return {
+    return new PostgrestError({
       code: "PGRST116",
       details: "",
       hint: "",
       message: "ユーザーが見つかりません",
-      name: "PostgrestError",
-    };
+    });
   }
 
   const { data: currentUser, error: currentUserError } = await supabase
@@ -336,13 +335,12 @@ export async function updateUserPositionTagsInServer(
   }
 
   if (currentUser.role !== USER_ROLE.ADMIN && currentUser.role !== USER_ROLE.MAINTAINER) {
-    return {
+    return new PostgrestError({
       code: "42501",
       details: "",
       hint: "",
       message: "役職の変更はadmin・maintainer権限が必要です",
-      name: "PostgrestError",
-    };
+    });
   }
 
   const { error: deleteError } = await supabase
